@@ -1,0 +1,22 @@
+# IDE and operating-system files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Java / Spring Boot
+backend/target/
+backend/.mvn/timing.properties
+
+# Node / Expo (created in a later state)
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+
+# Local secrets and developer overrides
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-*.local.properties
