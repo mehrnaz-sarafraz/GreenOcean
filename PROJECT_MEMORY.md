@@ -117,6 +117,11 @@ Local tools → Git/GitHub → repository scaffolding → PostgreSQL
 
 ## Current state — 2026-08-24
 
-- The workspace exists and contains only an initialized `.git` directory.
-- No frontend, backend, database, or GitHub remote has been created yet.
-- The next implementation milestone is a local machine readiness audit, followed by Git/GitHub setup and project scaffolding.
+- The private GitHub monorepo is connected on `main` with `backend/` and `frontend/` roots.
+- Backend runs on Java 21, Spring Boot 4.1, PostgreSQL 18 and Flyway. Ten migrations are applied and schema constraints have integration coverage.
+- Authentication is implemented end to end: registration, BCrypt passwords, JWT access tokens, rotating hashed refresh-token sessions, login, refresh, logout, logout-all and password change.
+- Profile APIs support own-profile reads/updates, privacy controls and privacy-filtered profile lookup by username.
+- Backend health, auth and profile flows have automated integration tests and PowerShell smoke tests.
+- Frontend uses Expo SDK 57, React Native 0.86, React 19 and strict TypeScript with Expo Router.
+- Frontend foundation includes GreenOcean theme tokens, English/Persian localization, RTL-aware layout, Welcome/Login/Register routes, secure token storage, automatic refresh, session restoration, Home and Profile routes.
+- The next product vertical slice is content: create post, feed, post detail and nested comments, implemented across Backend and Frontend together.
