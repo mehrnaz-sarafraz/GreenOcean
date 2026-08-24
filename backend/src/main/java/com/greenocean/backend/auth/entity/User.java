@@ -42,6 +42,9 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
@@ -68,11 +71,27 @@ public class User {
         roles.add(role);
     }
 
+    public void recordLogin() {
+        this.lastLoginAt = Instant.now();
+    }
+
     public UUID getId() {
         return id;
     }
 
     public String getEmail() {
         return email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public Set<Role> getRoles() {
+        return Set.copyOf(roles);
     }
 }
