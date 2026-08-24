@@ -20,6 +20,14 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFoundException(NotFoundException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(
+                Instant.now(), HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
+                exception.getMessage(), request.getRequestURI(), List.of()
+        ));
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiError> handleUnauthorizedException(UnauthorizedException exception, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiError(

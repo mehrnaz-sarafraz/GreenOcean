@@ -1,5 +1,6 @@
 package com.greenocean.backend.auth.controller;
 
+import com.greenocean.backend.auth.dto.ChangePasswordRequest;
 import com.greenocean.backend.auth.dto.CurrentUserResponse;
 import com.greenocean.backend.auth.dto.LoginRequest;
 import com.greenocean.backend.auth.dto.LogoutRequest;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -55,5 +58,24 @@ public class AuthController {
     @GetMapping("/me")
     public CurrentUserResponse me(@AuthenticationPrincipal Jwt jwt) {
         return authenticationService.currentUser(jwt);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        authenticationService.changePassword(
+                UUID.fromString(jwt.getSubject()),
+                request.currentPassword(),
+                request.newPassword()
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll(@AuthenticationPrincipal Jwt jwt) {
+        authenticationService.logoutAll(UUID.fromString(jwt.getSubject()));
+        return ResponseEntity.noContent().build();
     }
 }

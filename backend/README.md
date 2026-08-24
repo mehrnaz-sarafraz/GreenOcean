@@ -27,11 +27,17 @@ Authentication endpoints:
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me` (Bearer access token required)
+- `POST /api/v1/auth/change-password` (Bearer access token required)
+- `POST /api/v1/auth/logout-all` (Bearer access token required)
+- `GET /api/v1/profiles/me` (Bearer access token required)
+- `PATCH /api/v1/profiles/me` (Bearer access token required)
+- `GET /api/v1/profiles/{username}` (Bearer access token required)
 
 Run the complete authentication smoke test while the backend is running:
 
 ```powershell
 .\scripts\smoke-auth.ps1
+.\scripts\smoke-profile-account.ps1
 ```
 
 ## Test

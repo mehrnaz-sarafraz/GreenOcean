@@ -75,6 +75,11 @@ public class User {
         this.lastLoginAt = Instant.now();
     }
 
+    public void changePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.updatedAt = Instant.now();
+    }
+
     public UUID getId() {
         return id;
     }

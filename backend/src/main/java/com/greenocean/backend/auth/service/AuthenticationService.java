@@ -93,6 +93,26 @@ public class AuthenticationService {
                 .ifPresent(UserSession::revoke);
     }
 
+    @Transactional
+    public void logoutAll(UUID userId) {
+        sessionRepository.revokeAllActiveByUserId(userId, Instant.now());
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User account is not available"));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new UnauthorizedException("Current password is incorrect");
+        }
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from the current password");
+        }
+
+        user.changePassword(passwordEncoder.encode(newPassword));
+        sessionRepository.revokeAllActiveByUserId(userId, Instant.now());
+    }
+
     public CurrentUserResponse currentUser(Jwt jwt) {
         List<String> roles = jwt.getClaimAsStringList("roles");
         return new CurrentUserResponse(
