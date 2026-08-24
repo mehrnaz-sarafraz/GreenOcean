@@ -10,7 +10,13 @@ Spring Boot REST API for GreenOcean.
 
 ## Run locally
 
-Set local secrets for the current PowerShell session and use the Maven Wrapper:
+Preferred local command (database password is requested securely and the JWT secret is generated automatically):
+
+```powershell
+.\scripts\run-local.ps1
+```
+
+Alternatively, set local secrets for the current PowerShell session and use the Maven Wrapper:
 
 ```powershell
 $env:GREENOCEAN_DB_PASSWORD = "your-local-postgres-password"
@@ -33,14 +39,52 @@ Authentication endpoints:
 - `PATCH /api/v1/profiles/me` (Bearer access token required)
 - `GET /api/v1/profiles/{username}` (Bearer access token required)
 
+Content and social endpoints (Bearer access token required):
+
+- `POST /api/v1/posts`
+- `GET /api/v1/posts/feed?page=0&size=20`
+- `GET /api/v1/posts/{postId}`
+- `DELETE /api/v1/posts/{postId}`
+- `GET|POST /api/v1/posts/{postId}/comments`
+- `PUT|DELETE /api/v1/posts/{postId}/like`
+- `PUT|DELETE /api/v1/posts/{postId}/bookmark`
+- `PUT|DELETE /api/v1/comments/{commentId}/like`
+- `PUT|DELETE /api/v1/social/follows/{userId}`
+- `PUT|DELETE /api/v1/social/blocks/{userId}`
+- `GET /api/v1/search/users?q=...`
+- `GET /api/v1/search/posts?q=...`
+- `POST /api/v1/communities`
+- `GET /api/v1/communities?q=...`
+- `GET /api/v1/communities/slug/{slug}`
+- `PUT|DELETE /api/v1/communities/{communityId}/membership`
+- `GET /api/v1/communities/{communityId}/posts`
+- `GET /api/v1/notifications`
+- `GET /api/v1/notifications/unread-count`
+- `PUT /api/v1/notifications/{notificationId}/read`
+- `PUT /api/v1/notifications/read-all`
+
+Post visibility supports `PUBLIC`, `FOLLOWERS`, and `COMMUNITY`. Feed and search results enforce
+visibility, membership, blocks, soft deletion, and anonymous-author privacy on the server.
+Likes, comments, replies, and follows create notifications only when the interaction is newly created;
+repeating an idempotent request does not produce duplicate notifications.
+
 Run the complete authentication smoke test while the backend is running:
 
 ```powershell
 .\scripts\smoke-auth.ps1
 .\scripts\smoke-profile-account.ps1
+.\scripts\smoke-content-social.ps1
 ```
 
 ## Test
+
+Preferred local command (the password is requested securely and is not printed or stored):
+
+```powershell
+.\scripts\test-local.ps1
+```
+
+Alternatively, when `GREENOCEAN_DB_PASSWORD` is already correct in the current terminal:
 
 ```powershell
 $env:GREENOCEAN_DB_PASSWORD = "your-local-postgres-password"

@@ -122,6 +122,12 @@ Local tools → Git/GitHub → repository scaffolding → PostgreSQL
 - Authentication is implemented end to end: registration, BCrypt passwords, JWT access tokens, rotating hashed refresh-token sessions, login, refresh, logout, logout-all and password change.
 - Profile APIs support own-profile reads/updates, privacy controls and privacy-filtered profile lookup by username.
 - Backend health, auth and profile flows have automated integration tests and PowerShell smoke tests.
+- The current tested milestone adds posts, visibility-aware feed, comments/replies, post and comment likes, bookmarks,
+  follow/block rules, user/post search, communities and notification delivery/read state.
 - Frontend uses Expo SDK 57, React Native 0.86, React 19 and strict TypeScript with Expo Router.
-- Frontend foundation includes GreenOcean theme tokens, English/Persian localization, RTL-aware layout, Welcome/Login/Register routes, secure token storage, automatic refresh, session restoration, Home and Profile routes.
-- The next product vertical slice is content: create post, feed, post detail and nested comments, implemented across Backend and Frontend together.
+- Frontend includes theme tokens, English/Persian localization, RTL-aware layout, Welcome/Login/Register, secure token
+  storage, automatic refresh, session restoration, Feed/Create/Post Detail/Search/Profile, Community and Notification routes.
+- Content/social/community/notification code compiles and the frontend passes type-check, lint and static web export.
+  Local PostgreSQL integration tests and the end-to-end smoke script must pass before this milestone is committed.
+- After that commit, the next milestone is Professionals + verification + Consultation, followed by Messaging,
+  Moderation/Media completion, deployment hardening and the dedicated GreenOcean branding/detail pass.

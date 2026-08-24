@@ -9,8 +9,14 @@ export default function AppLayout() {
   if (status === 'unauthenticated') return <Redirect href="/(auth)/welcome" />;
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.ocean600, tabBarInactiveTintColor: colors.muted }}>
-      <Tabs.Screen name="index" options={{ title: t('homeTitle') }} />
+      <Tabs.Screen name="index" options={{ title: t('feed') }} />
+      <Tabs.Screen name="create" options={{ title: t('createPost') }} />
+      <Tabs.Screen name="communities" options={{ title: t('communities') }} />
+      <Tabs.Screen name="search" options={{ title: t('search') }} />
+      <Tabs.Screen name="notifications" options={{ title: t('notifications') }} />
       <Tabs.Screen name="profile" options={{ title: t('profile') }} />
+      <Tabs.Screen name="post/[id]" options={{ href: null }} />
+      <Tabs.Screen name="community/[slug]" options={{ href: null }} />
     </Tabs>
   );
 }
