@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
 import { AppField } from '@/components/app-field';
@@ -22,7 +22,9 @@ export default function LoginScreen() {
   }
   return (
     <Screen scroll style={styles.content}>
+      <Pressable onPress={() => router.back()}><Text style={styles.back}>←</Text></Pressable>
       <Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{t('loginTitle')}</Text>
+      <Text style={[styles.subtitle, { textAlign: isRtl ? 'right' : 'left' }]}>{t('loginSubtitle')}</Text>
       <View style={styles.form}>
         <AppField label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <AppField label={t('password')} value={password} onChangeText={setPassword} secureTextEntry />
@@ -33,4 +35,4 @@ export default function LoginScreen() {
     </Screen>
   );
 }
-const styles = StyleSheet.create({ content: { justifyContent: 'center', gap: spacing.xl }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '800' }, form: { gap: spacing.md }, error: { color: colors.danger } });
+const styles = StyleSheet.create({ content: { justifyContent: 'center', gap: spacing.md, maxWidth: 560, width: '100%', alignSelf: 'center' }, back: { color: colors.ocean700, fontSize: 25, fontWeight: '800' }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '900', marginTop: spacing.lg }, subtitle: { color: colors.muted, fontSize: 15, marginBottom: spacing.md }, form: { gap: spacing.md, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: spacing.lg }, error: { color: colors.danger } });

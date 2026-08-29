@@ -1,58 +1,90 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-
+import { router, useLocalSearchParams } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
+import { AppIcon } from '@/components/app-icon';
+import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { useAuth } from '@/features/auth/auth-provider';
-import { OwnProfile } from '@/features/profile/types';
-import { apiRequest } from '@/lib/api/client';
+import { PostCard } from '@/features/content/post-card';
 import { useLanguage } from '@/localization/language-provider';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { mockPosts, Professional, professionals } from '@/mocks/data';
+import { professionalArticles } from '@/mocks/discovery';
+import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth(); const { t, isRtl } = useLanguage();
-  const [profile, setProfile] = useState<OwnProfile | null>(null); const [error, setError] = useState('');
+  const { professional } = useLocalSearchParams<{ professional?: string }>();
+  const { t } = useLanguage();
+  const selectedProfessional = professionals.find(item => item.id === professional);
+  if (selectedProfessional) return <ProfessionalProfile professional={selectedProfessional} />;
 
-  useEffect(() => {
-    let active = true;
-    apiRequest<OwnProfile>('/api/v1/profiles/me')
-      .then((result) => { if (active) { setProfile(result); setError(''); } })
-      .catch((exception) => { if (active) setError(exception instanceof Error ? exception.message : t('genericError')); });
-    return () => { active = false; };
-  }, [t]);
-
-  async function loadProfile() {
-    try {
-      setProfile(await apiRequest<OwnProfile>('/api/v1/profiles/me'));
-      setError('');
-    }
-    catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
-  }
-  async function logout() { await signOut(); router.replace('/(auth)/welcome'); }
-
-  return (
-    <Screen>
-      <Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{t('profile')}</Text>
-      {!profile && !error && <ActivityIndicator style={styles.loader} color={colors.ocean500} />}
-      {!!error && <View style={styles.card}><Text style={styles.error}>{error}</Text><AppButton label={t('retry')} onPress={loadProfile} /></View>}
-      {profile && (
-        <View style={styles.card}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{profile.displayName.slice(0, 1).toUpperCase()}</Text></View>
-          <Text style={[styles.name, { textAlign: isRtl ? 'right' : 'left' }]}>{profile.displayName}</Text>
-          <Text style={[styles.username, { textAlign: isRtl ? 'right' : 'left' }]}>@{profile.username}</Text>
-          {!!profile.bio && <Text style={[styles.bio, { textAlign: isRtl ? 'right' : 'left' }]}>{profile.bio}</Text>}
-          <AppButton label={t('logout')} variant="secondary" onPress={logout} />
-        </View>
-      )}
-    </Screen>
-  );
+  return <Screen scroll style={styles.screen}><View style={styles.content}>
+    <View style={styles.cover}><View style={styles.orb} /><View style={styles.coverMark}><AppIcon name="waves" size={42} color="#ffffff18" /></View></View>
+    <View style={styles.identity}><Avatar name="Taylor" size={86} /><AppButton label={t('editProfile')} variant="secondary" onPress={() => {}} /></View>
+    <Text style={styles.name}>Taylor Morgan</Text><Text style={styles.handle}>@taylor.m · Portland</Text>
+    <Text style={styles.bio}>Learning to meet myself with a little more patience, one day at a time.</Text>
+    <View style={styles.badges}><View style={styles.badge}><AppIcon name="favorite" size={16} color={colors.coral} /><Text style={styles.badgeText}>Supportive voice</Text></View><View style={styles.badge}><AppIcon name="calendar_month" size={16} color={colors.ocean600} /><Text style={styles.badgeText}>Member since 2026</Text></View></View>
+    <View style={styles.counts}><Count value="128" label={t('followers')} /><Count value="84" label={t('following')} /><Count value="24" label={t('stories')} /><Count value="486" label="Helpful reactions" /></View>
+    <View style={styles.profileTabs}>{[t('stories'), t('saved'), t('about')].map((item, index) => <Text key={item} style={[styles.profileTab, index === 0 && styles.profileTabActive]}>{item}</Text>)}</View>
+    <Text style={styles.sectionTitle}>Recent stories</Text>{mockPosts.slice(2, 4).map(post => <PostCard key={post.id} post={{ ...post, author: { userId: 'demo-user', username: 'taylor.m', displayName: 'Taylor Morgan', avatarUrl: null } }} />)}
+    <Text style={styles.sectionTitle}>Profile details</Text><View style={styles.infoCard}><Info icon="location_on" title="Location" text="Portland, United States" /><Info icon="language" title="Languages" text="English · Spanish" /><Info icon="interests" title="Topics I follow" text="Relationships · Self-esteem · Work & burnout" /><Info icon="lock" title="Visibility" text="Public profile" /></View>
+    <Text style={styles.sectionTitle}>Account & safety</Text><View style={styles.settings}><Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} /><Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} /><Setting icon="shield" title="Privacy and safety" subtitle="Blocks, muted words, and content controls" /><Setting icon="notifications" title="Notification preferences" subtitle="Choose what you want to hear about" /><Setting icon="admin_panel_settings" title="Admin panel" subtitle="Trust and safety operations" accent onPress={() => router.push('/admin')} /></View>
+  </View></Screen>;
 }
 
+function ProfessionalProfile({ professional }: { professional: Professional }) {
+  const articles = professionalArticles.filter(article => article.authorId === professional.id);
+  const pinned = articles.find(article => article.pinned);
+  return <Screen scroll style={styles.screen}><View style={styles.proContent}>
+    <View style={styles.proTop}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Pressable onPress={() => router.push('/article-editor')} style={styles.studioButton}><AppIcon name="edit_note" size={18} color={colors.ocean700} /><Text style={styles.studioText}>Article studio</Text></Pressable></View>
+
+    <View style={styles.proHero}>
+      <View style={styles.heroGlow} /><View style={styles.proIdentity}><Avatar name={professional.displayName} size={90} verified /><View style={{ flex: 1 }}><Text style={styles.proBigName}>{professional.displayName}</Text><Text style={styles.proRole}>{professional.title}</Text><Text style={styles.proHandle}>@{professional.username}</Text><View style={styles.verified}><AppIcon name="verified" filled size={17} color={colors.ocean300} /><Text style={styles.verifiedText}>Identity, license & education verified</Text></View></View><Score score={professional.greenOceanScore} /></View>
+      <Text style={styles.proBio}>{professional.bio}</Text>
+      <View style={styles.proStats}><Count value={String(professional.rating)} label="Rating" light /><Count value={String(professional.reviewCount)} label="Reviews" light /><Count value={String(professional.experienceYears)} label="Years experience" light /></View>
+      <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Message" variant="secondary" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: professional.id === 'pro-1' ? 'maya' : professional.id } })} /></View><View style={{ flex: 1 }}><AppButton label="Follow" onPress={() => {}} /></View></View>
+    </View>
+
+    <View style={styles.availability}><View style={[styles.availabilityDot, !professional.acceptingNewClients && { backgroundColor: colors.sun }]} /><View style={{ flex: 1 }}><Text style={styles.availabilityTitle}>{professional.acceptingNewClients ? 'Accepting new clients' : 'Waitlist currently active'}</Text><Text style={styles.availabilityText}>{professional.consultationModes.join(' · ')}</Text></View><AppIcon name="event_available" color={colors.ocean600} /></View>
+
+    <Text style={styles.sectionTitle}>Professional profile</Text>
+    <View style={styles.detailGrid}>
+      <DetailCard icon="psychology" title="Specialties" value={professional.specialties.join(' · ')} />
+      <DetailCard icon="apartment" title="Workplace" value={professional.workplace} />
+      <DetailCard icon="medical_services" title="Clinic / practice" value={professional.clinicName} />
+      <DetailCard icon="location_on" title="Clinic location" value={`${professional.clinicAddress}\n${professional.city}, ${professional.country}`} />
+      <DetailCard icon="language" title="Languages" value={professional.languages.join(' · ')} />
+      <DetailCard icon="person" title="Gender" value={professional.gender} />
+    </View>
+
+    <Text style={styles.sectionTitle}>Credentials</Text><View style={styles.infoCard}>{professional.education.map(item => <Info key={item} icon="school" title="Education" text={item} />)}<Info icon="workspace_premium" title="License" text={`${professional.licenseNumber} · Verified by GreenOcean`} /><Info icon="update" title="Last verification" text="August 2026" /></View>
+
+    {pinned && <><View style={styles.sectionTitleRow}><View><Text style={styles.eyebrow}>PINNED BY THIS PROFESSIONAL</Text><Text style={styles.sectionTitle}>Scientific article</Text></View><Pressable onPress={() => router.push('/articles')}><Text style={styles.seeAll}>All articles</Text></Pressable></View><Pressable onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinned.id } })} style={styles.pinnedArticle}><View style={styles.pinnedFlag}><AppIcon name="push_pin" filled size={17} color={colors.white} /><Text style={styles.pinnedFlagText}>PINNED</Text></View><Text style={styles.articleTopic}>{pinned.evidenceLevel} · {pinned.readTime}</Text><Text style={styles.articleTitle}>{pinned.title}</Text><Text style={styles.articleSummary}>{pinned.summary}</Text><View style={styles.articleMeta}><AppIcon name="favorite" size={17} color={colors.coral} /><Text style={styles.articleMetaText}>{pinned.helpfulCount} found this helpful</Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></Pressable></>}
+
+    <Text style={styles.sectionTitle}>How the GreenOcean Score works</Text><View style={styles.scoreExplainer}><Score score={professional.greenOceanScore} small /><View style={{ flex: 1 }}><Text style={styles.scoreTitle}>Trust and contribution score</Text><Text style={styles.scoreText}>Based on credential verification, profile completeness, helpful professional answers, response consistency, and community feedback. Sponsored placement never changes this score.</Text></View></View>
+
+    <Text style={styles.sectionTitle}>Professional boundaries</Text><View style={styles.boundary}><AppIcon name="health_and_safety" color={colors.ocean600} /><Text style={styles.boundaryText}>Public replies, articles, and messages provide general educational support. They do not establish a therapeutic relationship or replace local medical care.</Text></View>
+    <Text style={styles.sectionTitle}>Professional answer</Text><View style={styles.answerCard}><Text style={styles.answerText}>A boundary is not necessarily a step away from someone. It can be a way to keep the relationship honest and sustainable. Start with small, clear statements.</Text><View style={styles.helpful}><AppIcon name="favorite" size={17} color={colors.coral} /><Text style={styles.helpfulText}>128 Helpful</Text></View></View>
+  </View></Screen>;
+}
+
+function Score({ score, small = false }: { score: number; small?: boolean }) { return <View style={[styles.score, small && styles.scoreSmall]}><Text style={[styles.scoreNumber, small && styles.scoreNumberSmall]}>{score}</Text><Text style={styles.scoreCaption}>GO SCORE</Text></View>; }
+function Count({ value, label, light = false }: { value: string; label: string; light?: boolean }) { return <View style={styles.count}><Text style={[styles.countValue, light && { color: colors.white }]}>{value}</Text><Text style={[styles.countLabel, light && { color: colors.ocean300 }]}>{label}</Text></View>; }
+function Info({ icon, title, text }: { icon: string; title: string; text: string }) { return <View style={styles.info}><View style={styles.infoIcon}><AppIcon name={icon} color={colors.ocean600} /></View><View style={{ flex: 1 }}><Text style={styles.infoTitle}>{title}</Text><Text style={styles.infoText}>{text}</Text></View></View>; }
+function DetailCard({ icon, title, value }: { icon: string; title: string; value: string }) { return <View style={styles.detailCard}><View style={styles.detailIcon}><AppIcon name={icon} color={colors.ocean700} /></View><Text style={styles.detailTitle}>{title}</Text><Text style={styles.detailValue}>{value}</Text></View>; }
+function Setting({ icon, title, subtitle, onPress, accent }: { icon: string; title: string; subtitle: string; onPress?: () => void; accent?: boolean }) { return <Pressable onPress={onPress} style={styles.setting}><View style={[styles.settingIcon, accent && { backgroundColor: colors.coralSoft }]}><AppIcon name={icon} color={accent ? colors.coral : colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.settingTitle}>{title}</Text><Text style={styles.settingSubtitle}>{subtitle}</Text></View><AppIcon name="chevron_right" color={colors.muted} /></Pressable>; }
+
 const styles = StyleSheet.create({
-  title: { marginTop: spacing.md, color: colors.ocean900, fontSize: 34, fontWeight: '800' }, loader: { marginTop: spacing.xxl },
-  card: { marginTop: spacing.xl, padding: spacing.xl, borderRadius: radius.lg, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, gap: spacing.md },
-  avatar: { width: 72, height: 72, borderRadius: radius.pill, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: colors.ocean700, fontWeight: '800', fontSize: 28 }, name: { color: colors.ink, fontSize: 24, fontWeight: '800' },
-  username: { color: colors.ocean600, fontWeight: '600' }, bio: { color: colors.ink, lineHeight: 24 }, error: { color: colors.danger },
+  screen: { padding: 0 }, content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', padding: spacing.md, gap: spacing.md }, proContent: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', padding: spacing.md, gap: spacing.md },
+  cover: { height: 150, borderRadius: radius.xl, backgroundColor: colors.ocean900, overflow: 'hidden' }, orb: { position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: colors.ocean600, right: -40, top: -100 }, coverMark: { position: 'absolute', left: spacing.lg, bottom: spacing.lg }, identity: { marginTop: -58, paddingHorizontal: spacing.md, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }, name: { fontSize: typography.h2, fontWeight: '900', color: colors.ink, textAlign: 'left' }, handle: { color: colors.muted, textAlign: 'left' }, bio: { color: colors.inkSoft, lineHeight: 23, textAlign: 'left' },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, badge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 6 }, badgeText: { fontSize: 10, color: colors.inkSoft, fontWeight: '700' },
+  counts: { flexDirection: 'row', backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, justifyContent: 'space-around' }, count: { alignItems: 'center', flex: 1 }, countValue: { fontSize: 18, fontWeight: '900', color: colors.ink }, countLabel: { fontSize: 9, color: colors.muted, marginTop: 3, textAlign: 'center' }, profileTabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.xl }, profileTab: { paddingVertical: spacing.sm, color: colors.muted, fontWeight: '700' }, profileTabActive: { color: colors.ocean700, borderBottomWidth: 2, borderBottomColor: colors.ocean600 },
+  sectionTitle: { fontSize: typography.h3, fontWeight: '900', color: colors.ink, marginTop: spacing.sm, textAlign: 'left' }, sectionTitleRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: spacing.sm }, eyebrow: { fontSize: 9, color: colors.ocean600, fontWeight: '900', letterSpacing: 1 }, seeAll: { color: colors.ocean600, fontWeight: '900', fontSize: 11 },
+  infoCard: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.md }, info: { flexDirection: 'row', alignItems: 'center', gap: spacing.md }, infoIcon: { width: 38, height: 38, borderRadius: radius.sm, backgroundColor: colors.ocean50, alignItems: 'center', justifyContent: 'center' }, infoTitle: { color: colors.ink, fontSize: 11, fontWeight: '900' }, infoText: { color: colors.inkSoft, fontSize: 11, lineHeight: 17, marginTop: 2 },
+  settings: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden' }, setting: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border }, settingIcon: { width: 38, height: 38, borderRadius: radius.sm, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, settingTitle: { fontSize: 12, fontWeight: '900', color: colors.ink }, settingSubtitle: { fontSize: 9, color: colors.muted, marginTop: 3 },
+  proTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, back: { width: 40, height: 40, borderRadius: radius.pill, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }, studioButton: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.ocean100, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, studioText: { color: colors.ocean700, fontSize: 11, fontWeight: '900' },
+  proHero: { backgroundColor: colors.ocean950, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.md, overflow: 'hidden', ...shadow.floating }, heroGlow: { position: 'absolute', width: 300, height: 300, borderRadius: 150, backgroundColor: colors.ocean700, right: -100, top: -150 }, proIdentity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md }, proBigName: { fontSize: 22, fontWeight: '900', color: colors.white, textAlign: 'left' }, proRole: { color: colors.ocean200, marginTop: 3, textAlign: 'left' }, proHandle: { color: colors.ocean300, fontSize: 10, marginTop: 3 }, verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }, verifiedText: { fontSize: 10, color: colors.ocean300, fontWeight: '800' }, proBio: { color: colors.white, lineHeight: 23, textAlign: 'left' }, proStats: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: spacing.sm, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#ffffff22' }, proActions: { flexDirection: 'row', gap: spacing.sm },
+  score: { width: 78, height: 78, borderRadius: 39, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: colors.ocean300 }, scoreSmall: { width: 64, height: 64, borderRadius: 32, borderWidth: 3 }, scoreNumber: { fontSize: 24, color: colors.ocean800, fontWeight: '900' }, scoreNumberSmall: { fontSize: 19 }, scoreCaption: { fontSize: 7, color: colors.muted, fontWeight: '900' },
+  availability: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md }, availabilityDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.ocean500 }, availabilityTitle: { color: colors.ink, fontWeight: '900', fontSize: 12 }, availabilityText: { color: colors.muted, fontSize: 10, marginTop: 3 },
+  detailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, detailCard: { flexGrow: 1, flexBasis: 210, minHeight: 132, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md }, detailIcon: { width: 38, height: 38, borderRadius: radius.sm, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, detailTitle: { color: colors.muted, fontSize: 9, fontWeight: '900', letterSpacing: .7, textTransform: 'uppercase', marginTop: spacing.sm }, detailValue: { color: colors.ink, fontSize: 12, lineHeight: 18, fontWeight: '700', marginTop: 4 },
+  pinnedArticle: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.ocean200, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm, ...shadow.soft }, pinnedFlag: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: radius.pill, backgroundColor: colors.ocean700, paddingHorizontal: spacing.sm, paddingVertical: 5 }, pinnedFlagText: { color: colors.white, fontSize: 8, fontWeight: '900', letterSpacing: 1 }, articleTopic: { color: colors.ocean600, fontSize: 9, fontWeight: '900', marginTop: spacing.xs }, articleTitle: { color: colors.ink, fontSize: 20, lineHeight: 27, fontWeight: '900' }, articleSummary: { color: colors.inkSoft, fontSize: 12, lineHeight: 19 }, articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 5 }, articleMetaText: { flex: 1, color: colors.muted, fontSize: 10, fontWeight: '700' },
+  scoreExplainer: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.ocean50, borderRadius: radius.lg, padding: spacing.md }, scoreTitle: { color: colors.ink, fontWeight: '900', fontSize: 12 }, scoreText: { color: colors.muted, fontSize: 10, lineHeight: 16, marginTop: 4 }, boundary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.ocean50, borderRadius: radius.md, padding: spacing.md }, boundaryText: { flex: 1, fontSize: 10, color: colors.muted, lineHeight: 16 }, answerCard: { backgroundColor: colors.ocean50, borderRadius: radius.lg, borderStartWidth: 3, borderStartColor: colors.ocean400, padding: spacing.lg, gap: spacing.md }, answerText: { fontSize: 15, color: colors.ink, lineHeight: 24, textAlign: 'left' }, helpful: { flexDirection: 'row', alignItems: 'center', gap: 5 }, helpfulText: { fontSize: 11, color: colors.muted, fontWeight: '700' },
 });

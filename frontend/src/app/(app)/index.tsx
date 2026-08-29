@@ -1,57 +1,85 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AppButton } from '@/components/app-button';
+import { AppIcon } from '@/components/app-icon';
+import { Avatar } from '@/components/avatar';
 import { PostCard } from '@/features/content/post-card';
-import { PageResponse, PostItem } from '@/features/content/types';
-import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
-import { colors, spacing } from '@/theme/tokens';
+import { categories, mockPosts, Professional, professionals } from '@/mocks/data';
+import { professionalArticles } from '@/mocks/discovery';
+import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
+
+const featuredCategories = [
+  ...categories.filter(category => category.group === 'EMOTION').slice(0, 2),
+  ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
+  ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
+];
+
+const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE: 'Life experience' } as const;
 
 export default function FeedScreen() {
-  const { t, isRtl } = useLanguage();
-  const [posts, setPosts] = useState<PostItem[]>([]); const [page, setPage] = useState(0);
-  const [hasNext, setHasNext] = useState(false); const [loading, setLoading] = useState(true); const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const { t } = useLanguage();
+  const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
+  const [categoryId, setCategoryId] = useState('all');
+  const shown = useMemo(() => mockPosts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.categoryId === categoryId)), [tab, categoryId]);
+  const pinnedArticle = professionalArticles.find(article => article.pinned)!;
+  const articleAuthor = professionals.find(professional => professional.id === pinnedArticle.authorId)!;
 
-  useEffect(() => {
-    let active = true;
-    apiRequest<PageResponse<PostItem>>('/api/v1/posts/feed?page=0&size=20')
-      .then((result) => { if (active) { setPosts(result.items); setHasNext(result.hasNext); setLoading(false); } })
-      .catch((exception) => { if (active) { setError(exception instanceof Error ? exception.message : t('genericError')); setLoading(false); } });
-    return () => { active = false; };
-  }, [t]);
+  const header = <View style={styles.headerContent}>
+    <View style={styles.top}>
+      <View><Text style={styles.brand}>GreenOcean</Text><Text style={styles.hello}>{t('moodQuestion')}</Text></View>
+      <View style={styles.topActions}><Pressable onPress={() => router.push('/notifications')} style={styles.round} accessibilityLabel="Activity"><AppIcon name="notifications" color={colors.ocean700} /><View style={styles.alertDot} /></Pressable><Pressable style={styles.round} accessibilityLabel="Safety resources"><AppIcon name="health_and_safety" color={colors.ocean700} /></Pressable><Avatar name="Taylor" size={42} /></View>
+    </View>
 
-  async function refresh() {
-    setRefreshing(true);
-    try { const result = await apiRequest<PageResponse<PostItem>>('/api/v1/posts/feed?page=0&size=20'); setPosts(result.items); setPage(0); setHasNext(result.hasNext); setError(''); }
-    catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
-    finally { setRefreshing(false); }
-  }
-  async function loadMore() {
-    if (!hasNext || loading) return; setLoading(true);
-    try { const nextPage = page + 1; const result = await apiRequest<PageResponse<PostItem>>(`/api/v1/posts/feed?page=${nextPage}&size=20`); setPosts((current) => [...current, ...result.items]); setPage(nextPage); setHasNext(result.hasNext); }
-    finally { setLoading(false); }
-  }
+    <Pressable onPress={() => router.push('/create')} style={styles.composer}><Avatar name="Taylor" size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{t('feed')}</Text>
-      {!!error && <View style={styles.errorBox}><Text style={styles.error}>{error}</Text><AppButton label={t('retry')} onPress={refresh} /></View>}
-      {loading && posts.length === 0 ? <ActivityIndicator style={styles.loader} color={colors.ocean500} size="large" /> : (
-        <FlatList data={posts} keyExtractor={(item) => item.id} renderItem={({ item }) => <PostCard post={item} />}
-          contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={styles.separator} />}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ocean500} />}
-          ListEmptyComponent={<Text style={[styles.empty, { textAlign: isRtl ? 'right' : 'left' }]}>{t('feedEmpty')}</Text>}
-          ListFooterComponent={hasNext ? <AppButton label={t('loadMore')} variant="secondary" onPress={loadMore} loading={loading} /> : null} />
-      )}
-    </SafeAreaView>
-  );
+    <View style={styles.discoveryGrid}>
+      <Pressable onPress={() => router.push('/articles')} style={[styles.discoveryCard, styles.knowledgeCard]}><View style={styles.discoveryIcon}><AppIcon name="science" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.discoveryLabel}>KNOWLEDGE HUB</Text><Text style={styles.discoveryTitle}>Articles by verified professionals</Text></View><AppIcon name="arrow_forward" color={colors.ocean700} /></Pressable>
+      <Pressable onPress={() => router.push('/media')} style={[styles.discoveryCard, styles.watchCard]}><View style={[styles.discoveryIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="movie" color={colors.lavender} /></View><View style={{ flex: 1 }}><Text style={[styles.discoveryLabel, { color: colors.lavender }]}>WATCH & REFLECT</Text><Text style={styles.discoveryTitle}>Psychology movies & series</Text></View><AppIcon name="arrow_forward" color={colors.lavender} /></Pressable>
+    </View>
+
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>{(['forYou', 'following', 'professionalAnswers'] as const).map(item => <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item && styles.activeTab]}><Text style={[styles.tabText, tab === item && styles.activeTabText]}>{t(item)}</Text></Pressable>)}</ScrollView>
+
+    <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>FIND YOUR SPACE</Text><Text style={styles.sectionTitle}>Browse stories by topic</Text></View><Pressable onPress={() => router.push('/search')}><Text style={styles.seeAll}>{t('seeAll')}</Text></Pressable></View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
+      <Pressable onPress={() => setCategoryId('all')} style={[styles.categoryCard, categoryId === 'all' && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: categoryId === 'all' ? colors.ocean600 : colors.ocean100 }]}><AppIcon name="grid_view" color={categoryId === 'all' ? colors.white : colors.ocean700} /></View><Text style={[styles.categoryName, categoryId === 'all' && styles.categoryNameActive]}>{t('allCategories')}</Text><Text style={styles.categoryCount}>All emotions, conditions & experiences</Text></Pressable>
+      {featuredCategories.map(category => <Pressable key={category.id} onPress={() => setCategoryId(category.id)} style={[styles.categoryCard, categoryId === category.id && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} color={category.color} /></View><Text style={styles.categoryGroup}>{groupNames[category.group]}</Text><Text style={[styles.categoryName, categoryId === category.id && styles.categoryNameActive]}>{category.name}</Text><Text style={styles.categoryCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}
+    </ScrollView>
+
+    <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>FEATURED PLACEMENT</Text><Text style={styles.sectionTitle}>Professionals for today</Text></View><Pressable onPress={() => router.push('/search')}><Text style={styles.seeAll}>All professionals</Text></Pressable></View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.experts}>{professionals.filter(professional => professional.promoted).map(professional => <DoctorBanner key={professional.id} professional={professional} />)}</ScrollView>
+
+    <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>PINNED SCIENTIFIC ARTICLE</Text><Text style={styles.sectionTitle}>A professional perspective</Text></View><Pressable onPress={() => router.push('/articles')}><Text style={styles.seeAll}>Knowledge Hub</Text></Pressable></View>
+    <Pressable onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}>
+      <View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View>
+      <View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View>
+    </Pressable>
+
+    <View style={styles.feedHeading}><Text style={styles.feedTitle}>{categoryId === 'all' ? (tab === 'forYou' ? t('forYou') : t(tab)) : categories.find(category => category.id === categoryId)?.name}</Text>{categoryId !== 'all' && <Pressable onPress={() => setCategoryId('all')}><Text style={styles.clear}>Clear filter</Text></Pressable>}</View>
+  </View>;
+
+  return <SafeAreaView style={styles.safe}><FlatList data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name="forum" size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>No stories in this category yet</Text><Text style={styles.emptyText}>Be the first person to share an experience here.</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
+}
+
+function DoctorBanner({ professional }: { professional: Professional }) {
+  return <Pressable onPress={() => router.push({ pathname: '/profile', params: { professional: professional.id } })} style={styles.doctorBanner}>
+    <View style={styles.bannerGlow} />
+    <View style={styles.sponsored}><AppIcon name="campaign" size={14} color={colors.ocean300} /><Text style={styles.sponsoredText}>FEATURED · SPONSORED</Text></View>
+    <View style={styles.bannerMain}><Avatar name={professional.displayName} size={66} verified /><View style={styles.bannerCopy}><Text style={styles.expertName}>{professional.displayName}</Text><Text style={styles.expertTitle}>{professional.title} · {professional.city}</Text><View style={styles.specialties}>{professional.specialties.slice(0, 2).map(specialty => <Text key={specialty} style={styles.specialty}>{specialty}</Text>)}</View></View><View style={styles.scoreBadge}><Text style={styles.scoreValue}>{professional.greenOceanScore}</Text><Text style={styles.scoreLabel}>GO SCORE</Text></View></View>
+    <View style={styles.bannerBottom}><View style={styles.rating}><AppIcon name="star" filled size={17} color={colors.sun} /><Text style={styles.ratingText}>{professional.rating} · {professional.reviewCount} reviews</Text></View><Text style={styles.bannerReason}>{professional.promotedReason}</Text><View style={styles.viewProfile}><Text style={styles.viewProfileText}>View profile</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></View>
+  </Pressable>;
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.foam, paddingHorizontal: spacing.lg }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '800', marginVertical: spacing.md },
-  list: { paddingBottom: spacing.xxl }, separator: { height: spacing.md }, loader: { marginTop: spacing.xxl }, empty: { color: colors.muted, fontSize: 17, marginTop: spacing.xxl },
-  errorBox: { gap: spacing.md, marginBottom: spacing.md }, error: { color: colors.danger },
+  safe: { flex: 1, backgroundColor: colors.foam }, list: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', paddingHorizontal: spacing.md, paddingBottom: spacing.xxxl }, headerContent: { gap: spacing.md },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: spacing.sm }, brand: { fontSize: 22, fontWeight: '900', color: colors.ocean800 }, hello: { fontSize: 12, color: colors.muted, marginTop: 2 }, topActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, round: { width: 40, height: 40, borderRadius: radius.pill, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }, alertDot: { position: 'absolute', right: 8, top: 7, width: 7, height: 7, borderRadius: 4, backgroundColor: colors.coral, borderWidth: 1, borderColor: colors.white },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.sm, ...shadow.soft }, composerText: { flex: 1, color: colors.muted, fontSize: 14, textAlign: 'left' }, composeIcon: { width: 34, height: 34, borderRadius: radius.pill, backgroundColor: colors.ocean600, alignItems: 'center', justifyContent: 'center' },
+  discoveryGrid: { gap: spacing.sm }, discoveryCard: { minHeight: 78, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.lg, padding: spacing.md, borderWidth: 1 }, knowledgeCard: { backgroundColor: colors.ocean50, borderColor: colors.ocean200 }, watchCard: { backgroundColor: '#F8F6FC', borderColor: '#DED7F1' }, discoveryIcon: { width: 42, height: 42, borderRadius: radius.sm, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, discoveryLabel: { fontSize: 9, letterSpacing: 1, color: colors.ocean600, fontWeight: '900' }, discoveryTitle: { color: colors.ink, fontSize: 13, fontWeight: '900', marginTop: 3 },
+  tabs: { gap: spacing.sm, paddingVertical: spacing.xs }, tab: { paddingHorizontal: spacing.md, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border }, activeTab: { backgroundColor: colors.ocean900, borderColor: colors.ocean900 }, tabText: { color: colors.muted, fontSize: 13, fontWeight: '700' }, activeTabText: { color: colors.white },
+  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: spacing.sm }, eyebrow: { fontSize: 9, color: colors.ocean600, fontWeight: '900', letterSpacing: 1.1, marginBottom: 3 }, sectionTitle: { fontSize: typography.h3, fontWeight: '900', color: colors.ink }, seeAll: { fontSize: 11, color: colors.ocean600, fontWeight: '800' },
+  categoryRail: { gap: spacing.sm, paddingBottom: spacing.xs }, categoryCard: { width: 152, minHeight: 142, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, gap: 6 }, categoryCardActive: { borderColor: colors.ocean500, backgroundColor: colors.ocean50 }, categoryIcon: { width: 38, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' }, categoryGroup: { fontSize: 8, color: colors.muted, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' }, categoryName: { fontSize: 13, fontWeight: '900', color: colors.ink }, categoryNameActive: { color: colors.ocean700 }, categoryCount: { fontSize: 9, color: colors.muted, lineHeight: 13 },
+  experts: { gap: spacing.sm, paddingBottom: spacing.xs }, doctorBanner: { width: 650, maxWidth: '90%', minHeight: 250, backgroundColor: colors.ocean950, borderRadius: radius.xl, padding: spacing.lg, overflow: 'hidden', gap: spacing.md, ...shadow.floating }, bannerGlow: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: colors.ocean700, right: -70, top: -100, opacity: 0.72 }, sponsored: { flexDirection: 'row', alignItems: 'center', gap: 5 }, sponsoredText: { color: colors.ocean300, fontSize: 9, fontWeight: '900', letterSpacing: 1 }, bannerMain: { flexDirection: 'row', alignItems: 'center', gap: spacing.md }, bannerCopy: { flex: 1 }, expertName: { fontSize: 20, fontWeight: '900', color: colors.white }, expertTitle: { fontSize: 11, color: colors.ocean300, marginTop: 4 }, specialties: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: spacing.sm }, specialty: { fontSize: 9, color: colors.white, backgroundColor: '#ffffff18', borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 4 }, scoreBadge: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }, scoreValue: { fontSize: 22, color: colors.ocean800, fontWeight: '900' }, scoreLabel: { fontSize: 7, color: colors.muted, fontWeight: '900' }, bannerBottom: { gap: spacing.sm }, rating: { flexDirection: 'row', alignItems: 'center', gap: 4 }, ratingText: { color: colors.white, fontSize: 11, fontWeight: '800' }, bannerReason: { color: colors.ocean200, fontSize: 10 }, viewProfile: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.ocean500, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 8 }, viewProfileText: { color: colors.white, fontSize: 11, fontWeight: '900' },
+  articleFeature: { backgroundColor: colors.white, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.ocean200, overflow: 'hidden', ...shadow.soft }, pin: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.ocean700, paddingHorizontal: spacing.md, paddingVertical: 8 }, pinText: { fontSize: 9, color: colors.white, fontWeight: '900', letterSpacing: 0.7 }, articleBody: { padding: spacing.lg, gap: spacing.sm }, articleTopic: { color: colors.ocean600, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' }, articleTitle: { color: colors.ink, fontSize: 20, lineHeight: 27, fontWeight: '900' }, articleSummary: { color: colors.inkSoft, fontSize: 12, lineHeight: 19 }, articleFooter: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs }, articleAuthor: { flex: 1, color: colors.ink, fontSize: 11, fontWeight: '900' }, articleRole: { color: colors.muted, fontWeight: '500' },
+  feedHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm }, feedTitle: { fontSize: typography.h3, fontWeight: '900', color: colors.ink }, clear: { fontSize: 11, color: colors.ocean600, fontWeight: '800' }, empty: { backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.xl, alignItems: 'center', gap: spacing.sm }, emptyTitle: { color: colors.ink, fontWeight: '900' }, emptyText: { color: colors.muted, fontSize: 13, textAlign: 'center' },
 });

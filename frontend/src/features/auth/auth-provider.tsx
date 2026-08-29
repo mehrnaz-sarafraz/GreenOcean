@@ -2,6 +2,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useState } fro
 
 import { apiRequest } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/storage/token-storage';
+import { isMockMode } from '@/lib/data-mode';
 
 import { CurrentUser, LoginInput, RegisterInput, TokenResponse } from './types';
 
@@ -23,6 +24,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     async function restoreSession() {
+      if (isMockMode) {
+        setUser({ userId: 'demo-user', email: 'demo@greenocean.app', roles: ['USER'] });
+        setStatus('authenticated');
+        return;
+      }
       try {
         const tokens = await tokenStorage.get();
         if (!tokens) throw new Error('No session');
@@ -39,6 +45,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   async function signIn(input: LoginInput) {
+    if (isMockMode) {
+      setUser({ userId: 'demo-user', email: input.email || 'demo@greenocean.app', roles: ['USER'] });
+      setStatus('authenticated');
+      return;
+    }
     const tokens = await apiRequest<TokenResponse>('/api/v1/auth/login', {
       method: 'POST',
       authenticated: false,
@@ -51,6 +62,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function register(input: RegisterInput) {
+    if (isMockMode) {
+      setUser({ userId: 'demo-user', email: input.email, roles: ['USER'] });
+      setStatus('authenticated');
+      return;
+    }
     await apiRequest('/api/v1/auth/register', {
       method: 'POST',
       authenticated: false,
@@ -60,6 +76,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function signOut() {
+    if (isMockMode) {
+      setUser(null);
+      setStatus('unauthenticated');
+      return;
+    }
     const tokens = await tokenStorage.get();
     try {
       if (tokens?.refreshToken) {
