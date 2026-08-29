@@ -17,7 +17,7 @@ export default function RegisterScreen() {
   async function submit() {
     if (Object.values(form).some((value) => !value.trim())) return setError(t('requiredFields'));
     setLoading(true); setError('');
-    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase() }); router.replace('/(app)'); }
+    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase() }); router.replace('/(auth)/onboarding'); }
     catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
     finally { setLoading(false); }
   }
