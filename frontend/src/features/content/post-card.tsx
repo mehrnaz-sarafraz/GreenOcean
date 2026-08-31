@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { apiRequest } from '@/lib/api/client';
@@ -8,6 +8,7 @@ import { isMockMode } from '@/lib/data-mode';
 import { categories, MockPost } from '@/mocks/data';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, shadow, spacing } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
 import { PostItem } from './types';
 
 const categoryGroupNames = { EMOTION: 'EMOTION', CONDITION: 'CONDITION', LIFE_EXPERIENCE: 'LIFE EXPERIENCE' } as const;
@@ -18,12 +19,12 @@ function relativeTime(value: string) {
   const hours = Math.floor(minutes / 60); return `${hours}h`;
 }
 export function PostCard({ post: initialPost, elevated = true }: { post: PostItem | MockPost; elevated?: boolean }) {
-  const { t } = useLanguage(); const [post, setPost] = useState(initialPost as MockPost);
-  const [sensitiveRevealed, setSensitiveRevealed] = useState(!initialPost.contentWarning);
+  const { t } = useLanguage(); const { state, toggleList } = useProduct(); const [post, setPost] = useState({ ...initialPost, bookmarked: state.savedPosts.includes(initialPost.id) || initialPost.bookmarked } as MockPost);
+  const [sensitiveRevealed, setSensitiveRevealed] = useState(!initialPost.contentWarning || !state.safety.blurSensitive);
   const category = post.category ?? categories[0];
   const postType = post.postType ?? 'EXPERIENCE';
   async function toggleLike() { const next = !post.liked; setPost(c => ({ ...c, liked: next, likeCount: c.likeCount + (next ? 1 : -1) })); if (!isMockMode) try { await apiRequest(`/api/v1/posts/${post.id}/like`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, liked: !next, likeCount: c.likeCount + (next ? -1 : 1) })); } }
-  async function toggleBookmark() { const next = !post.bookmarked; setPost(c => ({ ...c, bookmarked: next })); if (!isMockMode) try { await apiRequest(`/api/v1/posts/${post.id}/bookmark`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, bookmarked: !next })); } }
+  async function toggleBookmark() { const next = !post.bookmarked; setPost(c => ({ ...c, bookmarked: next })); toggleList('savedPosts', post.id); if (!isMockMode) try { await apiRequest(`/api/v1/posts/${post.id}/bookmark`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, bookmarked: !next })); toggleList('savedPosts', post.id); } }
   const authorName = post.author?.displayName ?? t('anonymous');
   const openPost = () => router.push({ pathname: '/(app)/post/[id]', params: { id: post.id } });
   return <View style={[styles.card, elevated && shadow.soft]}>
@@ -47,8 +48,9 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
     </View>}</Pressable>}
     <View style={styles.actions}>
       <Pressable accessibilityRole="button" accessibilityLabel={post.liked ? 'Unlike post' : 'Like post'} accessibilityState={{ selected: post.liked }} onPress={e => { e.stopPropagation(); void toggleLike(); }} style={styles.action}><AppIcon name="favorite" filled={post.liked} size={22} color={post.liked ? colors.coral : colors.muted} /><Text style={[styles.actionText, post.liked && { color: colors.coral }]}>{post.likeCount}</Text></Pressable>
-      <View style={styles.action}><AppIcon name="chat_bubble" size={21} color={colors.muted} /><Text style={styles.actionText}>{post.commentCount}</Text></View>
-      <View style={styles.action}><AppIcon name="ios_share" size={22} color={colors.muted} /></View>
+      <Pressable accessibilityRole="button" accessibilityLabel="Open replies" onPress={openPost} style={styles.action}><AppIcon name="chat_bubble" size={21} color={colors.muted} /><Text style={styles.actionText}>{post.commentCount}</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Share post" onPress={() => void Share.share({ message: `${post.body}\n\nGreenOcean post: /post/${post.id}` })} style={styles.action}><AppIcon name="ios_share" size={22} color={colors.muted} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel="Report post" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'report', targetType: 'post', targetId: post.id } } as never)} style={styles.action}><AppIcon name="flag" size={21} color={colors.muted} /></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={post.bookmarked ? 'Remove bookmark' : 'Bookmark post'} accessibilityState={{ selected: post.bookmarked }} onPress={e => { e.stopPropagation(); void toggleBookmark(); }} style={[styles.action, styles.save]}><AppIcon name="bookmark" filled={post.bookmarked} size={22} color={post.bookmarked ? colors.ocean600 : colors.muted} /></Pressable>
     </View>
   </View>;

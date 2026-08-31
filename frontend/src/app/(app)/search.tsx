@@ -7,6 +7,7 @@ import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
 import { categories, mockCommunities, professionals, SupportCategoryGroup } from '@/mocks/data';
 import { professionalArticles } from '@/mocks/discovery';
+import { useProduct } from '@/features/product/product-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 const groups: { id: SupportCategoryGroup; title: string; subtitle: string }[] = [
@@ -16,7 +17,9 @@ const groups: { id: SupportCategoryGroup; title: string; subtitle: string }[] = 
 ];
 
 export default function ExploreScreen() {
+  const { state, patch } = useProduct();
   const [query, setQuery] = useState('');
+  const remember = () => { const value = query.trim(); if (value) patch('searchHistory', [value, ...state.searchHistory.filter(item => item.toLowerCase() !== value.toLowerCase())].slice(0, 12)); };
   const normalizedQuery = query.trim().toLowerCase();
   const visibleCategories = categories.filter(category => `${category.name} ${category.group}`.toLowerCase().includes(normalizedQuery));
   const visibleProfessionals = professionals.filter(professional => [professional.displayName, professional.title, professional.city, professional.country, professional.gender, ...professional.specialties, ...professional.languages].join(' ').toLowerCase().includes(normalizedQuery));
@@ -30,7 +33,7 @@ export default function ExploreScreen() {
     <Text style={styles.subtitle}>Find stories, professional knowledge, support spaces, and thoughtful things to watch.</Text>
     <View style={styles.search}>
       <AppIcon name="search" color={colors.muted} />
-      <TextInput accessibilityLabel="Search GreenOcean" value={query} onChangeText={setQuery} placeholder="Search topics, communities, or professionals" placeholderTextColor={colors.muted} style={styles.input} />
+      <TextInput accessibilityLabel="Search GreenOcean" value={query} onChangeText={setQuery} onSubmitEditing={remember} placeholder="Search topics, communities, or professionals" placeholderTextColor={colors.muted} style={styles.input} />
       {!!query && <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery('')} style={styles.clearButton}><AppIcon name="close" size={18} color={colors.muted} /></Pressable>}
     </View>
 
@@ -47,7 +50,7 @@ export default function ExploreScreen() {
       const groupCategories = visibleCategories.filter(category => category.group === group.id);
       return groupCategories.length > 0 && <View key={group.id} style={styles.groupBlock}>
         <Section title={group.title} subtitle={group.subtitle} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}</ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} onPress={() => router.push({ pathname: '/', params: { category: category.id } })} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}</ScrollView>
       </View>;
     })}
 
@@ -62,6 +65,7 @@ export default function ExploreScreen() {
     </>}
 
     {!hasResults && <View style={styles.empty}><View style={styles.emptyIcon}><AppIcon name="search_off" color={colors.ocean700} /></View><Text style={styles.emptyTitle}>No matches yet</Text><Text style={styles.emptyBody}>Try a broader topic, condition, city, language, or professional name.</Text><Pressable accessibilityRole="button" onPress={() => setQuery('')}><Text style={styles.emptyAction}>Clear search</Text></Pressable></View>}
+    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'search-history' } } as never)} style={styles.historyLink}><AppIcon name="history" size={17} color={colors.ocean600} /><Text style={styles.historyText}>Manage search history</Text></Pressable>
   </View></Screen>;
 }
 
@@ -78,6 +82,7 @@ const styles = StyleSheet.create({
   search: { height: 52, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md },
   input: { flex: 1, color: colors.ink, fontSize: 15, textAlign: 'left' },
   clearButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.foam, alignItems: 'center', justifyContent: 'center' },
+  historyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, padding: spacing.sm }, historyText: { color: colors.ocean700, fontSize: 10, fontWeight: '900' },
   hubGrid: { gap: spacing.sm },
   hub: { minHeight: 185, borderRadius: radius.xl, padding: spacing.lg, overflow: 'hidden' },
   hubIcon: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.ocean200, alignItems: 'center', justifyContent: 'center' },

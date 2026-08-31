@@ -52,6 +52,7 @@ export default function Welcome() {
           <AppButton label={t('signIn')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
           <Pressable accessibilityRole="button" accessibilityLabel="Explore the GreenOcean demo" onPress={() => router.replace('/(app)')}><Text style={styles.demo}>{t('exploreDemo')} →</Text></Pressable>
           <Text style={styles.safety}>{t('safetyNote')}</Text>
+          <View style={styles.infoLinks}><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'how-it-works' } } as never)}><Text style={styles.infoLink}>How it works</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'faq' } } as never)}><Text style={styles.infoLink}>FAQ</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'guidelines' } } as never)}><Text style={styles.infoLink}>Guidelines</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'privacy' } } as never)}><Text style={styles.infoLink}>Privacy</Text></Pressable></View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -84,6 +85,7 @@ const styles = StyleSheet.create({
   actions: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: spacing.sm },
   demo: { color: colors.ocean200, fontWeight: '800', textAlign: 'center', padding: spacing.sm },
   safety: { color: '#ffffff80', fontSize: 9, lineHeight: 14, textAlign: 'center' },
+  infoLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md }, infoLink: { color: colors.ocean200, fontSize: 9, fontWeight: '800' },
   orb1: { position: 'absolute', width: 350, height: 350, borderRadius: 175, backgroundColor: '#86D9C510', right: -100, top: 70 },
   orb2: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: '#F4B8600D', left: -100, bottom: 70 },
 });

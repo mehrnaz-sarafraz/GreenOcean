@@ -28,6 +28,7 @@ export default function LoginScreen() {
       <View style={styles.form}>
         <AppField label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
         <AppField label={t('password')} value={password} onChangeText={setPassword} secureTextEntry />
+        <Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'forgot-password' } } as never)}><Text style={styles.forgot}>Forgot password?</Text></Pressable>
         {!!error && <Text style={[styles.error, { textAlign: isRtl ? 'right' : 'left' }]}>{error}</Text>}
         <AppButton label={t('signIn')} loading={loading} onPress={submit} />
         <AppButton label={t('createAccount')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
@@ -35,4 +36,4 @@ export default function LoginScreen() {
     </Screen>
   );
 }
-const styles = StyleSheet.create({ content: { justifyContent: 'center', gap: spacing.md, maxWidth: 560, width: '100%', alignSelf: 'center' }, back: { color: colors.ocean700, fontSize: 25, fontWeight: '800' }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '900', marginTop: spacing.lg }, subtitle: { color: colors.muted, fontSize: 15, marginBottom: spacing.md }, form: { gap: spacing.md, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: spacing.lg }, error: { color: colors.danger } });
+const styles = StyleSheet.create({ content: { justifyContent: 'center', gap: spacing.md, maxWidth: 560, width: '100%', alignSelf: 'center' }, back: { color: colors.ocean700, fontSize: 25, fontWeight: '800' }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '900', marginTop: spacing.lg }, subtitle: { color: colors.muted, fontSize: 15, marginBottom: spacing.md }, form: { gap: spacing.md, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: spacing.lg }, forgot: { color: colors.ocean700, fontSize: 11, fontWeight: '800', textAlign: 'right' }, error: { color: colors.danger } });

@@ -5,19 +5,28 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppField } from '@/components/app-field';
 import { Screen } from '@/components/screen';
+import { AppIcon } from '@/components/app-icon';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, spacing } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
 
 export default function RegisterScreen() {
   const { register } = useAuth(); const { t, isRtl } = useLanguage();
+  const { update } = useProduct();
   const [form, setForm] = useState({ email: '', password: '', username: '', displayName: '', birthYear: '', countryCode: '', city: '' });
+  const [confirmPassword, setConfirmPassword] = useState(''); const [role, setRole] = useState<'MEMBER' | 'PROFESSIONAL'>('MEMBER'); const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
   const setField = (field: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [field]: value }));
   async function submit() {
     if (Object.values(form).some((value) => !value.trim())) return setError(t('requiredFields'));
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Enter a valid email address.');
+    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) return setError('Use at least 8 characters with a letter and a number.');
+    if (form.password !== confirmPassword) return setError('Passwords do not match.');
+    if (Number(form.birthYear) < 1900 || new Date().getFullYear() - Number(form.birthYear) < 16) return setError('You must be at least 16 to create this demo account.');
+    if (!agreed) return setError('Accept the Terms, Privacy Policy, and Community Guidelines.');
     setLoading(true); setError('');
-    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase() }); router.replace('/(auth)/onboarding'); }
+    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase() }); update(current => ({ ...current, onboarding: { ...current.onboarding, role }, profile: { ...current.profile, displayName: form.displayName, username: form.username, city: form.city, country: form.countryCode.toUpperCase() } })); router.replace('/(auth)/onboarding'); }
     catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
     finally { setLoading(false); }
   }
@@ -29,11 +38,16 @@ export default function RegisterScreen() {
       <View style={styles.form}>
         <AppField label={t('email')} value={form.email} onChangeText={setField('email')} autoCapitalize="none" keyboardType="email-address" />
         <AppField label={t('password')} value={form.password} onChangeText={setField('password')} secureTextEntry />
+        <Text style={styles.hint}>At least 8 characters, including a letter and number.</Text>
+        <AppField label="Confirm password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
         <AppField label={t('username')} value={form.username} onChangeText={setField('username')} autoCapitalize="none" />
         <AppField label={t('displayName')} value={form.displayName} onChangeText={setField('displayName')} />
         <AppField label={t('birthYear')} value={form.birthYear} onChangeText={setField('birthYear')} keyboardType="number-pad" />
         <AppField label={t('countryCode')} value={form.countryCode} onChangeText={setField('countryCode')} autoCapitalize="characters" maxLength={2} />
         <AppField label={t('city')} value={form.city} onChangeText={setField('city')} />
+        <Text style={styles.choiceLabel}>I am joining as</Text><View style={styles.choices}>{(['MEMBER','PROFESSIONAL'] as const).map(item => <Pressable key={item} onPress={() => setRole(item)} style={[styles.choice, role === item && styles.choiceActive]}><Text style={[styles.choiceText, role === item && styles.choiceTextActive]}>{item === 'MEMBER' ? 'Community member' : 'Mental-health professional'}</Text></Pressable>)}</View>
+        {role === 'PROFESSIONAL' && <Text style={styles.hint}>Professional tools stay locked until identity, education, and license verification are complete.</Text>}
+        <Pressable onPress={() => setAgreed(value => !value)} style={styles.terms}><AppIcon name={agreed ? 'check_box' : 'check_box_outline_blank'} filled={agreed} color={colors.ocean600} /><Text style={styles.termsText}>I accept the Terms, Privacy Policy, and Community Guidelines.</Text></Pressable>
         {!!error && <Text style={[styles.error, { textAlign: isRtl ? 'right' : 'left' }]}>{error}</Text>}
         <AppButton label={t('createAccount')} loading={loading} onPress={submit} />
         <AppButton label={t('signIn')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
@@ -41,4 +55,4 @@ export default function RegisterScreen() {
     </Screen>
   );
 }
-const styles = StyleSheet.create({ content: { gap: spacing.md, paddingTop: spacing.xl, maxWidth: 560, width: '100%', alignSelf: 'center' }, back: { color: colors.ocean700, fontSize: 25, fontWeight: '800' }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '900', marginTop: spacing.md }, subtitle: { color: colors.muted, fontSize: 15, marginBottom: spacing.md }, form: { gap: spacing.md, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: spacing.lg }, error: { color: colors.danger } });
+const styles = StyleSheet.create({ content: { gap: spacing.md, paddingTop: spacing.xl, maxWidth: 560, width: '100%', alignSelf: 'center' }, back: { color: colors.ocean700, fontSize: 25, fontWeight: '800' }, title: { color: colors.ocean900, fontSize: 34, fontWeight: '900', marginTop: spacing.md }, subtitle: { color: colors.muted, fontSize: 15, marginBottom: spacing.md }, form: { gap: spacing.md, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: spacing.lg }, error: { color: colors.danger }, hint: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: -8 }, choiceLabel: { color: colors.ink, fontSize: 11, fontWeight: '900' }, choices: { flexDirection: 'row', gap: spacing.sm }, choice: { flex: 1, padding: spacing.md, borderRadius: 16, borderWidth: 1, borderColor: colors.border }, choiceActive: { backgroundColor: colors.ocean900, borderColor: colors.ocean900 }, choiceText: { color: colors.muted, fontSize: 10, textAlign: 'center', fontWeight: '800' }, choiceTextActive: { color: colors.white }, terms: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, termsText: { flex: 1, color: colors.inkSoft, fontSize: 10, lineHeight: 15 } });

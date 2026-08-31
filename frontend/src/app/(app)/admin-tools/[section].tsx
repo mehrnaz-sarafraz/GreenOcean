@@ -1,0 +1,81 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppButton } from '@/components/app-button';
+import { AppIcon } from '@/components/app-icon';
+import { ActionRow, EmptyState, Notice, Pill, ProductCard, ProductHeader, ProductPage, ProductSection } from '@/components/product-ui';
+import { useAuth } from '@/features/auth/auth-provider';
+import { adminReports, verificationQueue } from '@/mocks/operations';
+import { colors, radius, spacing } from '@/theme/tokens';
+
+const copy: Record<string, [string,string]> = {
+  'report-detail': ['Report investigation','Evidence, context, enforcement, outreach, and audit trail.'],
+  'verification-detail': ['Credential investigation','Review identity, education, license, sanctions, and scope.'],
+  appeals: ['Moderation appeals','Re-review enforcement decisions with a separate decision record.'],
+  campaigns: ['Professional campaigns','Labelled placement with budget, schedule, eligibility, and performance.'],
+  communities: ['Community operations','Health, moderator capacity, events, and incident trends.'],
+  listeners: ['Listener operations','Applications, training, supervision, quality, and safeguarding.'],
+  notifications: ['Operations notifications','Send targeted safety, service, and editorial notices.'],
+  exports: ['Reports & exports','Create privacy-aware operational datasets and scheduled reports.'],
+  policies: ['Policy & taxonomy','Versioned rules, report reasons, categories, and review dates.'],
+};
+
+export default function AdminTool() {
+  const { user } = useAuth(); const params = useLocalSearchParams<{ section?: string; id?: string }>(); const screen = String(params.section || '');
+  if (!user?.roles.includes('ADMIN')) return <ProductPage><ProductHeader title="Admin access required" subtitle="This area is restricted to authorized trust and safety staff." /><Notice tone="warning" title="Role protected" body="Production authorization must be enforced by the server for every admin request." /></ProductPage>;
+  if (!copy[screen]) return <ProductPage><ProductHeader title="Admin page not found" subtitle="This operations route is unavailable." /></ProductPage>;
+  return <ProductPage wide><ProductHeader eyebrow="GREENOCEAN OPERATIONS" title={copy[screen][0]} subtitle={copy[screen][1]} /><AdminNav active={screen} />{screen === 'report-detail' && <ReportDetail id={String(params.id || adminReports[0].id)} />}{screen === 'verification-detail' && <VerificationDetail id={String(params.id || verificationQueue[0].id)} />}{screen === 'appeals' && <Appeals />}{screen === 'campaigns' && <Campaigns />}{screen === 'communities' && <CommunityOps />}{screen === 'listeners' && <ListenerOps />}{screen === 'notifications' && <NotificationComposer />}{screen === 'exports' && <Exports />}{screen === 'policies' && <Policies />}</ProductPage>;
+}
+
+function AdminNav({ active }: { active: string }) { const items = [['appeals','Appeals'],['campaigns','Campaigns'],['communities','Communities'],['listeners','Listeners'],['notifications','Notices'],['exports','Exports'],['policies','Policies']] as const; return <View style={styles.wrap}><Pill label="Dashboard" onPress={() => router.push('/admin')} />{items.map(([section,label]) => <Pill key={section} label={label} active={active === section} onPress={() => router.replace({ pathname: '/admin-tools/[section]' as never, params: { section } } as never)} />)}</View>; }
+
+function ReportDetail({ id }: { id: string }) {
+  const report = adminReports.find(item => item.id === id) || adminReports[0]; const [status, setStatus] = useState(report.status); const [note, setNote] = useState(''); const [history, setHistory] = useState<string[]>([]);
+  const act = (label: string, next = 'RESOLVED') => { setStatus(next as typeof status); setHistory(current => [`${new Date().toLocaleTimeString()} · ${label}${note ? ` · ${note}` : ''}`, ...current]); setNote(''); };
+  return <><Notice tone={report.severity === 'CRITICAL' ? 'warning' : 'ocean'} title={`${report.severity} · ${report.reason}`} body={`${report.id} · ${report.targetType} · ${report.createdAt}`} /><ProductCard><Text style={styles.title}>Reported context</Text><Text style={styles.body}>{report.summary}</Text><View style={styles.wrap}>{report.signals.map(signal => <Pill key={signal} label={signal} />)}</View><View style={styles.grid}><Metric label="Reported account" value={`@${report.reportedUser}`} /><Metric label="Reporter" value={report.reporter} /><Metric label="Category" value={report.category} /><Metric label="Current status" value={status} /></View></ProductCard><ProductSection title="Investigation"><ProductCard><Field label="Internal decision note" value={note} onChangeText={setNote} multiline /><View style={styles.wrap}><Pill label="Keep content" onPress={() => act('Content approved')} /><Pill label="Remove content" active onPress={() => act('Content removed')} /><Pill label="Restrict account" onPress={() => act('Account restricted')} /><Pill label="Safety outreach" onPress={() => act('Safety outreach queued', 'REVIEWING')} /><Pill label="Escalate" onPress={() => act('Escalated to senior reviewer', 'REVIEWING')} /></View></ProductCard></ProductSection><ProductSection title="Audit trail">{history.length ? history.map(item => <ActionRow key={item} icon="history" title={item} />) : <EmptyState icon="history" title="No new actions" body="Every decision, reason, actor, and before/after state will be recorded here." />}</ProductSection></>;
+}
+
+function VerificationDetail({ id }: { id: string }) {
+  const item = verificationQueue.find(entry => entry.id === id) || verificationQueue[0]; const [checks, setChecks] = useState({ identity: false, education: false, license: false, sanctions: false, scope: false }); const [decision, setDecision] = useState(''); const ready = Object.values(checks).every(Boolean);
+  const labels = { identity:'Identity matches application', education:'Degree confirmed with institution', license:'License active with issuing authority', sanctions:'Sanctions / standing checked', scope:'Country and scope are supported' };
+  return <><ProductCard tone="soft"><Text style={styles.title}>{item.name}</Text><Text style={styles.body}>{item.profession} · {item.country} · submitted {item.submitted}</Text><Text style={styles.meta}>{item.id} · {item.documents} documents</Text></ProductCard>{Object.entries(labels).map(([key,label]) => <Pressable key={key} onPress={() => setChecks(current => ({ ...current, [key]: !current[key as keyof typeof current] }))} style={styles.check}><AppIcon name={checks[key as keyof typeof checks] ? 'check_box' : 'check_box_outline_blank'} filled={checks[key as keyof typeof checks]} color={colors.ocean600} /><Text style={styles.body}>{label}</Text></Pressable>)}<ProductCard><Text style={styles.title}>Decision</Text><View style={styles.wrap}><Pill label="Approve" active={decision === 'APPROVED'} onPress={() => ready && setDecision('APPROVED')} /><Pill label="Request information" active={decision === 'MORE_INFO'} onPress={() => setDecision('MORE_INFO')} /><Pill label="Reject" active={decision === 'REJECTED'} onPress={() => setDecision('REJECTED')} /></View>{!ready && <Text style={styles.error}>Approval is disabled until every verification check is complete.</Text>}{!!decision && <Notice title="Decision recorded" body={`${decision}. A production workflow will notify the applicant and write an immutable audit event.`} />}</ProductCard></>;
+}
+
+function Appeals() {
+  const [items, setItems] = useState([{ id:'AP-2041', account:'@quiet.river', decision:'Post removed', reason:'Context was misunderstood', age:'22m', status:'OPEN' },{ id:'AP-2038', account:'@northwind88', decision:'7-day restriction', reason:'Requests a second review', age:'2h', status:'OPEN' }]);
+  return <>{items.map(item => <ProductCard key={item.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.title}>{item.id} · {item.account}</Text><Text style={styles.body}>{item.decision} · {item.reason}</Text><Text style={styles.meta}>{item.age} · {item.status}</Text></View><View style={styles.wrap}><Pill label="Uphold" onPress={() => setItems(current => current.map(x => x.id === item.id ? { ...x, status:'UPHELD' } : x))} /><Pill label="Reverse" active onPress={() => setItems(current => current.map(x => x.id === item.id ? { ...x, status:'REVERSED' } : x))} /></View></View></ProductCard>)}</>;
+}
+
+function Campaigns() {
+  const [active, setActive] = useState<string[]>(['CMP-92']); const campaigns = [{ id:'CMP-92', name:'Dr. Maya · Relationships', detail:'Aug 28–Sep 4 · $320 · 18.4k impressions' },{ id:'CMP-93', name:'Dr. Daniel · Sleep', detail:'Sep 2–Sep 9 · $280 · scheduled' }];
+  return <><Notice title="Advertising integrity" body="Sponsored placement is always labelled, does not alter GreenOcean Score, and requires current verification and geographic eligibility." />{campaigns.map(item => <ProductCard key={item.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.title}>{item.name}</Text><Text style={styles.body}>{item.id} · {item.detail}</Text></View><Pill label={active.includes(item.id) ? 'Active' : 'Paused'} active={active.includes(item.id)} onPress={() => setActive(current => current.includes(item.id) ? current.filter(id => id !== item.id) : [...current,item.id])} /></View></ProductCard>)}<ActionRow icon="add" title="Create labelled campaign" subtitle="Audience, location, schedule, creative, budget, and review" onPress={() => setActive(current => [...current, `CMP-${94 + current.length}`])} /></>;
+}
+
+function CommunityOps() {
+  const communities = [{ name:'Better Sleep', members:'12.4k', health:'Healthy', reports:'1.9 / 1k posts' },{ name:'Living with Anxiety', members:'8.7k', health:'Watch', reports:'3.8 / 1k posts' },{ name:'Parents’ Private Circle', members:'940', health:'Moderator gap', reports:'4.1 / 1k posts' }];
+  return <><View style={styles.grid}><Metric label="Active communities" value="84" /><Metric label="Moderator coverage" value="93%" /><Metric label="Events this week" value="26" /><Metric label="Open incidents" value="11" /></View>{communities.map(item => <ProductCard key={item.name}><View style={styles.between}><View style={styles.flex}><Text style={styles.title}>{item.name}</Text><Text style={styles.body}>{item.members} members · {item.reports}</Text></View><Pill label={item.health} active={item.health === 'Healthy'} /></View></ProductCard>)}</>;
+}
+
+function ListenerOps() {
+  const [approved, setApproved] = useState<string[]>([]); const queue = [{ id:'L-441', name:'Samira N.', progress:'5/5 modules · practice passed' },{ id:'L-442', name:'Evan R.', progress:'4/5 modules · needs safety practice' },{ id:'L-443', name:'Mina K.', progress:'5/5 modules · supervisor review' }];
+  return <><View style={styles.grid}><Metric label="Listeners online" value="18" /><Metric label="Median match" value="1m 42s" /><Metric label="Supervision due" value="7" /><Metric label="Quality alerts" value="2" /></View>{queue.map(item => <ProductCard key={item.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.title}>{item.name}</Text><Text style={styles.body}>{item.id} · {item.progress}</Text></View><Pill label={approved.includes(item.id) ? 'Approved' : 'Review'} active={approved.includes(item.id)} onPress={() => setApproved(current => [...current, item.id])} /></View></ProductCard>)}</>;
+}
+
+function NotificationComposer() {
+  const [audience, setAudience] = useState('All members'); const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [sent, setSent] = useState(false);
+  return <><Notice title="Least necessary reach" body="Use targeted operational notices. Marketing consent, localization, quiet hours, and delivery preferences must be respected." /><ProductCard><Text style={styles.label}>Audience</Text><View style={styles.wrap}>{['All members','Professionals','Listeners','Community moderators'].map(item => <Pill key={item} label={item} active={audience === item} onPress={() => setAudience(item)} />)}</View><Field label="Notification title" value={title} onChangeText={setTitle} /><Field label="Message" value={body} onChangeText={setBody} multiline /><AppButton label="Review and send" onPress={() => title.trim() && body.trim() && setSent(true)} /></ProductCard>{sent && <Notice title="Demo delivery created" body={`Queued for ${audience}. Production requires a second confirmation and delivery audit.`} />}</>;
+}
+
+function Exports() {
+  const [ready, setReady] = useState<string[]>([]); const reports = ['Trust & safety weekly','Community health','Professional verification SLA','Listener quality & supervision','Campaign transparency'];
+  return <>{reports.map(name => <ActionRow key={name} icon="table_view" title={name} subtitle="Aggregated, privacy-minimized CSV and PDF" value={ready.includes(name) ? 'Ready' : 'Generate'} onPress={() => setReady(current => [...current,name])} />)}<Notice title="Export controls" body="Production exports require role checks, purpose limitation, row-level redaction, watermarking, expiry, and an audit event." /></>;
+}
+
+function Policies() {
+  const [version, setVersion] = useState(12); const [draft, setDraft] = useState(false); const items = [{ title:'Community guidelines', detail:`v${version} · reviewed Aug 2026` },{ title:'Professional boundaries', detail:'v8 · reviewed Aug 2026' },{ title:'Listener code of conduct', detail:'v6 · reviewed Jul 2026' },{ title:'Report reason taxonomy', detail:'v14 · reviewed Aug 2026' },{ title:'Content category taxonomy', detail:'v9 · reviewed Aug 2026' }];
+  return <>{items.map(item => <ActionRow key={item.title} icon="policy" title={item.title} subtitle={item.detail} onPress={() => setDraft(true)} />)}{draft && <ProductCard><Text style={styles.title}>Policy change draft</Text><Text style={styles.body}>Changes require legal, clinical, trust & safety, localization, and accessibility review before publication.</Text><AppButton label="Publish reviewed version" onPress={() => { setVersion(current => current + 1); setDraft(false); }} /></ProductCard>}</>;
+}
+
+function Metric({ label, value }: { label: string; value: string }) { return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
+function Field({ label, value, onChangeText, multiline }: { label: string; value: string; onChangeText: (value: string) => void; multiline?: boolean }) { return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput value={value} onChangeText={onChangeText} multiline={multiline} style={[styles.input, multiline && styles.multiline]} /></View>; }
+const styles = StyleSheet.create({ flex: { flex: 1 }, wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }, title: { color: colors.ink, fontSize: 13, fontWeight: '900' }, body: { color: colors.inkSoft, fontSize: 10, lineHeight: 17 }, meta: { color: colors.muted, fontSize: 9, lineHeight: 14 }, metric: { flexGrow: 1, minWidth: 145, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md }, metricLabel: { color: colors.muted, fontSize: 9, fontWeight: '800' }, metricValue: { color: colors.ink, fontSize: 20, fontWeight: '900', marginTop: 4 }, check: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white, borderRadius: radius.md, padding: spacing.md }, error: { color: colors.danger, fontSize: 10, fontWeight: '800' }, label: { color: colors.ink, fontSize: 11, fontWeight: '900' }, field: { gap: 6 }, input: { minHeight: 48, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.md, backgroundColor: colors.white, paddingHorizontal: spacing.md, color: colors.ink, textAlign: 'left', writingDirection: 'ltr' }, multiline: { minHeight: 112, paddingTop: spacing.md, textAlignVertical: 'top' } });

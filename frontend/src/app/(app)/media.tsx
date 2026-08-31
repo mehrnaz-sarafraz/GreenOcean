@@ -6,20 +6,22 @@ import { AppIcon } from '@/components/app-icon';
 import { Screen } from '@/components/screen';
 import { mediaPicks, MediaPick } from '@/mocks/discovery';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
 
 const filters = ['ALL', 'MOVIE', 'SERIES', 'DOCUMENTARY'] as const;
 
 export default function MediaGuide() {
+  const { state, toggleList } = useProduct();
   const [filter, setFilter] = useState<(typeof filters)[number]>('ALL');
-  const [saved, setSaved] = useState<string[]>([]);
+  const saved = state.savedMedia;
   const shown = useMemo(() => mediaPicks.filter(item => filter === 'ALL' || item.kind === filter), [filter]);
   const featured = mediaPicks[0];
-  function toggleSaved(id: string) { setSaved(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]); }
+  function toggleSaved(id: string) { toggleList('savedMedia', id); }
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.topIcon}><AppIcon name="bookmark" color={colors.lavender} /></View></View>
     <View><Text style={styles.eyebrow}>WATCH · REFLECT · DISCUSS</Text><Text style={styles.title}>Psychology on screen</Text><Text style={styles.subtitle}>Movies, series, and documentaries selected as conversation starters—not as diagnostic or treatment resources.</Text></View>
 
-    <Pressable style={styles.hero}>
+    <Pressable onPress={() => toggleSaved(featured.id)} style={styles.hero}>
       <LinearGradient colors={['#2D2352', '#6B4F8D', '#F27D69']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroGradient}>
         <View style={styles.editorPick}><AppIcon name="stars" filled size={15} color={colors.sun} /><Text style={styles.editorPickText}>EDITOR&apos;S CONVERSATION PICK</Text></View>
         <View style={styles.heroArt}><View style={[styles.emotionOrb, { backgroundColor: '#F4B860', left: 10, top: 24 }]} /><View style={[styles.emotionOrb, { backgroundColor: '#5B9BD5', left: 55, top: 8 }]} /><View style={[styles.emotionOrb, { backgroundColor: '#F27D69', left: 95, top: 39 }]} /><AppIcon name="movie" size={60} color="#ffffff44" /></View>

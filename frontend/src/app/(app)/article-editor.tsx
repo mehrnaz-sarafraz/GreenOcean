@@ -6,20 +6,26 @@ import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
+import { useAuth } from '@/features/auth/auth-provider';
+import { Notice } from '@/components/product-ui';
 
 const topics = ['Anxiety', 'Depression', 'Sleep', 'Relationships', 'Trauma', 'ADHD'];
 
 export default function ArticleEditor() {
-  const [topic, setTopic] = useState('Anxiety');
-  const [title, setTitle] = useState('');
-  const [summary, setSummary] = useState('');
-  const [body, setBody] = useState('');
-  const [references, setReferences] = useState('');
-  const [pinned, setPinned] = useState(true);
+  const { state, patch } = useProduct(); const { user } = useAuth(); const draft = state.articleDraft;
+  const [topic, setTopic] = useState(draft?.topic || 'Anxiety');
+  const [title, setTitle] = useState(draft?.title || '');
+  const [summary, setSummary] = useState(draft?.summary || '');
+  const [body, setBody] = useState(draft?.body || '');
+  const [references, setReferences] = useState(draft?.references || '');
+  const [pinned, setPinned] = useState(draft?.pinned ?? true);
   const [error, setError] = useState('');
-  function publish() { if (!title.trim() || !summary.trim() || !body.trim()) { setError('Add a title, summary, and article body before publishing.'); return; } router.replace('/articles'); }
+  function saveDraft() { patch('articleDraft', { title, summary, body, references, topic, pinned }); setError('Draft saved on this device.'); }
+  function publish() { if (!title.trim() || !summary.trim() || !body.trim() || references.trim().length < 10) { setError('Add a title, summary, article body, and at least one source before submitting.'); return; } patch('submittedArticles', [{ id: `submitted-${Date.now()}`, title: title.trim(), summary: summary.trim(), body: body.trim(), references: references.trim(), topic, pinned, status: 'IN_REVIEW', createdAt: new Date().toISOString() }, ...state.submittedArticles]); patch('articleDraft', null); router.replace('/articles'); }
+  if (!user?.roles.includes('PROFESSIONAL')) return <Screen scroll style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Notice tone="warning" title="Verified professionals only" body="Apply and complete credential verification before accessing professional publishing tools." /><AppButton label="Start professional application" onPress={() => router.replace({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never)} /></View></Screen>;
   return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="close" color={colors.ocean700} /></Pressable><View style={{ alignItems: 'center' }}><Text style={styles.title}>Professional article studio</Text><Text style={styles.subtitle}>Educational content by verified professionals</Text></View><Pressable style={styles.draft}><Text style={styles.draftText}>Save draft</Text></Pressable></View>
+    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="close" color={colors.ocean700} /></Pressable><View style={{ alignItems: 'center' }}><Text style={styles.title}>Professional article studio</Text><Text style={styles.subtitle}>Educational content by verified professionals</Text></View><Pressable onPress={saveDraft} style={styles.draft}><Text style={styles.draftText}>Save draft</Text></Pressable></View>
     <View style={styles.author}><Avatar name="Dr. Maya Bennett" size={48} verified /><View style={{ flex: 1 }}><Text style={styles.authorName}>Dr. Maya Bennett</Text><Text style={styles.authorMeta}>Clinical Psychologist · Verified author</Text></View><View style={styles.score}><Text style={styles.scoreValue}>96</Text><Text style={styles.scoreLabel}>SCORE</Text></View></View>
     <View style={styles.notice}><AppIcon name="science" color={colors.ocean600} /><View style={{ flex: 1 }}><Text style={styles.noticeTitle}>Professional publishing standards</Text><Text style={styles.noticeText}>Use clear sources, separate education from personal medical advice, and include content notes where needed. Articles enter editorial review before publication.</Text></View></View>
     <FieldLabel step="1" title="Article topic" required /><View style={styles.topics}>{topics.map(item => <Pressable key={item} onPress={() => setTopic(item)} style={[styles.topic, topic === item && styles.topicActive]}><Text style={[styles.topicText, topic === item && styles.topicTextActive]}>{item}</Text></Pressable>)}</View>

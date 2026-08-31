@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { PostCard } from '@/features/content/post-card';
 import { useLanguage } from '@/localization/language-provider';
 import { categories, mockPosts, Professional, professionals } from '@/mocks/data';
 import { professionalArticles } from '@/mocks/discovery';
+import { useProduct } from '@/features/product/product-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 const featuredCategories = [
@@ -27,10 +28,12 @@ const checkInOptions = [
 
 export default function FeedScreen() {
   const { t } = useLanguage();
+  const params = useLocalSearchParams<{ category?: string }>(); const { state, patch } = useProduct();
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
-  const [categoryId, setCategoryId] = useState('all');
+  const [categoryId, setCategoryId] = useState(params.category || 'all');
   const [checkIn, setCheckIn] = useState('');
-  const shown = useMemo(() => mockPosts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.categoryId === categoryId)), [tab, categoryId]);
+  const allPosts = useMemo(() => [...state.posts.map(local => ({ id: local.id, author: local.anonymous ? null : { userId: 'demo-user', username: state.profile.username, displayName: state.profile.displayName, avatarUrl: null }, communityId: local.communitySlug || null, body: local.body, anonymous: local.anonymous, visibility: local.audience, contentWarning: local.contentWarning || null, likeCount: 0, commentCount: state.comments.filter(item => item.postId === local.id).length, liked: false, bookmarked: state.savedPosts.includes(local.id), createdAt: local.createdAt, mood: local.mood, categoryId: local.categoryId, category: categories.find(item => item.id === local.categoryId) || categories[0], postType: local.postType, professionalReply: undefined })), ...mockPosts], [state]);
+  const shown = useMemo(() => allPosts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (tab !== 'following' || (!!post.author && state.followingUsernames.includes(post.author.username))) && (categoryId === 'all' || post.categoryId === categoryId)), [allPosts, tab, categoryId, state.followingUsernames]);
   const pinnedArticle = professionalArticles.find(article => article.pinned)!;
   const articleAuthor = professionals.find(professional => professional.id === pinnedArticle.authorId)!;
 
@@ -42,7 +45,7 @@ export default function FeedScreen() {
 
     <Pressable accessibilityRole="button" accessibilityLabel="Talk privately with a trained listener" onPress={() => router.push('/support')} style={styles.supportStrip}><View style={styles.supportIcon}><AppIcon name="hearing" color={colors.ocean800} /></View><View style={{ flex: 1 }}><Text style={styles.supportLabel}>NEED SOMEONE RIGHT NOW?</Text><Text style={styles.supportTitle}>Talk privately with a trained listener</Text><Text style={styles.supportMeta}>18 listeners online · Usually under 2 minutes</Text></View><View style={styles.supportAction}><Text style={styles.supportActionText}>Talk now</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></Pressable>
 
-    <View style={styles.checkIn}><View style={styles.checkInHead}><View><Text style={styles.checkInTitle}>How are you, really?</Text><Text style={styles.checkInText}>{checkIn ? 'Thanks for checking in. Your feed will adapt gently.' : 'A private check-in for better recommendations.'}</Text></View>{!!checkIn && <AppIcon name="check_circle" filled color={colors.ocean500} />}</View><View style={styles.checkInOptions}>{checkInOptions.map(option => <Pressable key={option.id} accessibilityRole="radio" accessibilityLabel={`Feeling ${option.label}`} accessibilityState={{ checked: checkIn === option.id }} onPress={() => setCheckIn(option.id)} style={[styles.checkInOption, checkIn === option.id && { backgroundColor: option.color, borderColor: option.color }]}><AppIcon name={option.icon} size={21} color={checkIn === option.id ? colors.white : option.color} /><Text style={[styles.checkInLabel, checkIn === option.id && { color: colors.white }]}>{option.label}</Text></Pressable>)}</View></View>
+    <View style={styles.checkIn}><View style={styles.checkInHead}><View><Text style={styles.checkInTitle}>How are you, really?</Text><Text style={styles.checkInText}>{checkIn ? 'Thanks for checking in. Your feed will adapt gently.' : 'A private check-in for better recommendations.'}</Text></View>{!!checkIn && <AppIcon name="check_circle" filled color={colors.ocean500} />}</View><View style={styles.checkInOptions}>{checkInOptions.map(option => <Pressable key={option.id} accessibilityRole="radio" accessibilityLabel={`Feeling ${option.label}`} accessibilityState={{ checked: checkIn === option.id }} onPress={() => { setCheckIn(option.id); patch('checkIns', [{ id: `feed-${Date.now()}`, mood: option.label, note: 'Feed check-in', createdAt: new Date().toISOString() }, ...state.checkIns]); }} style={[styles.checkInOption, checkIn === option.id && { backgroundColor: option.color, borderColor: option.color }]}><AppIcon name={option.icon} size={21} color={checkIn === option.id ? colors.white : option.color} /><Text style={[styles.checkInLabel, checkIn === option.id && { color: colors.white }]}>{option.label}</Text></Pressable>)}</View></View>
 
     <Pressable accessibilityRole="button" accessibilityLabel="Create a new post" onPress={() => router.push('/create')} style={styles.composer}><Avatar name="Taylor" size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
 
@@ -60,6 +63,7 @@ export default function FeedScreen() {
   const footer = <View style={styles.footerContent}>
     <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>CONTINUE EXPLORING</Text><Text style={styles.sectionTitle}>Knowledge, culture & professional support</Text></View></View>
     <View style={styles.discoveryGrid}>
+      <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'wellbeing' } } as never)} style={[styles.discoveryCard, styles.knowledgeCard]}><View style={styles.discoveryIcon}><AppIcon name="self_improvement" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.discoveryLabel}>WELLBEING TOOLS</Text><Text style={styles.discoveryTitle}>Check-ins, goals, journal & guided paths</Text></View><AppIcon name="arrow_forward" color={colors.ocean700} /></Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/articles')} style={[styles.discoveryCard, styles.knowledgeCard]}><View style={styles.discoveryIcon}><AppIcon name="science" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.discoveryLabel}>KNOWLEDGE HUB</Text><Text style={styles.discoveryTitle}>Articles by verified professionals</Text></View><AppIcon name="arrow_forward" color={colors.ocean700} /></Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/media')} style={[styles.discoveryCard, styles.watchCard]}><View style={[styles.discoveryIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="movie" color={colors.lavender} /></View><View style={{ flex: 1 }}><Text style={[styles.discoveryLabel, { color: colors.lavender }]}>WATCH & REFLECT</Text><Text style={styles.discoveryTitle}>Psychology movies & series</Text></View><AppIcon name="arrow_forward" color={colors.lavender} /></Pressable>
     </View>

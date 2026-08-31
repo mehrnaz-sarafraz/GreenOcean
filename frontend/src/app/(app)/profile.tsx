@@ -9,28 +9,32 @@ import { useLanguage } from '@/localization/language-provider';
 import { mockPosts, Professional, professionals } from '@/mocks/data';
 import { professionalArticles } from '@/mocks/discovery';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
+import { useAuth } from '@/features/auth/auth-provider';
 
 export default function ProfileScreen() {
   const { professional } = useLocalSearchParams<{ professional?: string }>();
   const { t } = useLanguage();
+  const { state } = useProduct(); const { user } = useAuth();
   const selectedProfessional = professionals.find(item => item.id === professional);
   if (selectedProfessional) return <ProfessionalProfile professional={selectedProfessional} />;
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.cover}><View style={styles.orb} /><View style={styles.coverMark}><AppIcon name="waves" size={42} color="#ffffff18" /></View></View>
-    <View style={styles.identity}><Avatar name="Taylor" size={86} /><AppButton label={t('editProfile')} variant="secondary" onPress={() => {}} /></View>
-    <Text style={styles.name}>Taylor Morgan</Text><Text style={styles.handle}>@taylor.m · Portland</Text>
-    <Text style={styles.bio}>Learning to meet myself with a little more patience, one day at a time.</Text>
+    <View style={styles.identity}><Avatar name={state.profile.displayName} size={86} /><AppButton label={t('editProfile')} variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'profile-edit' } } as never)} /></View>
+    <Text style={styles.name}>{state.profile.displayName}</Text><Text style={styles.handle}>@{state.profile.username} · {state.profile.city}</Text>
+    <Text style={styles.bio}>{state.profile.bio}</Text>
     <View style={styles.badges}><View style={styles.badge}><AppIcon name="favorite" size={16} color={colors.coral} /><Text style={styles.badgeText}>Supportive voice</Text></View><View style={styles.badge}><AppIcon name="calendar_month" size={16} color={colors.ocean600} /><Text style={styles.badgeText}>Member since 2026</Text></View></View>
-    <View style={styles.counts}><Count value="128" label={t('followers')} /><Count value="84" label={t('following')} /><Count value="24" label={t('stories')} /><Count value="486" label="Helpful reactions" /></View>
-    <View style={styles.profileTabs}>{[t('stories'), t('saved'), t('about')].map((item, index) => <Text key={item} style={[styles.profileTab, index === 0 && styles.profileTabActive]}>{item}</Text>)}</View>
+    <Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'followers' } } as never)} style={styles.counts}><Count value="128" label={t('followers')} /><Count value={String(state.followingUsernames.length + state.followedProfessionals.length)} label={t('following')} /><Count value={String(24 + state.posts.length)} label={t('stories')} /><Count value="486" label="Helpful reactions" /></Pressable>
+    <View style={styles.profileTabs}><Text style={[styles.profileTab, styles.profileTabActive]}>{t('stories')}</Text><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'saved' } } as never)}><Text style={styles.profileTab}>{t('saved')}</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'profile-edit' } } as never)}><Text style={styles.profileTab}>{t('about')}</Text></Pressable></View>
     <Text style={styles.sectionTitle}>Recent stories</Text>{mockPosts.slice(2, 4).map(post => <PostCard key={post.id} post={{ ...post, author: { userId: 'demo-user', username: 'taylor.m', displayName: 'Taylor Morgan', avatarUrl: null } }} />)}
-    <Text style={styles.sectionTitle}>Profile details</Text><View style={styles.infoCard}><Info icon="location_on" title="Location" text="Portland, United States" /><Info icon="language" title="Languages" text="English · Spanish" /><Info icon="interests" title="Topics I follow" text="Relationships · Self-esteem · Work & burnout" /><Info icon="lock" title="Visibility" text="Public profile" /></View>
-    <Text style={styles.sectionTitle}>Account & safety</Text><View style={styles.settings}><Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} /><Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} /><Setting icon="shield" title="Privacy and safety" subtitle="Blocks, muted words, and content controls" onPress={() => router.push('/safety-settings')} /><Setting icon="notifications" title="Notification preferences" subtitle="Choose what you want to hear about" /><Setting icon="admin_panel_settings" title="Admin panel" subtitle="Trust and safety operations" accent onPress={() => router.push('/admin')} /></View>
+    <Text style={styles.sectionTitle}>Profile details</Text><View style={styles.infoCard}><Info icon="location_on" title="Location" text={`${state.profile.city}, ${state.profile.country}`} /><Info icon="language" title="Languages" text={state.profile.languages.join(' · ')} /><Info icon="interests" title="Topics I follow" text="Relationships · Self-esteem · Work & burnout" /><Info icon="lock" title="Visibility" text={state.profile.privateProfile ? 'Private profile' : 'Public profile'} /></View>
+    <Text style={styles.sectionTitle}>Account & safety</Text><View style={styles.settings}><Setting icon="self_improvement" title="Wellbeing hub" subtitle="Check-ins, goals, journal, and progress" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'wellbeing' } } as never)} /><Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} /><Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} /><Setting icon="shield" title="Privacy and safety" subtitle="Blocks, muted words, and content controls" onPress={() => router.push('/safety-settings')} /><Setting icon="notifications" title="Notification preferences" subtitle="Choose what you want to hear about" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'notification-settings' } } as never)} /><Setting icon="manage_accounts" title="Account & security" subtitle="Password, sessions, privacy, and export" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'account-security' } } as never)} /><Setting icon="workspace_premium" title="Apply as a professional" subtitle="Credentialed professional onboarding" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never)} />{user?.roles.includes('ADMIN') && <><Setting icon="admin_panel_settings" title="Admin dashboard" subtitle="Trust, safety, users, content, and audit" accent onPress={() => router.push('/admin')} /><Setting icon="fact_check" title="Admin workflow center" subtitle="Appeals, campaigns, communities, listeners, exports, and policies" accent onPress={() => router.push({ pathname: '/admin-tools/[section]' as never, params: { section: 'appeals' } } as never)} /></>}</View>
   </View></Screen>;
 }
 
 function ProfessionalProfile({ professional }: { professional: Professional }) {
+  const { state, toggleList } = useProduct(); const following = state.followedProfessionals.includes(professional.id);
   const articles = professionalArticles.filter(article => article.authorId === professional.id);
   const pinned = articles.find(article => article.pinned);
   return <Screen scroll style={styles.screen}><View style={styles.proContent}>
@@ -40,10 +44,11 @@ function ProfessionalProfile({ professional }: { professional: Professional }) {
       <View style={styles.heroGlow} /><View style={styles.proIdentity}><Avatar name={professional.displayName} size={90} verified /><View style={{ flex: 1 }}><Text style={styles.proBigName}>{professional.displayName}</Text><Text style={styles.proRole}>{professional.title}</Text><Text style={styles.proHandle}>@{professional.username}</Text><View style={styles.verified}><AppIcon name="verified" filled size={17} color={colors.ocean300} /><Text style={styles.verifiedText}>Identity, license & education verified</Text></View></View><Score score={professional.greenOceanScore} /></View>
       <Text style={styles.proBio}>{professional.bio}</Text>
       <View style={styles.proStats}><Count value={String(professional.rating)} label="Rating" light /><Count value={String(professional.reviewCount)} label="Reviews" light /><Count value={String(professional.experienceYears)} label="Years experience" light /></View>
-      <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Message" variant="secondary" onPress={() => router.push({ pathname: '/chat/[id]', params: { id: professional.id === 'pro-1' ? 'maya' : professional.id } })} /></View><View style={{ flex: 1 }}><AppButton label="Follow" onPress={() => {}} /></View></View>
+      <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Contact" variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'contact' } } as never)} /></View><View style={{ flex: 1 }}><AppButton label={following ? 'Following' : 'Follow'} onPress={() => toggleList('followedProfessionals', professional.id)} /></View></View>
     </View>
 
     <View style={styles.availability}><View style={[styles.availabilityDot, !professional.acceptingNewClients && { backgroundColor: colors.sun }]} /><View style={{ flex: 1 }}><Text style={styles.availabilityTitle}>{professional.acceptingNewClients ? 'Accepting new clients' : 'Waitlist currently active'}</Text><Text style={styles.availabilityText}>{professional.consultationModes.join(' · ')}</Text></View><AppIcon name="event_available" color={colors.ocean600} /></View>
+    <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Request appointment" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'book' } } as never)} /></View><View style={{ flex: 1 }}><AppButton label={`Reviews (${professional.reviewCount})`} variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'reviews' } } as never)} /></View></View>
 
     <Text style={styles.sectionTitle}>Professional profile</Text>
     <View style={styles.detailGrid}>
@@ -53,6 +58,8 @@ function ProfessionalProfile({ professional }: { professional: Professional }) {
       <DetailCard icon="location_on" title="Clinic location" value={`${professional.clinicAddress}\n${professional.city}, ${professional.country}`} />
       <DetailCard icon="language" title="Languages" value={professional.languages.join(' · ')} />
       <DetailCard icon="person" title="Gender" value={professional.gender} />
+      <DetailCard icon="payments" title="Session fee" value={`${professional.sessionFee} ${professional.currency} · ${professional.insuranceAccepted ? 'Insurance accepted' : 'Self-pay'}`} />
+      <DetailCard icon="schedule" title="Time zone" value={professional.timeZone} />
     </View>
 
     <Text style={styles.sectionTitle}>Credentials</Text><View style={styles.infoCard}>{professional.education.map(item => <Info key={item} icon="school" title="Education" text={item} />)}<Info icon="workspace_premium" title="License" text={`${professional.licenseNumber} · Verified by GreenOcean`} /><Info icon="update" title="Last verification" text="August 2026" /></View>

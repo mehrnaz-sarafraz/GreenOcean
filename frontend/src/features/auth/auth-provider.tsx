@@ -25,7 +25,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     async function restoreSession() {
       if (isMockMode) {
-        setUser({ userId: 'demo-user', email: 'demo@greenocean.app', roles: ['USER'] });
+        setUser({ userId: 'demo-user', email: 'demo@greenocean.app', roles: ['USER', 'PROFESSIONAL', 'ADMIN'] });
         setStatus('authenticated');
         return;
       }
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   async function signIn(input: LoginInput) {
     if (isMockMode) {
-      setUser({ userId: 'demo-user', email: input.email || 'demo@greenocean.app', roles: ['USER'] });
+      setUser({ userId: 'demo-user', email: input.email || 'demo@greenocean.app', roles: ['USER', 'PROFESSIONAL', 'ADMIN'] });
       setStatus('authenticated');
       return;
     }
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   async function register(input: RegisterInput) {
     if (isMockMode) {
-      setUser({ userId: 'demo-user', email: input.email, roles: ['USER'] });
+      setUser({ userId: 'demo-user', email: input.email, roles: ['USER', 'PROFESSIONAL', 'ADMIN'] });
       setStatus('authenticated');
       return;
     }

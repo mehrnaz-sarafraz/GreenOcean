@@ -12,7 +12,7 @@ export default function SupportNow() {
 
     <View style={styles.availability}><View style={styles.pulse} /><Text style={styles.availabilityText}>18 trained listeners and 126 peers are online now</Text></View>
 
-    <Pressable onPress={() => router.push('/chat/jamie')} style={[styles.path, styles.listenerPath]}>
+    <Pressable onPress={() => router.push({ pathname: '/listener/[action]' as never, params: { action: 'match' } } as never)} style={[styles.path, styles.listenerPath]}>
       <View style={styles.pathTop}><View style={[styles.pathIcon, { backgroundColor: colors.ocean200 }]}><AppIcon name="hearing" size={28} color={colors.ocean800} /></View><View style={styles.recommended}><Text style={styles.recommendedText}>FASTEST · RECOMMENDED</Text></View></View>
       <Text style={styles.pathTitle}>Talk with a trained listener</Text><Text style={styles.pathText}>A private, one-to-one conversation with someone trained to listen without judging or giving medical advice.</Text>
       <View style={styles.pathMeta}><Meta icon="schedule" text="Usually under 2 minutes" /><Meta icon="payments" text="Free" /><Meta icon="visibility_off" text="Anonymous option" /></View>
@@ -26,7 +26,7 @@ export default function SupportNow() {
 
     <View style={styles.listenerPreview}><View style={styles.faces}><Avatar name="Amelia" size={38} /><Avatar name="Noah" size={38} /><Avatar name="Priya" size={38} /></View><View style={{ flex: 1 }}><Text style={styles.previewTitle}>Matched around your preferences</Text><Text style={styles.previewText}>Topic, language, time zone, and lived experience help shape a better first match.</Text></View></View>
 
-    <View style={styles.crisis}><View style={styles.crisisIcon}><AppIcon name="emergency" color={colors.white} /></View><View style={{ flex: 1 }}><Text style={styles.crisisTitle}>Are you in immediate danger?</Text><Text style={styles.crisisText}>GreenOcean is not a crisis service. Contact your local emergency services or a crisis line in your country now.</Text></View><Pressable style={styles.crisisButton}><Text style={styles.crisisButtonText}>Find urgent help</Text></Pressable></View>
+    <View style={styles.crisis}><View style={styles.crisisIcon}><AppIcon name="emergency" color={colors.white} /></View><View style={{ flex: 1 }}><Text style={styles.crisisTitle}>Are you in immediate danger?</Text><Text style={styles.crisisText}>GreenOcean is not a crisis service. Contact your local emergency services or a crisis line in your country now.</Text></View><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'urgent-help' } } as never)} style={styles.crisisButton}><Text style={styles.crisisButtonText}>Find urgent help</Text></Pressable></View>
     <Text style={styles.boundary}>Peer listeners and community members do not provide diagnosis, treatment, or emergency intervention.</Text>
   </View></Screen>;
 }

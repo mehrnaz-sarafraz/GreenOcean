@@ -5,14 +5,16 @@ import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Screen } from '@/components/screen';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
+import { useProduct } from '@/features/product/product-provider';
 
 const topics = [['air', 'Anxiety'], ['rainy', 'Low mood'], ['favorite', 'Relationships'], ['bedtime', 'Sleep'], ['shield', 'Trauma'], ['work', 'Burnout'], ['spa', 'Grief'], ['neurology', 'ADHD']];
 const supportStyles = [['forum', 'Shared experiences', 'Stories from people who understand'], ['groups', 'Support groups', 'Moderated conversations by topic'], ['hearing', 'One-to-one listener', 'Private peer support when I need it'], ['psychology', 'Professional knowledge', 'Articles and verified expert perspectives']];
 
 export default function Onboarding() {
-  const [step, setStep] = useState(1); const [selectedTopics, setSelectedTopics] = useState<string[]>([]); const [support, setSupport] = useState(''); const [privateFeed, setPrivateFeed] = useState(true);
+  const { state, update } = useProduct(); const [step, setStep] = useState(1); const [selectedTopics, setSelectedTopics] = useState<string[]>(state.onboarding.topics); const [support, setSupport] = useState(state.onboarding.supportStyle); const [privateFeed, setPrivateFeed] = useState(state.onboarding.strongSafety);
   function toggleTopic(topic: string) { setSelectedTopics(items => items.includes(topic) ? items.filter(item => item !== topic) : [...items, topic]); }
-  function next() { if (step < 3) setStep(value => value + 1); else router.replace('/(app)'); }
+  function finish() { update(current => ({ ...current, onboarding: { ...current.onboarding, complete: true, topics: selectedTopics, supportStyle: support, strongSafety: privateFeed }, safety: { ...current.safety, blurSensitive: privateFeed } })); if (state.onboarding.role === 'PROFESSIONAL') router.replace({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never); else router.replace('/(app)'); }
+  function next() { if (step < 3) setStep(value => value + 1); else finish(); }
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.top}><View style={styles.logo}><AppIcon name="waves" color={colors.ocean700} /><Text style={styles.brand}>GreenOcean</Text></View><Text style={styles.stepText}>{step} of 3</Text></View>
     <View style={styles.progress}>{[1, 2, 3].map(item => <View key={item} style={[styles.progressBar, item <= step && styles.progressActive]} />)}</View>
@@ -20,7 +22,7 @@ export default function Onboarding() {
     {step === 2 && <><View><Text style={styles.eyebrow}>HOW YOU WANT TO CONNECT</Text><Text style={styles.title}>What kind of support feels most comfortable?</Text><Text style={styles.subtitle}>We will place this option closer to the top of your experience.</Text></View><View style={styles.supportList}>{supportStyles.map(([icon, title, text]) => <Pressable key={title} onPress={() => setSupport(title)} style={[styles.support, support === title && styles.supportActive]}><View style={[styles.supportIcon, support === title && { backgroundColor: colors.ocean600 }]}><AppIcon name={icon} color={support === title ? colors.white : colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.supportTitle}>{title}</Text><Text style={styles.supportText}>{text}</Text></View>{support === title && <AppIcon name="check_circle" filled color={colors.ocean600} />}</Pressable>)}</View></>}
     {step === 3 && <><View><Text style={styles.eyebrow}>PRIVACY FIRST</Text><Text style={styles.title}>You stay in control</Text><Text style={styles.subtitle}>GreenOcean makes safety controls visible from the beginning instead of hiding them in settings.</Text></View><View style={styles.privacyCard}><View style={styles.privacyIcon}><AppIcon name="shield_lock" size={34} color={colors.ocean700} /></View><Text style={styles.privacyTitle}>Start with stronger content controls</Text><Text style={styles.privacyText}>Sensitive posts will be blurred, message requests separated, and frightening topics shown with a warning first.</Text><Pressable onPress={() => setPrivateFeed(value => !value)} style={[styles.privacyToggle, privateFeed && styles.privacyToggleActive]}><AppIcon name={privateFeed ? 'toggle_on' : 'toggle_off'} filled size={34} color={privateFeed ? colors.ocean600 : colors.muted} /><Text style={styles.privacyToggleText}>{privateFeed ? 'Recommended safety controls on' : 'Standard controls'}</Text></Pressable></View><View style={styles.boundary}><AppIcon name="health_and_safety" color={colors.ocean600} /><Text style={styles.boundaryText}>GreenOcean offers peer support and educational information. It is not an emergency service or a substitute for medical care.</Text></View></>}
     <View style={styles.actions}>{step > 1 && <Pressable onPress={() => setStep(value => value - 1)} style={styles.back}><Text style={styles.backText}>Back</Text></Pressable>}<View style={{ flex: 1 }}><AppButton label={step === 3 ? 'Enter GreenOcean' : 'Continue'} onPress={next} /></View></View>
-    <Pressable onPress={() => router.replace('/(app)')}><Text style={styles.skip}>Skip for now</Text></Pressable>
+    <Pressable onPress={finish}><Text style={styles.skip}>Skip for now</Text></Pressable>
   </View></Screen>;
 }
 
