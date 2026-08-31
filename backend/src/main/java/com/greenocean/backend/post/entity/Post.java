@@ -44,6 +44,16 @@ public class Post {
     @Column(name = "content_warning", length = 120)
     private String contentWarning;
 
+    @Column(name = "category_id")
+    private UUID categoryId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "post_type", nullable = false, length = 20)
+    private PostType postType;
+
+    @Column(length = 30)
+    private String mood;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -57,7 +67,7 @@ public class Post {
     }
 
     public Post(UUID id, User author, UUID communityId, String body, boolean anonymous,
-                PostVisibility visibility, String contentWarning) {
+                PostVisibility visibility, String contentWarning, UUID categoryId, PostType postType, String mood) {
         Instant now = Instant.now();
         this.id = id;
         this.author = author;
@@ -67,6 +77,9 @@ public class Post {
         this.visibility = visibility;
         this.status = ContentStatus.PUBLISHED;
         this.contentWarning = contentWarning;
+        this.categoryId = categoryId;
+        this.postType = postType == null ? PostType.EXPERIENCE : postType;
+        this.mood = mood;
         this.createdAt = now;
         this.updatedAt = now;
     }
