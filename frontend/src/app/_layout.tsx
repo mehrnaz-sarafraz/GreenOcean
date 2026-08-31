@@ -5,6 +5,7 @@ import { MaterialSymbols_400Regular } from '@expo-google-fonts/material-symbols/
 import { MaterialSymbols_600SemiBold } from '@expo-google-fonts/material-symbols/600SemiBold';
 
 import { AuthProvider } from '@/features/auth/auth-provider';
+import { DataProvider } from '@/features/platform/data-provider';
 import { LanguageProvider } from '@/localization/language-provider';
 import { colors } from '@/theme/tokens';
 
@@ -14,8 +15,10 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.foam } }} />
+        <DataProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.foam } }} />
+        </DataProvider>
       </AuthProvider>
     </LanguageProvider>
   );

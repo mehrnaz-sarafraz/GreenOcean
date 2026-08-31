@@ -5,8 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { categories, mockCommunities, professionals, SupportCategoryGroup } from '@/mocks/data';
-import { professionalArticles } from '@/mocks/discovery';
+import { SupportCategoryGroup } from '@/features/content/types';
+import { usePlatformData } from '@/features/platform/data-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 const groups: { id: SupportCategoryGroup; title: string; subtitle: string }[] = [
@@ -16,6 +16,7 @@ const groups: { id: SupportCategoryGroup; title: string; subtitle: string }[] = 
 ];
 
 export default function ExploreScreen() {
+  const { categories, communities: mockCommunities, professionals, articles: professionalArticles } = usePlatformData();
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
   const visibleCategories = categories.filter(category => `${category.name} ${category.group}`.toLowerCase().includes(normalizedQuery));

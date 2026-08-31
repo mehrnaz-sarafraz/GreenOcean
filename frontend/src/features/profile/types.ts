@@ -10,4 +10,6 @@ export type OwnProfile = {
   profilePrivate: boolean;
   showLocation: boolean;
   showBirthYear: boolean;
+  createdAt: string;
+  updatedAt: string;
 };

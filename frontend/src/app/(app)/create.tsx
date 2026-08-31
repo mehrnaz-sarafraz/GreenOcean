@@ -5,8 +5,10 @@ import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
+import { SupportCategoryGroup } from '@/features/content/types';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
-import { categories, SupportCategoryGroup } from '@/mocks/data';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 const moods = [
@@ -31,6 +33,7 @@ const groupOptions: { id: SupportCategoryGroup; title: string; subtitle: string;
 
 export default function Create() {
   const { t } = useLanguage();
+  const { categories, profile, refresh } = usePlatformData();
   const [body, setBody] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [mood, setMood] = useState('');
@@ -38,6 +41,7 @@ export default function Create() {
   const [categoryId, setCategoryId] = useState('');
   const [type, setType] = useState('EXPERIENCE');
   const [error, setError] = useState('');
+  const [publishing, setPublishing] = useState(false);
   const visibleCategories = useMemo(() => categories.filter(category => category.group === group), [group]);
 
   function chooseGroup(next: SupportCategoryGroup) {
@@ -46,12 +50,24 @@ export default function Create() {
     setError('');
   }
 
-  function publish() {
+  async function publish() {
     if (!body.trim() || !group || !categoryId) {
       setError(!group ? 'Choose whether your story is about an emotion, condition, or life experience.' : !categoryId ? 'Choose the topic that fits your story best.' : t('requiredFields'));
       return;
     }
-    router.replace('/(app)');
+    setPublishing(true); setError('');
+    try {
+      await apiRequest('/api/v1/posts', { method: 'POST', body: JSON.stringify({
+        body: body.trim(), anonymous, visibility: 'PUBLIC', communityId: null,
+        contentWarning: null, categoryId, postType: type, mood: mood || null,
+      }) });
+      await refresh();
+      router.replace('/(app)');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not publish this story');
+    } finally {
+      setPublishing(false);
+    }
   }
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
@@ -62,8 +78,8 @@ export default function Create() {
     </View>
 
     <View style={styles.author}>
-      <Avatar name={anonymous ? t('anonymous') : 'Taylor'} size={44} />
-      <View><Text style={styles.authorName}>{anonymous ? t('anonymous') : 'Taylor Morgan'}</Text><View style={styles.visibility}><AppIcon name="public" size={14} color={colors.ocean600} /><Text style={styles.visibilityText}>{t('public')}</Text></View></View>
+      <Avatar name={anonymous ? t('anonymous') : (profile?.displayName ?? 'GreenOcean member')} uri={anonymous ? null : profile?.avatarUrl} size={44} />
+      <View><Text style={styles.authorName}>{anonymous ? t('anonymous') : (profile?.displayName ?? 'GreenOcean member')}</Text><View style={styles.visibility}><AppIcon name="public" size={14} color={colors.ocean600} /><Text style={styles.visibilityText}>{t('public')}</Text></View></View>
     </View>
 
     <TextInput autoFocus multiline value={body} onChangeText={setBody} placeholder={t('sharePrompt')} placeholderTextColor={colors.muted} style={styles.editor} />
@@ -88,7 +104,7 @@ export default function Create() {
     <View style={styles.safetyNote}><AppIcon name="health_and_safety" color={colors.ocean600} /><View style={{ flex: 1 }}><Text style={styles.safetyTitle}>Share safely</Text><Text style={styles.safetyText}>For frightening or sensitive experiences, avoid names and identifying details. You can add a content note before publishing.</Text></View></View>
     <View style={styles.tools}><View style={styles.tool}><AppIcon name="visibility_off" color={colors.ocean600} /><Text style={styles.toolText}>{t('postAnonymously')}</Text><Switch value={anonymous} onValueChange={setAnonymous} trackColor={{ true: colors.ocean500 }} /></View><View style={styles.tool}><AppIcon name="shield" color={colors.coral} /><Text style={styles.toolText}>{t('contentWarning')}</Text><AppIcon name="chevron_right" color={colors.muted} /></View></View>
     {!!error && <Text style={styles.error}>{error}</Text>}
-    <AppButton label={t('publish')} onPress={publish} />
+    <AppButton label={publishing ? 'Publishing…' : t('publish')} disabled={publishing} onPress={() => void publish()} />
   </View></Screen>;
 }
 

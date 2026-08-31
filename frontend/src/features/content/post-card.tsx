@@ -4,8 +4,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { apiRequest } from '@/lib/api/client';
-import { isMockMode } from '@/lib/data-mode';
-import { categories, MockPost } from '@/mocks/data';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, shadow, spacing } from '@/theme/tokens';
 import { PostItem } from './types';
@@ -17,13 +15,13 @@ function relativeTime(value: string) {
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60); return `${hours}h`;
 }
-export function PostCard({ post: initialPost, elevated = true }: { post: PostItem | MockPost; elevated?: boolean }) {
-  const { t } = useLanguage(); const [post, setPost] = useState(initialPost as MockPost);
+export function PostCard({ post: initialPost, elevated = true }: { post: PostItem; elevated?: boolean }) {
+  const { t } = useLanguage(); const [post, setPost] = useState(initialPost);
   const [sensitiveRevealed, setSensitiveRevealed] = useState(!initialPost.contentWarning);
-  const category = post.category ?? categories[0];
+  const category = post.category;
   const postType = post.postType ?? 'EXPERIENCE';
-  async function toggleLike() { const next = !post.liked; setPost(c => ({ ...c, liked: next, likeCount: c.likeCount + (next ? 1 : -1) })); if (!isMockMode) try { await apiRequest(`/api/v1/posts/${post.id}/like`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, liked: !next, likeCount: c.likeCount + (next ? -1 : 1) })); } }
-  async function toggleBookmark() { const next = !post.bookmarked; setPost(c => ({ ...c, bookmarked: next })); if (!isMockMode) try { await apiRequest(`/api/v1/posts/${post.id}/bookmark`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, bookmarked: !next })); } }
+  async function toggleLike() { const next = !post.liked; setPost(c => ({ ...c, liked: next, likeCount: c.likeCount + (next ? 1 : -1) })); try { await apiRequest(`/api/v1/posts/${post.id}/like`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, liked: !next, likeCount: c.likeCount + (next ? -1 : 1) })); } }
+  async function toggleBookmark() { const next = !post.bookmarked; setPost(c => ({ ...c, bookmarked: next })); try { await apiRequest(`/api/v1/posts/${post.id}/bookmark`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, bookmarked: !next })); } }
   const authorName = post.author?.displayName ?? t('anonymous');
   const openPost = () => router.push({ pathname: '/(app)/post/[id]', params: { id: post.id } });
   return <View style={[styles.card, elevated && shadow.soft]}>
@@ -33,7 +31,7 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
         <Text style={styles.meta}>{post.author ? `@${post.author.username} · ` : ''}{relativeTime(post.createdAt)}</Text></View>
       <AppIcon name="more_horiz" color={colors.muted} />
     </Pressable>
-    <View style={styles.chips}><View style={styles.groupChip}><Text style={styles.groupText}>{categoryGroupNames[category.group]}</Text></View><View style={[styles.categoryChip, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={15} color={category.color} /><Text style={[styles.categoryText, { color: category.color }]}>{category.name}</Text></View><View style={styles.typeChip}><Text style={styles.typeText}>{postType === 'QUESTION' ? t('question') : postType === 'REFLECTION' ? t('reflection') : t('experience')}</Text></View>{post.mood && <View style={[styles.chip, styles.moodChip]}><Text style={styles.moodText}>● {post.mood}</Text></View>}</View>
+    <View style={styles.chips}>{category && <><View style={styles.groupChip}><Text style={styles.groupText}>{categoryGroupNames[category.group]}</Text></View><View style={[styles.categoryChip, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={15} color={category.color} /><Text style={[styles.categoryText, { color: category.color }]}>{category.name}</Text></View></>}<View style={styles.typeChip}><Text style={styles.typeText}>{postType === 'QUESTION' ? t('question') : postType === 'REFLECTION' ? t('reflection') : t('experience')}</Text></View>{post.mood && <View style={[styles.chip, styles.moodChip]}><Text style={styles.moodText}>● {post.mood}</Text></View>}</View>
     {!!post.contentWarning && !sensitiveRevealed && <View style={styles.warningGate}>
       <View style={styles.warningIcon}><AppIcon name="visibility_off" size={22} color={colors.coral} /></View>
       <View style={styles.warningCopy}><Text style={styles.warningTitle}>Sensitive story hidden</Text><Text style={styles.warningText}>{post.contentWarning}. Your safety settings keep this content covered until you choose to see it.</Text></View>

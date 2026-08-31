@@ -5,16 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { PostCard } from '@/features/content/post-card';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { Professional } from '@/features/platform/types';
 import { useLanguage } from '@/localization/language-provider';
-import { categories, mockPosts, Professional, professionals } from '@/mocks/data';
-import { professionalArticles } from '@/mocks/discovery';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
-
-const featuredCategories = [
-  ...categories.filter(category => category.group === 'EMOTION').slice(0, 2),
-  ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
-  ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
-];
 
 const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE: 'Life experience' } as const;
 const checkInOptions = [
@@ -27,30 +21,37 @@ const checkInOptions = [
 
 export default function FeedScreen() {
   const { t } = useLanguage();
+  const { categories, posts, professionals, articles, profile, loading, error, refresh } = usePlatformData();
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
   const [categoryId, setCategoryId] = useState('all');
   const [checkIn, setCheckIn] = useState('');
-  const shown = useMemo(() => mockPosts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.categoryId === categoryId)), [tab, categoryId]);
-  const pinnedArticle = professionalArticles.find(article => article.pinned)!;
-  const articleAuthor = professionals.find(professional => professional.id === pinnedArticle.authorId)!;
+  const featuredCategories = useMemo(() => [
+    ...categories.filter(category => category.group === 'EMOTION').slice(0, 2),
+    ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
+    ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
+  ], [categories]);
+  const shown = useMemo(() => posts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.category?.id === categoryId)), [posts, tab, categoryId]);
+  const pinnedArticle = articles.find(article => article.pinned) ?? articles[0];
+  const articleAuthor = professionals.find(professional => professional.id === pinnedArticle?.authorId);
+  const displayName = profile?.displayName ?? 'GreenOcean member';
 
   const header = <View style={styles.headerContent}>
     <View style={styles.top}>
       <View><Text style={styles.brand}>GreenOcean</Text><Text style={styles.hello}>{t('moodQuestion')}</Text></View>
-      <View style={styles.topActions}><Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={styles.round} accessibilityLabel="Activity"><AppIcon name="notifications" color={colors.ocean700} /><View style={styles.alertDot} /></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/support')} style={styles.round} accessibilityLabel="Support now"><AppIcon name="health_and_safety" color={colors.ocean700} /></Pressable><Avatar name="Taylor" size={42} /></View>
+      <View style={styles.topActions}><Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={styles.round} accessibilityLabel="Activity"><AppIcon name="notifications" color={colors.ocean700} /><View style={styles.alertDot} /></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/support')} style={styles.round} accessibilityLabel="Support now"><AppIcon name="health_and_safety" color={colors.ocean700} /></Pressable><Avatar name={displayName} uri={profile?.avatarUrl} size={42} /></View>
     </View>
 
     <Pressable accessibilityRole="button" accessibilityLabel="Talk privately with a trained listener" onPress={() => router.push('/support')} style={styles.supportStrip}><View style={styles.supportIcon}><AppIcon name="hearing" color={colors.ocean800} /></View><View style={{ flex: 1 }}><Text style={styles.supportLabel}>NEED SOMEONE RIGHT NOW?</Text><Text style={styles.supportTitle}>Talk privately with a trained listener</Text><Text style={styles.supportMeta}>18 listeners online · Usually under 2 minutes</Text></View><View style={styles.supportAction}><Text style={styles.supportActionText}>Talk now</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></Pressable>
 
     <View style={styles.checkIn}><View style={styles.checkInHead}><View><Text style={styles.checkInTitle}>How are you, really?</Text><Text style={styles.checkInText}>{checkIn ? 'Thanks for checking in. Your feed will adapt gently.' : 'A private check-in for better recommendations.'}</Text></View>{!!checkIn && <AppIcon name="check_circle" filled color={colors.ocean500} />}</View><View style={styles.checkInOptions}>{checkInOptions.map(option => <Pressable key={option.id} accessibilityRole="radio" accessibilityLabel={`Feeling ${option.label}`} accessibilityState={{ checked: checkIn === option.id }} onPress={() => setCheckIn(option.id)} style={[styles.checkInOption, checkIn === option.id && { backgroundColor: option.color, borderColor: option.color }]}><AppIcon name={option.icon} size={21} color={checkIn === option.id ? colors.white : option.color} /><Text style={[styles.checkInLabel, checkIn === option.id && { color: colors.white }]}>{option.label}</Text></Pressable>)}</View></View>
 
-    <Pressable accessibilityRole="button" accessibilityLabel="Create a new post" onPress={() => router.push('/create')} style={styles.composer}><Avatar name="Taylor" size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Create a new post" onPress={() => router.push('/create')} style={styles.composer}><Avatar name={displayName} uri={profile?.avatarUrl} size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
 
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>{(['forYou', 'following', 'professionalAnswers'] as const).map(item => <Pressable accessibilityRole="tab" accessibilityState={{ selected: tab === item }} key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item && styles.activeTab]}><Text style={[styles.tabText, tab === item && styles.activeTabText]}>{t(item)}</Text></Pressable>)}</ScrollView>
 
     <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>FIND YOUR SPACE</Text><Text style={styles.sectionTitle}>Browse stories by topic</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/search')}><Text style={styles.seeAll}>{t('seeAll')}</Text></Pressable></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
-      <Pressable accessibilityRole="radio" accessibilityState={{ checked: categoryId === 'all' }} onPress={() => setCategoryId('all')} style={[styles.categoryCard, categoryId === 'all' && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: categoryId === 'all' ? colors.ocean600 : colors.ocean100 }]}><AppIcon name="grid_view" color={categoryId === 'all' ? colors.white : colors.ocean700} /></View><Text style={[styles.categoryName, categoryId === 'all' && styles.categoryNameActive]}>{t('allCategories')}</Text><Text style={styles.categoryCount}>All emotions, conditions & experiences</Text></Pressable>
+      <Pressable accessibilityRole="radio" accessibilityState={{ checked: categoryId === 'all' }} onPress={() => setCategoryId('all')} style={[styles.categoryCard, categoryId === 'all' && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: categoryId === 'all' ? colors.ocean600 : colors.ocean100 }]}><AppIcon name="grid_view" color={categoryId === 'all' ? colors.white : colors.ocean700} /></View><Text style={[styles.categoryName, categoryId === 'all' && styles.categoryNameActive]}>{t('allCategories')}</Text><Text style={styles.categoryCount}>{posts.length.toLocaleString()} stories across all topics</Text></Pressable>
       {featuredCategories.map(category => <Pressable accessibilityRole="radio" accessibilityState={{ checked: categoryId === category.id }} key={category.id} onPress={() => setCategoryId(category.id)} style={[styles.categoryCard, categoryId === category.id && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} color={category.color} /></View><Text style={styles.categoryGroup}>{groupNames[category.group]}</Text><Text style={[styles.categoryName, categoryId === category.id && styles.categoryNameActive]}>{category.name}</Text><Text style={styles.categoryCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}
     </ScrollView>
 
@@ -65,11 +66,11 @@ export default function FeedScreen() {
     </View>
     <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>FEATURED PLACEMENT</Text><Text style={styles.sectionTitle}>Professionals for today</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/professionals')}><Text style={styles.seeAll}>Compare all</Text></Pressable></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.experts}>{professionals.filter(professional => professional.promoted).map(professional => <DoctorBanner key={professional.id} professional={professional} />)}</ScrollView>
-    <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>PINNED SCIENTIFIC ARTICLE</Text><Text style={styles.sectionTitle}>A professional perspective</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/articles')}><Text style={styles.seeAll}>Knowledge Hub</Text></Pressable></View>
-    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}><View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View><View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View></Pressable>
+    {pinnedArticle && articleAuthor && <><View style={styles.sectionHead}><View><Text style={styles.eyebrow}>PINNED SCIENTIFIC ARTICLE</Text><Text style={styles.sectionTitle}>A professional perspective</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/articles')}><Text style={styles.seeAll}>Knowledge Hub</Text></Pressable></View>
+    <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}><View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View><View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} uri={articleAuthor.avatarUrl} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View></Pressable></>}
   </View>;
 
-  return <SafeAreaView style={styles.safe}><FlatList data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name="forum" size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>No stories in this category yet</Text><Text style={styles.emptyText}>Be the first person to share an experience here.</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading} onRefresh={() => void refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
 }
 
 function DoctorBanner({ professional }: { professional: Professional }) {

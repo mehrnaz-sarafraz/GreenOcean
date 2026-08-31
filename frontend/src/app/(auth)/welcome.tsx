@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/app-button';
@@ -50,7 +50,6 @@ export default function Welcome() {
         <View style={styles.actions}>
           <AppButton label={t('getStarted')} onPress={() => router.push('/(auth)/register')} />
           <AppButton label={t('signIn')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
-          <Pressable accessibilityRole="button" accessibilityLabel="Explore the GreenOcean demo" onPress={() => router.replace('/(app)')}><Text style={styles.demo}>{t('exploreDemo')} →</Text></Pressable>
           <Text style={styles.safety}>{t('safetyNote')}</Text>
         </View>
       </ScrollView>
@@ -82,7 +81,6 @@ const styles = StyleSheet.create({
   faceOverlap: { marginStart: -10 },
   peopleText: { color: colors.ocean200, fontSize: 12, fontWeight: '700', marginStart: spacing.sm },
   actions: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: spacing.sm },
-  demo: { color: colors.ocean200, fontWeight: '800', textAlign: 'center', padding: spacing.sm },
   safety: { color: '#ffffff80', fontSize: 9, lineHeight: 14, textAlign: 'center' },
   orb1: { position: 'absolute', width: 350, height: 350, borderRadius: 175, backgroundColor: '#86D9C510', right: -100, top: 70 },
   orb2: { position: 'absolute', width: 260, height: 260, borderRadius: 130, backgroundColor: '#F4B8600D', left: -100, bottom: 70 },

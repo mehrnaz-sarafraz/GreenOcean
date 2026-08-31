@@ -4,36 +4,40 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { professionals } from '@/mocks/data';
-import { professionalArticles } from '@/mocks/discovery';
+import { useAuth } from '@/features/auth/auth-provider';
+import { usePlatformData } from '@/features/platform/data-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 const filters = ['All', 'Anxiety', 'Sleep', 'Relationships'];
 
 export default function Articles() {
+  const { user } = useAuth();
+  const { professionals, articles: professionalArticles } = usePlatformData();
   const [filter, setFilter] = useState('All');
   const shown = useMemo(() => professionalArticles.filter(article => filter === 'All' || article.topic === filter), [filter]);
-  const featured = professionalArticles.find(article => article.pinned)!;
-  const featuredAuthor = professionals.find(item => item.id === featured.authorId)!;
+  const featured = professionalArticles.find(article => article.pinned) ?? professionalArticles[0];
+  const featuredAuthor = professionals.find(item => item.id === featured?.authorId);
   return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Pressable onPress={() => router.push('/article-editor')} style={styles.studio}><AppIcon name="edit_note" size={18} color={colors.white} /><Text style={styles.studioText}>Professional studio</Text></Pressable></View>
+    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable>{user?.roles.includes('PROFESSIONAL') && <Pressable onPress={() => router.push('/article-editor')} style={styles.studio}><AppIcon name="edit_note" size={18} color={colors.white} /><Text style={styles.studioText}>Professional studio</Text></Pressable>}</View>
     <View><Text style={styles.eyebrow}>GREENOCEAN KNOWLEDGE HUB</Text><Text style={styles.title}>Clear science for real life</Text><Text style={styles.subtitle}>Educational articles written by verified mental-health professionals and reviewed for clarity, boundaries, and safety.</Text></View>
 
-    <Pressable onPress={() => router.push({ pathname: '/article/[id]', params: { id: featured.id } })} style={styles.hero}>
+    {featured && featuredAuthor && <Pressable onPress={() => router.push({ pathname: '/article/[id]', params: { id: featured.id } })} style={styles.hero}>
       <View style={styles.heroGlow} /><View style={styles.pinned}><AppIcon name="push_pin" filled size={16} color={colors.ocean950} /><Text style={styles.pinnedText}>PINNED ARTICLE</Text></View><Text style={styles.heroTopic}>{featured.evidenceLevel} · {featured.readTime}</Text><Text style={styles.heroTitle}>{featured.title}</Text><Text style={styles.heroSummary}>{featured.summary}</Text><View style={styles.author}><Avatar name={featuredAuthor.displayName} size={42} verified /><View style={{ flex: 1 }}><Text style={styles.authorName}>{featuredAuthor.displayName}</Text><Text style={styles.authorRole}>{featuredAuthor.title} · Score {featuredAuthor.greenOceanScore}</Text></View><View style={styles.read}><Text style={styles.readText}>Read article</Text><AppIcon name="arrow_forward" color={colors.ocean950} /></View></View>
-    </Pressable>
+    </Pressable>}
 
     <View style={styles.boundary}><AppIcon name="health_and_safety" color={colors.ocean600} /><Text style={styles.boundaryText}>Knowledge Hub content is educational. It cannot diagnose you or replace care from a qualified professional who knows your situation.</Text></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>{filters.map(item => <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}><Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</Text></Pressable>)}</ScrollView>
     <View style={styles.sectionHead}><Text style={styles.sectionTitle}>{filter === 'All' ? 'Latest professional articles' : filter}</Text><Text style={styles.result}>{shown.length} articles</Text></View>
     {shown.map(article => {
-      const author = professionals.find(item => item.id === article.authorId)!;
+      const author = professionals.find(item => item.id === article.authorId);
+      if (!author) return null;
       return <Pressable key={article.id} onPress={() => router.push({ pathname: '/article/[id]', params: { id: article.id } })} style={styles.card}>
         <View style={styles.cardTop}><View style={styles.evidence}><AppIcon name="science" size={15} color={colors.ocean600} /><Text style={styles.evidenceText}>{article.evidenceLevel}</Text></View>{article.pinned && <AppIcon name="push_pin" filled size={18} color={colors.ocean600} />}</View>
         <Text style={styles.topic}>{article.topic} · {article.readTime}</Text><Text style={styles.cardTitle}>{article.title}</Text><Text style={styles.cardSummary}>{article.summary}</Text>
-        <View style={styles.cardAuthor}><Avatar name={author.displayName} size={38} verified /><View style={{ flex: 1 }}><Text style={styles.cardAuthorName}>{author.displayName}</Text><Text style={styles.cardMeta}>{article.publishedAt} · {article.helpfulCount} helpful</Text></View><AppIcon name="chevron_right" color={colors.ocean700} /></View>
+        <View style={styles.cardAuthor}><Avatar name={author.displayName} uri={author.avatarUrl} size={38} verified /><View style={{ flex: 1 }}><Text style={styles.cardAuthorName}>{author.displayName}</Text><Text style={styles.cardMeta}>{article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'In review'} · {article.helpfulCount} helpful</Text></View><AppIcon name="chevron_right" color={colors.ocean700} /></View>
       </Pressable>;
     })}
+    {!professionalArticles.length && <Text style={styles.result}>No published articles are available yet.</Text>}
   </View></Screen>;
 }
 

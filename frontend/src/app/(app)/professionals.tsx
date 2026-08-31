@@ -4,12 +4,14 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { Professional, professionals } from '@/mocks/data';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { Professional } from '@/features/platform/types';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 const specialtyFilters = ['All', 'Anxiety', 'Sleep', 'Relationships', 'ADHD', 'Trauma'];
 
 export default function ProfessionalDirectory() {
+  const { professionals } = usePlatformData();
   const [query, setQuery] = useState(''); const [specialty, setSpecialty] = useState('All'); const [availableOnly, setAvailableOnly] = useState(false);
   const shown = useMemo(() => professionals.filter(pro => {
     const search = query.trim().toLowerCase();
