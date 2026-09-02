@@ -1,32 +1,66 @@
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# ==============================
+# IDE / Editor
+# ==============================
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+.idea/
 .vscode/
+*.iml
+
+# ==============================
+# Operating system
+# ==============================
+
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Maven / Java / Spring Boot
+# ==============================
+
+.m2/
+backend/target/
+backend/.mvn/timing.properties
+
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# ==============================
+# Node / Expo / React Native
+# ==============================
+
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/coverage/
+frontend/.eslintcache
+frontend/*.tsbuildinfo
+
+# ==============================
+# Environment variables / secrets
+# ==============================
+
+.env
+.env.*
+!.env.example
+
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ==============================
+# Spring local configuration
+# ==============================
+
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-*.local.properties
+
+# ==============================
+# Temporary files
+# ==============================
+
+*.tmp
+*.temp
+*.swp
+*.swo
