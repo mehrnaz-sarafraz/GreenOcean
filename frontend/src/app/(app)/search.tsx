@@ -16,12 +16,12 @@ const groups: { id: SupportCategoryGroup; title: string; subtitle: string }[] = 
 ];
 
 export default function ExploreScreen() {
-  const { categories, communities: mockCommunities, professionals, articles: professionalArticles } = usePlatformData();
+  const { categories, communities, professionals, articles: professionalArticles } = usePlatformData();
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
   const visibleCategories = categories.filter(category => `${category.name} ${category.group}`.toLowerCase().includes(normalizedQuery));
   const visibleProfessionals = professionals.filter(professional => [professional.displayName, professional.title, professional.city, professional.country, professional.gender, ...professional.specialties, ...professional.languages].join(' ').toLowerCase().includes(normalizedQuery));
-  const visibleCommunities = mockCommunities.filter(community => `${community.name} ${community.description}`.toLowerCase().includes(normalizedQuery));
+  const visibleCommunities = communities.filter(community => `${community.name} ${community.description}`.toLowerCase().includes(normalizedQuery));
   const showKnowledge = !normalizedQuery || 'knowledge articles science verified professionals mental health'.includes(normalizedQuery);
   const showMedia = !normalizedQuery || 'movies series documentaries psychology watch reflect'.includes(normalizedQuery);
   const hasResults = showKnowledge || showMedia || visibleCategories.length > 0 || visibleProfessionals.length > 0 || visibleCommunities.length > 0;

@@ -14,7 +14,7 @@ const filters = ['ALL', 'MOVIE', 'SERIES', 'DOCUMENTARY'] as const;
 export default function MediaGuide() {
   const { media: mediaPicks, setMedia } = usePlatformData();
   const [filter, setFilter] = useState<(typeof filters)[number]>('ALL');
-  const shown = useMemo(() => mediaPicks.filter(item => filter === 'ALL' || item.kind === filter), [filter]);
+  const shown = useMemo(() => mediaPicks.filter(item => filter === 'ALL' || item.kind === filter), [filter, mediaPicks]);
   const featured = mediaPicks[0];
   async function toggleSaved(item: MediaPick) {
     const next = !item.saved;

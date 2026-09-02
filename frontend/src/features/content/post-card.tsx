@@ -45,8 +45,7 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
     </View>}</Pressable>}
     <View style={styles.actions}>
       <Pressable accessibilityRole="button" accessibilityLabel={post.liked ? 'Unlike post' : 'Like post'} accessibilityState={{ selected: post.liked }} onPress={e => { e.stopPropagation(); void toggleLike(); }} style={styles.action}><AppIcon name="favorite" filled={post.liked} size={22} color={post.liked ? colors.coral : colors.muted} /><Text style={[styles.actionText, post.liked && { color: colors.coral }]}>{post.likeCount}</Text></Pressable>
-      <View style={styles.action}><AppIcon name="chat_bubble" size={21} color={colors.muted} /><Text style={styles.actionText}>{post.commentCount}</Text></View>
-      <View style={styles.action}><AppIcon name="ios_share" size={22} color={colors.muted} /></View>
+      <Pressable accessibilityRole="button" accessibilityLabel="Open comments" onPress={openPost} style={styles.action}><AppIcon name="chat_bubble" size={21} color={colors.muted} /><Text style={styles.actionText}>{post.commentCount}</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={post.bookmarked ? 'Remove bookmark' : 'Bookmark post'} accessibilityState={{ selected: post.bookmarked }} onPress={e => { e.stopPropagation(); void toggleBookmark(); }} style={[styles.action, styles.save]}><AppIcon name="bookmark" filled={post.bookmarked} size={22} color={post.bookmarked ? colors.ocean600 : colors.muted} /></Pressable>
     </View>
   </View>;

@@ -1,14 +1,16 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { PostCard } from '@/features/content/post-card';
+import { PageResponse, PostItem } from '@/features/content/types';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { Professional } from '@/features/platform/types';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
+import { apiRequest } from '@/lib/api/client';
 
 const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE: 'Life experience' } as const;
 const checkInOptions = [
@@ -21,16 +23,31 @@ const checkInOptions = [
 
 export default function FeedScreen() {
   const { t } = useLanguage();
-  const { categories, posts, professionals, articles, profile, loading, error, refresh } = usePlatformData();
+  const { categories, posts, professionals, articles, profile, supportAvailability, loading, error, refresh } = usePlatformData();
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
   const [categoryId, setCategoryId] = useState('all');
   const [checkIn, setCheckIn] = useState('');
+  const [selectedFeed, setSelectedFeed] = useState<PostItem[] | null>(null);
+  const [selectedFeedLoading, setSelectedFeedLoading] = useState(false);
+  useEffect(() => {
+    if (tab === 'forYou') { setSelectedFeed(null); return; }
+    const mode = tab === 'following' ? 'FOLLOWING' : 'PROFESSIONAL_ANSWERS';
+    setSelectedFeedLoading(true);
+    apiRequest<PageResponse<PostItem>>(`/api/v1/posts/feed?mode=${mode}&size=50`)
+      .then(result => setSelectedFeed(result.items))
+      .catch(() => setSelectedFeed([]))
+      .finally(() => setSelectedFeedLoading(false));
+  }, [tab]);
+  function recordCheckIn(value: string) {
+    setCheckIn(value);
+    void apiRequest('/api/v1/preferences/me/check-ins', { method: 'POST', body: JSON.stringify({ mood: value.toUpperCase() }) });
+  }
   const featuredCategories = useMemo(() => [
     ...categories.filter(category => category.group === 'EMOTION').slice(0, 2),
     ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
     ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
   ], [categories]);
-  const shown = useMemo(() => posts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.category?.id === categoryId)), [posts, tab, categoryId]);
+  const shown = useMemo(() => (selectedFeed ?? posts).filter(post => categoryId === 'all' || post.category?.id === categoryId), [selectedFeed, posts, categoryId]);
   const pinnedArticle = articles.find(article => article.pinned) ?? articles[0];
   const articleAuthor = professionals.find(professional => professional.id === pinnedArticle?.authorId);
   const displayName = profile?.displayName ?? 'GreenOcean member';
@@ -41,9 +58,9 @@ export default function FeedScreen() {
       <View style={styles.topActions}><Pressable accessibilityRole="button" onPress={() => router.push('/notifications')} style={styles.round} accessibilityLabel="Activity"><AppIcon name="notifications" color={colors.ocean700} /><View style={styles.alertDot} /></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/support')} style={styles.round} accessibilityLabel="Support now"><AppIcon name="health_and_safety" color={colors.ocean700} /></Pressable><Avatar name={displayName} uri={profile?.avatarUrl} size={42} /></View>
     </View>
 
-    <Pressable accessibilityRole="button" accessibilityLabel="Talk privately with a trained listener" onPress={() => router.push('/support')} style={styles.supportStrip}><View style={styles.supportIcon}><AppIcon name="hearing" color={colors.ocean800} /></View><View style={{ flex: 1 }}><Text style={styles.supportLabel}>NEED SOMEONE RIGHT NOW?</Text><Text style={styles.supportTitle}>Talk privately with a trained listener</Text><Text style={styles.supportMeta}>18 listeners online · Usually under 2 minutes</Text></View><View style={styles.supportAction}><Text style={styles.supportActionText}>Talk now</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Talk privately with a trained listener" onPress={() => router.push('/support')} style={styles.supportStrip}><View style={styles.supportIcon}><AppIcon name="hearing" color={colors.ocean800} /></View><View style={{ flex: 1 }}><Text style={styles.supportLabel}>NEED SOMEONE RIGHT NOW?</Text><Text style={styles.supportTitle}>Talk privately with a trained listener</Text><Text style={styles.supportMeta}>{supportAvailability?.availableListeners ?? 0} listeners available · {supportAvailability?.estimatedWaitSeconds ? `About ${supportAvailability.estimatedWaitSeconds} seconds` : 'Check availability'}</Text></View><View style={styles.supportAction}><Text style={styles.supportActionText}>Talk now</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></Pressable>
 
-    <View style={styles.checkIn}><View style={styles.checkInHead}><View><Text style={styles.checkInTitle}>How are you, really?</Text><Text style={styles.checkInText}>{checkIn ? 'Thanks for checking in. Your feed will adapt gently.' : 'A private check-in for better recommendations.'}</Text></View>{!!checkIn && <AppIcon name="check_circle" filled color={colors.ocean500} />}</View><View style={styles.checkInOptions}>{checkInOptions.map(option => <Pressable key={option.id} accessibilityRole="radio" accessibilityLabel={`Feeling ${option.label}`} accessibilityState={{ checked: checkIn === option.id }} onPress={() => setCheckIn(option.id)} style={[styles.checkInOption, checkIn === option.id && { backgroundColor: option.color, borderColor: option.color }]}><AppIcon name={option.icon} size={21} color={checkIn === option.id ? colors.white : option.color} /><Text style={[styles.checkInLabel, checkIn === option.id && { color: colors.white }]}>{option.label}</Text></Pressable>)}</View></View>
+    <View style={styles.checkIn}><View style={styles.checkInHead}><View><Text style={styles.checkInTitle}>How are you, really?</Text><Text style={styles.checkInText}>{checkIn ? 'Thanks for checking in. Your feed will adapt gently.' : 'A private check-in for better recommendations.'}</Text></View>{!!checkIn && <AppIcon name="check_circle" filled color={colors.ocean500} />}</View><View style={styles.checkInOptions}>{checkInOptions.map(option => <Pressable key={option.id} accessibilityRole="radio" accessibilityLabel={`Feeling ${option.label}`} accessibilityState={{ checked: checkIn === option.id }} onPress={() => recordCheckIn(option.id)} style={[styles.checkInOption, checkIn === option.id && { backgroundColor: option.color, borderColor: option.color }]}><AppIcon name={option.icon} size={21} color={checkIn === option.id ? colors.white : option.color} /><Text style={[styles.checkInLabel, checkIn === option.id && { color: colors.white }]}>{option.label}</Text></Pressable>)}</View></View>
 
     <Pressable accessibilityRole="button" accessibilityLabel="Create a new post" onPress={() => router.push('/create')} style={styles.composer}><Avatar name={displayName} uri={profile?.avatarUrl} size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
 
@@ -70,7 +87,7 @@ export default function FeedScreen() {
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}><View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View><View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} uri={articleAuthor.avatarUrl} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View></Pressable></>}
   </View>;
 
-  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading} onRefresh={() => void refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading || selectedFeedLoading} onRefresh={() => void refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
 }
 
 function DoctorBanner({ professional }: { professional: Professional }) {

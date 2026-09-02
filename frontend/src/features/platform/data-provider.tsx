@@ -7,11 +7,11 @@ import { PageResponse, PostItem, SupportCategory } from '@/features/content/type
 import { OwnProfile } from '@/features/profile/types';
 import { apiRequest } from '@/lib/api/client';
 
-import { Conversation, MediaPick, PlatformData, Professional, ProfessionalArticle, SupportChannel, UserPreferences } from './types';
+import { Conversation, MediaPick, PlatformData, Professional, ProfessionalArticle, ProfileStats, SupportAvailability, SupportChannel, UserPreferences } from './types';
 
 const emptyData: PlatformData = {
   categories: [], posts: [], communities: [], notifications: [], professionals: [], articles: [], media: [],
-  conversations: [], channels: [], profile: null, preferences: null,
+  conversations: [], channels: [], profile: null, preferences: null, supportAvailability: null, profileStats: null,
 };
 
 type DataContextValue = PlatformData & {
@@ -24,6 +24,9 @@ type DataContextValue = PlatformData & {
   setChannels: React.Dispatch<React.SetStateAction<SupportChannel[]>>;
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
   setMedia: React.Dispatch<React.SetStateAction<MediaPick[]>>;
+  setProfessionals: React.Dispatch<React.SetStateAction<Professional[]>>;
+  setArticles: React.Dispatch<React.SetStateAction<ProfessionalArticle[]>>;
+  setProfile: React.Dispatch<React.SetStateAction<OwnProfile | null>>;
   setPreferences: React.Dispatch<React.SetStateAction<UserPreferences | null>>;
 };
 
@@ -39,7 +42,7 @@ export function DataProvider({ children }: PropsWithChildren) {
     if (status !== 'authenticated') return;
     setLoading(true); setError(null);
     try {
-      const [categories, posts, communities, notifications, professionals, articles, media, conversations, channels, profile, preferences] = await Promise.all([
+      const [categories, posts, communities, notifications, professionals, articles, media, conversations, channels, profile, preferences, supportAvailability, profileStats] = await Promise.all([
         apiRequest<SupportCategory[]>('/api/v1/catalog/categories'),
         apiRequest<PageResponse<PostItem>>('/api/v1/posts/feed?size=50').then(result => result.items),
         apiRequest<PageResponse<Community>>('/api/v1/communities?size=50').then(result => result.items),
@@ -51,8 +54,10 @@ export function DataProvider({ children }: PropsWithChildren) {
         apiRequest<SupportChannel[]>('/api/v1/support-channels'),
         apiRequest<OwnProfile>('/api/v1/profiles/me'),
         apiRequest<UserPreferences>('/api/v1/preferences/me'),
+        apiRequest<SupportAvailability>('/api/v1/support/availability'),
+        apiRequest<ProfileStats>('/api/v1/profiles/me/stats'),
       ]);
-      setData({ categories, posts, communities, notifications, professionals, articles, media, conversations, channels, profile, preferences });
+      setData({ categories, posts, communities, notifications, professionals, articles, media, conversations, channels, profile, preferences, supportAvailability, profileStats });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not load GreenOcean data');
     } finally {
@@ -73,6 +78,9 @@ export function DataProvider({ children }: PropsWithChildren) {
     setChannels: update => setData(current => ({ ...current, channels: typeof update === 'function' ? update(current.channels) : update })),
     setConversations: update => setData(current => ({ ...current, conversations: typeof update === 'function' ? update(current.conversations) : update })),
     setMedia: update => setData(current => ({ ...current, media: typeof update === 'function' ? update(current.media) : update })),
+    setProfessionals: update => setData(current => ({ ...current, professionals: typeof update === 'function' ? update(current.professionals) : update })),
+    setArticles: update => setData(current => ({ ...current, articles: typeof update === 'function' ? update(current.articles) : update })),
+    setProfile: update => setData(current => ({ ...current, profile: typeof update === 'function' ? update(current.profile) : update })),
     setPreferences: update => setData(current => ({ ...current, preferences: typeof update === 'function' ? update(current.preferences) : update })),
   }), [data, error, loading, refresh]);
 

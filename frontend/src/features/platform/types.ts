@@ -9,14 +9,14 @@ export type Professional = {
   verified: boolean; promoted: boolean; promotedReason: string | null; bio: string | null; gender: string | null;
   country: string | null; city: string | null; workplace: string | null; clinicName: string | null;
   clinicAddress: string | null; education: string[]; licenseNumber: string | null; consultationModes: string[];
-  acceptingNewClients: boolean;
+  acceptingNewClients: boolean; followed: boolean;
 };
 
 export type ProfessionalArticle = {
   id: string; authorId: string; title: string; summary: string; topic: string; readTime: string;
   status: 'DRAFT' | 'IN_REVIEW' | 'PUBLISHED' | 'REJECTED'; pinned: boolean; evidenceLevel: string;
   sections: { heading: string; body: string }[]; takeaways: string[]; references: string[];
-  helpfulCount: number; helpful: boolean; publishedAt: string | null;
+  helpfulCount: number; helpful: boolean; saved: boolean; publishedAt: string | null;
 };
 
 export type MediaPick = {
@@ -27,7 +27,7 @@ export type MediaPick = {
 
 export type Conversation = {
   id: string; name: string; subtitle: string | null; lastMessage: string | null; lastMessageAt: string | null;
-  unread: number; verified: boolean; kind: 'DIRECT' | 'PROFESSIONAL' | 'GROUP'; online: boolean;
+  unread: number; verified: boolean; kind: 'DIRECT' | 'PROFESSIONAL' | 'LISTENER' | 'GROUP'; online: boolean; writable: boolean;
 };
 
 export type ChatMessage = {
@@ -47,6 +47,10 @@ export type UserPreferences = {
   professionalsOnlyMessages: boolean; mutedTerms: string[];
 };
 
+export type SupportAvailability = { availableListeners: number; peersOnline: number; estimatedWaitSeconds: number };
+export type ProfileStats = { followers: number; following: number; stories: number; helpfulReactions: number;
+  savedPosts: number; blockedAccounts: number };
+
 export type AdminDashboard = {
   stats: { members: number; activeToday: number; postsToday: number; openReports: number; criticalReports: number;
     verifiedProfessionals: number; pendingVerifications: number; resolvedWeek: number };
@@ -65,4 +69,5 @@ export type PlatformData = {
   categories: SupportCategory[]; posts: PostItem[]; communities: Community[]; notifications: NotificationItem[];
   professionals: Professional[]; articles: ProfessionalArticle[]; media: MediaPick[]; conversations: Conversation[];
   channels: SupportChannel[]; profile: OwnProfile | null; preferences: UserPreferences | null;
+  supportAvailability: SupportAvailability | null; profileStats: ProfileStats | null;
 };
