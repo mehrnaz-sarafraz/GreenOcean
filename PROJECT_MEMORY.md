@@ -131,3 +131,33 @@ Local tools → Git/GitHub → repository scaffolding → PostgreSQL
   Local PostgreSQL integration tests and the end-to-end smoke script must pass before this milestone is committed.
 - After that commit, the next milestone is Professionals + verification + Consultation, followed by Messaging,
   Moderation/Media completion, deployment hardening and the dedicated GreenOcean branding/detail pass.
+
+
+## Current state — 2026-09-02
+
+* GreenOcean is maintained as a GitHub monorepo with `backend/`, `frontend/`, and `docs/` at the repository root.
+* Backend runs on Java 21, Spring Boot 4.1, PostgreSQL 18, Spring Security, JPA, and Flyway.
+* The database schema is currently migrated through V13. Flyway remains the authoritative source of truth for schema evolution.
+* Authentication supports registration, BCrypt password hashing, JWT access tokens, rotating hashed refresh-token sessions, login, refresh, logout, logout-all, password change, and authenticated user lookup.
+* Profile functionality includes account/profile management, privacy controls, public profile lookup, and profile statistics.
+* Social and content functionality includes posts, visibility-aware feeds, comments and replies, likes, bookmarks, follows, blocks, search, communities, and notifications.
+* Professional functionality includes professional profiles, professional discovery, verification data, and administrative verification operations.
+* Additional application functionality includes articles, media recommendations, messaging, support channels, user preferences, and basic moderation/admin capabilities.
+* The frontend uses Expo SDK 57, React Native 0.86, React 19, TypeScript, and Expo Router.
+* Frontend localization currently includes English and Persian with RTL-aware behavior.
+* The frontend includes authentication and onboarding, feed, content creation, post detail, profiles, search, notifications, communities, professionals, articles, media, messaging, support, safety settings, and administration screens.
+* Local PostgreSQL connectivity has been verified and the current development database successfully validates all 13 Flyway migrations and reaches schema version V13.
+* Repository cleanup and documentation are the current hardening milestone.
+* The next milestone is automated quality gates and CI, followed by security hardening, frontend architecture improvements, missing product infrastructure, production readiness, and release polish.
+
+## Current hardening roadmap
+
+```text
+1. Repository cleanup and durable documentation
+2. Automated quality gates and CI
+3. Authentication and application security hardening
+4. Frontend architecture and automated testing
+5. Core product infrastructure and safety workflows
+6. Production, deployment and observability
+7. Branding, accessibility, performance and release preparation
+```

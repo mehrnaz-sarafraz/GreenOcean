@@ -1,22 +1,66 @@
-# IDE and operating-system files
+# ==============================
+# IDE / Editor
+# ==============================
+
 .idea/
 .vscode/
 *.iml
+
+# ==============================
+# Operating system
+# ==============================
+
 .DS_Store
 Thumbs.db
 
-# Java / Spring Boot
+# ==============================
+# Maven / Java / Spring Boot
+# ==============================
+
+.m2/
 backend/target/
 backend/.mvn/timing.properties
 
-# Node / Expo (created in a later state)
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# ==============================
+# Node / Expo / React Native
+# ==============================
+
 frontend/node_modules/
 frontend/.expo/
 frontend/dist/
+frontend/coverage/
+frontend/.eslintcache
+frontend/*.tsbuildinfo
 
-# Local secrets and developer overrides
+# ==============================
+# Environment variables / secrets
+# ==============================
+
 .env
 .env.*
 !.env.example
+
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ==============================
+# Spring local configuration
+# ==============================
+
 backend/src/main/resources/application-local.properties
 backend/src/main/resources/application-*.local.properties
+
+# ==============================
+# Temporary files
+# ==============================
+
+*.tmp
+*.temp
+*.swp
+*.swo
