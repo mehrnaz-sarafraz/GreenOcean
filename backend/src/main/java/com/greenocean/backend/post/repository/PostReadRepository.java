@@ -6,6 +6,7 @@ import com.greenocean.backend.post.dto.PostResponse;
 import com.greenocean.backend.post.dto.ProfessionalReplyResponse;
 import com.greenocean.backend.post.dto.SupportCategoryResponse;
 import com.greenocean.backend.post.entity.PostType;
+import com.greenocean.backend.post.entity.FeedMode;
 import com.greenocean.backend.post.entity.PostVisibility;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,12 +70,26 @@ public class PostReadRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<PostResponse> findFeed(UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + ACCESS_PREDICATE
+    public List<PostResponse> findFeed(UUID viewerId, FeedMode mode, int page, int size) {
+        String modePredicate = switch (mode) {
+            case FOR_YOU -> "";
+            case FOLLOWING -> " AND EXISTS (SELECT 1 FROM follows feed_follow WHERE feed_follow.follower_id = ? AND feed_follow.following_id = p.author_id) ";
+            case PROFESSIONAL_ANSWERS -> " AND EXISTS (SELECT 1 FROM professional_answers feed_answer WHERE feed_answer.post_id = p.id) ";
+        };
+        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + modePredicate + ACCESS_PREDICATE
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, this::mapPost,
-                viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, viewerId,
-                size + 1, (long) page * size);
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(viewerId);
+        parameters.add(viewerId);
+        if (mode == FeedMode.FOLLOWING) parameters.add(viewerId);
+        parameters.add(viewerId);
+        parameters.add(viewerId);
+        parameters.add(viewerId);
+        parameters.add(viewerId);
+        parameters.add(viewerId);
+        parameters.add(size + 1);
+        parameters.add((long) page * size);
+        return jdbcTemplate.query(sql, this::mapPost, parameters.toArray());
     }
 
     public Optional<PostResponse> findAccessiblePost(UUID postId, UUID viewerId) {

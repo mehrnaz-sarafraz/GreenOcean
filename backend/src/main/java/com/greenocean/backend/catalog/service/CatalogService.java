@@ -28,12 +28,12 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<SupportCategoryResponse> categories() { return repository.categories(); }
     @Transactional(readOnly = true)
-    public List<ProfessionalResponse> professionals(String query, String specialty, boolean availableOnly) {
-        return repository.professionals(query == null ? "" : query, specialty, availableOnly);
+    public List<ProfessionalResponse> professionals(UUID userId, String query, String specialty, boolean availableOnly) {
+        return repository.professionals(userId, query == null ? "" : query, specialty, availableOnly);
     }
     @Transactional(readOnly = true)
-    public ProfessionalResponse professional(UUID id) {
-        return repository.professional(id).orElseThrow(() -> new NotFoundException("Professional was not found"));
+    public ProfessionalResponse professional(UUID userId, UUID id) {
+        return repository.professional(id, userId).orElseThrow(() -> new NotFoundException("Professional was not found"));
     }
     @Transactional(readOnly = true)
     public List<ArticleResponse> articles(UUID userId, String topic) { return repository.articles(userId, topic); }
@@ -54,6 +54,11 @@ public class CatalogService {
     public void setArticleHelpful(UUID userId, UUID articleId, boolean helpful) {
         article(userId, articleId);
         if (helpful) repository.markArticleHelpful(articleId, userId); else repository.removeArticleHelpful(articleId, userId);
+    }
+    @Transactional
+    public void setArticleSaved(UUID userId, UUID articleId, boolean saved) {
+        article(userId, articleId);
+        repository.setArticleSaved(articleId, userId, saved);
     }
     @Transactional(readOnly = true)
     public List<MediaRecommendationResponse> media(UUID userId, String kind) { return repository.media(userId, kind); }

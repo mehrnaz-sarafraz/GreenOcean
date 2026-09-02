@@ -4,6 +4,7 @@ import com.greenocean.backend.messaging.dto.ConversationResponse;
 import com.greenocean.backend.messaging.dto.MessageResponse;
 import com.greenocean.backend.messaging.dto.SendMessageRequest;
 import com.greenocean.backend.messaging.dto.SupportChannelResponse;
+import com.greenocean.backend.messaging.dto.SupportAvailabilityResponse;
 import com.greenocean.backend.messaging.service.MessagingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,9 @@ public class MessagingController {
 
     @GetMapping("/support-channels")
     public List<SupportChannelResponse> channels(@AuthenticationPrincipal Jwt jwt) { return service.channels(userId(jwt)); }
+
+    @GetMapping("/support/availability")
+    public SupportAvailabilityResponse availability() { return service.supportAvailability(); }
 
     @PutMapping("/support-channels/{id}/membership")
     public SupportChannelResponse join(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
@@ -46,6 +50,12 @@ public class MessagingController {
                                                                @PathVariable UUID professionalId) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("id", service.startProfessionalConversation(professionalId, userId(jwt))));
+    }
+
+    @PostMapping("/conversations/listener-match")
+    public ResponseEntity<Map<String, UUID>> startListener(@AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("id", service.startListenerConversation(userId(jwt))));
     }
 
     @GetMapping("/conversations/{id}/messages")

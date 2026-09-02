@@ -24,4 +24,7 @@ public class UserPreferencesService {
         repository.update(userId, request);
         return get(userId);
     }
+
+    @Transactional
+    public void recordMood(UUID userId, String mood) { repository.recordMood(userId, mood); }
 }

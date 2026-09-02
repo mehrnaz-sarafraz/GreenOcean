@@ -27,14 +27,17 @@ public class CatalogController {
     public List<SupportCategoryResponse> categories() { return service.categories(); }
 
     @GetMapping("/professionals")
-    public List<ProfessionalResponse> professionals(@RequestParam(defaultValue = "") String q,
+    public List<ProfessionalResponse> professionals(@AuthenticationPrincipal Jwt jwt,
+                                                     @RequestParam(defaultValue = "") String q,
                                                      @RequestParam(defaultValue = "All") String specialty,
                                                      @RequestParam(defaultValue = "false") boolean availableOnly) {
-        return service.professionals(q, specialty, availableOnly);
+        return service.professionals(userId(jwt), q, specialty, availableOnly);
     }
 
     @GetMapping("/professionals/{id}")
-    public ProfessionalResponse professional(@PathVariable UUID id) { return service.professional(id); }
+    public ProfessionalResponse professional(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        return service.professional(userId(jwt), id);
+    }
 
     @GetMapping("/articles")
     public List<ArticleResponse> articles(@AuthenticationPrincipal Jwt jwt,
@@ -62,6 +65,18 @@ public class CatalogController {
     @DeleteMapping("/articles/{id}/helpful")
     public ResponseEntity<Void> notHelpful(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
         service.setArticleHelpful(userId(jwt), id, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/articles/{id}/save")
+    public ResponseEntity<Void> saveArticle(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        service.setArticleSaved(userId(jwt), id, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/articles/{id}/save")
+    public ResponseEntity<Void> unsaveArticle(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        service.setArticleSaved(userId(jwt), id, false);
         return ResponseEntity.noContent().build();
     }
 

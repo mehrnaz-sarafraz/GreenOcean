@@ -12,6 +12,7 @@ public record ConversationResponse(
         long unread,
         boolean verified,
         String kind,
-        boolean online
+        boolean online,
+        boolean writable
 ) {
 }

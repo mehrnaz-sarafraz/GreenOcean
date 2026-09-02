@@ -14,6 +14,7 @@ import com.greenocean.backend.post.entity.Comment;
 import com.greenocean.backend.post.entity.ContentStatus;
 import com.greenocean.backend.post.entity.Post;
 import com.greenocean.backend.post.entity.PostVisibility;
+import com.greenocean.backend.post.entity.FeedMode;
 import com.greenocean.backend.post.repository.CommentRepository;
 import com.greenocean.backend.post.repository.PostReadRepository;
 import com.greenocean.backend.post.repository.PostRepository;
@@ -63,8 +64,8 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostResponse> feed(UUID userId, int page, int size) {
-        List<PostResponse> results = postReadRepository.findFeed(userId, page, size);
+    public PageResponse<PostResponse> feed(UUID userId, FeedMode mode, int page, int size) {
+        List<PostResponse> results = postReadRepository.findFeed(userId, mode, page, size);
         return page(results, page, size);
     }
 

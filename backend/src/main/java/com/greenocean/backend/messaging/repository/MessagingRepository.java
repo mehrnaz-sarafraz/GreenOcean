@@ -3,6 +3,7 @@ package com.greenocean.backend.messaging.repository;
 import com.greenocean.backend.messaging.dto.ConversationResponse;
 import com.greenocean.backend.messaging.dto.MessageResponse;
 import com.greenocean.backend.messaging.dto.SupportChannelResponse;
+import com.greenocean.backend.messaging.dto.SupportAvailabilityResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -52,6 +53,8 @@ public class MessagingRepository {
         return jdbcTemplate.query("""
                 SELECT c.id, c.title, c.subtitle, c.conversation_kind,
                        pp.verification_status,
+                       CASE WHEN c.conversation_kind = 'LISTENER' THEN lp.status = 'AVAILABLE' ELSE FALSE END AS online,
+                       CASE WHEN ch.channel_type = 'ANNOUNCEMENT' THEN FALSE ELSE TRUE END AS writable,
                        last_message.body AS last_message, last_message.created_at AS last_message_at,
                        (SELECT COUNT(*) FROM messages unread_messages
                          WHERE unread_messages.conversation_id = c.id
@@ -60,6 +63,8 @@ public class MessagingRepository {
                   FROM conversation_members cm
                   JOIN conversations c ON c.id = cm.conversation_id AND c.is_active = TRUE
                   LEFT JOIN professional_profiles pp ON pp.user_id = c.professional_user_id
+                  LEFT JOIN listener_profiles lp ON lp.user_id = c.listener_user_id
+                  LEFT JOIN support_channels ch ON ch.id = c.channel_id
                   LEFT JOIN LATERAL (
                       SELECT m.body, m.created_at FROM messages m
                        WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
@@ -71,7 +76,7 @@ public class MessagingRepository {
                 rs.getObject("id", UUID.class), rs.getString("title"), rs.getString("subtitle"),
                 rs.getString("last_message"), instant(rs.getObject("last_message_at", OffsetDateTime.class)),
                 rs.getLong("unread"), "VERIFIED".equals(rs.getString("verification_status")),
-                rs.getString("conversation_kind"), false), userId, userId);
+                rs.getString("conversation_kind"), rs.getBoolean("online"), rs.getBoolean("writable")), userId, userId);
     }
 
     public Optional<ConversationResponse> conversation(UUID conversationId, UUID userId) {
@@ -128,6 +133,52 @@ public class MessagingRepository {
                 INSERT INTO messages (id, conversation_id, message_kind, body)
                 VALUES (?, ?, 'SYSTEM', 'Professional messages provide general support and do not establish emergency or medical care.')
                 """, systemMessageId, id);
+    }
+
+    public SupportAvailabilityResponse supportAvailability() {
+        return jdbcTemplate.queryForObject("""
+                SELECT COALESCE((SELECT SUM(current_capacity - active_conversations)
+                                  FROM listener_profiles WHERE status = 'AVAILABLE'), 0) AS listeners,
+                       (SELECT COUNT(*) FROM users u
+                         WHERE u.status = 'ACTIVE' AND u.deleted_at IS NULL
+                           AND u.last_login_at >= CURRENT_TIMESTAMP - INTERVAL '15 minutes') AS peers
+                """, (rs, row) -> {
+            long listeners = rs.getLong("listeners");
+            return new SupportAvailabilityResponse(listeners, rs.getLong("peers"), listeners > 0 ? 60 : 0);
+        });
+    }
+
+    public Optional<UUID> availableListener() {
+        return jdbcTemplate.query("""
+                SELECT user_id FROM listener_profiles
+                 WHERE status = 'AVAILABLE' AND active_conversations < current_capacity
+                 ORDER BY active_conversations, trained_at
+                 LIMIT 1 FOR UPDATE SKIP LOCKED
+                """, (rs, row) -> rs.getObject("user_id", UUID.class)).stream().findFirst();
+    }
+
+    public Optional<UUID> listenerConversation(UUID userId, UUID listenerId) {
+        return jdbcTemplate.query("""
+                SELECT c.id FROM conversations c
+                  JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = ?
+                 WHERE c.conversation_kind = 'LISTENER' AND c.listener_user_id = ? AND c.is_active = TRUE
+                """, (rs, row) -> rs.getObject("id", UUID.class), userId, listenerId).stream().findFirst();
+    }
+
+    public void createListenerConversation(UUID id, UUID systemMessageId, UUID userId, UUID listenerId) {
+        String name = jdbcTemplate.queryForObject("SELECT display_name FROM profiles WHERE user_id = ?", String.class, listenerId);
+        jdbcTemplate.update("""
+                INSERT INTO conversations (id, conversation_kind, title, subtitle, listener_user_id)
+                VALUES (?, 'LISTENER', ?, 'Trained peer listener', ?)
+                """, id, name, listenerId);
+        jdbcTemplate.update("INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)",
+                id, userId, id, listenerId);
+        jdbcTemplate.update("""
+                INSERT INTO messages (id, conversation_id, message_kind, body)
+                VALUES (?, ?, 'SYSTEM', 'Peer listeners provide non-clinical emotional support. GreenOcean is not an emergency service.')
+                """, systemMessageId, id);
+        jdbcTemplate.update("UPDATE listener_profiles SET active_conversations = active_conversations + 1 WHERE user_id = ?",
+                listenerId);
     }
 
     private java.time.Instant instant(OffsetDateTime value) { return value == null ? null : value.toInstant(); }

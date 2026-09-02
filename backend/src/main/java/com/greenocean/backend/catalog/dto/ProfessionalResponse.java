@@ -9,6 +9,6 @@ public record ProfessionalResponse(
         BigDecimal rating, int reviewCount, int greenOceanScore, int experienceYears, List<String> languages,
         boolean verified, boolean promoted, String promotedReason, String bio, String gender, String country,
         String city, String workplace, String clinicName, String clinicAddress, List<String> education,
-        String licenseNumber, List<String> consultationModes, boolean acceptingNewClients
+        String licenseNumber, List<String> consultationModes, boolean acceptingNewClients, boolean followed
 ) {
 }

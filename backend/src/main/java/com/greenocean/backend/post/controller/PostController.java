@@ -6,6 +6,7 @@ import com.greenocean.backend.post.dto.CreateCommentRequest;
 import com.greenocean.backend.post.dto.CreatePostRequest;
 import com.greenocean.backend.post.dto.PostResponse;
 import com.greenocean.backend.post.service.PostService;
+import com.greenocean.backend.post.entity.FeedMode;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,9 +41,10 @@ public class PostController {
 
     @GetMapping("/feed")
     public PageResponse<PostResponse> feed(@AuthenticationPrincipal Jwt jwt,
+                                           @RequestParam(defaultValue = "FOR_YOU") FeedMode mode,
                                            @RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "20") int size) {
-        return postService.feed(userId(jwt), validPage(page), validSize(size));
+        return postService.feed(userId(jwt), mode, validPage(page), validSize(size));
     }
 
     @GetMapping("/{postId}")

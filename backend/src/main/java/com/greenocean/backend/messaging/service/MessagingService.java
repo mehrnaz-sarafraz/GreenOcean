@@ -7,6 +7,7 @@ import com.greenocean.backend.common.persistence.DatabaseUuidGenerator;
 import com.greenocean.backend.messaging.dto.ConversationResponse;
 import com.greenocean.backend.messaging.dto.MessageResponse;
 import com.greenocean.backend.messaging.dto.SupportChannelResponse;
+import com.greenocean.backend.messaging.dto.SupportAvailabilityResponse;
 import com.greenocean.backend.messaging.repository.MessagingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +58,8 @@ public class MessagingService {
 
     @Transactional
     public MessageResponse send(UUID conversationId, UUID userId, String body) {
-        requireConversation(conversationId, userId);
+        ConversationResponse conversation = requireConversation(conversationId, userId);
+        if (!conversation.writable()) throw new ForbiddenException("This announcement channel is read-only");
         UUID id = uuidGenerator.nextUuid();
         repository.send(id, conversationId, userId, body.trim());
         return repository.messages(conversationId, userId).stream()
@@ -67,7 +69,7 @@ public class MessagingService {
 
     @Transactional
     public UUID startProfessionalConversation(UUID professionalId, UUID userId) {
-        if (catalogRepository.professional(professionalId).isEmpty()) {
+        if (!catalogRepository.isVerifiedProfessional(professionalId)) {
             throw new NotFoundException("Professional was not found");
         }
         return repository.professionalConversation(userId, professionalId).orElseGet(() -> {
@@ -77,10 +79,25 @@ public class MessagingService {
         });
     }
 
+    @Transactional(readOnly = true)
+    public SupportAvailabilityResponse supportAvailability() { return repository.supportAvailability(); }
+
+    @Transactional
+    public UUID startListenerConversation(UUID userId) {
+        UUID listenerId = repository.availableListener()
+                .orElseThrow(() -> new NotFoundException("No trained listener is available right now"));
+        return repository.listenerConversation(userId, listenerId).orElseGet(() -> {
+            UUID id = uuidGenerator.nextUuid();
+            repository.createListenerConversation(id, uuidGenerator.nextUuid(), userId, listenerId);
+            return id;
+        });
+    }
+
     private SupportChannelResponse channel(UUID id, UUID userId) {
         return repository.channel(id, userId).orElseThrow(() -> new NotFoundException("Support channel was not found"));
     }
-    private void requireConversation(UUID id, UUID userId) {
-        if (repository.conversation(id, userId).isEmpty()) throw new ForbiddenException("Conversation is not available");
+    private ConversationResponse requireConversation(UUID id, UUID userId) {
+        return repository.conversation(id, userId)
+                .orElseThrow(() -> new ForbiddenException("Conversation is not available"));
     }
 }

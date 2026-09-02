@@ -7,6 +7,8 @@ import com.greenocean.backend.profile.dto.PublicProfileResponse;
 import com.greenocean.backend.profile.dto.UpdateProfileRequest;
 import com.greenocean.backend.profile.entity.Profile;
 import com.greenocean.backend.profile.repository.ProfileRepository;
+import com.greenocean.backend.profile.repository.ProfileStatsRepository;
+import com.greenocean.backend.profile.dto.ProfileStatsResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,9 +20,11 @@ import java.util.UUID;
 @Service
 public class ProfileService {
     private final ProfileRepository profileRepository;
+    private final ProfileStatsRepository profileStatsRepository;
 
-    public ProfileService(ProfileRepository profileRepository) {
+    public ProfileService(ProfileRepository profileRepository, ProfileStatsRepository profileStatsRepository) {
         this.profileRepository = profileRepository;
+        this.profileStatsRepository = profileStatsRepository;
     }
 
     @Transactional(readOnly = true)
@@ -76,6 +80,12 @@ public class ProfileService {
                 profile.isShowBirthYear() ? profile.getBirthYear() : null,
                 profile.isProfilePrivate()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileStatsResponse getOwnStats(UUID userId) {
+        findByUserId(userId);
+        return profileStatsRepository.get(userId);
     }
 
     private Profile findByUserId(UUID userId) {

@@ -3,6 +3,7 @@ package com.greenocean.backend.profile.controller;
 import com.greenocean.backend.profile.dto.OwnProfileResponse;
 import com.greenocean.backend.profile.dto.PublicProfileResponse;
 import com.greenocean.backend.profile.dto.UpdateProfileRequest;
+import com.greenocean.backend.profile.dto.ProfileStatsResponse;
 import com.greenocean.backend.profile.service.ProfileService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,11 @@ public class ProfileController {
     @GetMapping("/me")
     public OwnProfileResponse getOwnProfile(@AuthenticationPrincipal Jwt jwt) {
         return profileService.getOwnProfile(UUID.fromString(jwt.getSubject()));
+    }
+
+    @GetMapping("/me/stats")
+    public ProfileStatsResponse getOwnStats(@AuthenticationPrincipal Jwt jwt) {
+        return profileService.getOwnStats(UUID.fromString(jwt.getSubject()));
     }
 
     @PatchMapping("/me")

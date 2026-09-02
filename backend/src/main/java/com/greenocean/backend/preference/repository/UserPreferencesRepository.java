@@ -53,6 +53,10 @@ public class UserPreferencesRepository {
                 userId);
     }
 
+    public void recordMood(UUID userId, String mood) {
+        jdbcTemplate.update("INSERT INTO mood_check_ins (user_id, mood) VALUES (?, ?)", userId, mood);
+    }
+
     private boolean value(Boolean requested, boolean current) { return requested == null ? current : requested; }
     private String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private String[] clean(List<String> values) {
