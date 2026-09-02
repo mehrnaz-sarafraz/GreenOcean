@@ -26,14 +26,39 @@ export default function Chat() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true); setError('');
+
+    let cancelled = false;
+
     apiRequest<ChatMessage[]>(`/api/v1/conversations/${id}/messages`)
       .then(result => {
+        if (cancelled) return;
+
         setMessages(result);
-        setConversations(items => items.map(item => item.id === id ? { ...item, unread: 0 } : item));
+        setError('');
+        setConversations(items =>
+          items.map(item =>
+            item.id === id ? { ...item, unread: 0 } : item
+          )
+        );
       })
-      .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load this conversation'))
-      .finally(() => setLoading(false));
+      .catch(caught => {
+        if (!cancelled) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Could not load this conversation'
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, setConversations]);
 
   async function send() {

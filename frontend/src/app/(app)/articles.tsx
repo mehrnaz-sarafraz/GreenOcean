@@ -1,12 +1,12 @@
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
 import { useAuth } from '@/features/auth/auth-provider';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const filters = ['All', 'Anxiety', 'Sleep', 'Relationships'];
 
@@ -14,7 +14,10 @@ export default function Articles() {
   const { user } = useAuth();
   const { professionals, articles: professionalArticles } = usePlatformData();
   const [filter, setFilter] = useState('All');
-  const shown = useMemo(() => professionalArticles.filter(article => filter === 'All' || article.topic === filter), [filter]);
+  const shown = useMemo(
+    () => professionalArticles.filter(article => filter === 'All' || article.topic === filter),
+    [filter, professionalArticles]
+  );  
   const featured = professionalArticles.find(article => article.pinned) ?? professionalArticles[0];
   const featuredAuthor = professionals.find(item => item.id === featured?.authorId);
   return <Screen scroll style={styles.screen}><View style={styles.content}>

@@ -1,16 +1,16 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { PostCard } from '@/features/content/post-card';
 import { PageResponse, PostItem } from '@/features/content/types';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { Professional } from '@/features/platform/types';
+import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
-import { apiRequest } from '@/lib/api/client';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE: 'Life experience' } as const;
 const checkInOptions = [
@@ -27,17 +27,58 @@ export default function FeedScreen() {
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
   const [categoryId, setCategoryId] = useState('all');
   const [checkIn, setCheckIn] = useState('');
-  const [selectedFeed, setSelectedFeed] = useState<PostItem[] | null>(null);
-  const [selectedFeedLoading, setSelectedFeedLoading] = useState(false);
+  type RemoteFeedTab = 'following' | 'professionalAnswers';
+
+  const [selectedFeedState, setSelectedFeedState] = useState<{
+    tab: RemoteFeedTab;
+    items: PostItem[];
+  } | null>(null);
+  
   useEffect(() => {
-    if (tab === 'forYou') { setSelectedFeed(null); return; }
-    const mode = tab === 'following' ? 'FOLLOWING' : 'PROFESSIONAL_ANSWERS';
-    setSelectedFeedLoading(true);
-    apiRequest<PageResponse<PostItem>>(`/api/v1/posts/feed?mode=${mode}&size=50`)
-      .then(result => setSelectedFeed(result.items))
-      .catch(() => setSelectedFeed([]))
-      .finally(() => setSelectedFeedLoading(false));
-  }, [tab]);
+  if (tab === 'forYou') return;
+
+  const requestedTab = tab;
+  const mode =
+    requestedTab === 'following'
+      ? 'FOLLOWING'
+      : 'PROFESSIONAL_ANSWERS';
+
+  let cancelled = false;
+
+  apiRequest<PageResponse<PostItem>>(
+    `/api/v1/posts/feed?mode=${mode}&size=50`
+  )
+    .then(result => {
+      if (!cancelled) {
+        setSelectedFeedState({
+          tab: requestedTab,
+          items: result.items,
+        });
+      }
+    })
+    .catch(() => {
+      if (!cancelled) {
+        setSelectedFeedState({
+          tab: requestedTab,
+          items: [],
+        });
+      }
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [tab]);
+
+  const selectedFeed =
+    tab === 'forYou'
+      ? null
+      : selectedFeedState?.tab === tab
+        ? selectedFeedState.items
+        : [];
+
+  const selectedFeedLoading =
+    tab !== 'forYou' && selectedFeedState?.tab !== tab;
   function recordCheckIn(value: string) {
     setCheckIn(value);
     void apiRequest('/api/v1/preferences/me/check-ins', { method: 'POST', body: JSON.stringify({ mood: value.toUpperCase() }) });

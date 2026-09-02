@@ -1,5 +1,6 @@
 package com.greenocean.backend;
 
+import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class AuthFlowIntegrationTest {
 
     @Autowired

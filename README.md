@@ -168,7 +168,19 @@ Useful frontend checks:
 ```powershell
 npm run typecheck
 npm run lint
+npm test -- --runInBand
 ```
+
+## Automated quality gates
+
+GitHub Actions runs the following checks for every push and pull request:
+
+* Backend compilation, Flyway migrations, and integration tests against a disposable PostgreSQL Testcontainer
+* Frontend linting
+* Frontend TypeScript checking
+* Frontend Jest tests
+
+Backend integration tests require a running Docker engine when executed locally. They do not use the developer's local PostgreSQL database or credentials.
 
 ## Database migrations
 

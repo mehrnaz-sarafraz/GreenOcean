@@ -6,7 +6,7 @@ import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Screen } from '@/components/screen';
 import { PostCard } from '@/features/content/post-card';
-import { PageResponse, PostItem } from '@/features/content/types';
+import { PostItem } from '@/features/content/types';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
@@ -20,11 +20,7 @@ export default function CommunityDetail() {
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!community?.member) { setPosts([]); return; }
-    apiRequest<PageResponse<PostItem>>(`/api/v1/communities/${community.id}/posts?size=50`)
-      .then(result => setPosts(result.items)).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load this circle'));
-  }, [community?.id, community?.member]);
+  useEffect
 
   async function join() {
     if (!community) return;
@@ -34,14 +30,15 @@ export default function CommunityDetail() {
 
   if (!community) return <Screen style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Text style={styles.empty}>Community not found.</Text></View></Screen>;
 
+  const visiblePosts = community?.member ? posts : [];
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable>
     <View style={styles.hero}><View style={styles.heroIcon}><AppIcon name="diversity_1" size={34} color={colors.ocean700} /></View><Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{community.name}</Text><Text style={[styles.meta, { textAlign: isRtl ? 'right' : 'left' }]}>{community.memberCount.toLocaleString()} {t('members')}</Text><Text style={[styles.desc, { textAlign: isRtl ? 'right' : 'left' }]}>{community.description}</Text><AppButton label={community.member ? t('shareHere') : t('join')} onPress={() => community.member ? router.push('/create') : void join()} /></View>
     <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>{t('communityPosts')}</Text>
     {!community.member && <Text style={styles.empty}>Join this circle to read and share community posts.</Text>}
     {!!error && <Text style={styles.error}>{error}</Text>}
-    {posts.map(post => <PostCard key={post.id} post={post} />)}
-    {community.member && posts.length === 0 && !error && <Text style={styles.empty}>No stories have been shared here yet.</Text>}
+    {visiblePosts.map(post => <PostCard key={post.id} post={post} />)}
+    {community.member && visiblePosts.length === 0 && !error && <Text style={styles.empty}>No stories have been shared here yet.</Text>}
   </View></Screen>;
 }
 

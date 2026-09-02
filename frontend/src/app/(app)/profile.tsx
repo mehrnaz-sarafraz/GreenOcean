@@ -18,8 +18,7 @@ export default function ProfileScreen() {
   const { professional: professionalId } = useLocalSearchParams<{ professional?: string }>();
   const { t } = useLanguage();
   const { user, signOut } = useAuth();
-  const { profile, profileStats, posts, preferences, professionals, articles } = usePlatformData();
-  const professional = professionals.find(item => item.id === professionalId);
+  const { profile, profileStats, posts, preferences, professionals } = usePlatformData();  const professional = professionals.find(item => item.id === professionalId);
   if (professional) return <ProfessionalProfile professional={professional} />;
 
   const recentStories = posts.filter(post => post.author?.userId === profile?.userId).slice(0, 4);

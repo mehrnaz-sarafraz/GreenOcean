@@ -1,6 +1,3 @@
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
@@ -10,6 +7,9 @@ import { usePlatformData } from '@/features/platform/data-provider';
 import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
+import { router } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 const moods = [
   ['sentiment_satisfied', 'Calm'],
@@ -42,8 +42,10 @@ export default function Create() {
   const [type, setType] = useState('EXPERIENCE');
   const [error, setError] = useState('');
   const [publishing, setPublishing] = useState(false);
-  const visibleCategories = useMemo(() => categories.filter(category => category.group === group), [group]);
-
+  const visibleCategories = useMemo(
+    () => categories.filter(category => category.group === group),
+    [categories, group]
+  );
   function chooseGroup(next: SupportCategoryGroup) {
     setGroup(next);
     setCategoryId('');

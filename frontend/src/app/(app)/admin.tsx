@@ -22,15 +22,18 @@ export default function Admin() {
   const [section, setSection] = useState<Section>('OVERVIEW');
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
-    if (!allowed) return;
-    setLoading(true); setError('');
-    try { setDashboard(await apiRequest<AdminDashboard>('/api/v1/admin/dashboard')); }
-    catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load moderation data'); }
-    finally { setLoading(false); }
-  }, [allowed]);
+  if (!allowed) return;
+
+  try {
+    const result = await apiRequest<AdminDashboard>('/api/v1/admin/dashboard');
+    setDashboard(result);
+    setError('');
+  } catch (caught) {
+    setError(caught instanceof Error ? caught.message : 'Could not load moderation data');
+  }
+}, [allowed]);
   useEffect(() => { void load(); }, [load]);
 
   async function reportAction(id: string, action: 'APPROVE' | 'REVIEW' | 'REMOVE') {
@@ -48,7 +51,7 @@ export default function Admin() {
     <View style={styles.top}><Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={{ flex: 1 }}><Text style={styles.title}>GreenOcean Admin</Text><Text style={styles.subtitle}>Trust, safety, and community operations</Text></View><Pressable onPress={() => void load()}><AppIcon name="refresh" color={colors.ocean700} /></Pressable></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.nav}>{navigation.map(([id, label, icon]) => <Pressable key={id} onPress={() => setSection(id)} style={[styles.navItem, section === id && styles.navActive]}><AppIcon name={icon} size={18} color={section === id ? colors.white : colors.muted} /><Text style={[styles.navText, section === id && styles.navTextActive]}>{label}</Text>{id === 'REPORTS' && !!dashboard?.stats.openReports && <View style={styles.badge}><Text style={styles.badgeText}>{dashboard.stats.openReports}</Text></View>}</Pressable>)}</ScrollView>
     <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
-      {loading && !dashboard && <Text style={styles.state}>Loading operations…</Text>}
+      {!dashboard && !error && <Text style={styles.state}>Loading operations…</Text>}
       {!!error && <Text style={styles.error}>{error}</Text>}
       {dashboard && section === 'OVERVIEW' && <Overview data={dashboard} go={setSection} />}
       {dashboard && section === 'REPORTS' && <Reports data={dashboard} act={reportAction} />}
