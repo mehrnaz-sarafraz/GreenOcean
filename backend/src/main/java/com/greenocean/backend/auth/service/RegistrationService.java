@@ -24,14 +24,22 @@ public class RegistrationService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final DatabaseUuidGenerator databaseUuidGenerator;
+    private final EmailVerificationService emailVerificationService;
 
-    public RegistrationService(UserRepository userRepository, ProfileRepository profileRepository, RoleRepository roleRepository,
-                               PasswordEncoder passwordEncoder, DatabaseUuidGenerator databaseUuidGenerator) {
+    public RegistrationService(
+            UserRepository userRepository,
+            ProfileRepository profileRepository,
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            DatabaseUuidGenerator databaseUuidGenerator,
+            EmailVerificationService emailVerificationService
+    ) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.databaseUuidGenerator = databaseUuidGenerator;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
@@ -61,6 +69,8 @@ public class RegistrationService {
 
         Profile profile = new Profile(savedUser, username, displayName, countryCode, city, request.birthYear());
         profileRepository.save(profile);
+
+        emailVerificationService.createToken(savedUser);
 
         return new RegisterResponse(savedUser.getId(), savedUser.getEmail(), profile.getUsername());
     }

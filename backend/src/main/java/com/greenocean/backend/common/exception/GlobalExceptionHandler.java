@@ -20,6 +20,27 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ApiError> handleTooManyRequestsException(
+            TooManyRequestsException exception,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(
+                        "Retry-After",
+                        Long.toString(exception.getRetryAfterSeconds())
+                )
+                .body(new ApiError(
+                        Instant.now(),
+                        HttpStatus.TOO_MANY_REQUESTS.value(),
+                        HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                        exception.getMessage(),
+                        request.getRequestURI(),
+                        List.of()
+                ));
+    }
+
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException exception, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiError(

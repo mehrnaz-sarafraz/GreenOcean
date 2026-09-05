@@ -99,4 +99,13 @@ public class User {
     public Set<Role> getRoles() {
         return Set.copyOf(roles);
     }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
+        this.updatedAt = Instant.now();
+    }
 }
