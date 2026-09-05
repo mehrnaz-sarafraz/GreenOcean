@@ -70,25 +70,70 @@ export default function FeedScreen() {
   };
 }, [tab]);
 
-  const selectedFeed =
-    tab === 'forYou'
-      ? null
-      : selectedFeedState?.tab === tab
-        ? selectedFeedState.items
-        : [];
-
   const selectedFeedLoading =
-    tab !== 'forYou' && selectedFeedState?.tab !== tab;
+    tab !== 'forYou' &&
+    selectedFeedState?.tab !== tab;
+
   function recordCheckIn(value: string) {
     setCheckIn(value);
-    void apiRequest('/api/v1/preferences/me/check-ins', { method: 'POST', body: JSON.stringify({ mood: value.toUpperCase() }) });
+
+    void apiRequest(
+      '/api/v1/preferences/me/check-ins',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          mood: value.toUpperCase(),
+        }),
+      },
+    );
   }
-  const featuredCategories = useMemo(() => [
-    ...categories.filter(category => category.group === 'EMOTION').slice(0, 2),
-    ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
-    ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
-  ], [categories]);
-  const shown = useMemo(() => (selectedFeed ?? posts).filter(post => categoryId === 'all' || post.category?.id === categoryId), [selectedFeed, posts, categoryId]);
+
+  const featuredCategories = useMemo(
+    () => [
+      ...categories
+        .filter(
+          category =>
+            category.group === 'EMOTION',
+        )
+        .slice(0, 2),
+
+      ...categories
+        .filter(
+          category =>
+            category.group === 'CONDITION',
+        )
+        .slice(0, 3),
+
+      ...categories
+        .filter(
+          category =>
+            category.group ===
+            'LIFE_EXPERIENCE',
+        )
+        .slice(0, 3),
+    ],
+    [categories],
+  );
+
+  const shown = useMemo(() => {
+    const source =
+      tab === 'forYou'
+        ? posts
+        : selectedFeedState?.tab === tab
+          ? selectedFeedState.items
+          : [];
+
+    return source.filter(
+      post =>
+        categoryId === 'all' ||
+        post.category?.id === categoryId,
+    );
+  }, [
+    categoryId,
+    posts,
+    selectedFeedState,
+    tab,
+  ]);
   const pinnedArticle = articles.find(article => article.pinned) ?? articles[0];
   const articleAuthor = professionals.find(professional => professional.id === pinnedArticle?.authorId);
   const displayName = profile?.displayName ?? 'GreenOcean member';

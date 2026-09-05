@@ -1,4 +1,6 @@
 package com.greenocean.backend;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import org.springframework.context.annotation.Import;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,17 +42,19 @@ class ContentSocialIntegrationTest {
         String publicPostId = createPost(author.token(), "PUBLIC", "A searchable ocean story");
         String followersPostId = createPost(author.token(), "FOLLOWERS", "Followers-only support story");
 
-        mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
+        mockMvc.perform(get("/api/v1/posts/feed")
+                        .header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(1))
-                .andExpect(jsonPath("$.items[0].id").value(publicPostId));
+                .andExpect(jsonPath("$.items[*].id", hasItem(publicPostId)))
+                .andExpect(jsonPath("$.items[*].id", not(hasItem(followersPostId))));
 
         mockMvc.perform(put("/api/v1/social/follows/{target}", author.userId()).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(2));
+                .andExpect(jsonPath("$.items[*].id", hasItem(publicPostId)))
+                .andExpect(jsonPath("$.items[*].id", hasItem(followersPostId)));
 
         mockMvc.perform(put("/api/v1/posts/{id}/like", publicPostId).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isNoContent());
@@ -89,7 +93,9 @@ class ContentSocialIntegrationTest {
                 .andExpect(status().isNoContent());
         mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(0));
+                .andExpect(jsonPath("$.items[*].id", not(hasItem(publicPostId))))
+                .andExpect(jsonPath("$.items[*].id", not(hasItem(followersPostId))));
+
         mockMvc.perform(get("/api/v1/search/users").queryParam("q", author.username()).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0));

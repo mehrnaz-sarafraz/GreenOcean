@@ -87,19 +87,13 @@ export function DataProvider({
 }: PropsWithChildren) {
   const { status, user } = useAuth();
 
+  const userId = user?.userId ?? null;
+
   const [data, setData] = useState<PlatformData>(emptyData);
   const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Fetches all platform data.
-   *
-   * Important:
-   * This function does not modify React state.
-   * That makes it safe to call from useEffect without triggering
-   * the react-hooks/set-state-in-effect lint rule.
-   */
   const fetchData = useCallback(async (): Promise<PlatformData> => {
     const [
       categories,
@@ -186,16 +180,10 @@ export function DataProvider({
     };
   }, []);
 
-  /**
-   * Manual refresh.
-   *
-   * This is used by screens such as the feed when the user explicitly
-   * requests fresh platform data.
-   */
   const refresh = useCallback(async () => {
     if (
       status !== 'authenticated' ||
-      !user?.userId
+      !userId
     ) {
       return;
     }
@@ -207,7 +195,7 @@ export function DataProvider({
       const result = await fetchData();
 
       setData(result);
-      setLoadedUserId(user.userId);
+      setLoadedUserId(userId);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -217,24 +205,17 @@ export function DataProvider({
     } finally {
       setRefreshing(false);
     }
-  }, [fetchData, status, user?.userId]);
+  }, [fetchData, status, userId]);
 
-  /**
-   * Initial authenticated data load.
-   *
-   * No state update happens synchronously inside the effect.
-   * State is updated only after the asynchronous request resolves.
-   */
   useEffect(() => {
     if (
       status !== 'authenticated' ||
-      !user?.userId
+      !userId
     ) {
       return;
     }
 
     let cancelled = false;
-    const userId = user.userId;
 
     fetchData()
       .then(result => {
@@ -263,29 +244,19 @@ export function DataProvider({
     return () => {
       cancelled = true;
     };
-  }, [fetchData, status, user?.userId]);
+  }, [fetchData, status, userId]);
 
-  /**
-   * Never expose data belonging to a previous authenticated session.
-   *
-   * We do not need setData(emptyData) inside useEffect when logging out.
-   * Instead, unauthenticated users simply receive emptyData.
-   */
   const sessionData =
     status === 'authenticated' &&
-    user?.userId &&
-    loadedUserId === user.userId
+    userId &&
+    loadedUserId === userId
       ? data
       : emptyData;
 
-  /**
-   * Initial loading is derived rather than synchronously set
-   * inside useEffect.
-   */
   const initialLoading =
     status === 'authenticated' &&
-    !!user?.userId &&
-    loadedUserId !== user.userId &&
+    !!userId &&
+    loadedUserId !== userId &&
     error === null;
 
   const loading = refreshing || initialLoading;
