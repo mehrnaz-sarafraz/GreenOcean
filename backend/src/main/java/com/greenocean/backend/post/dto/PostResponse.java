@@ -5,6 +5,7 @@ import com.greenocean.backend.post.entity.PostType;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 public record PostResponse(
         UUID id,
@@ -22,6 +23,7 @@ public record PostResponse(
         PostType postType,
         String mood,
         ProfessionalReplyResponse professionalReply,
+        List<PostMediaResponse> media,
         Instant createdAt
 ) {
 }

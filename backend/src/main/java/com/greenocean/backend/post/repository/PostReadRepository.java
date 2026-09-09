@@ -5,6 +5,7 @@ import com.greenocean.backend.post.dto.CommentResponse;
 import com.greenocean.backend.post.dto.PostResponse;
 import com.greenocean.backend.post.dto.ProfessionalReplyResponse;
 import com.greenocean.backend.post.dto.SupportCategoryResponse;
+import com.greenocean.backend.post.dto.PostMediaResponse;
 import com.greenocean.backend.post.entity.PostType;
 import com.greenocean.backend.post.entity.FeedMode;
 import com.greenocean.backend.post.entity.PostVisibility;
@@ -38,6 +39,8 @@ public class PostReadRepository {
                    (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'PUBLISHED') AS comment_count,
                    EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked,
                    EXISTS(SELECT 1 FROM bookmarks b WHERE b.post_id = p.id AND b.user_id = ?) AS bookmarked
+                   ,ARRAY(SELECT m.id FROM media m WHERE m.post_id = p.id AND m.media_status = 'ATTACHED' AND m.deleted_at IS NULL ORDER BY m.created_at) AS media_ids
+                   ,ARRAY(SELECT m.content_type FROM media m WHERE m.post_id = p.id AND m.media_status = 'ATTACHED' AND m.deleted_at IS NULL ORDER BY m.created_at) AS media_types
               FROM posts p
               JOIN profiles pr ON pr.user_id = p.author_id
               LEFT JOIN support_categories sc ON sc.id = p.category_id
@@ -190,8 +193,17 @@ public class PostReadRepository {
                 resultSet.getLong("like_count"), resultSet.getLong("comment_count"),
                 resultSet.getBoolean("liked"), resultSet.getBoolean("bookmarked"),
                 category, PostType.valueOf(resultSet.getString("post_type")), resultSet.getString("mood"), professionalReply,
+                media(resultSet),
                 resultSet.getObject("created_at", OffsetDateTime.class).toInstant()
         );
+    }
+
+    private List<PostMediaResponse> media(ResultSet resultSet) throws SQLException {
+        UUID[] ids = (UUID[]) resultSet.getArray("media_ids").getArray();
+        String[] types = (String[]) resultSet.getArray("media_types").getArray();
+        List<PostMediaResponse> result = new ArrayList<>(ids.length);
+        for (int index = 0; index < ids.length; index++) result.add(new PostMediaResponse(ids[index], types[index]));
+        return List.copyOf(result);
     }
 
     private CommentResponse mapComment(ResultSet resultSet, int rowNumber) throws SQLException {

@@ -8,12 +8,15 @@ import com.greenocean.backend.auth.dto.CurrentUserResponse;
 import com.greenocean.backend.auth.dto.LoginRequest;
 import com.greenocean.backend.auth.dto.LogoutRequest;
 import com.greenocean.backend.auth.dto.RefreshTokenRequest;
+import com.greenocean.backend.auth.dto.RequestPasswordResetRequest;
+import com.greenocean.backend.auth.dto.ResetPasswordRequest;
 import com.greenocean.backend.auth.dto.RegisterRequest;
 import com.greenocean.backend.auth.dto.RegisterResponse;
 import com.greenocean.backend.auth.dto.TokenResponse;
 import com.greenocean.backend.auth.service.AuthRateLimitService;
 import com.greenocean.backend.auth.service.AuthenticationService;
 import com.greenocean.backend.auth.service.RegistrationService;
+import com.greenocean.backend.auth.service.PasswordResetService;
 import com.greenocean.backend.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -37,23 +40,28 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     private final AuthRateLimitService authRateLimitService;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(
             RegistrationService registrationService,
             AuthenticationService authenticationService,
             AuthRateLimitService authRateLimitService,
-            EmailVerificationService emailVerificationService
+            EmailVerificationService emailVerificationService,
+            PasswordResetService passwordResetService
     ) {
         this.registrationService = registrationService;
         this.authenticationService = authenticationService;
         this.authRateLimitService = authRateLimitService;
         this.emailVerificationService = emailVerificationService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(
-            @Valid @RequestBody VerifyEmailRequest request
+            @Valid @RequestBody VerifyEmailRequest request,
+            HttpServletRequest httpRequest
     ) {
+        authRateLimitService.checkRecoveryAllowed(clientIp(httpRequest));
         emailVerificationService.verify(request.token());
 
         return ResponseEntity.noContent().build();
@@ -61,10 +69,32 @@ public class AuthController {
 
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(
-            @Valid @RequestBody ResendEmailVerificationRequest request
+            @Valid @RequestBody ResendEmailVerificationRequest request,
+            HttpServletRequest httpRequest
     ) {
+        authRateLimitService.checkRecoveryAllowed(clientIp(httpRequest));
         emailVerificationService.resend(request.email());
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<Void> requestPasswordReset(
+            @Valid @RequestBody RequestPasswordResetRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        authRateLimitService.checkRecoveryAllowed(clientIp(httpRequest));
+        passwordResetService.requestReset(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        authRateLimitService.checkRecoveryAllowed(clientIp(httpRequest));
+        passwordResetService.resetPassword(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
     }
 
@@ -107,6 +137,7 @@ public class AuthController {
             authRateLimitService.recordLoginFailure(
                     request.email()
             );
+            authenticationService.recordLoginFailure(request.email());
 
             throw exception;
         }

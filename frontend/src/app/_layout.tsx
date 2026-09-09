@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from '@expo-google-fonts/material-symbols/useFonts';
 import { MaterialSymbols_400Regular } from '@expo-google-fonts/material-symbols/400Regular';
@@ -8,18 +9,21 @@ import { AuthProvider } from '@/features/auth/auth-provider';
 import { DataProvider } from '@/features/platform/data-provider';
 import { LanguageProvider } from '@/localization/language-provider';
 import { colors } from '@/theme/tokens';
+import { AppErrorBoundary } from '@/components/app-error-boundary';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ MaterialSymbols_400Regular, MaterialSymbols_600SemiBold });
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded) return <View accessibilityLabel="Loading GreenOcean" style={styles.loading}><ActivityIndicator color={colors.ocean600} /></View>;
   return (
-    <LanguageProvider>
+    <AppErrorBoundary><LanguageProvider>
       <AuthProvider>
         <DataProvider>
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.foam } }} />
         </DataProvider>
       </AuthProvider>
-    </LanguageProvider>
+    </LanguageProvider></AppErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({ loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.foam } });

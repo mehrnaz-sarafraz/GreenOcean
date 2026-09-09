@@ -55,8 +55,8 @@ public class EmailVerificationToken {
                 && expiresAt.isAfter(now);
     }
 
-    public void consume() {
-        this.consumedAt = Instant.now();
+    public void consume(Instant now) {
+        this.consumedAt = now;
     }
 
     public UUID getId() {

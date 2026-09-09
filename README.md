@@ -68,14 +68,16 @@ The current application includes:
 * Messaging
 * User preferences
 * Support channels
-* Basic administration and moderation functionality
+* Moderation, user reports, account blocks, and auditable review workflows
+* Secure media attachments and professional credential submissions
+* Production container, observability, and backup foundations
 
 The PostgreSQL schema is managed exclusively through Flyway migrations.
 
 Current migration level:
 
 ```text
-V13
+V16
 ```
 
 Existing migrations must not be edited after they have been applied. Schema changes must be introduced using new Flyway migrations.
@@ -180,7 +182,7 @@ GitHub Actions runs the following checks for every push and pull request:
 * Frontend TypeScript checking
 * Frontend Jest tests
 
-Backend integration tests require a running Docker engine when executed locally. They do not use the developer's local PostgreSQL database or credentials.
+Backend integration tests require a running Docker engine when executed locally. They do not use the developer's local PostgreSQL database or credentials. Pull requests also build both container images without publishing them.
 
 ## Database migrations
 
@@ -256,3 +258,7 @@ The current hardening roadmap is:
 5. Core product infrastructure
 6. Production and deployment readiness
 7. Product polish and release preparation
+
+Stages 1-3 are complete. Security hardening includes authentication/recovery rate limits, email verification,
+single-use password recovery, refresh-token reuse detection, security audit events, defensive HTTP headers,
+production CORS validation, and non-persistent browser token storage.

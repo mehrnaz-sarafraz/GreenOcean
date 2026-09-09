@@ -8,6 +8,8 @@ export function AppButton({ label, onPress, loading = false, disabled = false, v
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: loading || disabled, busy: loading }}
       disabled={loading || disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.base, styles[variant], pressed && styles.pressed, (loading || disabled) && styles.disabled]}>

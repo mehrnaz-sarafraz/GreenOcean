@@ -18,6 +18,7 @@ import {
 import { NotificationItem } from '@/features/notification/types';
 import { OwnProfile } from '@/features/profile/types';
 import { apiRequest } from '@/lib/api/client';
+import { queryClient } from '@/lib/query/query-client';
 
 import {
   Conversation,
@@ -51,6 +52,10 @@ type DataContextValue = PlatformData & {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  loadMorePosts: () => Promise<void>;
+  loadMoreCommunities: () => Promise<void>;
+  loadMoreNotifications: () => Promise<void>;
+  hasMore: { posts: boolean; communities: boolean; notifications: boolean };
 
   setPosts: React.Dispatch<React.SetStateAction<PostItem[]>>;
   setCommunities: React.Dispatch<React.SetStateAction<Community[]>>;
@@ -93,13 +98,17 @@ export function DataProvider({
   const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pages, setPages] = useState({ posts: 0, communities: 0, notifications: 0 });
+  const [hasMore, setHasMore] = useState({ posts: false, communities: false, notifications: false });
 
   const fetchData = useCallback(async (): Promise<PlatformData> => {
+    const query = <T,>(key: string, path: string) =>
+      queryClient.fetchQuery(`${userId}:${key}`, () => apiRequest<T>(path));
     const [
       categories,
-      posts,
-      communities,
-      notifications,
+      postPage,
+      communityPage,
+      notificationPage,
       professionals,
       articles,
       media,
@@ -110,21 +119,15 @@ export function DataProvider({
       supportAvailability,
       profileStats,
     ] = await Promise.all([
-      apiRequest<SupportCategory[]>(
+      query<SupportCategory[]>('categories',
         '/api/v1/catalog/categories',
       ),
 
-      apiRequest<PageResponse<PostItem>>(
-        '/api/v1/posts/feed?size=50',
-      ).then(result => result.items),
+      query<PageResponse<PostItem>>('posts:0', '/api/v1/posts/feed?page=0&size=20'),
 
-      apiRequest<PageResponse<Community>>(
-        '/api/v1/communities?size=50',
-      ).then(result => result.items),
+      query<PageResponse<Community>>('communities:0', '/api/v1/communities?page=0&size=20'),
 
-      apiRequest<PageResponse<NotificationItem>>(
-        '/api/v1/notifications?size=50',
-      ).then(result => result.items),
+      query<PageResponse<NotificationItem>>('notifications:0', '/api/v1/notifications?page=0&size=20'),
 
       apiRequest<Professional[]>(
         '/api/v1/professionals',
@@ -138,9 +141,7 @@ export function DataProvider({
         '/api/v1/media-recommendations',
       ),
 
-      apiRequest<Conversation[]>(
-        '/api/v1/conversations',
-      ),
+      apiRequest<PageResponse<Conversation>>('/api/v1/conversations?page=0&size=20').then(result => result.items),
 
       apiRequest<SupportChannel[]>(
         '/api/v1/support-channels',
@@ -163,11 +164,13 @@ export function DataProvider({
       ),
     ]);
 
+    setPages({ posts: 0, communities: 0, notifications: 0 });
+    setHasMore({ posts: postPage.hasNext, communities: communityPage.hasNext, notifications: notificationPage.hasNext });
     return {
       categories,
-      posts,
-      communities,
-      notifications,
+      posts: postPage.items,
+      communities: communityPage.items,
+      notifications: notificationPage.items,
       professionals,
       articles,
       media,
@@ -178,7 +181,7 @@ export function DataProvider({
       supportAvailability,
       profileStats,
     };
-  }, []);
+  }, [userId]);
 
   const refresh = useCallback(async () => {
     if (
@@ -192,6 +195,7 @@ export function DataProvider({
     setError(null);
 
     try {
+      queryClient.invalidate(`${userId}:`);
       const result = await fetchData();
 
       setData(result);
@@ -206,6 +210,33 @@ export function DataProvider({
       setRefreshing(false);
     }
   }, [fetchData, status, userId]);
+
+  const loadMore = useCallback(async <T,>(
+    resource: 'posts' | 'communities' | 'notifications',
+    path: string,
+    update: (items: T[]) => void,
+  ) => {
+    if (!userId || refreshing || !hasMore[resource]) return;
+    const nextPage = pages[resource] + 1;
+    try {
+      const result = await queryClient.fetchQuery<PageResponse<T>>(
+        `${userId}:${resource}:${nextPage}`,
+        () => apiRequest<PageResponse<T>>(`${path}?page=${nextPage}&size=20`),
+      );
+      update(result.items);
+      setPages(current => ({ ...current, [resource]: nextPage }));
+      setHasMore(current => ({ ...current, [resource]: result.hasNext }));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not load more items');
+    }
+  }, [hasMore, pages, refreshing, userId]);
+
+  const loadMorePosts = useCallback(() => loadMore<PostItem>('posts', '/api/v1/posts/feed', items =>
+    setData(current => ({ ...current, posts: [...current.posts, ...items] }))), [loadMore]);
+  const loadMoreCommunities = useCallback(() => loadMore<Community>('communities', '/api/v1/communities', items =>
+    setData(current => ({ ...current, communities: [...current.communities, ...items] }))), [loadMore]);
+  const loadMoreNotifications = useCallback(() => loadMore<NotificationItem>('notifications', '/api/v1/notifications', items =>
+    setData(current => ({ ...current, notifications: [...current.notifications, ...items] }))), [loadMore]);
 
   useEffect(() => {
     if (
@@ -268,6 +299,10 @@ export function DataProvider({
       loading,
       error,
       refresh,
+      loadMorePosts,
+      loadMoreCommunities,
+      loadMoreNotifications,
+      hasMore,
 
       setPosts: update =>
         setData(current => ({
@@ -364,6 +399,10 @@ export function DataProvider({
       loading,
       refresh,
       sessionData,
+      loadMorePosts,
+      loadMoreCommunities,
+      loadMoreNotifications,
+      hasMore,
     ],
   );
 

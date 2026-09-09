@@ -1,0 +1,55 @@
+services:
+  database:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: greenocean
+      POSTGRES_USER: greenocean
+      POSTGRES_PASSWORD: ${GREENOCEAN_DB_PASSWORD:?required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenocean -d greenocean"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/greenocean
+      SPRING_DATASOURCE_USERNAME: greenocean
+      GREENOCEAN_DB_PASSWORD: ${GREENOCEAN_DB_PASSWORD:?required}
+      GREENOCEAN_JWT_SECRET: ${GREENOCEAN_JWT_SECRET:?required}
+      GREENOCEAN_ALLOWED_ORIGIN_PATTERNS: ${GREENOCEAN_ALLOWED_ORIGIN_PATTERNS:?required}
+      GREENOCEAN_AUTH_TOKEN_DELIVERY_WEBHOOK_URL: ${GREENOCEAN_AUTH_TOKEN_DELIVERY_WEBHOOK_URL:?required}
+      GREENOCEAN_AUTH_TOKEN_DELIVERY_WEBHOOK_SECRET: ${GREENOCEAN_AUTH_TOKEN_DELIVERY_WEBHOOK_SECRET:?required}
+      GREENOCEAN_MEDIA_ROOT: /data/media
+    volumes:
+      - media_data:/data/media
+    depends_on:
+      database:
+        condition: service_healthy
+    networks: [private, edge]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        EXPO_PUBLIC_API_URL: ${PUBLIC_API_URL:?required}
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks: [edge]
+
+volumes:
+  postgres_data:
+  media_data:
+
+networks:
+  private:
+    internal: true
+  edge:

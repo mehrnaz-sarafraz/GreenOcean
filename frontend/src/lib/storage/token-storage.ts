@@ -7,13 +7,18 @@ const REFRESH_TOKEN_KEY = 'greenocean.refreshToken';
 export type StoredTokens = { accessToken: string; refreshToken: string };
 
 async function getItem(key: string) {
-  if (Platform.OS === 'web') return typeof localStorage === 'undefined' ? null : localStorage.getItem(key);
+  if (Platform.OS === 'web') {
+    // Remove credentials left by releases that persisted web tokens across browser sessions.
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
+    return typeof sessionStorage === 'undefined' ? null : sessionStorage.getItem(key);
+  }
   return SecureStore.getItemAsync(key);
 }
 
 async function setItem(key: string, value: string) {
   if (Platform.OS === 'web') {
-    if (typeof localStorage !== 'undefined') localStorage.setItem(key, value);
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, value);
     return;
   }
   await SecureStore.setItemAsync(key, value);
@@ -22,6 +27,7 @@ async function setItem(key: string, value: string) {
 async function removeItem(key: string) {
   if (Platform.OS === 'web') {
     if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(key);
     return;
   }
   await SecureStore.deleteItemAsync(key);

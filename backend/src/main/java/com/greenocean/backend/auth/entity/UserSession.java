@@ -71,4 +71,12 @@ public class UserSession {
     public User getUser() {
         return user;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
 }

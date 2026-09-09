@@ -88,6 +88,12 @@ class AuthFlowIntegrationTest {
                         .content(json(Map.of("refreshToken", firstRefreshToken))))
                 .andExpect(status().isUnauthorized());
 
+        // Reuse of a rotated token is treated as theft and revokes its token family.
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("refreshToken", rotatedRefreshToken))))
+                .andExpect(status().isUnauthorized());
+
         mockMvc.perform(post("/api/v1/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("refreshToken", rotatedRefreshToken))))

@@ -50,6 +50,7 @@ export default function ProfileScreen() {
       <Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} />
       <Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} />
       <Setting icon="shield" title="Privacy and safety" subtitle="Muted words and content controls" onPress={() => router.push('/safety-settings')} />
+      <Setting icon="workspace_premium" title="Professional verification" subtitle="Submit credentials for private review" onPress={() => router.push('/professional-verification')} />
       {canModerate && <Setting icon="admin_panel_settings" title="Admin panel" subtitle="Trust and safety operations" accent onPress={() => router.push('/admin')} />}
       <Setting icon="logout" title="Sign out" subtitle="End the session on this device" onPress={() => void signOut()} />
     </View>
@@ -83,8 +84,8 @@ function ProfessionalProfile({ professional }: { professional: Professional }) {
     setBusy(true); setError('');
     try {
       const result = await apiRequest<{ id: string }>(`/api/v1/conversations/professionals/${professional.id}`, { method: 'POST' });
-      const conversations = await apiRequest<import('@/features/platform/types').Conversation[]>('/api/v1/conversations');
-      setConversations(conversations);
+      const conversations = await apiRequest<import('@/features/content/types').PageResponse<import('@/features/platform/types').Conversation>>('/api/v1/conversations?page=0&size=20');
+      setConversations(conversations.items);
       router.push({ pathname: '/chat/[id]', params: { id: result.id } });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not start the conversation');

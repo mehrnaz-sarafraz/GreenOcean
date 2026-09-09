@@ -32,6 +32,10 @@ Authentication endpoints:
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/verify-email`
+- `POST /api/v1/auth/resend-verification`
+- `POST /api/v1/auth/request-password-reset`
+- `POST /api/v1/auth/reset-password`
 - `GET /api/v1/auth/me` (Bearer access token required)
 - `POST /api/v1/auth/change-password` (Bearer access token required)
 - `POST /api/v1/auth/logout-all` (Bearer access token required)
@@ -94,3 +98,6 @@ $env:GREENOCEAN_DB_PASSWORD = "your-local-postgres-password"
 Tests use a dedicated non-production JWT secret from the `test` profile. Real JWT and database secrets are never committed.
 
 Flyway migrations under `src/main/resources/db/migration` are the database schema source of truth.
+
+Security configuration, production requirements, and token-delivery setup are documented in
+[`../docs/security.md`](../docs/security.md).

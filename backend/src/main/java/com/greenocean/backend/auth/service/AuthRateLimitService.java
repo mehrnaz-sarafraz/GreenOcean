@@ -17,6 +17,7 @@ public class AuthRateLimitService {
     private final Map<String, LoginFailureState> loginFailureCounters = new HashMap<>();
     private final Map<String, WindowCounter> registerIpCounters = new HashMap<>();
     private final Map<String, WindowCounter> refreshIpCounters = new HashMap<>();
+    private final Map<String, WindowCounter> recoveryIpCounters = new HashMap<>();
 
     private final int loginIpMax;
     private final Duration loginIpWindow;
@@ -29,6 +30,8 @@ public class AuthRateLimitService {
 
     private final int refreshIpMax;
     private final Duration refreshIpWindow;
+    private final int recoveryIpMax;
+    private final Duration recoveryIpWindow;
 
     private long operations;
 
@@ -40,7 +43,9 @@ public class AuthRateLimitService {
             @Value("${greenocean.security.rate-limit.register-ip-max:5}") int registerIpMax,
             @Value("${greenocean.security.rate-limit.register-ip-window:PT10M}") Duration registerIpWindow,
             @Value("${greenocean.security.rate-limit.refresh-ip-max:60}") int refreshIpMax,
-            @Value("${greenocean.security.rate-limit.refresh-ip-window:PT1M}") Duration refreshIpWindow
+            @Value("${greenocean.security.rate-limit.refresh-ip-window:PT1M}") Duration refreshIpWindow,
+            @Value("${greenocean.security.rate-limit.recovery-ip-max:5}") int recoveryIpMax,
+            @Value("${greenocean.security.rate-limit.recovery-ip-window:PT15M}") Duration recoveryIpWindow
     ) {
         this.loginIpMax = loginIpMax;
         this.loginIpWindow = loginIpWindow;
@@ -50,6 +55,8 @@ public class AuthRateLimitService {
         this.registerIpWindow = registerIpWindow;
         this.refreshIpMax = refreshIpMax;
         this.refreshIpWindow = refreshIpWindow;
+        this.recoveryIpMax = recoveryIpMax;
+        this.recoveryIpWindow = recoveryIpWindow;
     }
 
     public synchronized void checkLoginAllowed(String email, String clientIp) {
@@ -67,15 +74,17 @@ public class AuthRateLimitService {
         String identity = normalizeEmail(email);
         LoginFailureState failureState = loginFailureCounters.get(identity);
 
-        if (failureState != null && failureState.lockedUntil() != null) {
-            if (failureState.lockedUntil().isAfter(now)) {
+        if (failureState != null) {
+            if (failureState.lockedUntil() != null && failureState.lockedUntil().isAfter(now)) {
                 throw new TooManyRequestsException(
                         "Too many failed login attempts. Please try again later.",
                         secondsUntil(failureState.lockedUntil(), now)
                 );
             }
 
-            loginFailureCounters.remove(identity);
+            if (!failureState.expiresAt().isAfter(now)) {
+                loginFailureCounters.remove(identity);
+            }
         }
 
         cleanupIfNeeded(now);
@@ -87,26 +96,28 @@ public class AuthRateLimitService {
 
         LoginFailureState current = loginFailureCounters.get(identity);
 
-        if (current != null
-                && current.lockedUntil() != null
-                && current.lockedUntil().isAfter(now)) {
+        if (current != null && current.lockedUntil() != null && current.lockedUntil().isAfter(now)) {
             return;
         }
 
-        int failures = current == null ? 1 : current.failures() + 1;
+        int failures = current == null || !current.expiresAt().isAfter(now)
+                ? 1
+                : current.failures() + 1;
+        Instant expiresAt = now.plus(loginLockDuration);
 
         if (failures >= loginFailureMax) {
             loginFailureCounters.put(
                     identity,
                     new LoginFailureState(
                             failures,
+                            expiresAt,
                             now.plus(loginLockDuration)
                     )
             );
         } else {
             loginFailureCounters.put(
                     identity,
-                    new LoginFailureState(failures, null)
+                    new LoginFailureState(failures, expiresAt, null)
             );
         }
 
@@ -144,6 +155,19 @@ public class AuthRateLimitService {
                 "Too many token refresh attempts. Please try again later."
         );
 
+        cleanupIfNeeded(now);
+    }
+
+    public synchronized void checkRecoveryAllowed(String clientIp) {
+        Instant now = Instant.now();
+        checkWindow(
+                recoveryIpCounters,
+                normalizeIp(clientIp),
+                recoveryIpMax,
+                recoveryIpWindow,
+                now,
+                "Too many account recovery attempts. Please try again later."
+        );
         cleanupIfNeeded(now);
     }
 
@@ -203,11 +227,14 @@ public class AuthRateLimitService {
                 entry -> !entry.getValue().windowEndsAt().isAfter(now)
         );
 
+        recoveryIpCounters.entrySet().removeIf(
+                entry -> !entry.getValue().windowEndsAt().isAfter(now)
+        );
+
         loginFailureCounters.entrySet().removeIf(entry -> {
             LoginFailureState state = entry.getValue();
 
-            return state.lockedUntil() != null
-                    && !state.lockedUntil().isAfter(now);
+            return !state.expiresAt().isAfter(now);
         });
     }
 
@@ -242,6 +269,7 @@ public class AuthRateLimitService {
 
     private record LoginFailureState(
             int failures,
+            Instant expiresAt,
             Instant lockedUntil
     ) {
     }

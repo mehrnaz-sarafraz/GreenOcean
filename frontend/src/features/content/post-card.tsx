@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, shadow, spacing } from '@/theme/tokens';
 import { PostItem } from './types';
+import { PostMedia } from '@/features/media/post-media';
 
 const categoryGroupNames = { EMOTION: 'EMOTION', CONDITION: 'CONDITION', LIFE_EXPERIENCE: 'LIFE EXPERIENCE' } as const;
 
@@ -39,6 +40,7 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
     </View>}
     {!!post.contentWarning && sensitiveRevealed && <View style={styles.warning}><AppIcon name="shield" size={18} color={colors.coral} /><Text style={[styles.warningText, styles.warningGrow]}>{post.contentWarning}</Text><Pressable accessibilityRole="button" accessibilityLabel="Hide sensitive story" onPress={event => { event.stopPropagation(); setSensitiveRevealed(false); }}><Text style={styles.warningAction}>Hide</Text></Pressable></View>}
     {sensitiveRevealed && <Pressable accessibilityRole="button" accessibilityLabel={`Read full post by ${authorName}`} onPress={openPost} style={styles.storyContent}><Text style={styles.body}>{post.body}</Text>
+    <PostMedia media={post.media ?? []} />
     {!!post.professionalReply && <View style={styles.professionalBox}>
       <View style={styles.profHeader}><Avatar name={post.professionalReply.professional.displayName} size={34} verified /><View style={{ flex: 1 }}><Text style={styles.profLabel}>{t('professionalResponse')}</Text><Text style={styles.profName}>{post.professionalReply.professional.displayName} · {post.professionalReply.professional.title}</Text></View></View>
       <Text style={styles.profBody} numberOfLines={3}>{post.professionalReply.body}</Text>

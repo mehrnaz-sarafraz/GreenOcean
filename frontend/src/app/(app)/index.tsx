@@ -23,7 +23,7 @@ const checkInOptions = [
 
 export default function FeedScreen() {
   const { t } = useLanguage();
-  const { categories, posts, professionals, articles, profile, supportAvailability, loading, error, refresh } = usePlatformData();
+  const { categories, posts, professionals, articles, profile, supportAvailability, loading, error, refresh, loadMorePosts, hasMore } = usePlatformData();
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
   const [categoryId, setCategoryId] = useState('all');
   const [checkIn, setCheckIn] = useState('');
@@ -173,7 +173,7 @@ export default function FeedScreen() {
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}><View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View><View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} uri={articleAuthor.avatarUrl} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View></Pressable></>}
   </View>;
 
-  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading || selectedFeedLoading} onRefresh={() => void refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading || selectedFeedLoading} onRefresh={() => void refresh()} onEndReached={tab === 'forYou' && hasMore.posts ? () => void loadMorePosts() : undefined} onEndReachedThreshold={0.4} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
 }
 
 function DoctorBanner({ professional }: { professional: Professional }) {

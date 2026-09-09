@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
 import java.util.UUID;
 
 public record CreatePostRequest(
@@ -16,6 +17,7 @@ public record CreatePostRequest(
         @Size(max = 120) String contentWarning,
         UUID categoryId,
         PostType postType,
-        @Size(max = 30) String mood
+        @Size(max = 30) String mood,
+        @Size(max = 6) List<UUID> mediaIds
 ) {
 }

@@ -19,6 +19,7 @@ import com.greenocean.backend.post.repository.CommentRepository;
 import com.greenocean.backend.post.repository.PostReadRepository;
 import com.greenocean.backend.post.repository.PostRepository;
 import com.greenocean.backend.notification.service.NotificationService;
+import com.greenocean.backend.media.service.MediaService;
 import com.greenocean.backend.social.service.SocialInteractionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +36,12 @@ public class PostService {
     private final SocialInteractionRepository interactions;
     private final DatabaseUuidGenerator uuidGenerator;
     private final NotificationService notificationService;
+    private final MediaService mediaService;
 
     public PostService(PostRepository postRepository, CommentRepository commentRepository,
                        PostReadRepository postReadRepository, UserRepository userRepository,
                        SocialInteractionRepository interactions, DatabaseUuidGenerator uuidGenerator,
-                       NotificationService notificationService) {
+                       NotificationService notificationService, MediaService mediaService) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.postReadRepository = postReadRepository;
@@ -47,6 +49,7 @@ public class PostService {
         this.interactions = interactions;
         this.uuidGenerator = uuidGenerator;
         this.notificationService = notificationService;
+        this.mediaService = mediaService;
     }
 
     @Transactional
@@ -60,6 +63,7 @@ public class PostService {
                 normalizeOptional(request.mood())
         );
         postRepository.saveAndFlush(post);
+        mediaService.attachToPost(userId, post.getId(), request.mediaIds());
         return get(post.getId(), userId);
     }
 

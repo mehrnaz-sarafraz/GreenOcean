@@ -10,13 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HexFormat;
 import java.util.Locale;
 
 @Service
@@ -28,38 +23,49 @@ public class EmailVerificationService {
     private final EmailVerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final DatabaseUuidGenerator databaseUuidGenerator;
+    private final TokenService tokenService;
+    private final AuthTokenDelivery tokenDelivery;
+    private final SecurityAuditService auditService;
 
     private final Duration tokenTtl;
-
-    private final SecureRandom secureRandom = new SecureRandom();
 
     public EmailVerificationService(
             EmailVerificationTokenRepository tokenRepository,
             UserRepository userRepository,
             DatabaseUuidGenerator databaseUuidGenerator,
+            TokenService tokenService,
+            AuthTokenDelivery tokenDelivery,
+            SecurityAuditService auditService,
             @Value("${greenocean.auth.email-verification-token-ttl:PT24H}")
             Duration tokenTtl
     ) {
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
         this.databaseUuidGenerator = databaseUuidGenerator;
+        this.tokenService = tokenService;
+        this.tokenDelivery = tokenDelivery;
+        this.auditService = auditService;
         this.tokenTtl = tokenTtl;
     }
 
     @Transactional
     public String createToken(User user) {
 
-        String rawToken = generateSecureToken();
+        Instant now = Instant.now();
+        tokenRepository.consumeActiveForUser(user.getId(), now);
+        String rawToken = tokenService.createOpaqueToken();
+        Instant expiresAt = now.plus(tokenTtl);
 
         EmailVerificationToken token =
                 new EmailVerificationToken(
                         databaseUuidGenerator.nextUuid(),
                         user,
-                        hashToken(rawToken),
-                        Instant.now().plus(tokenTtl)
+                        tokenService.hashOpaqueToken(rawToken),
+                        expiresAt
                 );
 
         tokenRepository.save(token);
+        tokenDelivery.sendEmailVerification(user.getEmail(), rawToken, expiresAt);
 
         return rawToken;
     }
@@ -67,7 +73,7 @@ public class EmailVerificationService {
     @Transactional
     public void verify(String rawToken) {
 
-        String tokenHash = hashToken(rawToken);
+        String tokenHash = tokenService.hashOpaqueToken(rawToken);
 
         EmailVerificationToken token =
                 tokenRepository.findByTokenHash(tokenHash)
@@ -84,39 +90,11 @@ public class EmailVerificationService {
         User user = token.getUser();
 
         user.verifyEmail();
-        token.consume();
+        token.consume(now);
+        tokenRepository.consumeActiveForUser(user.getId(), now);
 
         userRepository.save(user);
-    }
-
-    private String generateSecureToken() {
-
-        byte[] bytes = new byte[32];
-
-        secureRandom.nextBytes(bytes);
-
-        return HexFormat.of().formatHex(bytes);
-    }
-
-    private String hashToken(String token) {
-
-        try {
-            MessageDigest digest =
-                    MessageDigest.getInstance("SHA-256");
-
-            byte[] hash =
-                    digest.digest(
-                            token.getBytes(StandardCharsets.UTF_8)
-                    );
-
-            return HexFormat.of().formatHex(hash);
-
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(
-                    "SHA-256 is unavailable",
-                    exception
-            );
-        }
+        auditService.recordForUser(user.getId(), "EMAIL_VERIFIED");
     }
 
     @Transactional

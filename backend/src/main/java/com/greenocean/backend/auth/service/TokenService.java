@@ -58,15 +58,27 @@ public class TokenService {
     }
 
     public String createRefreshToken() {
-        byte[] bytes = new byte[48];
+        return createOpaqueToken(48);
+    }
+
+    public String createOpaqueToken() {
+        return createOpaqueToken(32);
+    }
+
+    private String createOpaqueToken(int byteLength) {
+        byte[] bytes = new byte[byteLength];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     public String hashRefreshToken(String refreshToken) {
+        return hashOpaqueToken(refreshToken);
+    }
+
+    public String hashOpaqueToken(String token) {
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(refreshToken.getBytes(StandardCharsets.UTF_8));
+                    .digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is not available", exception);

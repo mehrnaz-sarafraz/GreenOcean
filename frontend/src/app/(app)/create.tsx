@@ -10,6 +10,7 @@ import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { MediaAttachment, MediaAttachmentPicker } from '@/features/media/media-attachment-picker';
 
 const moods = [
   ['sentiment_satisfied', 'Calm'],
@@ -42,6 +43,7 @@ export default function Create() {
   const [type, setType] = useState('EXPERIENCE');
   const [error, setError] = useState('');
   const [publishing, setPublishing] = useState(false);
+  const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const visibleCategories = useMemo(
     () => categories.filter(category => category.group === group),
     [categories, group]
@@ -62,6 +64,7 @@ export default function Create() {
       await apiRequest('/api/v1/posts', { method: 'POST', body: JSON.stringify({
         body: body.trim(), anonymous, visibility: 'PUBLIC', communityId: null,
         contentWarning: null, categoryId, postType: type, mood: mood || null,
+        mediaIds: attachments.map(item => item.id),
       }) });
       await refresh();
       router.replace('/(app)');
@@ -85,6 +88,7 @@ export default function Create() {
     </View>
 
     <TextInput autoFocus multiline value={body} onChangeText={setBody} placeholder={t('sharePrompt')} placeholderTextColor={colors.muted} style={styles.editor} />
+    <MediaAttachmentPicker value={attachments} onChange={setAttachments} onError={setError} disabled={publishing} />
 
     <View><Text style={styles.step}>STEP 1</Text><Text style={styles.label}>What is this story mainly about? <Text style={styles.required}>*</Text></Text><Text style={styles.helper}>This helps people find experiences that feel relevant to them.</Text></View>
     <View style={styles.groupGrid}>{groupOptions.map(option => <Pressable key={option.id} onPress={() => chooseGroup(option.id)} style={[styles.groupCard, group === option.id && { borderColor: option.color, backgroundColor: option.softColor }]}>
@@ -106,7 +110,7 @@ export default function Create() {
     <View style={styles.safetyNote}><AppIcon name="health_and_safety" color={colors.ocean600} /><View style={{ flex: 1 }}><Text style={styles.safetyTitle}>Share safely</Text><Text style={styles.safetyText}>For frightening or sensitive experiences, avoid names and identifying details. You can add a content note before publishing.</Text></View></View>
     <View style={styles.tools}><View style={styles.tool}><AppIcon name="visibility_off" color={colors.ocean600} /><Text style={styles.toolText}>{t('postAnonymously')}</Text><Switch value={anonymous} onValueChange={setAnonymous} trackColor={{ true: colors.ocean500 }} /></View><View style={styles.tool}><AppIcon name="shield" color={colors.coral} /><Text style={styles.toolText}>{t('contentWarning')}</Text><AppIcon name="chevron_right" color={colors.muted} /></View></View>
     {!!error && <Text style={styles.error}>{error}</Text>}
-    <AppButton label={publishing ? 'Publishing…' : t('publish')} disabled={publishing} onPress={() => void publish()} />
+    <AppButton label={publishing ? 'Publishing…' : t('publish')} disabled={publishing || attachments.some(item => item.uploading)} onPress={() => void publish()} />
   </View></Screen>;
 }
 

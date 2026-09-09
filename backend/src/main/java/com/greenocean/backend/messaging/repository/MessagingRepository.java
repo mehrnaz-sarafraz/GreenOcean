@@ -49,7 +49,7 @@ public class MessagingRepository {
                 conversationId, userId);
     }
 
-    public List<ConversationResponse> conversations(UUID userId) {
+    public List<ConversationResponse> conversations(UUID userId, int page, int size) {
         return jdbcTemplate.query("""
                 SELECT c.id, c.title, c.subtitle, c.conversation_kind,
                        pp.verification_status,
@@ -70,33 +70,58 @@ public class MessagingRepository {
                        WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
                        ORDER BY m.created_at DESC LIMIT 1
                   ) last_message ON TRUE
-                 WHERE cm.user_id = ?
+                 WHERE cm.user_id = ? AND cm.archived_at IS NULL
                  ORDER BY COALESCE(last_message.created_at, c.updated_at) DESC
+                 LIMIT ? OFFSET ?
                 """, (rs, row) -> new ConversationResponse(
                 rs.getObject("id", UUID.class), rs.getString("title"), rs.getString("subtitle"),
                 rs.getString("last_message"), instant(rs.getObject("last_message_at", OffsetDateTime.class)),
                 rs.getLong("unread"), "VERIFIED".equals(rs.getString("verification_status")),
-                rs.getString("conversation_kind"), rs.getBoolean("online"), rs.getBoolean("writable")), userId, userId);
+                rs.getString("conversation_kind"), rs.getBoolean("online"), rs.getBoolean("writable")), userId, userId, size + 1, page * size);
     }
 
     public Optional<ConversationResponse> conversation(UUID conversationId, UUID userId) {
-        return conversations(userId).stream().filter(item -> item.id().equals(conversationId)).findFirst();
+        return jdbcTemplate.query("""
+                SELECT c.id, c.title, c.subtitle, c.conversation_kind, pp.verification_status,
+                       CASE WHEN c.conversation_kind = 'LISTENER' THEN lp.status = 'AVAILABLE' ELSE FALSE END AS online,
+                       CASE WHEN ch.channel_type = 'ANNOUNCEMENT' THEN FALSE ELSE TRUE END AS writable,
+                       NULL::TEXT AS last_message, NULL::TIMESTAMPTZ AS last_message_at, 0 AS unread
+                  FROM conversation_members cm JOIN conversations c ON c.id = cm.conversation_id AND c.is_active = TRUE
+                  LEFT JOIN professional_profiles pp ON pp.user_id = c.professional_user_id
+                  LEFT JOIN listener_profiles lp ON lp.user_id = c.listener_user_id
+                  LEFT JOIN support_channels ch ON ch.id = c.channel_id
+                 WHERE cm.user_id = ? AND c.id = ?
+                """, (rs, row) -> new ConversationResponse(rs.getObject("id", UUID.class), rs.getString("title"),
+                rs.getString("subtitle"), null, null, 0, "VERIFIED".equals(rs.getString("verification_status")),
+                rs.getString("conversation_kind"), rs.getBoolean("online"), rs.getBoolean("writable")), userId, conversationId)
+                .stream().findFirst();
     }
 
-    public List<MessageResponse> messages(UUID conversationId, UUID userId) {
+    public List<MessageResponse> messages(UUID conversationId, UUID userId, int page, int size) {
         return jdbcTemplate.query("""
                 SELECT m.id, m.sender_id, p.display_name, m.body, m.message_kind, m.created_at
                   FROM messages m
                   LEFT JOIN profiles p ON p.user_id = m.sender_id
                  WHERE m.conversation_id = ? AND m.deleted_at IS NULL
-                 ORDER BY m.created_at, m.id
+                 ORDER BY m.created_at DESC, m.id DESC LIMIT ? OFFSET ?
                 """, (rs, row) -> {
             UUID senderId = rs.getObject("sender_id", UUID.class);
             return new MessageResponse(
                     rs.getObject("id", UUID.class), senderId, rs.getString("display_name"), rs.getString("body"),
                     rs.getObject("created_at", OffsetDateTime.class).toInstant(), userId.equals(senderId),
                     "SYSTEM".equals(rs.getString("message_kind")));
-        }, conversationId);
+        }, conversationId, size + 1, page * size);
+    }
+
+    public Optional<MessageResponse> message(UUID id, UUID conversationId, UUID userId) {
+        return jdbcTemplate.query("""
+                SELECT m.id, m.sender_id, p.display_name, m.body, m.message_kind, m.created_at
+                  FROM messages m LEFT JOIN profiles p ON p.user_id = m.sender_id
+                 WHERE m.id = ? AND m.conversation_id = ? AND m.deleted_at IS NULL
+                """, (rs, row) -> { UUID sender = rs.getObject("sender_id", UUID.class); return new MessageResponse(
+                rs.getObject("id", UUID.class), sender, rs.getString("display_name"), rs.getString("body"),
+                rs.getObject("created_at", OffsetDateTime.class).toInstant(), userId.equals(sender),
+                "SYSTEM".equals(rs.getString("message_kind"))); }, id, conversationId).stream().findFirst();
     }
 
     public void markRead(UUID conversationId, UUID userId) {
@@ -104,11 +129,33 @@ public class MessagingRepository {
                 conversationId, userId);
     }
 
-    public void send(UUID id, UUID conversationId, UUID userId, String body) {
+    public UUID send(UUID id, UUID conversationId, UUID userId, String body, UUID clientMessageId) {
         jdbcTemplate.update("""
-                INSERT INTO messages (id, conversation_id, sender_id, message_kind, body) VALUES (?, ?, ?, 'USER', ?)
-                """, id, conversationId, userId, body);
+                INSERT INTO messages (id, conversation_id, sender_id, message_kind, body, client_message_id)
+                VALUES (?, ?, ?, 'USER', ?, ?) ON CONFLICT (sender_id, client_message_id) WHERE sender_id IS NOT NULL AND client_message_id IS NOT NULL DO NOTHING
+                """, id, conversationId, userId, body, clientMessageId);
         jdbcTemplate.update("UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", conversationId);
+        if (clientMessageId == null) return id;
+        return jdbcTemplate.queryForObject("SELECT id FROM messages WHERE sender_id = ? AND client_message_id = ?", UUID.class, userId, clientMessageId);
+    }
+
+    public long recentMessageCount(UUID userId) {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM messages WHERE sender_id = ? AND created_at >= CURRENT_TIMESTAMP - INTERVAL '1 minute'", Long.class, userId);
+    }
+
+    public boolean isBlockedInPrivateConversation(UUID conversationId, UUID userId) {
+        Boolean blocked = jdbcTemplate.queryForObject("""
+                SELECT CASE WHEN c.conversation_kind = 'GROUP' THEN FALSE ELSE EXISTS(
+                    SELECT 1 FROM conversation_members other JOIN blocks b
+                      ON (b.blocker_id = ? AND b.blocked_id = other.user_id) OR (b.blocked_id = ? AND b.blocker_id = other.user_id)
+                     WHERE other.conversation_id = c.id AND other.user_id <> ?)
+                END FROM conversations c WHERE c.id = ?
+                """, Boolean.class, userId, userId, userId, conversationId);
+        return Boolean.TRUE.equals(blocked);
+    }
+
+    public void archive(UUID conversationId, UUID userId) {
+        jdbcTemplate.update("UPDATE conversation_members SET archived_at = CURRENT_TIMESTAMP WHERE conversation_id = ? AND user_id = ?", conversationId, userId);
     }
 
     public Optional<UUID> professionalConversation(UUID userId, UUID professionalId) {

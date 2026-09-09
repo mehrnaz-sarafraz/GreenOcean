@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { ChatMessage } from '@/features/platform/types';
+import { PageResponse } from '@/features/content/types';
 import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, shadow, spacing } from '@/theme/tokens';
 
@@ -23,17 +24,21 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!id) return;
 
     let cancelled = false;
 
-    apiRequest<ChatMessage[]>(`/api/v1/conversations/${id}/messages`)
+    apiRequest<PageResponse<ChatMessage>>(`/api/v1/conversations/${id}/messages?page=0&size=50`)
       .then(result => {
         if (cancelled) return;
 
-        setMessages(result);
+        setMessages([...result.items].reverse());
+        setHasMore(result.hasNext);
+        setPage(0);
         setError('');
         setConversations(items =>
           items.map(item =>
@@ -68,7 +73,7 @@ export default function Chat() {
     try {
       const created = await apiRequest<ChatMessage>(`/api/v1/conversations/${id}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body, clientMessageId: createUuid() }),
       });
       setMessages(items => [...items, created]);
       setText('');
@@ -80,17 +85,41 @@ export default function Chat() {
     }
   }
 
+  async function loadOlder() {
+    if (!id || !hasMore || loading) return;
+    setLoading(true);
+    try {
+      const next = page + 1;
+      const result = await apiRequest<PageResponse<ChatMessage>>(`/api/v1/conversations/${id}/messages?page=${next}&size=50`);
+      setMessages(items => [...result.items].reverse().concat(items));
+      setPage(next);
+      setHasMore(result.hasNext);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not load older messages');
+    } finally { setLoading(false); }
+  }
+
+  function reportMessage(messageId: string) {
+    Alert.alert('Report this message?', 'A trust and safety reviewer will assess it. The sender is not notified who reported it.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Report', style: 'destructive', onPress: () => void apiRequest('/api/v1/safety/reports', {
+        method: 'POST', body: JSON.stringify({ messageId, reason: 'HARASSMENT', description: 'Reported from the conversation screen' }),
+      }).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not submit report')) },
+    ]);
+  }
+
   const title = conversation?.name ?? 'Conversation';
   return <SafeAreaView style={styles.safe}><View style={styles.page}>
     <View style={styles.header}><Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Avatar name={title} size={42} verified={conversation?.verified} /><View style={{ flex: 1 }}><Text style={styles.name}>{title}</Text><Text style={styles.status}>{conversation?.online ? 'Online · ' : ''}{conversation?.subtitle ?? 'Private support conversation'}</Text></View></View>
     <View style={styles.safety}><AppIcon name="shield" size={17} color={colors.ocean600} /><Text style={styles.safetyText}>Keep personal information private. You can block or report unsafe behaviour from a member profile.</Text></View>
     <ScrollView contentContainerStyle={styles.messages} showsVerticalScrollIndicator={false}>
+      {hasMore && <Pressable accessibilityRole="button" onPress={() => void loadOlder()} style={styles.older}><Text style={styles.olderText}>Load older messages</Text></Pressable>}
       {loading && <Text style={styles.stateText}>Loading conversation…</Text>}
       {!!error && <Text style={styles.error}>{error}</Text>}
       {!loading && !error && messages.length === 0 && <Text style={styles.stateText}>No messages yet. Start with a kind hello.</Text>}
       {messages.map(message => message.system
         ? <View key={message.id} style={styles.system}><AppIcon name="info" size={16} color={colors.ocean600} /><Text style={styles.systemText}>{message.body}</Text></View>
-        : <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>{!message.mine && <Avatar name={message.senderName ?? 'Member'} size={30} verified={conversation?.verified} />}<View style={[styles.bubble, message.mine && styles.bubbleMine]}>{!message.mine && conversation?.kind === 'GROUP' && <Text style={styles.sender}>{message.senderName ?? 'Member'}</Text>}<Text style={[styles.body, message.mine && styles.bodyMine]}>{message.body}</Text><Text style={[styles.time, message.mine && styles.timeMine]}>{timeLabel(message.createdAt)}</Text></View></View>)}
+        : <Pressable key={message.id} accessibilityHint={message.mine ? undefined : 'Long press to report this message'} onLongPress={message.mine ? undefined : () => reportMessage(message.id)} style={[styles.messageRow, message.mine && styles.messageRowMine]}>{!message.mine && <Avatar name={message.senderName ?? 'Member'} size={30} verified={conversation?.verified} />}<View style={[styles.bubble, message.mine && styles.bubbleMine]}>{!message.mine && conversation?.kind === 'GROUP' && <Text style={styles.sender}>{message.senderName ?? 'Member'}</Text>}<Text style={[styles.body, message.mine && styles.bodyMine]}>{message.body}</Text><Text style={[styles.time, message.mine && styles.timeMine]}>{timeLabel(message.createdAt)}</Text></View></Pressable>)}
     </ScrollView>
     {conversation?.writable === false
       ? <View style={styles.readOnly}><AppIcon name="campaign" color={colors.ocean600} /><Text style={styles.readOnlyText}>This is an announcement channel. Only moderators can publish here.</Text></View>
@@ -106,4 +135,13 @@ const styles = StyleSheet.create({
   messageRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, maxWidth: 540 }, messageRowMine: { alignSelf: 'flex-end', justifyContent: 'flex-end' }, bubble: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, borderBottomLeftRadius: radius.xs, padding: spacing.md, gap: 4, ...shadow.soft }, bubbleMine: { backgroundColor: colors.ocean700, borderColor: colors.ocean700, borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.xs }, sender: { fontSize: 10, color: colors.ocean600, fontWeight: '900' }, body: { fontSize: 14, color: colors.ink, lineHeight: 21, textAlign: 'left' }, bodyMine: { color: colors.white }, time: { fontSize: 9, color: colors.muted, textAlign: 'right' }, timeMine: { color: colors.ocean200 }, system: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, alignSelf: 'center', maxWidth: 580, backgroundColor: colors.ocean50, borderRadius: radius.md, padding: spacing.sm }, systemText: { flex: 1, fontSize: 10, color: colors.muted, lineHeight: 15, textAlign: 'center' },
   composer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border }, input: { flex: 1, minHeight: 46, maxHeight: 110, borderRadius: radius.pill, backgroundColor: colors.foam, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, color: colors.ink, textAlign: 'left' }, send: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.ocean600, alignItems: 'center', justifyContent: 'center' }, sendDisabled: { opacity: 0.45 },
   readOnly: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.ocean50, borderTopWidth: 1, borderTopColor: colors.border }, readOnlyText: { flex: 1, color: colors.inkSoft, fontSize: 11, lineHeight: 16 },
+  older: { alignSelf: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, olderText: { color: colors.ocean600, fontWeight: '800', fontSize: 12 },
 });
+
+function createUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+    const random = Math.floor(Math.random() * 16);
+    const value = character === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}

@@ -10,7 +10,7 @@ import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 export default function Notifications() {
   const { t, isRtl } = useLanguage();
-  const { notifications, setNotifications } = usePlatformData();
+  const { notifications, setNotifications, loadMoreNotifications, hasMore } = usePlatformData();
   const message = (type: string) => type === 'PROFESSIONAL_REPLY' ? t('notificationProfessional') : type === 'LIKE' ? t('notificationLike') : type === 'FOLLOW' ? t('notificationFollow') : type === 'COMMENT' ? 'commented on your story' : 'replied to your conversation';
 
   async function read(id: string) {
@@ -22,7 +22,7 @@ export default function Notifications() {
     setNotifications(items => items.map(item => ({ ...item, read: true })));
   }
 
-  return <SafeAreaView style={styles.safe}><FlatList data={notifications} keyExtractor={item => item.id} contentContainerStyle={styles.list}
+  return <SafeAreaView style={styles.safe}><FlatList data={notifications} keyExtractor={item => item.id} contentContainerStyle={styles.list} onEndReached={hasMore.notifications ? () => void loadMoreNotifications() : undefined} onEndReachedThreshold={0.4}
     ListHeaderComponent={<View style={[styles.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}><Text style={styles.title}>{t('notifications')}</Text><Pressable onPress={() => void readAll()}><Text style={styles.read}>{t('markAllRead')}</Text></Pressable></View>}
     renderItem={({ item }) => <Pressable onPress={() => void read(item.id)} style={[styles.item, !item.read && styles.unread, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}><Avatar name={item.actor?.displayName ?? t('anonymous')} uri={item.actor?.avatarUrl} size={46} verified={item.type === 'PROFESSIONAL_REPLY'} /><View style={{ flex: 1 }}><Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}><Text style={styles.actor}>{item.actor?.displayName ?? 'Someone'} </Text>{message(item.type)}</Text><Text style={[styles.time, { textAlign: isRtl ? 'right' : 'left' }]}>{new Date(item.createdAt).toLocaleString(isRtl ? 'fa-IR' : 'en-US')}</Text></View>{!item.read && <View style={styles.dot} />}<AppIcon name="chevron_right" color={colors.borderStrong} /></Pressable>}
     ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}

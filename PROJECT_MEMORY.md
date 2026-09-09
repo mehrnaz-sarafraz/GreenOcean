@@ -161,3 +161,27 @@ Local tools → Git/GitHub → repository scaffolding → PostgreSQL
 6. Production, deployment and observability
 7. Branding, accessibility, performance and release preparation
 ```
+
+## Current state — 2026-09-09
+
+* Hardening stages 1-3 are complete; the next milestone is frontend architecture and automated testing.
+* Flyway schema version V15 adds hashed, expiring password-reset tokens and retired refresh-token history.
+* Authentication now includes rate limits for login, registration, refresh and recovery, bounded login-failure windows,
+  single-use email verification and password recovery, production email-verification enforcement, and timing-resistant
+  unknown-user login checks.
+* Refresh-token rotation detects reuse, revokes the affected session family, and is paired with single-flight refresh in
+  the frontend client.
+* Security events are persisted to the existing audit log. Authentication responses are non-cacheable and API responses
+  include defensive browser headers.
+* Production startup rejects unsafe CORS origins and missing auth-token delivery. Mobile tokens use Expo SecureStore;
+  web tokens use sessionStorage rather than localStorage.
+* Backend integration coverage validates all 15 migrations and security flows against PostgreSQL 18 through
+  Testcontainers.
+
+## Current state — Stages 4–7 implementation pass (2026-09-09)
+
+* Stage 4 adds feature-owned large screens, a cache/deduplication query abstraction, incremental feed/notification/message pagination, timeouts and explicit network/rate-limit errors.
+* Stage 5 adds V16 media lifecycle/storage, post attachment UI, professional verification submission/status, message idempotency/throttling/archives, user reports, message reporting and account blocks.
+* Stage 6 adds production containers, a PostgreSQL topology, health/Prometheus metrics, structured correlation logging, image-build CI, backup/restore scripts and operations/privacy documentation. Nothing was deployed or published.
+* Stage 7 adds app identifiers, media privacy declarations, branded splash settings, global UI error recovery, shared-control accessibility and release-readiness documentation.
+* Per product-owner direction, this pass did not run tests, lint, typecheck, builds or migrations. The next task begins with full verification and fixes.

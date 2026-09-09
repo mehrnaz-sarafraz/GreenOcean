@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,7 +43,9 @@ public class SecurityConfig {
 
                         // Public health endpoint
                         .requestMatchers(
-                                "/api/v1/health"
+                                "/api/v1/health",
+                                "/actuator/health",
+                                "/actuator/health/**"
                         ).permitAll()
 
                         // Public authentication endpoints
@@ -54,7 +57,9 @@ public class SecurityConfig {
 
                                 // Email verification
                                 "/api/v1/auth/verify-email",
-                                "/api/v1/auth/resend-verification"
+                                "/api/v1/auth/resend-verification",
+                                "/api/v1/auth/request-password-reset",
+                                "/api/v1/auth/reset-password"
                         ).permitAll()
 
                         // Everything else requires authentication
@@ -84,6 +89,21 @@ public class SecurityConfig {
                                 .accessDeniedHandler(
                                         accessDeniedHandler
                                 )
+                )
+
+                .headers(headers -> headers
+                        .addHeaderWriter(new StaticHeadersWriter(
+                                "Content-Security-Policy",
+                                "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+                        ))
+                        .addHeaderWriter(new StaticHeadersWriter(
+                                "Permissions-Policy",
+                                "camera=(), microphone=(), geolocation=()"
+                        ))
+                        .addHeaderWriter(new StaticHeadersWriter(
+                                "Referrer-Policy",
+                                "no-referrer"
+                        ))
                 );
 
         return http.build();
@@ -117,8 +137,13 @@ public class SecurityConfig {
                 List.of(
                         "Authorization",
                         "Content-Type",
-                        "Accept"
+                        "Accept",
+                        "X-Request-Id"
                 )
+        );
+
+        configuration.setExposedHeaders(
+                List.of("Retry-After", "X-Request-Id")
         );
 
         configuration.setMaxAge(3600L);

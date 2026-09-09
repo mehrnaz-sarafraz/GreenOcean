@@ -50,9 +50,11 @@ public class AdminRepository {
                 UPDATE professional_verifications
                    SET status = ?, reviewed_by = CASE WHEN ? = 'PENDING' THEN NULL ELSE ? END,
                        reviewed_at = CASE WHEN ? = 'PENDING' THEN NULL ELSE CURRENT_TIMESTAMP END,
-                       notes = ?
+                       notes = CASE WHEN ? = 'PENDING' THEN notes ELSE ? END,
+                       info_request = CASE WHEN ? = 'PENDING' THEN ? ELSE NULL END,
+                       updated_at = CURRENT_TIMESTAMP
                  WHERE id = ?
-                """, status, status, actorId, status, normalize(note), verificationId);
+                """, status, status, actorId, status, status, normalize(note), status, normalize(note), verificationId);
         if (updated == 1 && !"PENDING".equals(status)) {
             jdbcTemplate.update("""
                     UPDATE professional_profiles pp
@@ -109,9 +111,9 @@ public class AdminRepository {
     private List<AdminDashboardResponse.ReportItem> reports() {
         return jdbcTemplate.query("""
                 SELECT r.*, reporter.display_name AS reporter_name,
-                       COALESCE(target_profile.username, post_profile.username, comment_profile.username, 'unknown') AS reported_username,
+                       COALESCE(target_profile.username, post_profile.username, comment_profile.username, message_profile.username, 'unknown') AS reported_username,
                        CASE WHEN r.target_user_id IS NOT NULL THEN 'PROFILE'
-                            WHEN r.post_id IS NOT NULL THEN 'POST' ELSE 'COMMENT' END AS target_type
+                            WHEN r.post_id IS NOT NULL THEN 'POST' WHEN r.comment_id IS NOT NULL THEN 'COMMENT' ELSE 'MESSAGE' END AS target_type
                   FROM reports r
                   JOIN profiles reporter ON reporter.user_id = r.reporter_id
                   LEFT JOIN profiles target_profile ON target_profile.user_id = r.target_user_id
@@ -119,6 +121,8 @@ public class AdminRepository {
                   LEFT JOIN profiles post_profile ON post_profile.user_id = target_post.author_id
                   LEFT JOIN comments target_comment ON target_comment.id = r.comment_id
                   LEFT JOIN profiles comment_profile ON comment_profile.user_id = target_comment.author_id
+                  LEFT JOIN messages target_message ON target_message.id = r.message_id
+                  LEFT JOIN profiles message_profile ON message_profile.user_id = target_message.sender_id
                  ORDER BY CASE r.severity WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 ELSE 4 END,
                           r.created_at
                 """, (rs, row) -> new AdminDashboardResponse.ReportItem(

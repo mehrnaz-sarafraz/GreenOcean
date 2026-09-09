@@ -13,7 +13,7 @@ export type PostItem = {
   id: string; author: AuthorSummary | null; communityId: string | null; body: string; anonymous: boolean;
   visibility: PostVisibility; contentWarning: string | null; likeCount: number; commentCount: number;
   liked: boolean; bookmarked: boolean; category: SupportCategory | null; postType: 'EXPERIENCE' | 'QUESTION' | 'REFLECTION';
-  mood: string | null; professionalReply: ProfessionalReply | null; createdAt: string;
+  mood: string | null; professionalReply: ProfessionalReply | null; media: { id: string; contentType: string }[]; createdAt: string;
 };
 export type CommentItem = {
   id: string; postId: string; parentCommentId: string | null; author: AuthorSummary | null; body: string;

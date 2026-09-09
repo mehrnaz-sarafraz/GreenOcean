@@ -6,6 +6,7 @@ import com.greenocean.backend.messaging.dto.SendMessageRequest;
 import com.greenocean.backend.messaging.dto.SupportChannelResponse;
 import com.greenocean.backend.messaging.dto.SupportAvailabilityResponse;
 import com.greenocean.backend.messaging.service.MessagingService;
+import com.greenocean.backend.common.api.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,10 @@ public class MessagingController {
     }
 
     @GetMapping("/conversations")
-    public List<ConversationResponse> conversations(@AuthenticationPrincipal Jwt jwt) {
-        return service.conversations(userId(jwt));
+    public PageResponse<ConversationResponse> conversations(@AuthenticationPrincipal Jwt jwt,
+                                                             @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "20") int size) {
+        return service.conversations(userId(jwt), page, size);
     }
 
     @PostMapping("/conversations/professionals/{professionalId}")
@@ -59,14 +62,22 @@ public class MessagingController {
     }
 
     @GetMapping("/conversations/{id}/messages")
-    public List<MessageResponse> messages(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
-        return service.messages(id, userId(jwt));
+    public PageResponse<MessageResponse> messages(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+                                                   @RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "50") int size) {
+        return service.messages(id, userId(jwt), page, size);
     }
 
     @PostMapping("/conversations/{id}/messages")
     public ResponseEntity<MessageResponse> send(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
                                                  @Valid @RequestBody SendMessageRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(id, userId(jwt), request.body()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(id, userId(jwt), request));
+    }
+
+    @DeleteMapping("/conversations/{id}/membership")
+    public ResponseEntity<Void> archive(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        service.archive(id, userId(jwt));
+        return ResponseEntity.noContent().build();
     }
 
     private UUID userId(Jwt jwt) { return UUID.fromString(jwt.getSubject()); }
