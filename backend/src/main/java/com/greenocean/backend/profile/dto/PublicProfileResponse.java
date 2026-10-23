@@ -1,6 +1,7 @@
 package com.greenocean.backend.profile.dto;
 
 import java.util.UUID;
+import java.time.Instant;
 
 public record PublicProfileResponse(
         UUID userId,
@@ -11,6 +12,14 @@ public record PublicProfileResponse(
         String countryCode,
         String city,
         Short birthYear,
-        boolean profilePrivate
+        boolean profilePrivate,
+        boolean following,
+        boolean followRequested,
+        boolean canSeeActivity,
+        long followerCount,
+        long followingCount,
+        long postCount,
+        long helpfulReactionCount,
+        Instant memberSince
 ) {
 }

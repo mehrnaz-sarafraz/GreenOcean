@@ -14,6 +14,7 @@ public record RegisterRequest(
         @NotBlank @Size(max = 80) String displayName,
         @Min(1900) @Max(2100) short birthYear,
         @NotBlank @Pattern(regexp = "^[A-Za-z]{2}$") String countryCode,
-        @NotBlank @Size(max = 100) String city
+        @NotBlank @Size(max = 100) String city,
+        @Pattern(regexp = "MEMBER|PROFESSIONAL") String intendedRole
 ) {
 }

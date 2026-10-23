@@ -18,7 +18,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const tokens = await tokenStorage.get();
   const headers = new Headers(requestInit.headers);
   headers.set('Accept', 'application/json');
-  if (requestInit.body) headers.set('Content-Type', 'application/json');
+  if (typeof requestInit.body === 'string' && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (authenticated && tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
 
   let response = await fetch(`${API_URL}${path}`, { ...requestInit, headers });
@@ -36,6 +36,27 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export async function apiDownloadText(path: string): Promise<{ filename: string; text: string }> {
+  const tokens = await tokenStorage.get();
+  const headers = new Headers({ Accept: 'text/csv' });
+  if (tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+  let response = await fetch(`${API_URL}${path}`, { headers });
+  if (response.status === 401 && tokens?.refreshToken) {
+    const refreshed = await refreshTokens(tokens.refreshToken);
+    if (refreshed) {
+      headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
+      response = await fetch(`${API_URL}${path}`, { headers });
+    }
+  }
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { message?: string } | null;
+    throw new ApiError(response.status, body?.message ?? `Download failed with status ${response.status}`);
+  }
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'greenocean-export.csv';
+  return { filename, text: await response.text() };
 }
 
 async function refreshTokens(refreshToken: string) {

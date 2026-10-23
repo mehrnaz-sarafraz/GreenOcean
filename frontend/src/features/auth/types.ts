@@ -14,6 +14,7 @@ export type RegisterInput = {
   birthYear: number;
   countryCode: string;
   city: string;
+  intendedRole: 'MEMBER' | 'PROFESSIONAL';
 };
 
 export type TokenResponse = {

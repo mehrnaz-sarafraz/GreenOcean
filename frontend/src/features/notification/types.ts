@@ -1,6 +1,6 @@
 import { AuthorSummary } from '@/features/content/types';
 
-export type NotificationType = 'LIKE' | 'COMMENT' | 'REPLY' | 'FOLLOW' | 'MENTION' | 'PROFESSIONAL_REPLY';
+export type NotificationType = 'LIKE' | 'COMMENT' | 'REPLY' | 'FOLLOW' | 'MENTION' | 'PROFESSIONAL_REPLY' | 'SYSTEM_NOTICE';
 
 export type NotificationItem = {
   id: string;
@@ -8,6 +8,8 @@ export type NotificationItem = {
   actor?: AuthorSummary | null;
   postId?: string | null;
   commentId?: string | null;
+  title?: string | null;
+  body?: string | null;
   read: boolean;
   createdAt: string;
 };

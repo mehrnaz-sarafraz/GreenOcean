@@ -74,10 +74,13 @@ class CommunityNotificationIntegrationTest {
                 "private-circle-" + suffix, true);
         mockMvc.perform(put("/api/v1/communities/{id}/membership", privateCommunity.get("id").asText())
                         .header(HttpHeaders.AUTHORIZATION, auth(member.token())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.member").value(false))
+                .andExpect(jsonPath("$.joinRequested").value(true));
 
         mockMvc.perform(put("/api/v1/social/follows/{id}", owner.userId()).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FOLLOWING"));
         mockMvc.perform(put("/api/v1/posts/{id}/like", postId).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
                 .andExpect(status().isNoContent());
         mockMvc.perform(post("/api/v1/posts/{id}/comments", postId).header(HttpHeaders.AUTHORIZATION, auth(member.token()))

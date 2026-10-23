@@ -1,3 +1,42 @@
-import { router } from 'expo-router'; import { useState } from 'react'; import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'; import { SafeAreaView } from 'react-native-safe-area-context'; import { AppIcon } from '@/components/app-icon'; import { Avatar } from '@/components/avatar'; import { EmptyState } from '@/components/product-ui'; import { mockNotifications } from '@/mocks/data'; import { colors,layout,radius,spacing,typography } from '@/theme/tokens';
-export default function Notifications(){const[items,setItems]=useState(mockNotifications);const msg=(item:(typeof items)[number])=>item.type==='PROFESSIONAL_REPLY'?'replied to your story':item.type==='LIKE'?'found your story helpful':'started following you';function open(item:(typeof items)[number]){setItems(current=>current.map(x=>x.id===item.id?{...x,read:true}:x));if(item.postId)router.push({pathname:'/post/[id]',params:{id:item.postId}});else router.push({pathname:'/tools/[tool]' as never,params:{tool:'followers'}} as never)}return <SafeAreaView style={styles.safe}><FlatList data={items} keyExtractor={item=>item.id} contentContainerStyle={styles.list} ListHeaderComponent={<><View style={styles.header}><View><Text style={styles.title}>Notifications</Text><Text style={styles.subtitle}>Replies, connections, groups, and knowledge updates</Text></View><Pressable onPress={()=>router.push({pathname:'/tools/[tool]' as never,params:{tool:'notification-settings'}} as never)}><AppIcon name="settings" color={colors.ocean700}/></Pressable></View><View style={styles.actions}><Pressable onPress={()=>setItems(current=>current.map(item=>({...item,read:true})))}><Text style={styles.read}>Mark all read</Text></Pressable><Pressable onPress={()=>setItems([])}><Text style={styles.clear}>Clear demo activity</Text></Pressable></View></>} renderItem={({item})=><Pressable onPress={()=>open(item)} style={[styles.item,!item.read&&styles.unread]}><Avatar name={item.actor?.displayName??'Anonymous'} size={46} verified={item.type==='PROFESSIONAL_REPLY'}/><View style={styles.flex}><Text style={styles.message}><Text style={styles.actor}>{item.actor?.displayName} </Text>{msg(item)}</Text><Text style={styles.time}>{new Date(item.createdAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</Text></View>{!item.read&&<View style={styles.dot}/>}<AppIcon name="chevron_right" color={colors.borderStrong}/></Pressable>} ItemSeparatorComponent={()=><View style={{height:spacing.sm}}/>} ListEmptyComponent={<EmptyState icon="notifications_none" title="You are all caught up" body="Replies, follows, group updates, and professional articles will appear here."/>}/></SafeAreaView>}
-const styles=StyleSheet.create({safe:{flex:1,backgroundColor:colors.foam},list:{width:'100%',maxWidth:layout.maxContent,alignSelf:'center',padding:spacing.md,paddingBottom:spacing.xxxl},flex:{flex:1},header:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:spacing.sm},title:{fontSize:typography.h1,fontWeight:'900',color:colors.ink},subtitle:{fontSize:10,color:colors.muted,marginTop:3},actions:{flexDirection:'row',justifyContent:'space-between',marginBottom:spacing.lg},read:{fontSize:11,color:colors.ocean600,fontWeight:'800'},clear:{fontSize:11,color:colors.muted,fontWeight:'800'},item:{flexDirection:'row',alignItems:'center',gap:spacing.sm,backgroundColor:colors.white,borderRadius:radius.lg,borderWidth:1,borderColor:colors.border,padding:spacing.md},unread:{backgroundColor:colors.ocean50,borderColor:colors.ocean200},message:{fontSize:14,color:colors.inkSoft,lineHeight:21},actor:{fontWeight:'900',color:colors.ink},time:{fontSize:11,color:colors.muted,marginTop:4},dot:{width:8,height:8,borderRadius:4,backgroundColor:colors.ocean500}});
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { AppIcon } from '@/components/app-icon';
+import { Avatar } from '@/components/avatar';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
+import { PageResponse } from '@/features/content/types';
+import { NotificationItem } from '@/features/notification/types';
+import { useLanguage } from '@/localization/language-provider';
+import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
+
+export default function Notifications() {
+  const { t, isRtl } = useLanguage();
+  const { notifications, setNotifications } = usePlatformData();
+  const message = (type: string) => type === 'PROFESSIONAL_REPLY' ? t('notificationProfessional') : type === 'LIKE' ? t('notificationLike') : type === 'FOLLOW' ? t('notificationFollow') : type === 'FOLLOW_REQUEST' ? 'requested to follow you' : type === 'COMMENT' ? 'commented on your story' : type === 'SYSTEM_NOTICE' ? '' : 'replied to your conversation';
+  useEffect(() => { const interval = setInterval(() => { void apiRequest<PageResponse<NotificationItem>>('/api/v1/notifications?size=50').then(result => setNotifications(result.items)).catch(() => undefined); }, 10000); return () => clearInterval(interval); }, [setNotifications]);
+
+  async function read(id: string) {
+    await apiRequest(`/api/v1/notifications/${id}/read`, { method: 'PUT' });
+    setNotifications(items => items.map(item => item.id === id ? { ...item, read: true } : item));
+  }
+  async function readAll() {
+    await apiRequest('/api/v1/notifications/read-all', { method: 'PUT' });
+    setNotifications(items => items.map(item => ({ ...item, read: true })));
+  }
+
+  return <SafeAreaView style={styles.safe}><FlatList data={notifications} keyExtractor={item => item.id} contentContainerStyle={styles.list}
+    ListHeaderComponent={<View style={[styles.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}><Text style={styles.title}>{t('notifications')}</Text><Pressable onPress={() => void readAll()}><Text style={styles.read}>{t('markAllRead')}</Text></Pressable></View>}
+    renderItem={({ item }) => <Pressable onPress={() => void read(item.id)} style={[styles.item, !item.read && styles.unread, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>{item.type === 'SYSTEM_NOTICE' ? <View style={styles.noticeIcon}><AppIcon name="campaign" color={colors.ocean700} /></View> : <Avatar name={item.actor?.displayName ?? t('anonymous')} uri={item.actor?.avatarUrl} size={46} verified={item.type === 'PROFESSIONAL_REPLY'} />}<View style={{ flex: 1 }}>{item.type === 'SYSTEM_NOTICE' ? <><Text style={[styles.actor, { textAlign: isRtl ? 'right' : 'left' }]}>{item.title}</Text><Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}>{item.body}</Text></> : <Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}><Text style={styles.actor}>{item.actor?.displayName ?? 'Someone'} </Text>{message(item.type)}</Text>}<Text style={[styles.time, { textAlign: isRtl ? 'right' : 'left' }]}>{new Date(item.createdAt).toLocaleString(isRtl ? 'fa-IR' : 'en-US')}</Text></View>{!item.read && <View style={styles.dot} />}<AppIcon name="chevron_right" color={colors.borderStrong} /></Pressable>}
+    ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+    ListEmptyComponent={<Text style={styles.empty}>You have no notifications yet.</Text>} />
+  </SafeAreaView>;
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.foam }, list: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', padding: spacing.md, paddingBottom: spacing.xxxl },
+  header: { alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg }, title: { fontSize: typography.h1, fontWeight: '900', color: colors.ink }, read: { fontSize: 12, color: colors.ocean600, fontWeight: '800' },
+  item: { alignItems: 'center', gap: spacing.sm, backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md }, unread: { backgroundColor: colors.ocean50, borderColor: colors.ocean200 },
+  message: { fontSize: 14, color: colors.inkSoft, lineHeight: 21 }, actor: { fontWeight: '900', color: colors.ink }, noticeIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, time: { fontSize: 11, color: colors.muted, marginTop: 4 }, dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.ocean500 }, empty: { color: colors.muted, textAlign: 'center', padding: spacing.xl },
+});

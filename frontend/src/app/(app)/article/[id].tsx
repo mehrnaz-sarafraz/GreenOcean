@@ -1,29 +1,25 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { professionals } from '@/mocks/data';
-import { professionalArticles } from '@/mocks/discovery';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
-import { useProduct } from '@/features/product/product-provider';
-import { AppButton } from '@/components/app-button';
-import { EmptyState } from '@/components/product-ui';
 
 export default function ArticleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { state, toggleList } = useProduct(); const [helpful, setHelpful] = useState(false);
-  const article = professionalArticles.find(item => item.id === id);
-  if (!article) return <Screen scroll style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()} style={styles.iconButton}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><EmptyState icon="article" title="Article not found" body="It may still be under review, unpublished, or the link is incomplete." /><AppButton label="Return to Knowledge Hub" onPress={() => router.replace('/articles')} /></View></Screen>;
-  const author = professionals.find(item => item.id === article.authorId)!;
+  const { articles, professionals, refresh } = usePlatformData();
+  const article = articles.find(item => item.id === id);
+  const author = professionals.find(item => item.id === article?.authorId);
+  if (!article || !author) return <Screen style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()} style={styles.iconButton}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Text style={styles.disclaimer}>Article not found.</Text></View></Screen>;
   return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.iconButton}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.topActions}><Pressable onPress={() => toggleList('savedArticles', article.id)} style={styles.iconButton}><AppIcon name="bookmark" filled={state.savedArticles.includes(article.id)} color={colors.ocean700} /></Pressable><Pressable onPress={() => void Share.share({ message: `${article.title}\n\n${article.summary}` })} style={styles.iconButton}><AppIcon name="ios_share" color={colors.ocean700} /></Pressable></View></View>
-    <View style={styles.hero}>{article.pinned && <View style={styles.pinned}><AppIcon name="push_pin" filled size={15} color={colors.white} /><Text style={styles.pinnedText}>PINNED BY {author.displayName.toUpperCase()}</Text></View>}<Text style={styles.topic}>{article.topic} · {article.evidenceLevel}</Text><Text style={styles.title}>{article.title}</Text><Text style={styles.summary}>{article.summary}</Text><View style={styles.author}><Avatar name={author.displayName} size={48} verified /><View style={{ flex: 1 }}><Text style={styles.authorName}>{author.displayName}</Text><Text style={styles.authorMeta}>{author.title} · {article.publishedAt} · {article.readTime}</Text></View></View></View>
+    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.iconButton}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.topActions}><Pressable onPress={() => void apiRequest(`/api/v1/articles/${article.id}/save`, { method: article.saved ? 'DELETE' : 'PUT' }).then(refresh)} style={styles.iconButton}><AppIcon name={article.saved ? 'bookmark' : 'bookmark_border'} filled={article.saved} color={colors.ocean700} /></Pressable><Pressable onPress={() => void Share.share({ message: `${article.title}\n\n${article.summary}` })} style={styles.iconButton}><AppIcon name="ios_share" color={colors.ocean700} /></Pressable></View></View>
+    <View style={styles.hero}>{article.pinned && <View style={styles.pinned}><AppIcon name="push_pin" filled size={15} color={colors.white} /><Text style={styles.pinnedText}>PINNED BY {author.displayName.toUpperCase()}</Text></View>}<Text style={styles.topic}>{article.topic} · {article.evidenceLevel}</Text><Text style={styles.title}>{article.title}</Text><Text style={styles.summary}>{article.summary}</Text><View style={styles.author}><Avatar name={author.displayName} uri={author.avatarUrl} size={48} verified /><View style={{ flex: 1 }}><Text style={styles.authorName}>{author.displayName}</Text><Text style={styles.authorMeta}>{author.title} · {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'In review'} · {article.readTime}</Text></View></View></View>
     <View style={styles.review}><AppIcon name="verified_user" color={colors.ocean600} /><View style={{ flex: 1 }}><Text style={styles.reviewTitle}>Professional educational content</Text><Text style={styles.reviewText}>The author’s identity and credentials are verified. This article was reviewed for safety and clear professional boundaries.</Text></View></View>
     {article.sections.map((section, index) => <View key={section.heading} style={styles.section}><View style={styles.sectionNumber}><Text style={styles.sectionNumberText}>{index + 1}</Text></View><View style={{ flex: 1 }}><Text style={styles.sectionTitle}>{section.heading}</Text><Text style={styles.body}>{section.body}</Text></View></View>)}
     <View style={styles.takeaways}><View style={styles.takeawayHead}><AppIcon name="lightbulb" filled color={colors.sun} /><Text style={styles.takeawayTitle}>Key takeaways</Text></View>{article.takeaways.map(item => <View key={item} style={styles.takeaway}><AppIcon name="check_circle" filled size={18} color={colors.ocean500} /><Text style={styles.takeawayText}>{item}</Text></View>)}</View>
-    <View style={styles.helpful}><View><Text style={styles.helpfulTitle}>Was this article helpful?</Text><Text style={styles.helpfulText}>{article.helpfulCount + (helpful ? 1 : 0)} community members said yes</Text></View><Pressable onPress={() => setHelpful(value => !value)} style={styles.helpfulButton}><AppIcon name="favorite" filled={helpful} color={colors.coral} /><Text style={styles.helpfulButtonText}>{helpful ? 'Helpful · saved' : 'Helpful'}</Text></Pressable></View>
+    <View style={styles.helpful}><View><Text style={styles.helpfulTitle}>Was this article helpful?</Text><Text style={styles.helpfulText}>{article.helpfulCount} community members said yes</Text></View><Pressable onPress={() => void apiRequest(`/api/v1/articles/${article.id}/helpful`, { method: article.helpful ? 'DELETE' : 'PUT' }).then(refresh)} style={styles.helpfulButton}><AppIcon name="favorite" filled={article.helpful} color={colors.coral} /><Text style={styles.helpfulButtonText}>Helpful</Text></Pressable></View>
     <View style={styles.references}><Text style={styles.referencesTitle}>Review & references</Text>{article.references.map(item => <Text key={item} style={styles.reference}>• {item}</Text>)}</View>
     <Text style={styles.disclaimer}>This article provides general educational information. It is not a diagnosis, treatment plan, or substitute for professional medical care.</Text>
   </View></Screen>;

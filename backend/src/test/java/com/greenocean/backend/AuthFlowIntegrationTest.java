@@ -72,6 +72,11 @@ class AuthFlowIntegrationTest {
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.roles[0]").value("USER"));
 
+        mockMvc.perform(get("/api/v1/admin/operations")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+
         MvcResult refreshResult = mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("refreshToken", firstRefreshToken))))
@@ -79,6 +84,7 @@ class AuthFlowIntegrationTest {
                 .andReturn();
 
         JsonNode refreshedTokens = objectMapper.readTree(refreshResult.getResponse().getContentAsString());
+        String refreshedAccessToken = refreshedTokens.get("accessToken").asText();
         String rotatedRefreshToken = refreshedTokens.get("refreshToken").asText();
 
         mockMvc.perform(post("/api/v1/auth/refresh")
@@ -94,6 +100,10 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("refreshToken", rotatedRefreshToken))))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + refreshedAccessToken))
                 .andExpect(status().isUnauthorized());
     }
 

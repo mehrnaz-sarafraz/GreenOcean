@@ -9,11 +9,9 @@ import { AppIcon } from '@/components/app-icon';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, spacing } from '@/theme/tokens';
-import { useProduct } from '@/features/product/product-provider';
 
 export default function RegisterScreen() {
   const { register } = useAuth(); const { t, isRtl } = useLanguage();
-  const { update } = useProduct();
   const [form, setForm] = useState({ email: '', password: '', username: '', displayName: '', birthYear: '', countryCode: '', city: '' });
   const [confirmPassword, setConfirmPassword] = useState(''); const [role, setRole] = useState<'MEMBER' | 'PROFESSIONAL'>('MEMBER'); const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
@@ -21,12 +19,12 @@ export default function RegisterScreen() {
   async function submit() {
     if (Object.values(form).some((value) => !value.trim())) return setError(t('requiredFields'));
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Enter a valid email address.');
-    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) return setError('Use at least 8 characters with a letter and a number.');
+    if (form.password.length < 12 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) return setError('Use at least 12 characters with a letter and a number.');
     if (form.password !== confirmPassword) return setError('Passwords do not match.');
-    if (Number(form.birthYear) < 1900 || new Date().getFullYear() - Number(form.birthYear) < 16) return setError('You must be at least 16 to create this demo account.');
+    if (Number(form.birthYear) < 1900 || new Date().getFullYear() - Number(form.birthYear) < 16) return setError('You must be at least 16 to create an account.');
     if (!agreed) return setError('Accept the Terms, Privacy Policy, and Community Guidelines.');
     setLoading(true); setError('');
-    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase() }); update(current => ({ ...current, onboarding: { ...current.onboarding, role }, profile: { ...current.profile, displayName: form.displayName, username: form.username, city: form.city, country: form.countryCode.toUpperCase() } })); router.replace('/(auth)/onboarding'); }
+    try { await register({ ...form, birthYear: Number(form.birthYear), countryCode: form.countryCode.toUpperCase(), intendedRole: role }); router.replace('/(auth)/onboarding'); }
     catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
     finally { setLoading(false); }
   }
@@ -38,7 +36,7 @@ export default function RegisterScreen() {
       <View style={styles.form}>
         <AppField label={t('email')} value={form.email} onChangeText={setField('email')} autoCapitalize="none" keyboardType="email-address" />
         <AppField label={t('password')} value={form.password} onChangeText={setField('password')} secureTextEntry />
-        <Text style={styles.hint}>At least 8 characters, including a letter and number.</Text>
+        <Text style={styles.hint}>At least 12 characters, including a letter and number.</Text>
         <AppField label="Confirm password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
         <AppField label={t('username')} value={form.username} onChangeText={setField('username')} autoCapitalize="none" />
         <AppField label={t('displayName')} value={form.displayName} onChangeText={setField('displayName')} />

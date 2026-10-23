@@ -3,6 +3,7 @@ package com.greenocean.backend.auth.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -35,6 +37,13 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout"
+                                ,"/api/v1/account-assistance/password-reset"
+                                ,"/api/v1/account-assistance/password-reset/confirm"
+                                ,"/api/v1/account-assistance/email-verification"
+                                ,"/api/v1/account-assistance/email-verification/confirm"
+                                ,"/api/v1/account-assistance/support"
+                                ,"/api/v1/policies/**"
+                                ,"/api/v1/crisis-resources"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

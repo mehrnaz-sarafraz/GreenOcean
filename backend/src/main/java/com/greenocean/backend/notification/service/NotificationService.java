@@ -26,6 +26,10 @@ public class NotificationService {
         create(followedUserId, actorId, actorId, "FOLLOW", null, null);
     }
 
+    public void followRequested(UUID actorId, UUID targetUserId) {
+        create(targetUserId, actorId, actorId, "FOLLOW_REQUEST", null, null);
+    }
+
     public void commentLiked(UUID actorId, UUID commentId) {
         repository.commentAuthor(commentId).ifPresent(recipient ->
                 create(recipient, actorId, actorId, "LIKE", repository.commentPost(commentId).orElse(null), commentId));

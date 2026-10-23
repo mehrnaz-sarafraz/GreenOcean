@@ -8,6 +8,7 @@ import com.greenocean.backend.auth.dto.RefreshTokenRequest;
 import com.greenocean.backend.auth.dto.RegisterRequest;
 import com.greenocean.backend.auth.dto.RegisterResponse;
 import com.greenocean.backend.auth.dto.TokenResponse;
+import com.greenocean.backend.auth.dto.SessionResponse;
 import com.greenocean.backend.auth.service.AuthenticationService;
 import com.greenocean.backend.auth.service.RegistrationService;
 import jakarta.validation.Valid;
@@ -16,12 +17,15 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -76,6 +80,17 @@ public class AuthController {
     @PostMapping("/logout-all")
     public ResponseEntity<Void> logoutAll(@AuthenticationPrincipal Jwt jwt) {
         authenticationService.logoutAll(UUID.fromString(jwt.getSubject()));
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/sessions")
+    public List<SessionResponse> sessions(@AuthenticationPrincipal Jwt jwt) {
+        return authenticationService.sessions(UUID.fromString(jwt.getSubject()), UUID.fromString(jwt.getClaimAsString("sid")));
+    }
+
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<Void> revokeSession(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID sessionId) {
+        authenticationService.revokeSession(UUID.fromString(jwt.getSubject()), sessionId);
         return ResponseEntity.noContent().build();
     }
 }

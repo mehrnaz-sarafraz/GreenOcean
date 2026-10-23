@@ -1,21 +1,34 @@
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
+import { EmptyState } from '@/components/product-ui';
+import { Listener } from '@/features/platform/types';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 export default function SupportNow() {
+  const { channels } = usePlatformData();
+  const [listeners, setListeners] = useState<Listener[]>([]);
+  useEffect(() => {
+    const timer = setTimeout(() => apiRequest<Listener[]>('/api/v1/listeners').then(setListeners).catch(() => undefined), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  const onlineListeners = listeners.filter(listener => listener.online);
+  const onlinePeers = channels.reduce((total, channel) => total + channel.onlineCount, 0);
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.private}><AppIcon name="lock" size={15} color={colors.ocean600} /><Text style={styles.privateText}>Private by default</Text></View></View>
     <View><Text style={styles.eyebrow}>SUPPORT, WITHOUT THE GUESSWORK</Text><Text style={styles.title}>What would feel helpful right now?</Text><Text style={styles.subtitle}>Choose the kind of connection you want. You can change your mind at any time.</Text></View>
 
-    <View style={styles.availability}><View style={styles.pulse} /><Text style={styles.availabilityText}>18 trained listeners and 126 peers are online now</Text></View>
+    <View style={styles.availability}><View style={styles.pulse} /><Text style={styles.availabilityText}>{onlineListeners.length} trained listeners and {onlinePeers} channel participants online now</Text></View>
 
     <Pressable onPress={() => router.push({ pathname: '/listener/[action]' as never, params: { action: 'match' } } as never)} style={[styles.path, styles.listenerPath]}>
-      <View style={styles.pathTop}><View style={[styles.pathIcon, { backgroundColor: colors.ocean200 }]}><AppIcon name="hearing" size={28} color={colors.ocean800} /></View><View style={styles.recommended}><Text style={styles.recommendedText}>FASTEST · RECOMMENDED</Text></View></View>
+      <View style={styles.pathTop}><View style={[styles.pathIcon, { backgroundColor: colors.ocean200 }]}><AppIcon name="hearing" size={28} color={colors.ocean800} /></View><View style={styles.recommended}><Text style={styles.recommendedText}>TRAINED · NON-CLINICAL</Text></View></View>
       <Text style={styles.pathTitle}>Talk with a trained listener</Text><Text style={styles.pathText}>A private, one-to-one conversation with someone trained to listen without judging or giving medical advice.</Text>
-      <View style={styles.pathMeta}><Meta icon="schedule" text="Usually under 2 minutes" /><Meta icon="payments" text="Free" /><Meta icon="visibility_off" text="Anonymous option" /></View>
+      <View style={styles.pathMeta}><Meta icon="schedule" text={onlineListeners.length ? `${onlineListeners.length} online now` : 'Check current availability'} /><Meta icon="payments" text="Free" /><Meta icon="lock" text="Private conversation" /></View>
       <View style={styles.pathButton}><Text style={styles.pathButtonText}>Find my listener</Text><AppIcon name="arrow_forward" color={colors.white} /></View>
     </Pressable>
 
@@ -24,7 +37,7 @@ export default function SupportNow() {
       <Pressable onPress={() => router.push('/professionals')} style={styles.smallPath}><View style={[styles.pathIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="psychology" color={colors.lavender} /></View><Text style={styles.smallTitle}>Find a verified professional</Text><Text style={styles.smallText}>Compare specialty, language, location, availability, and consultation style.</Text><Meta icon="verified" text="Credentials checked" /><View style={styles.inlineAction}><Text style={styles.inlineActionText}>Find a professional</Text><AppIcon name="arrow_forward" size={17} color={colors.ocean700} /></View></Pressable>
     </View>
 
-    <View style={styles.listenerPreview}><View style={styles.faces}><Avatar name="Amelia" size={38} /><Avatar name="Noah" size={38} /><Avatar name="Priya" size={38} /></View><View style={{ flex: 1 }}><Text style={styles.previewTitle}>Matched around your preferences</Text><Text style={styles.previewText}>Topic, language, time zone, and lived experience help shape a better first match.</Text></View></View>
+    {listeners.length ? <View style={styles.listenerPreview}><View style={styles.faces}>{listeners.slice(0, 3).map(listener => <Avatar key={listener.id} name={listener.displayName} uri={listener.avatarUrl || undefined} size={38} />)}</View><View style={{ flex: 1 }}><Text style={styles.previewTitle}>Matched around your preferences</Text><Text style={styles.previewText}>Topic, language, and current availability help shape a better first match.</Text></View></View> : <EmptyState icon="support_agent" title="No active listeners right now" body="Peer communities and verified professionals remain available while listener matching is offline." />}
 
     <View style={styles.crisis}><View style={styles.crisisIcon}><AppIcon name="emergency" color={colors.white} /></View><View style={{ flex: 1 }}><Text style={styles.crisisTitle}>Are you in immediate danger?</Text><Text style={styles.crisisText}>GreenOcean is not a crisis service. Contact your local emergency services or a crisis line in your country now.</Text></View><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'urgent-help' } } as never)} style={styles.crisisButton}><Text style={styles.crisisButtonText}>Find urgent help</Text></Pressable></View>
     <Text style={styles.boundary}>Peer listeners and community members do not provide diagnosis, treatment, or emergency intervention.</Text>

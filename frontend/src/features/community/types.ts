@@ -8,5 +8,31 @@ export type Community = {
   memberCount: number;
   member: boolean;
   membershipRole?: 'MEMBER' | 'MODERATOR' | 'OWNER' | null;
+  joinRequested: boolean;
   createdAt: string;
+};
+
+export type CommunityDetails = {
+  rules: { id: string; position: number; text: string }[];
+  members: {
+    userId: string;
+    displayName: string;
+    username: string;
+    avatarUrl?: string | null;
+    role: 'MEMBER' | 'MODERATOR' | 'OWNER';
+    joinedAt: string;
+  }[];
+  events: {
+    id: string;
+    title: string;
+    description?: string | null;
+    format: 'TEXT_CIRCLE' | 'VIDEO' | 'AUDIO' | 'WORKSHOP' | 'Q_AND_A';
+    hostName?: string | null;
+    startsAt: string;
+    endsAt: string;
+    capacity?: number | null;
+    attendeeCount: number;
+    joined: boolean;
+    status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
+  }[];
 };

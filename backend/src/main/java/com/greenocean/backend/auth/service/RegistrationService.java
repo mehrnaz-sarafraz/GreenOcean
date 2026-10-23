@@ -10,6 +10,7 @@ import com.greenocean.backend.common.exception.ConflictException;
 import com.greenocean.backend.common.persistence.DatabaseUuidGenerator;
 import com.greenocean.backend.profile.entity.Profile;
 import com.greenocean.backend.profile.repository.ProfileRepository;
+import com.greenocean.backend.preference.repository.UserPreferencesRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +25,17 @@ public class RegistrationService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final DatabaseUuidGenerator databaseUuidGenerator;
+    private final UserPreferencesRepository userPreferencesRepository;
 
     public RegistrationService(UserRepository userRepository, ProfileRepository profileRepository, RoleRepository roleRepository,
-                               PasswordEncoder passwordEncoder, DatabaseUuidGenerator databaseUuidGenerator) {
+                               PasswordEncoder passwordEncoder, DatabaseUuidGenerator databaseUuidGenerator,
+                               UserPreferencesRepository userPreferencesRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.databaseUuidGenerator = databaseUuidGenerator;
+        this.userPreferencesRepository = userPreferencesRepository;
     }
 
     @Transactional
@@ -61,6 +65,7 @@ public class RegistrationService {
 
         Profile profile = new Profile(savedUser, username, displayName, countryCode, city, request.birthYear());
         profileRepository.save(profile);
+        userPreferencesRepository.updateIntendedRole(savedUser.getId(), request.intendedRole());
 
         return new RegisterResponse(savedUser.getId(), savedUser.getEmail(), profile.getUsername());
     }

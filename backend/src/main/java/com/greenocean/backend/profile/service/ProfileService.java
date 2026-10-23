@@ -14,13 +14,24 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Year;
 import java.util.Locale;
 import java.util.UUID;
+import com.greenocean.backend.social.service.SocialInteractionRepository;
+import com.greenocean.backend.post.repository.PostReadRepository;
+import com.greenocean.backend.post.dto.PostResponse;
+import com.greenocean.backend.common.api.PageResponse;
+import com.greenocean.backend.common.exception.ForbiddenException;
+import java.util.List;
 
 @Service
 public class ProfileService {
     private final ProfileRepository profileRepository;
+    private final SocialInteractionRepository interactions;
+    private final PostReadRepository postReadRepository;
 
-    public ProfileService(ProfileRepository profileRepository) {
+    public ProfileService(ProfileRepository profileRepository, SocialInteractionRepository interactions,
+                          PostReadRepository postReadRepository) {
         this.profileRepository = profileRepository;
+        this.interactions = interactions;
+        this.postReadRepository = postReadRepository;
     }
 
     @Transactional(readOnly = true)
@@ -62,20 +73,52 @@ public class ProfileService {
     }
 
     @Transactional(readOnly = true)
-    public PublicProfileResponse getPublicProfile(String username) {
+    public PublicProfileResponse getPublicProfile(UUID viewerId, String username) {
         Profile profile = profileRepository.findByUsernameIgnoreCase(username.trim())
                 .orElseThrow(() -> new NotFoundException("Profile was not found"));
+        UUID targetId = profile.getUserId();
+        if (interactions.hasBlockBetween(viewerId, targetId)) {
+            throw new NotFoundException("Profile was not found");
+        }
+        boolean ownProfile = viewerId.equals(targetId);
+        boolean following = ownProfile || interactions.isFollowing(viewerId, targetId);
+        boolean canSeeActivity = ownProfile || !profile.isProfilePrivate() || following;
         return new PublicProfileResponse(
-                profile.getUserId(),
+                targetId,
                 profile.getUsername(),
                 profile.getDisplayName(),
                 profile.getBio(),
                 profile.getAvatarUrl(),
                 profile.isShowLocation() ? profile.getCountryCode() : null,
                 profile.isShowLocation() ? profile.getCity() : null,
-                profile.isShowBirthYear() ? profile.getBirthYear() : null,
-                profile.isProfilePrivate()
+                profile.isShowBirthYear() && canSeeActivity ? profile.getBirthYear() : null,
+                profile.isProfilePrivate(),
+                following && !ownProfile,
+                !following && interactions.hasPendingFollowRequest(viewerId, targetId),
+                canSeeActivity,
+                interactions.followerCount(targetId),
+                interactions.followingCount(targetId),
+                interactions.visiblePostCount(targetId, viewerId),
+                canSeeActivity ? interactions.helpfulReactionCount(targetId) : 0,
+                profile.getCreatedAt()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PostResponse> getPublicPosts(UUID viewerId, String username, int page, int size) {
+        Profile profile = profileRepository.findByUsernameIgnoreCase(username.trim())
+                .orElseThrow(() -> new NotFoundException("Profile was not found"));
+        if (interactions.hasBlockBetween(viewerId, profile.getUserId())) {
+            throw new NotFoundException("Profile was not found");
+        }
+        if (profile.isProfilePrivate() && !viewerId.equals(profile.getUserId())
+                && !interactions.isFollowing(viewerId, profile.getUserId())) {
+            throw new ForbiddenException("Follow this private profile to view its stories");
+        }
+        List<PostResponse> results = postReadRepository.findAuthorPosts(profile.getUserId(), viewerId, page, size);
+        boolean hasNext = results.size() > size;
+        return new PageResponse<>(hasNext ? List.copyOf(results.subList(0, size)) : List.copyOf(results),
+                page, size, hasNext);
     }
 
     private Profile findByUserId(UUID userId) {

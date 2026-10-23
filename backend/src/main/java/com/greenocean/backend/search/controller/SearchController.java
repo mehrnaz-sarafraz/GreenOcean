@@ -4,6 +4,13 @@ import com.greenocean.backend.common.api.PageResponse;
 import com.greenocean.backend.post.dto.PostResponse;
 import com.greenocean.backend.search.service.SearchService;
 import com.greenocean.backend.search.service.UserSearchResponse;
+import com.greenocean.backend.search.dto.SearchHistoryRequest;
+import com.greenocean.backend.search.dto.SearchHistoryResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/search")
@@ -32,6 +40,23 @@ public class SearchController {
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "20") int size) {
         validate(q, page, size); return searchService.posts(userId(jwt), q, page, size);
+    }
+
+    @GetMapping("/history")
+    public List<SearchHistoryResponse> history(@AuthenticationPrincipal Jwt jwt) {
+        return searchService.history(userId(jwt));
+    }
+
+    @PostMapping("/history")
+    public SearchHistoryResponse remember(@AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestBody SearchHistoryRequest request) {
+        return searchService.remember(userId(jwt), request.term());
+    }
+
+    @DeleteMapping("/history")
+    public ResponseEntity<Void> clearHistory(@AuthenticationPrincipal Jwt jwt) {
+        searchService.clearHistory(userId(jwt));
+        return ResponseEntity.noContent().build();
     }
 
     private void validate(String query, int page, int size) {

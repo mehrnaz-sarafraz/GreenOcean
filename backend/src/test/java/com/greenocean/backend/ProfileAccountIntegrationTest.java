@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -90,6 +91,7 @@ class ProfileAccountIntegrationTest {
                 .andExpect(status().isNoContent());
 
         assertRefreshRejected(initial.refreshToken());
+        assertAccessRejected(initial.accessToken());
         assertLoginRejected(initial.email(), initial.password());
 
         AuthTokens afterPasswordChange = login(initial.email(), newPassword);
@@ -97,6 +99,7 @@ class ProfileAccountIntegrationTest {
                         .header("Authorization", auth(afterPasswordChange.accessToken())))
                 .andExpect(status().isNoContent());
         assertRefreshRejected(afterPasswordChange.refreshToken());
+        assertAccessRejected(afterPasswordChange.accessToken());
     }
 
     private AuthTokens registerAndLogin(String prefix) throws Exception {
@@ -139,6 +142,26 @@ class ProfileAccountIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldDeleteAccountAndImmediatelyInvalidateItsAccessToken() throws Exception {
+        AuthTokens account = registerAndLogin("delete-account");
+
+        mockMvc.perform(delete("/api/v1/account")
+                        .header("Authorization", auth(account.accessToken()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("password", account.password()))))
+                .andExpect(status().isNoContent());
+
+        assertAccessRejected(account.accessToken());
+        assertRefreshRejected(account.refreshToken());
+        assertLoginRejected(account.email(), account.password());
+    }
+
+    private void assertAccessRejected(String accessToken) throws Exception {
+        mockMvc.perform(get("/api/v1/auth/me").header("Authorization", auth(accessToken)))
                 .andExpect(status().isUnauthorized());
     }
 

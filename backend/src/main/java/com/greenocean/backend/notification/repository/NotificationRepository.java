@@ -21,8 +21,16 @@ public class NotificationRepository {
     public void create(UUID userId, UUID visibleActorId, String type, UUID postId, UUID commentId) {
         jdbcTemplate.update("""
                 INSERT INTO notifications (user_id, actor_user_id, type, post_id, comment_id)
-                VALUES (?, ?, ?, ?, ?)
-                """, userId, visibleActorId, type, postId, commentId);
+                SELECT ?, ?, ?, ?, ?
+                 WHERE COALESCE((
+                     SELECT CASE
+                         WHEN ? IN ('COMMENT', 'REPLY', 'MENTION', 'LIKE', 'PROFESSIONAL_REPLY') THEN notify_replies
+                         WHEN ? IN ('FOLLOW', 'FOLLOW_REQUEST') THEN notify_follows
+                         ELSE TRUE
+                     END
+                     FROM user_preferences WHERE user_id = ?
+                 ), TRUE)
+                """, userId, visibleActorId, type, postId, commentId, type, type, userId);
     }
 
     public Optional<UUID> postAuthor(UUID postId) {
@@ -42,7 +50,7 @@ public class NotificationRepository {
 
     public List<NotificationResponse> findAll(UUID userId, int page, int size) {
         return jdbcTemplate.query("""
-                SELECT n.id, n.type, n.actor_user_id, n.post_id, n.comment_id, n.is_read, n.created_at,
+                SELECT n.id, n.type, n.actor_user_id, n.post_id, n.comment_id, n.title, n.body, n.is_read, n.created_at,
                        p.username, p.display_name, p.avatar_url
                   FROM notifications n
                   LEFT JOIN profiles p ON p.user_id = n.actor_user_id
@@ -56,6 +64,7 @@ public class NotificationRepository {
             return new NotificationResponse(
                     rs.getObject("id", UUID.class), rs.getString("type"), actor,
                     rs.getObject("post_id", UUID.class), rs.getObject("comment_id", UUID.class),
+                    rs.getString("title"), rs.getString("body"),
                     rs.getBoolean("is_read"), rs.getObject("created_at", OffsetDateTime.class).toInstant());
         }, userId, size + 1, (long) page * size);
     }

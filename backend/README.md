@@ -1,22 +1,33 @@
 # GreenOcean Backend
 
-Spring Boot REST API for GreenOcean.
+Spring Boot REST API for GreenOcean. It is a modular monolith backed by PostgreSQL and Flyway.
 
 ## Local requirements
 
 - Java 21
-- PostgreSQL 18
-- Database named `greenocean`
+- PowerShell
+- Either the bundled embedded PostgreSQL runner or an existing PostgreSQL installation
 
-## Run locally
+## Run without an installed database
 
-Preferred local command (database password is requested securely and the JWT secret is generated automatically):
+This is the recommended command for frontend and local API development:
 
 ```powershell
+cd D:\p\GreenOcean\backend
+.\scripts\run-embedded.ps1
+```
+
+It starts a real temporary PostgreSQL 14 process, applies all Flyway migrations, loads curated reference content,
+and runs the API on `http://localhost:8080`. No development identities remain after migration. The temporary data is discarded when the process stops.
+
+## Run with persistent PostgreSQL
+
+```powershell
+cd D:\p\GreenOcean\backend
 .\scripts\run-local.ps1
 ```
 
-Alternatively, set local secrets for the current PowerShell session and use the Maven Wrapper:
+Or configure the process directly:
 
 ```powershell
 $env:GREENOCEAN_DB_PASSWORD = "your-local-postgres-password"
@@ -26,49 +37,49 @@ $env:GREENOCEAN_JWT_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid()
 
 Health check: `GET http://localhost:8080/api/v1/health`
 
-Authentication endpoints:
+## Implemented domains
 
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me` (Bearer access token required)
-- `POST /api/v1/auth/change-password` (Bearer access token required)
-- `POST /api/v1/auth/logout-all` (Bearer access token required)
-- `GET /api/v1/profiles/me` (Bearer access token required)
-- `PATCH /api/v1/profiles/me` (Bearer access token required)
-- `GET /api/v1/profiles/{username}` (Bearer access token required)
+- Authentication: registration, login, rotating refresh sessions, logout, logout-all, password change, session listing and revocation
+- Account: privacy-safe JSON archive and password-confirmed account deletion/anonymization
+- Profiles/social: public/private profiles, posts by username, follows, private follow requests, approvals, blocks, followers, and following
+- Content: categorized posts, post types, anonymous publishing, visibility enforcement, comments/replies, reactions, bookmarks, and professional responses
+- Communities: discovery, creation, public/private membership, join requests, roles, moderation, rules, events, attendance, and member feeds
+- Catalog: support categories, 66 database-managed product options, professional directory/details, articles, helpful/saved state, psychology media recommendations, and sourced crisis resources
+- Professionals: credential applications, signed document upload, manual scan/review status, reviews, availability slots, appointment requests, and practice-side consultation management
+- Messaging/support: user and professional conversations, messages, support channels, listener matching, applications, training, and activation
+- Wellbeing: check-ins, goals, journals, non-diagnostic reflections, and guided growth progress
+- Safety: reports, personal report history, moderation appeals, durable onboarding/preferences/search history, public policies, public urgent resources, and assistance requests
+- Administration: role-gated operational dashboard, queues, broadcasts, campaigns, policy publishing, account/community actions, credential scanning state, CSV exports, and audit logging
 
-Content and social endpoints (Bearer access token required):
+## Security behavior
 
-- `POST /api/v1/posts`
-- `GET /api/v1/posts/feed?page=0&size=20`
-- `GET /api/v1/posts/{postId}`
-- `DELETE /api/v1/posts/{postId}`
-- `GET|POST /api/v1/posts/{postId}/comments`
-- `PUT|DELETE /api/v1/posts/{postId}/like`
-- `PUT|DELETE /api/v1/posts/{postId}/bookmark`
-- `PUT|DELETE /api/v1/comments/{commentId}/like`
-- `PUT|DELETE /api/v1/social/follows/{userId}`
-- `PUT|DELETE /api/v1/social/blocks/{userId}`
-- `GET /api/v1/search/users?q=...`
-- `GET /api/v1/search/posts?q=...`
-- `POST /api/v1/communities`
-- `GET /api/v1/communities?q=...`
-- `GET /api/v1/communities/slug/{slug}`
-- `PUT|DELETE /api/v1/communities/{communityId}/membership`
-- `GET /api/v1/communities/{communityId}/posts`
-- `GET /api/v1/notifications`
-- `GET /api/v1/notifications/unread-count`
-- `PUT /api/v1/notifications/{notificationId}/read`
-- `PUT /api/v1/notifications/read-all`
+- Passwords and refresh tokens are stored only as hashes.
+- Every access token is checked against its active server-side session, so logout, logout-all, password change, or deletion immediately revokes it.
+- Authorization failures return structured HTTP 403 responses.
+- Private-profile, community-membership, block, soft-delete, and anonymous-author rules are enforced by backend queries.
+- Professional uploads are size-limited, stored outside PostgreSQL, hashed, and validated by actual PDF/JPEG/PNG signatures.
+- Appointment slots are row-locked when booked and per-professional schedules are transaction-locked while checking overlap.
+- Admin exports use allowlisted datasets, CSV formula neutralization, no-store responses, and download audit events.
 
-Post visibility supports `PUBLIC`, `FOLLOWERS`, and `COMMUNITY`. Feed and search results enforce
-visibility, membership, blocks, soft deletion, and anonymous-author privacy on the server.
-Likes, comments, replies, and follows create notifications only when the interaction is newly created;
-repeating an idempotent request does not produce duplicate notifications.
+## Migrations
 
-Run the complete authentication smoke test while the backend is running:
+Flyway migrations under `src/main/resources/db/migration` are the schema source of truth.
+There are 31 ordered migrations (`V0` through `V30`), including local UUID compatibility, the original schema,
+product workflow completion, availability, public policies, database-managed product configuration, development-fixture cleanup, and sourced crisis resources.
+
+## Test
+
+With a PostgreSQL database available:
+
+```powershell
+.\mvnw.cmd test
+```
+
+The suite covers application startup, schema constraints, auth/session revocation, profile/account behavior,
+content/social/community notifications, availability collision and double booking, uploaded-file signature checks,
+registration intent, onboarding/search persistence, product configuration, fixture removal, and crisis-resource access.
+
+Optional running-server smoke scripts:
 
 ```powershell
 .\scripts\smoke-auth.ps1
@@ -76,21 +87,4 @@ Run the complete authentication smoke test while the backend is running:
 .\scripts\smoke-content-social.ps1
 ```
 
-## Test
-
-Preferred local command (the password is requested securely and is not printed or stored):
-
-```powershell
-.\scripts\test-local.ps1
-```
-
-Alternatively, when `GREENOCEAN_DB_PASSWORD` is already correct in the current terminal:
-
-```powershell
-$env:GREENOCEAN_DB_PASSWORD = "your-local-postgres-password"
-.\mvnw.cmd test
-```
-
-Tests use a dedicated non-production JWT secret from the `test` profile. Real JWT and database secrets are never committed.
-
-Flyway migrations under `src/main/resources/db/migration` are the database schema source of truth.
+See [../IMPLEMENTATION_STATUS.md](../IMPLEMENTATION_STATUS.md) for the complete product coverage and production integration checklist.

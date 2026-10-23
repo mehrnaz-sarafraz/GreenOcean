@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.greenocean.backend.common.api.PageResponse;
+import com.greenocean.backend.post.dto.PostResponse;
 
 import java.util.UUID;
 
@@ -39,7 +42,16 @@ public class ProfileController {
     }
 
     @GetMapping("/{username}")
-    public PublicProfileResponse getPublicProfile(@PathVariable String username) {
-        return profileService.getPublicProfile(username);
+    public PublicProfileResponse getPublicProfile(@AuthenticationPrincipal Jwt jwt, @PathVariable String username) {
+        return profileService.getPublicProfile(UUID.fromString(jwt.getSubject()), username);
+    }
+
+    @GetMapping("/{username}/posts")
+    public PageResponse<PostResponse> getPublicPosts(@AuthenticationPrincipal Jwt jwt, @PathVariable String username,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        if (page < 0) throw new IllegalArgumentException("page cannot be negative");
+        if (size < 1 || size > 100) throw new IllegalArgumentException("size must be between 1 and 100");
+        return profileService.getPublicPosts(UUID.fromString(jwt.getSubject()), username, page, size);
     }
 }

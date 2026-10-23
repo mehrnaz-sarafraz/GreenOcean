@@ -1,17 +1,20 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Linking, Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { ActionRow, EmptyState, Notice, Pill, ProductCard, ProductHeader, ProductPage, ProductSection } from '@/components/product-ui';
-import { useProduct } from '@/features/product/product-provider';
-import { mockCommunities, mockPosts, professionals } from '@/mocks/data';
-import { mediaPicks, professionalArticles } from '@/mocks/discovery';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { optionsIn } from '@/features/platform/catalog';
+import { CommunityDetails } from '@/features/community/types';
+import { AccountArchive, Consultation, FollowRequest, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences, WellbeingSnapshot } from '@/features/platform/types';
+import { apiRequest } from '@/lib/api/client';
+import { useAuth } from '@/features/auth/auth-provider';
+import { UrgentHelpContent } from '@/features/safety/urgent-help';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 type Params = { tool?: string; targetType?: string; targetId?: string; slug?: string };
 const nav = (tool: string, params: Record<string, string> = {}) => router.push({ pathname: '/tools/[tool]' as never, params: { tool, ...params } } as never);
-const id = (prefix: string) => `${prefix}-${Date.now()}`;
 
 const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: string }> = {
   'profile-edit': { title: 'Edit profile', subtitle: 'Choose what people can learn about you.', eyebrow: 'YOUR IDENTITY' },
@@ -38,9 +41,10 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
   assessments: { title: 'Wellbeing reflection', subtitle: 'A short, non-diagnostic check to help you decide what support may fit.' },
   'growth-paths': { title: 'Guided growth paths', subtitle: 'Short, evidence-informed learning journeys you can take at your pace.' },
   companion: { title: 'Reflection companion', subtitle: 'A guided writing tool—not a therapist or crisis service.' },
-  'search-history': { title: 'Search history', subtitle: 'Review or clear recent searches stored on this device.' },
+  'search-history': { title: 'Search history', subtitle: 'Review or clear recent searches synchronized with your account.' },
   'session-management': { title: 'Active sessions', subtitle: 'Review where your account is signed in.' },
   'data-export': { title: 'Download your data', subtitle: 'Prepare a portable copy of your GreenOcean activity.' },
+  consultations: { title: 'Consultation requests', subtitle: 'Track preferred times and confirmations from professional practices.' },
 };
 
 export default function ProductToolScreen() {
@@ -63,13 +67,13 @@ function renderScreen(screen: string, params: Params) {
     case 'safety-center': return <SafetyCenter />;
     case 'my-reports': return <MyReports />;
     case 'report': return <ReportForm targetType={String(params.targetType || 'content')} targetId={String(params.targetId || 'unknown')} />;
-    case 'urgent-help': return <UrgentHelp />;
+    case 'urgent-help': return <UrgentHelpContent />;
     case 'message-requests': return <MessageRequests />;
     case 'new-message': return <NewMessage />;
     case 'community-create': return <CommunityCreate />;
     case 'community-rules': return <CommunityRules slug={String(params.slug || 'better-sleep')} />;
-    case 'community-members': return <CommunityMembers />;
-    case 'community-events': return <CommunityEvents />;
+    case 'community-members': return <CommunityMembers slug={String(params.slug || 'better-sleep')} />;
+    case 'community-events': return <CommunityEvents slug={String(params.slug || 'better-sleep')} />;
     case 'wellbeing': return <WellbeingHub />;
     case 'check-ins': return <CheckIns />;
     case 'goals': return <Goals />;
@@ -80,46 +84,77 @@ function renderScreen(screen: string, params: Params) {
     case 'search-history': return <SearchHistory />;
     case 'session-management': return <Sessions />;
     case 'data-export': return <DataExport />;
+    case 'consultations': return <Consultations />;
     default: return null;
   }
 }
 
 function ProfileEdit() {
-  const { state, update } = useProduct(); const [profile, setProfile] = useState(state.profile); const [saved, setSaved] = useState(false);
-  const set = (key: keyof typeof profile, value: string | string[] | boolean) => setProfile(current => ({ ...current, [key]: value }));
-  return <><ProductSection title="Public details"><ProductCard><Field label="Display name" value={profile.displayName} onChangeText={value => set('displayName', value)} /><Field label="Username" value={profile.username} onChangeText={value => set('username', value.replace(/\s/g, ''))} /><Field label="Bio" value={profile.bio} onChangeText={value => set('bio', value)} multiline /><View style={styles.two}><View style={styles.flex}><Field label="City" value={profile.city} onChangeText={value => set('city', value)} /></View><View style={styles.flex}><Field label="Country" value={profile.country} onChangeText={value => set('country', value)} /></View></View><Field label="Languages (comma separated)" value={profile.languages.join(', ')} onChangeText={value => set('languages', value.split(',').map(item => item.trim()).filter(Boolean))} /><Toggle label="Private profile" detail="Only approved followers can see your posts." value={profile.privateProfile} onChange={value => set('privateProfile', value)} /></ProductCard></ProductSection>{saved && <Success text="Profile changes saved on this device." />}<AppButton label="Save profile" onPress={() => { update(current => ({ ...current, profile })); setSaved(true); }} /></>;
+  const { profile: source, refresh } = usePlatformData();
+  const [profile, setProfile] = useState({ displayName: '', username: '', bio: '', city: '', countryCode: '', profilePrivate: false });
+  const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (source) setProfile({ displayName: source.displayName, username: source.username, bio: source.bio || '', city: source.city || '', countryCode: source.countryCode || '', profilePrivate: source.profilePrivate });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [source]);
+  const set = (key: keyof typeof profile, value: string | boolean) => setProfile(current => ({ ...current, [key]: value }));
+  const save = async () => { setBusy(true); setMessage(''); try { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify(profile) }); await refresh(); setMessage('Profile changes saved to your account.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not save profile'); } finally { setBusy(false); } };
+  return <><ProductSection title="Public details"><ProductCard><Field label="Display name" value={profile.displayName} onChangeText={value => set('displayName', value)} /><Field label="Username" value={profile.username} onChangeText={value => set('username', value.replace(/\s/g, ''))} /><Field label="Bio" value={profile.bio} onChangeText={value => set('bio', value)} multiline /><View style={styles.two}><View style={styles.flex}><Field label="City" value={profile.city} onChangeText={value => set('city', value)} /></View><View style={styles.flex}><Field label="Country code" value={profile.countryCode} onChangeText={value => set('countryCode', value.toUpperCase().slice(0, 2))} /></View></View><Toggle label="Private profile" detail="Only approved followers can see your posts." value={profile.profilePrivate} onChange={value => set('profilePrivate', value)} /></ProductCard></ProductSection>{!!message && (message.startsWith('Profile') ? <Success text={message} /> : <ErrorText text={message} />)}<AppButton label="Save profile" loading={busy} onPress={() => void save()} /></>;
 }
 
 function Saved() {
-  const { state, toggleList } = useProduct();
-  const savedArticles = professionalArticles.filter(item => state.savedArticles.includes(item.id)); const savedMedia = mediaPicks.filter(item => state.savedMedia.includes(item.id)); const savedPosts = [...mockPosts.map(item => ({ id: item.id, body: item.body })), ...state.posts.map(item => ({ id: item.id, body: item.body }))].filter(item => state.savedPosts.includes(item.id));
-  return <><Notice title="Your private collection" body="Saved items are visible only to you in this prototype and stay available after refresh." /><ProductSection title="Posts" subtitle={`${savedPosts.length} saved`}>{savedPosts.length ? savedPosts.map(item => <ActionRow key={item.id} icon="bookmark" title={item.body.slice(0, 72)} subtitle="Saved community story" onPress={() => router.push({ pathname: '/post/[id]', params: { id: item.id } })} />) : <EmptyState icon="bookmark_border" title="No saved posts yet" body="Bookmark a story from the feed to keep it here." />}</ProductSection><ProductSection title="Articles" subtitle={`${savedArticles.length} saved`}>{savedArticles.length ? savedArticles.map(item => <ActionRow key={item.id} icon="article" title={item.title} subtitle={item.summary} onPress={() => router.push({ pathname: '/article/[id]', params: { id: item.id } })} />) : <EmptyState icon="bookmark_border" title="No saved articles yet" body="Open Knowledge and bookmark anything you want to revisit." />}</ProductSection><ProductSection title="Media" subtitle={`${savedMedia.length} saved`}>{savedMedia.map(item => <ActionRow key={item.id} icon="movie" title={item.title} subtitle={item.description} value="Saved" onPress={() => toggleList('savedMedia', item.id)} />)}{!savedMedia.length && <EmptyState icon="subscriptions" title="No saved media yet" body="Save a film, series, podcast, or book from the Media guide." />}</ProductSection></>;
+  const { articles, media, posts, refresh } = usePlatformData();
+  const savedArticles = articles.filter(item => item.saved); const savedMedia = media.filter(item => item.saved); const savedPosts = posts.filter(item => item.bookmarked);
+  const remove = async (path: string) => { await apiRequest(path, { method: 'DELETE' }); await refresh(); };
+  return <><Notice title="Your private collection" body="Saved items are private and synchronized with your GreenOcean account." /><ProductSection title="Posts" subtitle={`${savedPosts.length} saved`}>{savedPosts.length ? savedPosts.map(item => <ActionRow key={item.id} icon="bookmark" title={item.body.slice(0, 72)} subtitle="Saved community story" value="Remove" onPress={() => void remove(`/api/v1/posts/${item.id}/bookmark`)} />) : <EmptyState icon="bookmark_border" title="No saved posts yet" body="Bookmark a story from the feed to keep it here." />}</ProductSection><ProductSection title="Articles" subtitle={`${savedArticles.length} saved`}>{savedArticles.length ? savedArticles.map(item => <ActionRow key={item.id} icon="article" title={item.title} subtitle={item.summary} value="Remove" onPress={() => void remove(`/api/v1/articles/${item.id}/save`)} />) : <EmptyState icon="bookmark_border" title="No saved articles yet" body="Open Knowledge and save anything you want to revisit." />}</ProductSection><ProductSection title="Media" subtitle={`${savedMedia.length} saved`}>{savedMedia.map(item => <ActionRow key={item.id} icon="movie" title={item.title} subtitle={item.description} value="Remove" onPress={() => void remove(`/api/v1/media-recommendations/${item.id}/save`)} />)}{!savedMedia.length && <EmptyState icon="subscriptions" title="No saved media yet" body="Save a movie, series, or documentary from the Media guide." />}</ProductSection></>;
 }
 
 function Connections() {
-  const { state, toggleList } = useProduct(); const people = ['jamie.grows', 'alex.notes', 'priya.daybyday'];
-  return <><ProductSection title="People you follow">{people.map(username => <ActionRow key={username} icon="person" title={`@${username}`} subtitle="Lived-experience community member" value={state.followingUsernames.includes(username) ? 'Following' : 'Follow'} onPress={() => toggleList('followingUsernames', username)} />)}</ProductSection><ProductSection title="Professionals">{professionals.map(pro => <ActionRow key={pro.id} icon="verified" title={pro.displayName} subtitle={`${pro.title} · ${pro.country}`} value={state.followedProfessionals.includes(pro.id) ? 'Following' : 'Follow'} onPress={() => toggleList('followedProfessionals', pro.id)} />)}</ProductSection></>;
+  const [following, setFollowing] = useState<SocialConnection[]>([]); const [followers, setFollowers] = useState<SocialConnection[]>([]); const [incoming, setIncoming] = useState<FollowRequest[]>([]); const [outgoing, setOutgoing] = useState<FollowRequest[]>([]);
+  const load = async () => { const [nextFollowing, nextFollowers, nextIncoming, nextOutgoing] = await Promise.all([apiRequest<SocialConnection[]>('/api/v1/social/following'), apiRequest<SocialConnection[]>('/api/v1/social/followers'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/incoming'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/outgoing')]); setFollowing(nextFollowing); setFollowers(nextFollowers); setIncoming(nextIncoming); setOutgoing(nextOutgoing); };
+  useEffect(() => {
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  const unfollow = async (userId: string) => { await apiRequest(`/api/v1/social/follows/${userId}`, { method: 'DELETE' }); await load(); };
+  const resolve = async (userId: string, accept: boolean) => { await apiRequest(`/api/v1/social/follow-requests/${userId}${accept ? '/accept' : ''}`, { method: accept ? 'POST' : 'DELETE' }); await load(); };
+  const cancel = async (userId: string) => { await apiRequest(`/api/v1/social/follow-requests/outgoing/${userId}`, { method: 'DELETE' }); await load(); };
+  return <><ProductSection title="Follow requests" subtitle={`${incoming.length} waiting`}>{incoming.length ? incoming.map(person => <ProductCard key={person.userId}><ActionRow icon="person_add" title={person.displayName} subtitle={`@${person.username}`} /><View style={styles.two}><View style={styles.flex}><AppButton label="Accept" onPress={() => void resolve(person.userId, true)} /></View><View style={styles.flex}><AppButton label="Decline" variant="secondary" onPress={() => void resolve(person.userId, false)} /></View></View></ProductCard>) : <EmptyState icon="person_add" title="No pending requests" body="Requests for a private profile will appear here." />}</ProductSection><ProductSection title="Sent requests" subtitle={`${outgoing.length} waiting`}>{outgoing.map(person => <ActionRow key={person.userId} icon="schedule" title={person.displayName} subtitle={`@${person.username}`} value="Cancel" onPress={() => void cancel(person.userId)} />)}</ProductSection><ProductSection title="Following" subtitle={`${following.length} people`}>{following.length ? following.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} value="Unfollow" onPress={() => void unfollow(person.userId)} />) : <EmptyState icon="group" title="Not following anyone yet" body="Follow community members or professionals from their profiles." />}</ProductSection><ProductSection title="Followers" subtitle={`${followers.length} people`}>{followers.length ? followers.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} />) : <EmptyState icon="group" title="No followers yet" body="New followers will appear here." />}</ProductSection></>;
 }
 
 function NotificationSettings() {
-  const { state, update } = useProduct(); const set = (key: keyof typeof state.notifications, value: boolean) => update(current => ({ ...current, notifications: { ...current.notifications, [key]: value } }));
-  return <ProductCard>{([['messages','Direct messages','Private conversations and requests'],['replies','Replies & mentions','Activity on your posts and comments'],['follows','New followers','People and professionals who connect'],['groups','Community activity','Events, announcements, and moderation'],['articles','Knowledge updates','New articles from followed professionals'],['quietHours','Quiet hours','Pause non-urgent notifications overnight']] as const).map(([key,label,detail]) => <Toggle key={key} label={label} detail={detail} value={state.notifications[key]} onChange={value => set(key, value)} />)}</ProductCard>;
+  const { preferences, setPreferences } = usePlatformData();
+  const fields = [['notifyMessages','Direct messages','Private conversations and requests'],['notifyReplies','Replies & mentions','Activity on your posts and comments'],['notifyFollows','New followers','People and professionals who connect'],['notifyGroups','Community activity','Events, announcements, and moderation'],['notifyArticles','Knowledge updates','New articles from followed professionals'],['quietHoursEnabled','Quiet hours','Pause non-urgent notifications overnight']] as const;
+  const set = async (key: typeof fields[number][0], value: boolean) => { if (!preferences) return; const next = { ...preferences, [key]: value }; setPreferences(next); try { setPreferences(await apiRequest<UserPreferences>('/api/v1/preferences/me', { method: 'PATCH', body: JSON.stringify({ [key]: value }) })); } catch { setPreferences(preferences); } };
+  return <ProductCard>{preferences ? fields.map(([key,label,detail]) => <Toggle key={key} label={label} detail={detail} value={preferences[key]} onChange={value => void set(key, value)} />) : <EmptyState icon="notifications" title="Preferences unavailable" body="Notification settings could not be loaded." />}</ProductCard>;
 }
 
 function AccountSecurity() {
-  const [current, setCurrent] = useState(''); const [next, setNext] = useState(''); const [confirm, setConfirm] = useState(''); const [message, setMessage] = useState('');
-  const save = () => setMessage(next.length < 8 ? 'Use at least 8 characters.' : next !== confirm ? 'New passwords do not match.' : 'Password updated in demo mode. A production build will confirm this with the server.');
-  return <><Notice icon="shield" title="Security baseline" body="Use a unique password. Production sessions will also support email verification, rate limiting, and optional multi-factor authentication." /><ProductCard><Field label="Current password" value={current} onChangeText={setCurrent} secure /><Field label="New password" value={next} onChangeText={setNext} secure /><Field label="Confirm new password" value={confirm} onChangeText={setConfirm} secure /><AppButton label="Update password" onPress={save} />{!!message && (message.startsWith('Password') ? <Success text={message} /> : <ErrorText text={message} />)}</ProductCard><ActionRow icon="devices" title="Active sessions" subtitle="Review devices and sign out remotely" onPress={() => nav('session-management')} /><ActionRow icon="download" title="Download my data" subtitle="Request a portable account archive" onPress={() => nav('data-export')} /></>;
+  const [current, setCurrent] = useState(''); const [next, setNext] = useState(''); const [confirm, setConfirm] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
+  const [deletePassword, setDeletePassword] = useState(''); const [deletePhrase, setDeletePhrase] = useState(''); const [deleteError, setDeleteError] = useState(''); const [deleting, setDeleting] = useState(false); const { signOut } = useAuth();
+  const save = async () => { if (next.length < 12) return setMessage('Use at least 12 characters.'); if (next !== confirm) return setMessage('New passwords do not match.'); setBusy(true); setMessage(''); try { await apiRequest('/api/v1/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: current, newPassword: next }) }); setCurrent(''); setNext(''); setConfirm(''); setMessage('Password updated. Other active sessions were signed out.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not update password'); } finally { setBusy(false); } };
+  const removeAccount = async () => { setDeleting(true); setDeleteError(''); try { await apiRequest('/api/v1/account', { method: 'DELETE', body: JSON.stringify({ password: deletePassword }) }); await signOut(); router.replace('/(auth)/welcome'); } catch (caught) { setDeleteError(caught instanceof Error ? caught.message : 'Could not delete the account.'); } finally { setDeleting(false); } };
+  return <><Notice icon="shield" title="Security baseline" body="Use a unique password of at least 12 characters. Changing it revokes every refresh session for this account." /><ProductCard><Field label="Current password" value={current} onChangeText={setCurrent} secure /><Field label="New password" value={next} onChangeText={setNext} secure /><Field label="Confirm new password" value={confirm} onChangeText={setConfirm} secure /><AppButton label="Update password" loading={busy} onPress={() => void save()} />{!!message && (message.startsWith('Password') ? <Success text={message} /> : <ErrorText text={message} />)}</ProductCard><ActionRow icon="devices" title="Active sessions" subtitle="Review devices and sign out remotely" onPress={() => nav('session-management')} /><ActionRow icon="download" title="Download my data" subtitle="Generate a portable account archive" onPress={() => nav('data-export')} /><ProductSection title="Delete account"><Notice tone="warning" icon="warning" title="Permanent account erasure" body="This revokes sessions, removes private wellbeing data and saved items, deletes your stories and messages, and anonymizes the remaining account identity. Download your archive first if you need a copy." /><ProductCard><Field label="Current password" value={deletePassword} onChangeText={setDeletePassword} secure /><Field label="Type DELETE to confirm" value={deletePhrase} onChangeText={setDeletePhrase} />{!!deleteError && <ErrorText text={deleteError} />}<AppButton label="Permanently delete my account" variant="secondary" loading={deleting} disabled={deletePhrase !== 'DELETE' || !deletePassword} onPress={() => void removeAccount()} /></ProductCard></ProductSection></>;
 }
 
 function PrivacyData() {
-  const { state, update } = useProduct(); const [requested, setRequested] = useState(false);
-  return <><ProductCard><Toggle label="Private profile" detail="Approve followers before they see profile activity." value={state.profile.privateProfile} onChange={value => update(current => ({ ...current, profile: { ...current.profile, privateProfile: value } }))} /><ActionRow icon="block" title="Blocked accounts" subtitle={`${state.blockedAccounts.length} accounts blocked`} onPress={() => nav('blocked')} /><ActionRow icon="manage_search" title="Search history" subtitle="Stored locally in this prototype" onPress={() => nav('search-history')} /></ProductCard><ProductSection title="Data rights"><ProductCard><Text style={styles.body}>You can access, correct, export, or request deletion of your account data. Production requests require identity confirmation before delivery.</Text><AppButton label={requested ? 'Export requested' : 'Request data export'} onPress={() => setRequested(true)} /></ProductCard></ProductSection>{requested && <Success text="Your demo request is queued. The real service will email a secure download link when the backend is connected." />}</>;
+  const { profile, refresh } = usePlatformData(); const [blocked, setBlocked] = useState<SocialConnection[]>([]);
+  useEffect(() => { apiRequest<SocialConnection[]>('/api/v1/social/blocks').then(setBlocked).catch(() => undefined); }, []);
+  const setPrivate = async (value: boolean) => { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify({ profilePrivate: value }) }); await refresh(); };
+  return <><ProductCard><Toggle label="Private profile" detail="Approve followers before they see profile activity." value={profile?.profilePrivate ?? false} onChange={value => void setPrivate(value)} /><ActionRow icon="block" title="Blocked accounts" subtitle={`${blocked.length} accounts blocked`} onPress={() => nav('blocked')} /><ActionRow icon="manage_search" title="Search history" subtitle="Synchronized with your account" onPress={() => nav('search-history')} /></ProductCard><ProductSection title="Data rights"><ProductCard><Text style={styles.body}>Generate a current JSON archive containing your profile, preferences, activity, saved items, wellbeing records, connections, reports, and search history.</Text><AppButton label="Open data export" onPress={() => nav('data-export')} /></ProductCard></ProductSection></>;
 }
 
 function Blocked() {
-  const { state, toggleList } = useProduct();
-  return <>{state.blockedAccounts.length ? state.blockedAccounts.map(account => <ActionRow key={account} icon="block" title={`@${account}`} subtitle="Cannot message, mention, or follow you" value="Unblock" onPress={() => toggleList('blockedAccounts', account)} />) : <EmptyState icon="verified_user" title="No blocked accounts" body="Accounts you block will appear here." />}</>;
+  const [accounts, setAccounts] = useState<SocialConnection[]>([]);
+  const load = async () => setAccounts(await apiRequest<SocialConnection[]>('/api/v1/social/blocks'));
+  useEffect(() => {
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  const unblock = async (userId: string) => { await apiRequest(`/api/v1/social/blocks/${userId}`, { method: 'DELETE' }); await load(); };
+  return <>{accounts.length ? accounts.map(account => <ActionRow key={account.userId} icon="block" title={account.displayName} subtitle={`@${account.username} · cannot message, mention, or follow you`} value="Unblock" onPress={() => void unblock(account.userId)} />) : <EmptyState icon="verified_user" title="No blocked accounts" body="Accounts you block will appear here." />}</>;
 }
 
 function SafetyCenter() {
@@ -127,52 +162,142 @@ function SafetyCenter() {
 }
 
 function MyReports() {
-  const { state } = useProduct();
-  return <>{state.reports.length ? state.reports.map(report => <ProductCard key={report.id}><View style={styles.between}><Text style={styles.cardTitle}>{report.reason}</Text><Pill label={report.status} active={report.status === 'RESOLVED'} /></View><Text style={styles.body}>{report.targetType} · {report.targetId}</Text><Text style={styles.meta}>{new Date(report.createdAt).toLocaleString()}</Text>{report.outcome && <Notice title="Outcome" body={report.outcome} />}</ProductCard>) : <EmptyState icon="flag" title="No reports submitted" body="If you report content or behavior, its status and outcome will appear here." />}</>;
+  const [reports, setReports] = useState<{ id: string; reason: string; status: string; targetType: string; targetId: string; createdAt: string; resolutionNote: string | null }[]>([]);
+  useEffect(() => { apiRequest<typeof reports>('/api/v1/reports/me').then(setReports).catch(() => undefined); }, []);
+  return <>{reports.length ? reports.map(report => <ProductCard key={report.id}><View style={styles.between}><Text style={styles.cardTitle}>{report.reason.replaceAll('_', ' ')}</Text><Pill label={report.status} active={report.status === 'RESOLVED'} /></View><Text style={styles.body}>{report.targetType} · {report.targetId}</Text><Text style={styles.meta}>{new Date(report.createdAt).toLocaleString()}</Text>{report.resolutionNote && <Notice title="Outcome" body={report.resolutionNote} />}</ProductCard>) : <EmptyState icon="flag" title="No reports submitted" body="If you report content or behavior, its status and outcome will appear here." />}</>;
 }
 
 function ReportForm({ targetType, targetId }: { targetType: string; targetId: string }) {
-  const { addReport } = useProduct(); const [reason, setReason] = useState('Harassment or bullying'); const [details, setDetails] = useState(''); const [done, setDone] = useState(false);
-  const reasons = ['Harassment or bullying', 'Dangerous or misleading advice', 'Hate or discrimination', 'Spam or scam', 'Self-harm risk', 'Privacy violation'];
+  const [reason, setReason] = useState('HARASSMENT'); const [details, setDetails] = useState(''); const [done, setDone] = useState(false); const [error, setError] = useState('');
+  const { options } = usePlatformData(); const reasons = optionsIn(options, 'REPORT_REASON');
+  const type = targetType.toUpperCase() === 'CONTENT' ? 'POST' : targetType.toUpperCase();
+  const submit = async () => { setError(''); try { await apiRequest('/api/v1/reports', { method: 'POST', body: JSON.stringify({ targetType: type, targetId, reason, description: details }) }); setDone(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not submit report'); } };
   if (done) return <><Success text="Report submitted. You can track its status in My reports." /><AppButton label="View my reports" onPress={() => nav('my-reports')} /></>;
-  return <><Notice title="Report context" body={`${targetType}: ${targetId}. The reported account is not told who submitted the report.`} /><ProductCard><Text style={styles.label}>What is happening?</Text><View style={styles.wrap}>{reasons.map(item => <Pill key={item} label={item} active={reason === item} onPress={() => setReason(item)} />)}</View><Field label="Details for the safety team" value={details} onChangeText={setDetails} multiline placeholder="What happened, and when? Avoid adding unrelated personal information." /><AppButton label="Submit confidential report" onPress={() => { addReport(targetType, targetId, reason, details.trim()); setDone(true); }} /></ProductCard></>;
-}
-
-function UrgentHelp() {
-  const [region, setRegion] = useState('United States');
-  const resources = region === 'United Kingdom' ? [{ title: 'Samaritans', detail: 'Call 116 123, 24/7', url: 'tel:116123' }, { title: 'NHS urgent mental health help', detail: 'Find local urgent support', url: 'https://www.nhs.uk/nhs-services/mental-health-services/where-to-get-urgent-help-for-mental-health/' }] : region === 'Canada' ? [{ title: '9-8-8 Suicide Crisis Helpline', detail: 'Call or text 9-8-8, 24/7', url: 'tel:988' }, { title: 'Talk Suicide Canada', detail: 'Official crisis support information', url: 'https://988.ca/' }] : [{ title: '988 Suicide & Crisis Lifeline', detail: 'Call or text 988, 24/7 in the U.S.', url: 'tel:988' }, { title: '988 Lifeline', detail: 'Chat and accessibility options', url: 'https://988lifeline.org/' }];
-  return <><Notice tone="warning" icon="emergency" title="If someone is in immediate danger" body="Call the local emergency number now or go to the nearest emergency department. GreenOcean cannot monitor this page or dispatch help." /><Text style={styles.label}>Choose your location</Text><View style={styles.wrap}>{['United States','Canada','United Kingdom'].map(item => <Pill key={item} label={item} active={region === item} onPress={() => setRegion(item)} />)}</View>{resources.map(item => <ActionRow key={item.title} icon="call" title={item.title} subtitle={item.detail} onPress={() => void Linking.openURL(item.url)} />)}<ProductCard tone="soft"><Text style={styles.cardTitle}>Elsewhere in the world</Text><Text style={styles.body}>Use your local emergency number or a verified national crisis service. The production app must localize and clinically review this directory before launch in each country.</Text><AppButton label="Browse Befrienders Worldwide" variant="secondary" onPress={() => void Linking.openURL('https://befrienders.org/')} /></ProductCard></>;
+  return <><Notice title="Report context" body={`${type}: ${targetId}. The reported account is not told who submitted the report.`} /><ProductCard><Text style={styles.label}>What is happening?</Text><View style={styles.wrap}>{reasons.map(option => <Pill key={option.key} label={option.label} active={reason === option.key} onPress={() => setReason(option.key)} />)}</View><Field label="Details for the safety team" value={details} onChangeText={setDetails} multiline placeholder="What happened, and when? Avoid adding unrelated personal information." />{!!error && <ErrorText text={error} />}<AppButton label="Submit confidential report" disabled={!targetId || targetId === 'unknown'} onPress={() => void submit()} /></ProductCard></>;
 }
 
 function MessageRequests() {
-  const { state, update } = useProduct();
-  return <><ProductCard><Toggle label="Allow message requests" detail="People you do not follow can request a conversation." value={state.safety.messageRequests} onChange={value => update(current => ({ ...current, safety: { ...current.safety, messageRequests: value } }))} /><Toggle label="Professionals only" detail="Limit new requests to verified professionals." value={state.safety.professionalsOnly} onChange={value => update(current => ({ ...current, safety: { ...current.safety, professionalsOnly: value } }))} /></ProductCard><ProductSection title="Pending requests"><ProductCard><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>Avery · trained listener</Text><Text style={styles.body}>Responding to your request about work stress.</Text></View><Pill label="Review" active onPress={() => router.push('/chat/jamie')} /></View></ProductCard></ProductSection></>;
+  const { preferences, setPreferences } = usePlatformData();
+  const set = async (key: 'allowMessageRequests' | 'professionalsOnlyMessages', value: boolean) => { if (!preferences) return; const previous = preferences; setPreferences({ ...previous, [key]: value }); try { setPreferences(await apiRequest<UserPreferences>('/api/v1/preferences/me', { method: 'PATCH', body: JSON.stringify({ [key]: value }) })); } catch { setPreferences(previous); } };
+  return <><ProductCard>{preferences ? <><Toggle label="Allow message requests" detail="People you do not follow can request a conversation." value={preferences.allowMessageRequests} onChange={value => void set('allowMessageRequests', value)} /><Toggle label="Professionals only" detail="Limit new requests to verified professionals." value={preferences.professionalsOnlyMessages} onChange={value => void set('professionalsOnlyMessages', value)} /></> : <EmptyState icon="mail" title="Preferences unavailable" body="Message controls could not be loaded." />}</ProductCard><Notice title="Requests are never invented" body="A request appears only after another account starts a real conversation permitted by these settings." /></>;
 }
 
 function NewMessage() {
-  const [query, setQuery] = useState(''); const people = ['Jamie · peer connection', 'Dr. Maya Bennett · psychologist', 'Avery · trained listener'].filter(item => item.toLowerCase().includes(query.toLowerCase()));
-  return <><Field label="Find a person" value={query} onChangeText={setQuery} placeholder="Search connections" />{people.map((person, index) => <ActionRow key={person} icon={index === 1 ? 'verified' : 'person'} title={person.split(' · ')[0]} subtitle={person.split(' · ')[1]} onPress={() => router.push('/chat/jamie')} />)}<Notice title="Private conversation boundaries" body="Do not share financial details, passwords, or identifying medical documents in chat. Report pressure, threats, or unsafe advice." /></>;
+  const { professionals } = usePlatformData();
+  const [query, setQuery] = useState('');
+  const [connections, setConnections] = useState<SocialConnection[]>([]);
+  const [listeners, setListeners] = useState<Listener[]>([]);
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    Promise.all([
+      apiRequest<SocialConnection[]>('/api/v1/social/following'),
+      apiRequest<Listener[]>('/api/v1/listeners'),
+    ]).then(([people, availableListeners]) => { setConnections(people); setListeners(availableListeners); })
+      .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load message contacts'));
+  }, []);
+  const normalized = query.trim().toLowerCase();
+  const matches = (value: string) => !normalized || value.toLowerCase().includes(normalized);
+  const start = async (kind: 'connection' | 'professional' | 'listener', id: string) => {
+    setBusy(`${kind}-${id}`); setError('');
+    try {
+      const result = kind === 'listener'
+        ? await apiRequest<{ conversationId: string }>(`/api/v1/listeners/match?listenerId=${id}`, { method: 'POST' })
+        : await apiRequest<{ id: string }>(kind === 'professional' ? `/api/v1/conversations/professionals/${id}` : `/api/v1/conversations/users/${id}`, { method: 'POST' });
+      router.replace({ pathname: '/chat/[id]', params: { id: 'conversationId' in result ? result.conversationId : result.id } });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not start conversation');
+    } finally { setBusy(''); }
+  };
+  const visibleConnections = connections.filter(person => matches(`${person.displayName} ${person.username}`));
+  const visibleProfessionals = professionals.filter(person => matches(`${person.displayName} ${person.title} ${person.specialties.join(' ')}`));
+  const visibleListeners = listeners.filter(person => matches(`${person.displayName} ${person.username} ${person.topics.join(' ')}`));
+  return <><Field label="Find a person" value={query} onChangeText={setQuery} placeholder="Search connections, professionals, or listeners" />{!!error && <ErrorText text={error} />}<ProductSection title="Connections" subtitle={`${visibleConnections.length} available`}>{visibleConnections.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}${busy === `connection-${person.userId}` ? ' · opening…' : ''}`} onPress={() => void start('connection', person.userId)} />)}{!visibleConnections.length && <EmptyState icon="group" title="No matching connections" body="Follow someone from their profile to find them here." />}</ProductSection><ProductSection title="Verified professionals" subtitle={`${visibleProfessionals.length} available`}>{visibleProfessionals.map(person => <ActionRow key={person.id} icon="verified" title={person.displayName} subtitle={`${person.title}${busy === `professional-${person.id}` ? ' · opening…' : ''}`} onPress={() => void start('professional', person.id)} />)}</ProductSection><ProductSection title="Trained peer listeners" subtitle={`${visibleListeners.length} available`}>{visibleListeners.map(person => <ActionRow key={person.id} icon="support_agent" title={person.displayName} subtitle={`${person.displayTitle} · ${person.online ? 'online' : 'offline'}${busy === `listener-${person.id}` ? ' · opening…' : ''}`} onPress={() => void start('listener', person.id)} />)}</ProductSection><Notice title="Private conversation boundaries" body="Do not share financial details, passwords, or identifying medical documents in chat. Report pressure, threats, or unsafe advice." /></>;
 }
 
 function CommunityCreate() {
-  const { state, patch, toggleList } = useProduct(); const [name, setName] = useState(''); const [description, setDescription] = useState(''); const [privateCommunity, setPrivate] = useState(false); const [error, setError] = useState(''); const [created, setCreated] = useState('');
-  const create = () => { if (name.trim().length < 3 || description.trim().length < 20) return setError('Add a clear name and a description of at least 20 characters.'); const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); patch('localCommunities', [{ id: id('community'), slug, name: name.trim(), description: description.trim(), privateCommunity, createdAt: new Date().toISOString() }, ...state.localCommunities]); if (!state.joinedCommunities.includes(slug)) toggleList('joinedCommunities', slug); setCreated(slug); };
+  const { refresh } = usePlatformData(); const [name, setName] = useState(''); const [description, setDescription] = useState(''); const [privateCommunity, setPrivate] = useState(false); const [error, setError] = useState(''); const [created, setCreated] = useState('');
+  const create = async () => { if (name.trim().length < 3 || description.trim().length < 20) return setError('Add a clear name and a description of at least 20 characters.'); const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); setError(''); try { await apiRequest('/api/v1/communities', { method: 'POST', body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), privateCommunity }) }); await refresh(); setCreated(slug); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not create community'); } };
   if (created) return <><Success text="Community created with you as owner and moderator." /><AppButton label="Open my community" onPress={() => router.replace({ pathname: '/community/[slug]', params: { slug: created } })} /></>;
-  return <><Notice title="Moderation commitment" body="Creators define rules, appoint moderators, respond to reports, and keep promotional or clinical claims out of peer spaces." /><ProductCard><Field label="Community name" value={name} onChangeText={setName} placeholder="Example: Gentle Mornings" /><Field label="Purpose and who it is for" value={description} onChangeText={setDescription} multiline /><Toggle label="Private community" detail="People request access before reading or posting." value={privateCommunity} onChange={setPrivate} />{!!error && <ErrorText text={error} />}<AppButton label="Create community" onPress={create} /></ProductCard></>;
+  return <><Notice title="Moderation commitment" body="Creators define rules, appoint moderators, respond to reports, and keep promotional or clinical claims out of peer spaces." /><ProductCard><Field label="Community name" value={name} onChangeText={setName} placeholder="Example: Gentle Mornings" /><Field label="Purpose and who it is for" value={description} onChangeText={setDescription} multiline /><Toggle label="Private community" detail="People request access before reading or posting." value={privateCommunity} onChange={setPrivate} />{!!error && <ErrorText text={error} />}<AppButton label="Create community" onPress={() => void create()} /></ProductCard></>;
 }
 
 function CommunityRules({ slug }: { slug: string }) {
-  const community = mockCommunities.find(item => item.slug === slug); const rules = ['Share lived experience; do not diagnose other members.', 'No graphic instructions, threats, harassment, or hate.', 'Do not promote medication changes or products as treatment.', 'Protect privacy: no names, screenshots, or identifying details.', 'Use content notes for potentially distressing experiences.'];
-  return <><Notice title={community?.name || 'Community rules'} body="Moderators may add context-specific rules, but GreenOcean-wide safety standards always apply." />{rules.map((rule, index) => <ProductCard key={rule}><View style={styles.number}><Text style={styles.numberText}>{index + 1}</Text></View><Text style={[styles.body, styles.flex]}>{rule}</Text></ProductCard>)}<ActionRow icon="flag" title="Report a rules concern" subtitle="Send it confidentially to moderators" onPress={() => nav('report', { targetType: 'community', targetId: slug })} /></>;
+  const { community, details, setDetails, error } = useCommunityDetails(slug);
+  const [draft, setDraft] = useState(''); const [message, setMessage] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (details) setDraft(details.rules.map(rule => rule.text).join('\n'));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [details]);
+  const canManage = community?.membershipRole === 'OWNER' || community?.membershipRole === 'MODERATOR';
+  const save = async () => {
+    if (!community) return;
+    const rules = draft.split('\n').map(rule => rule.trim()).filter(Boolean);
+    if (!rules.length) return setMessage('Add at least one rule.');
+    try {
+      setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/rules`, { method: 'PUT', body: JSON.stringify({ rules }) }));
+      setMessage('Community rules updated.');
+    } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not update rules.'); }
+  };
+  return <><Notice title={community?.name || 'Community rules'} body="Community-specific rules and GreenOcean-wide safety standards both apply." />{!!error && <ErrorText text={error} />}{canManage ? <ProductCard><Field label="One rule per line" value={draft} onChangeText={setDraft} multiline placeholder="Write clear, specific participation rules." /><Text style={styles.meta}>{draft.split('\n').filter(item => item.trim()).length}/20 rules</Text><AppButton label="Save rules" onPress={() => void save()} />{!!message && (message.startsWith('Community') ? <Success text={message} /> : <ErrorText text={message} />)}</ProductCard> : details?.rules.map(rule => <ProductCard key={rule.id}><View style={styles.number}><Text style={styles.numberText}>{rule.position}</Text></View><Text style={[styles.body, styles.flex]}>{rule.text}</Text></ProductCard>)}{community && !community.member && <EmptyState icon="lock" title="Join to view the complete guidelines" body="Members can review the current community rules before posting." />}<ActionRow icon="flag" title="Report a rules concern" subtitle="Send it confidentially to moderators" onPress={() => community && nav('report', { targetType: 'community', targetId: community.id })} /></>;
 }
 
-function CommunityMembers() {
-  return <><ProductSection title="Moderators"><ActionRow icon="shield" title="Morgan Lee" subtitle="Lead moderator · safety trained" /><ActionRow icon="shield" title="Dr. Maya Bennett" subtitle="Professional adviser · verified" /></ProductSection><ProductSection title="Members"><ActionRow icon="person" title="Jamie" subtitle="Member since March 2025" /><ActionRow icon="person" title="Priya" subtitle="Peer welcome volunteer" /><ActionRow icon="person" title="Alex" subtitle="Member since January 2026" /></ProductSection></>;
+function CommunityMembers({ slug }: { slug: string }) {
+  const { community, details, setDetails, error } = useCommunityDetails(slug);
+  const [requests, setRequests] = useState<{ userId: string; displayName: string; username: string; requestedAt: string }[]>([]);
+  const canManage = community?.membershipRole === 'OWNER' || community?.membershipRole === 'MODERATOR';
+  const communityId = community?.id;
+  useEffect(() => { if (communityId && canManage) apiRequest<typeof requests>(`/api/v1/communities/${communityId}/join-requests`).then(setRequests).catch(() => undefined); }, [communityId, canManage]);
+  const resolve = async (userId: string, approve: boolean) => {
+    if (!community) return;
+    await apiRequest(`/api/v1/communities/${community.id}/join-requests/${userId}${approve ? '/approve' : ''}`, { method: approve ? 'POST' : 'DELETE' });
+    setRequests(items => items.filter(item => item.userId !== userId));
+    if (approve) setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/details`));
+  };
+  const setRole = async (userId: string, role: 'MEMBER' | 'MODERATOR') => { if (community) setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/members/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role }) })); };
+  const remove = async (userId: string) => { if (community) setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/members/${userId}`, { method: 'DELETE' })); };
+  const moderators = details?.members.filter(member => member.role !== 'MEMBER') || [];
+  const members = details?.members.filter(member => member.role === 'MEMBER') || [];
+  return <>{!!error && <ErrorText text={error} />}{canManage && <ProductSection title="Access requests" subtitle={`${requests.length} waiting`}>{requests.map(person => <ProductCard key={person.userId}><ActionRow icon="person_add" title={person.displayName} subtitle={`@${person.username}`} /><View style={styles.two}><View style={styles.flex}><AppButton label="Approve" onPress={() => void resolve(person.userId, true)} /></View><View style={styles.flex}><AppButton label="Decline" variant="secondary" onPress={() => void resolve(person.userId, false)} /></View></View></ProductCard>)}{!requests.length && <EmptyState icon="how_to_reg" title="No access requests" body="Private-circle requests will appear here." />}</ProductSection>}<ProductSection title="Moderators" subtitle={`${moderators.length} community leads`}>{moderators.map(person => <ProductCard key={person.userId}><ActionRow icon="shield" title={person.displayName} subtitle={`@${person.username} · ${person.role.toLowerCase()}`} />{community?.membershipRole === 'OWNER' && person.role === 'MODERATOR' && <View style={styles.two}><View style={styles.flex}><AppButton label="Make member" variant="secondary" onPress={() => void setRole(person.userId, 'MEMBER')} /></View><View style={styles.flex}><AppButton label="Remove" variant="secondary" onPress={() => void remove(person.userId)} /></View></View>}</ProductCard>)}{!moderators.length && !error && <EmptyState icon="shield" title="No moderators to show" body="Community leadership will appear here." />}</ProductSection><ProductSection title="Members" subtitle={`${members.length} visible members`}>{members.map(person => <ProductCard key={person.userId}><ActionRow icon="person" title={person.displayName} subtitle={`@${person.username} · joined ${new Date(person.joinedAt).toLocaleDateString()}`} />{canManage && <View style={styles.two}>{community?.membershipRole === 'OWNER' && <View style={styles.flex}><AppButton label="Make moderator" variant="secondary" onPress={() => void setRole(person.userId, 'MODERATOR')} /></View>}<View style={styles.flex}><AppButton label="Remove" variant="secondary" onPress={() => void remove(person.userId)} /></View></View>}</ProductCard>)}{!members.length && !error && <EmptyState icon="group" title="No members to show" body="Join this community to see its member directory." />}</ProductSection></>;
 }
 
-function CommunityEvents() {
-  const [joined, setJoined] = useState<string[]>([]); const events = [{ id:'e1', title:'Gentle sleep reset', detail:'Today · 7:00 PM · text circle' },{ id:'e2', title:'Ask a psychologist: worry loops', detail:'Thursday · 6:30 PM · moderated Q&A' },{ id:'e3', title:'Quiet co-journaling', detail:'Saturday · 10:00 AM · 30 minutes' }];
-  return <>{events.map(event => <ProductCard key={event.id}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.body}>{event.detail}</Text><AppButton label={joined.includes(event.id) ? 'Added to my events' : 'Join event'} variant={joined.includes(event.id) ? 'secondary' : 'primary'} onPress={() => setJoined(current => current.includes(event.id) ? current.filter(item => item !== event.id) : [...current, event.id])} /></ProductCard>)}</>;
+function CommunityEvents({ slug }: { slug: string }) {
+  const { community, details, setDetails, error } = useCommunityDetails(slug);
+  const [title, setTitle] = useState(''); const [startsAt, setStartsAt] = useState(() => new Date(Date.now() + 86400000).toISOString().slice(0, 16)); const [duration, setDuration] = useState('60'); const [message, setMessage] = useState('');
+  const canManage = community?.membershipRole === 'OWNER' || community?.membershipRole === 'MODERATOR';
+  const toggle = async (eventId: string, joined: boolean) => { if (community) setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/events/${eventId}/attendance`, { method: joined ? 'DELETE' : 'PUT' })); };
+  const create = async () => {
+    if (!community) return;
+    const start = new Date(startsAt); const minutes = Number(duration);
+    if (!title.trim() || Number.isNaN(start.getTime()) || minutes < 15) return setMessage('Add a title, valid start time, and a duration of at least 15 minutes.');
+    try {
+      const end = new Date(start.getTime() + minutes * 60000);
+      setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/events`, { method: 'POST', body: JSON.stringify({ title: title.trim(), format: 'TEXT_CIRCLE', startsAt: start.toISOString(), endsAt: end.toISOString(), capacity: 100 }) }));
+      setTitle(''); setMessage('Event scheduled.');
+    } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not schedule event.'); }
+  };
+  const cancel = async (eventId: string) => { if (community) setDetails(await apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/events/${eventId}`, { method: 'DELETE' })); };
+  return <>{!!error && <ErrorText text={error} />}{canManage && <ProductSection title="Schedule an event"><ProductCard><Field label="Event title" value={title} onChangeText={setTitle} /><Field label="Start (YYYY-MM-DDTHH:mm)" value={startsAt} onChangeText={setStartsAt} /><Field label="Duration in minutes" value={duration} onChangeText={setDuration} /><AppButton label="Schedule text circle" onPress={() => void create()} />{!!message && (message.startsWith('Event') ? <Success text={message} /> : <ErrorText text={message} />)}</ProductCard></ProductSection>}{details?.events.map(event => <ProductCard key={event.id}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.body}>{new Date(event.startsAt).toLocaleString()} · {event.format.replaceAll('_', ' ')}</Text>{!!event.description && <Text style={styles.body}>{event.description}</Text>}<Text style={styles.meta}>Hosted by {event.hostName || 'Community team'} · {event.attendeeCount}{event.capacity ? `/${event.capacity}` : ''} attending</Text><View style={styles.two}><View style={styles.flex}><AppButton label={event.joined ? 'Leave event' : 'Join event'} variant={event.joined ? 'secondary' : 'primary'} onPress={() => void toggle(event.id, event.joined)} /></View>{canManage && <View style={styles.flex}><AppButton label="Cancel event" variant="secondary" onPress={() => void cancel(event.id)} /></View>}</View></ProductCard>)}{!details?.events.length && !error && <EmptyState icon="event" title="No upcoming events" body="Scheduled community circles and workshops will appear here." />}</>;
+}
+
+function useCommunityDetails(slug: string) {
+  const { communities } = usePlatformData();
+  const community = communities.find(item => item.slug === slug);
+  const [details, setDetails] = useState<CommunityDetails | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!community?.member) { setDetails(null); return; }
+      setError('');
+      apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/details`)
+        .then(setDetails)
+        .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load community details'));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [community?.id, community?.member]);
+  return { community, details, setDetails, error };
 }
 
 function WellbeingHub() {
@@ -180,53 +305,92 @@ function WellbeingHub() {
 }
 
 function CheckIns() {
-  const { state, patch } = useProduct(); const [mood, setMood] = useState('Calm'); const [note, setNote] = useState(''); const [done, setDone] = useState(false); const moods = ['Calm','Hopeful','Low','Anxious','Overwhelmed'];
-  const add = () => { patch('checkIns', [{ id: id('checkin'), mood, note: note.trim(), createdAt: new Date().toISOString() }, ...state.checkIns]); setNote(''); setDone(true); };
-  return <><ProductCard tone="soft"><Text style={styles.label}>How are you feeling?</Text><View style={styles.wrap}>{moods.map(item => <Pill key={item} label={item} active={mood === item} onPress={() => setMood(item)} />)}</View><Field label="A note for yourself (optional)" value={note} onChangeText={setNote} multiline /><AppButton label="Save check-in" onPress={add} /></ProductCard>{done && <Success text="Check-in saved privately on this device." />}<ProductSection title="Recent check-ins">{state.checkIns.length ? state.checkIns.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.cardTitle}>{item.mood}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>{!!item.note && <Text style={styles.body}>{item.note}</Text>}</ProductCard>) : <EmptyState icon="mood" title="Your first check-in starts here" body="There is no good or bad score—just a moment worth noticing." />}</ProductSection></>;
+  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'POST_MOOD'); const [mood, setMood] = useState(''); const [note, setNote] = useState(''); const [done, setDone] = useState(false);
+  const selectedMood = mood || moods[0]?.label || '';
+  const add = async () => { if (!selectedMood) return; await apiRequest('/api/v1/wellbeing/check-ins', { method: 'POST', body: JSON.stringify({ mood: selectedMood, note }) }); setNote(''); setDone(true); await refresh(); };
+  return <><ProductCard tone="soft"><Text style={styles.label}>How are you feeling?</Text><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><Field label="A note for yourself (optional)" value={note} onChangeText={setNote} multiline /><AppButton label="Save check-in" disabled={!selectedMood} onPress={() => void add()} /></ProductCard>{done && <Success text="Check-in saved privately to your account." />}<ProductSection title="Recent check-ins">{snapshot.checkIns.length ? snapshot.checkIns.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.cardTitle}>{item.mood}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>{!!item.note && <Text style={styles.body}>{item.note}</Text>}</ProductCard>) : <EmptyState icon="mood" title="Your first check-in starts here" body="There is no good or bad score—just a moment worth noticing." />}</ProductSection></>;
 }
 
 function Goals() {
-  const { state, patch } = useProduct(); const [title, setTitle] = useState(''); const [cadence, setCadence] = useState('Daily');
-  const add = () => { if (!title.trim()) return; patch('goals', [{ id: id('goal'), title: title.trim(), cadence, progress: 0, completed: false }, ...state.goals]); setTitle(''); };
-  const progress = (goalId: string) => patch('goals', state.goals.map(goal => goal.id === goalId ? { ...goal, progress: goal.progress + 1, completed: goal.progress >= 6 } : goal));
-  return <><ProductCard><Field label="A small, specific step" value={title} onChangeText={setTitle} placeholder="Example: Step outside for five minutes" /><View style={styles.wrap}>{['Daily','3× weekly','Weekly'].map(item => <Pill key={item} label={item} active={cadence === item} onPress={() => setCadence(item)} />)}</View><AppButton label="Add goal" onPress={add} /></ProductCard>{state.goals.map(goal => <ProductCard key={goal.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{goal.title}</Text><Text style={styles.body}>{goal.cadence} · {goal.progress} check-ins</Text></View><Pill label={goal.completed ? 'Completed' : '+ Done today'} active={goal.completed} onPress={() => !goal.completed && progress(goal.id)} /></View></ProductCard>)}</>;
+  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const cadences = optionsIn(options, 'GOAL_CADENCE'); const [title, setTitle] = useState(''); const [cadence, setCadence] = useState('');
+  const selectedCadence = cadence || cadences[0]?.label || '';
+  const add = async () => { if (!title.trim() || !selectedCadence) return; await apiRequest('/api/v1/wellbeing/goals', { method: 'POST', body: JSON.stringify({ title, cadence: selectedCadence }) }); setTitle(''); await refresh(); };
+  const progress = async (goalId: string, current: number) => { await apiRequest(`/api/v1/wellbeing/goals/${goalId}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, current + 15), completed: current >= 85 }) }); await refresh(); };
+  return <><ProductCard><Field label="A small, specific step" value={title} onChangeText={setTitle} placeholder="Example: Step outside for five minutes" /><View style={styles.wrap}>{cadences.map(item => <Pill key={item.key} label={item.label} active={selectedCadence === item.label} onPress={() => setCadence(item.label)} />)}</View><AppButton label="Add goal" disabled={!selectedCadence} onPress={() => void add()} /></ProductCard>{snapshot.goals.map(goal => <ProductCard key={goal.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{goal.title}</Text><Text style={styles.body}>{goal.cadence} · {goal.progress}%</Text></View><Pill label={goal.completed ? 'Completed' : '+ Progress'} active={goal.completed} onPress={() => !goal.completed && void progress(goal.id, goal.progress)} /></View></ProductCard>)}</>;
 }
 
 function Journal() {
-  const { state, patch } = useProduct(); const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [mood, setMood] = useState('Reflective');
-  const add = () => { if (!body.trim()) return; patch('journal', [{ id: id('journal'), title: title.trim() || 'Untitled reflection', body: body.trim(), mood, createdAt: new Date().toISOString() }, ...state.journal]); setTitle(''); setBody(''); };
-  return <><Notice icon="lock" title="Private—not a post" body="Journal entries stay in your private local data. Use Create if you decide to share something with the community." /><ProductCard><Field label="Title" value={title} onChangeText={setTitle} /><Field label="What feels important to name?" value={body} onChangeText={setBody} multiline /><View style={styles.wrap}>{['Reflective','Heavy','Grateful','Unclear'].map(item => <Pill key={item} label={item} active={mood === item} onPress={() => setMood(item)} />)}</View><AppButton label="Save privately" onPress={add} /></ProductCard>{state.journal.map(entry => <ProductCard key={entry.id}><View style={styles.between}><Text style={styles.cardTitle}>{entry.title}</Text><Pill label={entry.mood} /></View><Text style={styles.body}>{entry.body}</Text><Text style={styles.meta}>{new Date(entry.createdAt).toLocaleString()}</Text></ProductCard>)}</>;
+  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'JOURNAL_MOOD'); const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [mood, setMood] = useState(''); const selectedMood = mood || moods[0]?.label || '';
+  const add = async () => { if (!body.trim()) return; await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: title.trim() || 'Untitled reflection', body, mood: selectedMood || null }) }); setTitle(''); setBody(''); await refresh(); };
+  return <><Notice icon="lock" title="Private—not a post" body="Journal entries are private account data. Use Create only if you decide to share something publicly." /><ProductCard><Field label="Title" value={title} onChangeText={setTitle} /><Field label="What feels important to name?" value={body} onChangeText={setBody} multiline /><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><AppButton label="Save privately" onPress={() => void add()} /></ProductCard>{snapshot.journalEntries.map(entry => <ProductCard key={entry.id}><View style={styles.between}><Text style={styles.cardTitle}>{entry.title}</Text><Pill label={entry.mood || 'Journal'} /></View><Text style={styles.body}>{entry.body}</Text><Text style={styles.meta}>{new Date(entry.createdAt).toLocaleString()}</Text></ProductCard>)}</>;
+}
+
+const emptyWellbeing: WellbeingSnapshot = { checkIns: [], journalEntries: [], goals: [], growthPaths: [], reflections: [] };
+function useWellbeing() {
+  const [snapshot, setSnapshot] = useState<WellbeingSnapshot>(emptyWellbeing);
+  const refresh = async () => setSnapshot(await apiRequest<WellbeingSnapshot>('/api/v1/wellbeing'));
+  useEffect(() => {
+    const timer = setTimeout(() => void refresh(), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  return { snapshot, refresh };
 }
 
 function Assessment() {
-  const questions = ['I have felt able to pause when stress rises.', 'I have felt connected to at least one person.', 'My sleep has felt restorative enough.', 'Daily responsibilities have felt manageable.', 'I have had moments of interest or hope.']; const [answers, setAnswers] = useState<number[]>(Array(5).fill(0)); const [done, setDone] = useState(false); const score = answers.reduce((sum, value) => sum + value, 0);
-  if (done) return <><Notice title="Your reflection summary" body={score >= 15 ? 'Several areas feel supported right now. Keep the routines and relationships that help.' : score >= 8 ? 'Some areas may need more support. A small goal, peer conversation, or professional directory may help.' : 'You reported strain across several areas. Consider reaching out to someone you trust or a verified professional. If you may be in danger, use urgent help now.'} tone={score < 8 ? 'warning' : 'ocean'} /><ProductCard><Text style={styles.bigScore}>{score}/20</Text><Text style={styles.body}>This is a GreenOcean reflection score, not a validated clinical scale, diagnosis, or risk assessment.</Text></ProductCard><ActionRow icon="support_agent" title="Choose support now" onPress={() => router.push('/support')} /><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
-  return <><Notice title="Important boundary" body="Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition." />{questions.map((question, index) => <ProductCard key={question}><Text style={styles.cardTitle}>{index + 1}. {question}</Text><View style={styles.wrap}>{['Not at all','Some days','Often','Most days','Nearly always'].map((label, value) => <Pill key={label} label={label} active={answers[index] === value} onPress={() => setAnswers(current => current.map((item, i) => i === index ? value : item))} />)}</View></ProductCard>)}<AppButton label="See reflection" onPress={() => setDone(true)} /></>;
+  const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0); const score = orderedAnswers.reduce((sum, value) => sum + value, 0); const maxScore = Math.max(0, questions.length * Math.max(0, responses.length - 1));
+  const finish = async () => { setSaving(true); setSaveError(''); try { await apiRequest('/api/v1/wellbeing/reflections', { method: 'POST', body: JSON.stringify({ answers: orderedAnswers }) }); setDone(true); } catch (caught) { setSaveError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } finally { setSaving(false); } };
+  if (done) return <><Notice title="Your reflection summary" body={score >= maxScore * .75 ? 'Several areas feel supported right now. Keep the routines and relationships that help.' : score >= maxScore * .4 ? 'Some areas may need more support. A small goal, peer conversation, or professional directory may help.' : 'You reported strain across several areas. Consider reaching out to someone you trust or a verified professional. If you may be in danger, use urgent help now.'} tone={score < maxScore * .4 ? 'warning' : 'ocean'} /><ProductCard><Text style={styles.bigScore}>{score}/{maxScore}</Text><Text style={styles.body}>This is a GreenOcean reflection score, not a validated clinical scale, diagnosis, or risk assessment.</Text></ProductCard><ActionRow icon="support_agent" title="Choose support now" onPress={() => router.push('/support')} /><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
+  return <><Notice title="Important boundary" body="Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition." />{questions.map((question, index) => <ProductCard key={question.key}><Text style={styles.cardTitle}>{index + 1}. {question.label}</Text><View style={styles.wrap}>{responses.map(response => <Pill key={response.key} label={response.label} active={(answers[question.key] ?? 0) === response.sortOrder} onPress={() => setAnswers(current => ({ ...current, [question.key]: response.sortOrder }))} />)}</View></ProductCard>)}{!!saveError && <ErrorText text={saveError} />}<AppButton label="Save and see reflection" disabled={!questions.length || !responses.length} loading={saving} onPress={() => void finish()} /></>;
 }
 
 function GrowthPaths() {
-  const { state, toggleList } = useProduct(); const paths = [{ id:'grounding', title:'Grounding through anxious moments', detail:'5 lessons · 28 minutes' },{ id:'sleep', title:'Build a gentler sleep rhythm', detail:'7 lessons · 42 minutes' },{ id:'boundaries', title:'Boundaries without guilt', detail:'6 lessons · 35 minutes' }];
-  return <>{paths.map(path => { const complete = state.completedPaths.includes(path.id); return <ProductCard key={path.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{path.title}</Text><Text style={styles.body}>{path.detail}</Text></View><Pill label={complete ? 'Completed' : 'Start'} active={complete} onPress={() => toggleList('completedPaths', path.id)} /></View><Text style={styles.meta}>{complete ? 'Saved to your progress' : 'Reflection · practice · community prompt'}</Text></ProductCard>; })}<Notice title="Evidence and review" body="Production learning paths need named authors, citations, review dates, and professional editorial approval." /></>;
+  const { snapshot, refresh } = useWellbeing();
+  const advance = async (id: string, progress: number) => {
+    await apiRequest(`/api/v1/wellbeing/growth-paths/${id}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, progress + 20) }) });
+    await refresh();
+  };
+  return <>{snapshot.growthPaths.map(path => <ProductCard key={path.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{path.title}</Text><Text style={styles.body}>{path.summary}</Text></View><Pill label={path.completed ? 'Completed' : path.progress ? `${path.progress}% · Continue` : 'Start'} active={path.completed} onPress={() => !path.completed && void advance(path.id, path.progress)} /></View><Text style={styles.meta}>{path.lessonCount} lessons · {path.durationMinutes} minutes · by {path.authorName}</Text><Text style={styles.meta}>{path.evidenceNote} · reviewed {new Date(path.reviewedAt).toLocaleDateString()}</Text><Text style={styles.meta}>Sources: {path.references.join(' · ')}</Text></ProductCard>)}{!snapshot.growthPaths.length && <EmptyState icon="route" title="No growth paths available" body="Reviewed learning paths will appear here when published." />}<Notice title="Educational scope" body="Growth paths teach reflection and coping skills. They do not diagnose conditions or replace individualized professional care." /></>;
 }
 
 function Companion() {
-  const prompts = ['What happened just before this feeling showed up?', 'What would you say to a friend in the same moment?', 'What is one need underneath this reaction?', 'What is a small next step that does not require fixing everything?']; const [index, setIndex] = useState(0); const [answer, setAnswer] = useState(''); const [notes, setNotes] = useState<string[]>([]);
-  return <><Notice title="Clear boundary" body="This companion follows fixed reflection prompts. It does not understand emergencies, provide therapy, or make clinical recommendations." /><ProductCard tone="soft"><Text style={styles.eyebrow}>PROMPT {index + 1} OF {prompts.length}</Text><Text style={styles.prompt}>{prompts[index]}</Text><Field label="Your private reflection" value={answer} onChangeText={setAnswer} multiline /><AppButton label={index === prompts.length - 1 ? 'Finish reflection' : 'Save and continue'} onPress={() => { setNotes(current => [...current, answer]); setAnswer(''); setIndex(current => current === prompts.length - 1 ? 0 : current + 1); }} /></ProductCard>{notes.length > 0 && <Success text={`${notes.length} reflection ${notes.length === 1 ? 'step' : 'steps'} completed in this session.`} />}<ActionRow icon="emergency" title="I need urgent help" danger onPress={() => nav('urgent-help')} /></>;
+  const { options } = usePlatformData(); const prompts = optionsIn(options, 'REFLECTION_PROMPT'); const [index, setIndex] = useState(0); const [answer, setAnswer] = useState(''); const [notes, setNotes] = useState<string[]>([]); const [saved, setSaved] = useState(false); const [error, setError] = useState('');
+  const advance = async () => { const nextNotes = [...notes, answer.trim()]; if (index < prompts.length - 1) { setNotes(nextNotes); setAnswer(''); setIndex(index + 1); return; } setError(''); try { const body = prompts.map((prompt, promptIndex) => `${prompt.label}\n${nextNotes[promptIndex] || 'No response'}`).join('\n\n'); await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: 'Guided reflection', body, mood: 'Reflective' }) }); setNotes([]); setAnswer(''); setIndex(0); setSaved(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } };
+  if (!prompts.length) return <EmptyState icon="auto_awesome" title="No reflection prompts available" body="Published reflection prompts will appear here." />;
+  return <><Notice title="Clear boundary" body="This companion follows fixed reflection prompts. It does not understand emergencies, provide therapy, or make clinical recommendations." /><ProductCard tone="soft"><Text style={styles.eyebrow}>PROMPT {index + 1} OF {prompts.length}</Text><Text style={styles.prompt}>{prompts[index].label}</Text><Field label="Your private reflection" value={answer} onChangeText={setAnswer} multiline /><AppButton label={index === prompts.length - 1 ? 'Save to private journal' : 'Save and continue'} disabled={!answer.trim()} onPress={() => void advance()} /></ProductCard>{saved && <Success text="Your guided reflection was saved in the private journal." />}{!!error && <ErrorText text={error} />}<ActionRow icon="emergency" title="I need urgent help" danger onPress={() => nav('urgent-help')} /></>;
 }
 
 function SearchHistory() {
-  const { state, patch } = useProduct();
-  return <>{state.searchHistory.length ? <><ProductCard>{state.searchHistory.map(term => <View key={term} style={styles.history}><AppIcon name="history" color={colors.muted} /><Text style={styles.body}>{term}</Text></View>)}</ProductCard><AppButton label="Clear search history" variant="secondary" onPress={() => patch('searchHistory', [])} /></> : <EmptyState icon="manage_search" title="No recent searches" body="Searches made after this update will appear here and stay on this device." />}</>;
+  const [history, setHistory] = useState<SearchHistoryItem[]>([]); const [error, setError] = useState('');
+  const load = async () => { try { setHistory(await apiRequest<SearchHistoryItem[]>('/api/v1/search/history')); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load search history.'); } };
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, []);
+  const clear = async () => { await apiRequest('/api/v1/search/history', { method: 'DELETE' }); setHistory([]); };
+  return <>{history.length ? <><ProductCard>{history.map(item => <View key={item.id} style={styles.history}><AppIcon name="history" color={colors.muted} /><View style={styles.flex}><Text style={styles.body}>{item.term}</Text><Text style={styles.meta}>{new Date(item.searchedAt).toLocaleString()}</Text></View></View>)}</ProductCard><AppButton label="Clear search history" variant="secondary" onPress={() => void clear()} /></> : <EmptyState icon="manage_search" title="No recent searches" body="Submitted searches will appear here and stay synced with your account." />}{!!error && <ErrorText text={error} />}</>;
 }
 
 function Sessions() {
-  const [signedOut, setSignedOut] = useState(false);
-  return <><ProductCard><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>Windows · Chrome</Text><Text style={styles.body}>Current session · Tehran · active now</Text></View><Pill label="Current" active /></View></ProductCard>{!signedOut ? <ProductCard><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>Android · GreenOcean</Text><Text style={styles.body}>Portland · last active 4 days ago</Text></View><Pill label="Sign out" onPress={() => setSignedOut(true)} /></View></ProductCard> : <Success text="The other demo session was signed out." />}<Notice title="Location can be approximate" body="Session locations are inferred from network information and may not match a precise physical location." /></>;
+  const [sessions, setSessions] = useState<SessionItem[]>([]); const [error, setError] = useState('');
+  const load = async () => { try { setSessions(await apiRequest<SessionItem[]>('/api/v1/auth/sessions')); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load sessions'); } };
+  useEffect(() => {
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
+  }, []);
+  const revoke = async (sessionId: string) => { await apiRequest(`/api/v1/auth/sessions/${sessionId}`, { method: 'DELETE' }); await load(); };
+  return <>{sessions.map(session => <ProductCard key={session.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{session.deviceName || 'Unknown device'}</Text><Text style={styles.body}>{session.lastUsedAt ? `Last used ${new Date(session.lastUsedAt).toLocaleString()}` : `Signed in ${new Date(session.createdAt).toLocaleString()}`}</Text><Text style={styles.meta}>Expires {new Date(session.expiresAt).toLocaleDateString()}</Text></View><Pill label={session.current ? 'Current' : 'Sign out'} active={session.current} onPress={() => !session.current && void revoke(session.id)} /></View></ProductCard>)}{!sessions.length && !error && <EmptyState icon="devices" title="No active sessions" body="Sign in sessions associated with your account will appear here." />}{!!error && <ErrorText text={error} />}<Notice title="Session privacy" body="GreenOcean stores the device label supplied at sign-in. It does not fabricate a precise device location." /></>;
 }
 
 function DataExport() {
-  const { state } = useProduct(); const [ready, setReady] = useState(false); const summary = `${state.posts.length} posts, ${state.comments.length} comments, ${state.journal.length} journal entries, ${state.reports.length} reports`;
-  return <><ProductCard><Text style={styles.cardTitle}>What your archive includes</Text><Text style={styles.body}>Profile, posts, comments, community membership, saved items, private wellbeing data, reports, and account settings.</Text><Text style={styles.meta}>{summary}</Text><AppButton label={ready ? 'Share export summary' : 'Prepare export'} onPress={() => ready ? void Share.share({ message: `GreenOcean demo export summary: ${summary}` }) : setReady(true)} /></ProductCard>{ready && <Success text="Demo export prepared. Production exports will use an encrypted, expiring download after identity verification." />}</>;
+  const [archive, setArchive] = useState<AccountArchive | null>(null); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const prepare = async () => { setBusy(true); setError(''); try { setArchive(await apiRequest<AccountArchive>('/api/v1/account/archive')); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not generate archive'); } finally { setBusy(false); } };
+  const summary = archive ? `${archive.activity.posts.length} posts, ${archive.activity.comments.length} comments, ${archive.wellbeing.journalEntries.length} journal entries, ${archive.searchHistory.length} recent searches, ${archive.reports.length} reports, ${archive.activity.savedItems.length} saved items` : '';
+  return <><ProductCard><Text style={styles.cardTitle}>What your archive includes</Text><Text style={styles.body}>Profile, preferences, posts, comments, community memberships, saved items, search history, private wellbeing data, connections, blocks, and report history.</Text>{!!summary && <Text style={styles.meta}>{summary}</Text>}<AppButton label={archive ? 'Share JSON archive' : 'Generate archive'} loading={busy} onPress={() => archive ? void Share.share({ message: JSON.stringify(archive, null, 2) }) : void prepare()} /></ProductCard>{archive && <Success text={`Archive generated from your account at ${new Date(archive.generatedAt).toLocaleString()}.`} />}{!!error && <ErrorText text={error} />}</>;
+}
+
+function Consultations() {
+  const [items, setItems] = useState<Consultation[]>([]); const [error, setError] = useState('');
+  const load = async () => { try { setItems(await apiRequest<Consultation[]>('/api/v1/consultations')); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load consultation requests.'); } };
+  useEffect(() => { const timer = setTimeout(() => void load(), 0); return () => clearTimeout(timer); }, []);
+  const cancel = async (id: string) => { await apiRequest(`/api/v1/consultations/${id}`, { method: 'DELETE' }); await load(); };
+  return <>{items.map(item => <ProductCard key={item.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{item.professionalName}</Text><Text style={styles.body}>{new Date(item.scheduledAt).toLocaleString()} · {item.consultationMode}</Text>{item.note && <Text style={styles.meta}>{item.note}</Text>}</View><Pill label={item.status} active={item.status === 'CONFIRMED'} /></View>{(item.status === 'REQUESTED' || item.status === 'CONFIRMED') && <AppButton label="Cancel request" variant="secondary" onPress={() => void cancel(item.id)} />}</ProductCard>)}{!items.length && !error && <EmptyState icon="event_available" title="No consultation requests" body="Requests you send from a professional profile will appear here." />}{!!error && <ErrorText text={error} />}</>;
 }
 
 function Field({ label, value, onChangeText, multiline = false, placeholder, secure = false }: { label: string; value: string; onChangeText: (value: string) => void; multiline?: boolean; placeholder?: string; secure?: boolean }) { return <View style={styles.field}><Text style={styles.fieldLabel}>{label}</Text><TextInput value={value} onChangeText={onChangeText} multiline={multiline} secureTextEntry={secure} placeholder={placeholder} placeholderTextColor={colors.muted} style={[styles.input, multiline && styles.multiline]} /></View>; }

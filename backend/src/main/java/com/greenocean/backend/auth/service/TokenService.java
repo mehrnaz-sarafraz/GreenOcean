@@ -41,7 +41,7 @@ public class TokenService {
         this.refreshTokenTtl = refreshTokenTtl;
     }
 
-    public String createAccessToken(User user) {
+    public String createAccessToken(User user, UUID sessionId) {
         Instant now = Instant.now();
         List<String> roles = user.getRoles().stream().map(Role::getName).sorted().toList();
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -52,6 +52,7 @@ public class TokenService {
                 .id(UUID.randomUUID().toString())
                 .claim("email", user.getEmail())
                 .claim("roles", roles)
+                .claim("sid", sessionId.toString())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

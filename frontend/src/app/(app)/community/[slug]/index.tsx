@@ -1,11 +1,108 @@
-import { router,useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Screen } from '@/components/screen'; import { AppButton } from '@/components/app-button'; import { AppIcon } from '@/components/app-icon'; import { EmptyState, Notice } from '@/components/product-ui'; import { PostCard } from '@/features/content/post-card'; import { useProduct } from '@/features/product/product-provider'; import { mockCommunities,mockPosts } from '@/mocks/data'; import { colors,layout,radius,spacing,typography } from '@/theme/tokens';
 
-export default function Circle(){
-  const{slug}=useLocalSearchParams<{slug:string}>(); const{state,toggleList}=useProduct(); const mock=mockCommunities.find(x=>x.slug===slug); const local=state.localCommunities.find(x=>x.slug===slug); const community=mock||local; const joined=!!community&&state.joinedCommunities.includes(community.slug); const tool=(screen:string)=>router.push({pathname:'/tools/[tool]' as never,params:{tool:screen,slug:String(slug)}} as never);
-  if(!community)return <Screen scroll style={styles.screen}><View style={styles.content}><Pressable onPress={()=>router.back()}><AppIcon name="arrow_back" color={colors.ocean700}/></Pressable><EmptyState icon="groups" title="Community not found" body="It may be private, archived, or the link is incomplete."/><AppButton label="Browse communities" onPress={()=>router.replace('/communities')}/></View></Screen>;
-  const communityPosts=[...state.posts.filter(post=>post.communitySlug===community.slug).map(localPost=>({...mockPosts[0],id:localPost.id,body:localPost.body,createdAt:localPost.createdAt,anonymous:localPost.anonymous,contentWarning:localPost.contentWarning||null,categoryId:localPost.categoryId,postType:localPost.postType,mood:localPost.mood,communityId:'id' })),...mockPosts.filter(post=>post.communityId===(mock&&mock.id))];
-  return <Screen scroll style={styles.screen}><View style={styles.content}><View style={styles.top}><Pressable onPress={()=>router.back()}><AppIcon name="arrow_back" color={colors.ocean700}/></Pressable><Pressable onPress={()=>tool('report')}><AppIcon name="flag" color={colors.muted}/></Pressable></View><View style={styles.hero}><View style={styles.heroIcon}><AppIcon name={community.privateCommunity?'lock':'diversity_1'} size={34} color={colors.ocean700}/></View><Text style={styles.title}>{community.name}</Text><Text style={styles.meta}>{('memberCount'in community?community.memberCount:1).toLocaleString()} members · {community.privateCommunity?'Private':'Public'}</Text><Text style={styles.desc}>{community.description}</Text><AppButton label={joined?'Share here':'Join community'} onPress={()=>joined?router.push({pathname:'/create',params:{community:community.slug}}):toggleList('joinedCommunities',community.slug)}/></View><View style={styles.links}><Pressable onPress={()=>tool('community-rules')} style={styles.link}><AppIcon name="gavel" color={colors.ocean700}/><Text style={styles.linkText}>Rules</Text></Pressable><Pressable onPress={()=>tool('community-members')} style={styles.link}><AppIcon name="group" color={colors.ocean700}/><Text style={styles.linkText}>Members</Text></Pressable><Pressable onPress={()=>tool('community-events')} style={styles.link}><AppIcon name="event" color={colors.ocean700}/><Text style={styles.linkText}>Events</Text></Pressable></View><Notice title="Moderated peer space" body="Share lived experience without diagnosing others, directing medication changes, or exposing anyone's identity."/><Text style={styles.section}>Community stories</Text>{communityPosts.length?communityPosts.map(post=><PostCard key={post.id} post={post}/>):<EmptyState icon="forum" title="No stories yet" body="Join and start a thoughtful conversation in this community."/>}</View></Screen>;
+import { AppButton } from '@/components/app-button';
+import { AppIcon } from '@/components/app-icon';
+import { Screen } from '@/components/screen';
+import { PostCard } from '@/features/content/post-card';
+import { PageResponse, PostItem } from '@/features/content/types';
+import { CommunityDetails } from '@/features/community/types';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
+import { useLanguage } from '@/localization/language-provider';
+import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
+
+export default function CommunityDetail() {
+  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { t, isRtl } = useLanguage();
+  const { communities, setCommunities } = usePlatformData();
+  const community = communities.find(item => item.slug === slug);
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [details, setDetails] = useState<CommunityDetails | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!community?.member) { setPosts([]); setDetails(null); return; }
+      setError('');
+      Promise.all([
+        apiRequest<PageResponse<PostItem>>(`/api/v1/communities/${community.id}/posts?size=50`),
+        apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/details`),
+      ]).then(([postResult, detailResult]) => {
+        setPosts(postResult.items);
+        setDetails(detailResult);
+      }).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load this circle'));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [community?.id, community?.member]);
+
+  async function join() {
+    if (!community) return;
+    const updated = await apiRequest<typeof community>(`/api/v1/communities/${community.id}/membership`, { method: 'PUT' });
+    setCommunities(items => items.map(item => item.id === community.id ? updated : item));
+  }
+
+  async function cancelRequest() {
+    if (!community) return;
+    await apiRequest(`/api/v1/communities/${community.id}/join-request`, { method: 'DELETE' });
+    setCommunities(items => items.map(item => item.id === community.id ? { ...item, joinRequested: false } : item));
+  }
+
+  async function toggleEvent(eventId: string, joined: boolean) {
+    if (!community) return;
+    setError('');
+    try {
+      const next = await apiRequest<CommunityDetails>(
+        `/api/v1/communities/${community.id}/events/${eventId}/attendance`,
+        { method: joined ? 'DELETE' : 'PUT' },
+      );
+      setDetails(next);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not update event attendance');
+    }
+  }
+
+  if (!community) return <Screen style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Text style={styles.empty}>Community not found.</Text></View></Screen>;
+
+  return <Screen scroll style={styles.screen}><View style={styles.content}>
+    <Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable>
+    <View style={styles.hero}><View style={styles.heroIcon}><AppIcon name="diversity_1" size={34} color={colors.ocean700} /></View><Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{community.name}</Text><Text style={[styles.meta, { textAlign: isRtl ? 'right' : 'left' }]}>{community.memberCount.toLocaleString()} {t('members')}</Text><Text style={[styles.desc, { textAlign: isRtl ? 'right' : 'left' }]}>{community.description}</Text><AppButton label={community.member ? t('shareHere') : community.joinRequested ? 'Request sent' : community.privateCommunity ? 'Request access' : t('join')} variant={community.joinRequested ? 'secondary' : 'primary'} onPress={() => community.member ? router.push('/create') : community.joinRequested ? void cancelRequest() : void join()} /></View>
+    {!community.member && <Text style={styles.empty}>{community.joinRequested ? 'Your request is waiting for a community moderator.' : community.privateCommunity ? 'Request access to read and share in this private circle.' : 'Join this circle to read and share community posts.'}</Text>}
+    {!!error && <Text style={styles.error}>{error}</Text>}
+    {community.member && details && <>
+      {(community.membershipRole === 'OWNER' || community.membershipRole === 'MODERATOR') && <View style={styles.manage}><Text style={styles.manageTitle}>Community management</Text><AppButton label="Rules" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-rules', slug: community.slug } } as never)} /><AppButton label="Members & requests" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-members', slug: community.slug } } as never)} /><AppButton label="Events" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-events', slug: community.slug } } as never)} /></View>}
+      <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>Upcoming events</Text>
+      {details.events.length ? details.events.map(event => <View key={event.id} style={styles.card}>
+        <View style={styles.cardHead}><View style={styles.cardCopy}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.meta}>{new Date(event.startsAt).toLocaleString()} · {event.format.replaceAll('_', ' ')}</Text></View><AppIcon name="event" color={colors.ocean600} /></View>
+        {!!event.description && <Text style={styles.cardBody}>{event.description}</Text>}
+        <Text style={styles.meta}>Hosted by {event.hostName || 'Community team'} · {event.attendeeCount}{event.capacity ? `/${event.capacity}` : ''} attending</Text>
+        <AppButton label={event.joined ? 'Leave event' : 'Join event'} variant={event.joined ? 'secondary' : 'primary'} onPress={() => void toggleEvent(event.id, event.joined)} />
+      </View>) : <Text style={styles.empty}>No upcoming events are scheduled.</Text>}
+
+      <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>Community guidelines</Text>
+      <View style={styles.card}>{details.rules.map(rule => <View key={rule.id} style={styles.rule}><View style={styles.ruleNumber}><Text style={styles.ruleNumberText}>{rule.position}</Text></View><Text style={styles.ruleText}>{rule.text}</Text></View>)}</View>
+
+      <View style={styles.sectionHead}><Text style={styles.section}>Members</Text><Text style={styles.meta}>{details.members.length} visible</Text></View>
+      <View style={styles.card}>{details.members.slice(0, 12).map(member => <View key={member.userId} style={styles.member}><View style={styles.memberIcon}><AppIcon name={member.role === 'MEMBER' ? 'person' : 'shield'} size={18} color={colors.ocean700} /></View><View style={styles.cardCopy}><Text style={styles.memberName}>{member.displayName}</Text><Text style={styles.meta}>@{member.username} · {member.role.toLowerCase()}</Text></View></View>)}</View>
+    </>}
+
+    <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>{t('communityPosts')}</Text>
+    {posts.map(post => <PostCard key={post.id} post={post} />)}
+    {community.member && posts.length === 0 && !error && <Text style={styles.empty}>No stories have been shared here yet.</Text>}
+  </View></Screen>;
 }
-const styles=StyleSheet.create({screen:{padding:0},content:{width:'100%',maxWidth:layout.maxContent,alignSelf:'center',padding:spacing.md,gap:spacing.md},top:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},hero:{backgroundColor:colors.ocean900,borderRadius:radius.xl,padding:spacing.lg,gap:spacing.sm},heroIcon:{width:58,height:58,borderRadius:radius.md,backgroundColor:colors.ocean100,alignItems:'center',justifyContent:'center'},title:{fontSize:typography.h1,color:colors.white,fontWeight:'900'},meta:{color:colors.ocean300,fontSize:12},desc:{color:colors.ocean100,lineHeight:22,marginBottom:spacing.sm},section:{fontSize:typography.h3,fontWeight:'900',color:colors.ink,marginTop:spacing.sm},links:{flexDirection:'row',gap:spacing.sm},link:{flex:1,alignItems:'center',gap:4,backgroundColor:colors.white,borderWidth:1,borderColor:colors.border,borderRadius:radius.md,padding:spacing.sm},linkText:{color:colors.ocean700,fontSize:9,fontWeight:'900'}});
+
+const styles = StyleSheet.create({
+  screen: { padding: 0 }, content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', padding: spacing.md, gap: spacing.md },
+  hero: { backgroundColor: colors.ocean900, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm }, heroIcon: { width: 58, height: 58, borderRadius: radius.md, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: typography.h1, color: colors.white, fontWeight: '900' }, meta: { color: colors.ocean300, fontSize: 12 }, desc: { color: colors.ocean100, lineHeight: 22, marginBottom: spacing.sm },
+  section: { fontSize: typography.h3, fontWeight: '900', color: colors.ink, marginTop: spacing.sm }, empty: { color: colors.muted, textAlign: 'center', padding: spacing.lg }, error: { color: colors.danger, fontWeight: '700' },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, gap: spacing.sm },
+  cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.sm },
+  cardCopy: { flex: 1 }, cardTitle: { color: colors.ink, fontWeight: '900', fontSize: 16 }, cardBody: { color: colors.inkSoft, lineHeight: 21 },
+  rule: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }, ruleNumber: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, ruleNumberText: { color: colors.ocean700, fontWeight: '900', fontSize: 11 }, ruleText: { flex: 1, color: colors.inkSoft, lineHeight: 20 },
+  member: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }, memberIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, memberName: { color: colors.ink, fontWeight: '800' },
+  manage: { backgroundColor: colors.ocean50, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.ocean200, padding: spacing.md, gap: spacing.sm }, manageTitle: { color: colors.ink, fontSize: 15, fontWeight: '900' },
+});

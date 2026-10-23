@@ -10,8 +10,8 @@ export const colors = {
 export const spacing = { xxs: 2, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48, xxxl: 64 } as const;
 export const radius = { xs: 8, sm: 12, md: 18, lg: 24, xl: 32, pill: 999 } as const;
 export const shadow = {
-  soft: { shadowColor: '#062621', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 20, elevation: 2 },
-  floating: { shadowColor: '#062621', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.14, shadowRadius: 26, elevation: 8 },
+  soft: { boxShadow: '0 8px 20px rgba(6, 38, 33, 0.06)', elevation: 2 },
+  floating: { boxShadow: '0 12px 26px rgba(6, 38, 33, 0.14)', elevation: 8 },
 } as const;
 export const typography = { display: 38, h1: 30, h2: 22, h3: 18, body: 16, small: 13, micro: 11 } as const;
 export const layout = { maxContent: 720, maxWide: 1120 } as const;

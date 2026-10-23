@@ -2,15 +2,15 @@ import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { colors, radius, spacing } from '@/theme/tokens';
 
-type Props = { label: string; onPress: () => void; loading?: boolean; variant?: 'primary' | 'secondary' };
+type Props = { label: string; onPress: () => void; loading?: boolean; disabled?: boolean; variant?: 'primary' | 'secondary' };
 
-export function AppButton({ label, onPress, loading = false, variant = 'primary' }: Props) {
+export function AppButton({ label, onPress, loading = false, disabled = false, variant = 'primary' }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={loading}
+      disabled={loading || disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.base, styles[variant], pressed && styles.pressed, loading && styles.disabled]}>
+      style={({ pressed }) => [styles.base, styles[variant], pressed && styles.pressed, (loading || disabled) && styles.disabled]}>
       {loading ? <ActivityIndicator color={variant === 'primary' ? colors.white : colors.ocean700} /> : (
         <Text style={[styles.label, variant === 'secondary' && styles.secondaryLabel]}>{label}</Text>
       )}

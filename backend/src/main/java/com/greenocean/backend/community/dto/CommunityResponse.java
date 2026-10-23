@@ -13,6 +13,7 @@ public record CommunityResponse(
         long memberCount,
         boolean member,
         String membershipRole,
+        boolean joinRequested,
         Instant createdAt
 ) {
 }

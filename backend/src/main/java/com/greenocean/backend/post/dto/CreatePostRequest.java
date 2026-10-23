@@ -1,6 +1,7 @@
 package com.greenocean.backend.post.dto;
 
 import com.greenocean.backend.post.entity.PostVisibility;
+import com.greenocean.backend.post.entity.PostType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -12,6 +13,9 @@ public record CreatePostRequest(
         boolean anonymous,
         @NotNull PostVisibility visibility,
         UUID communityId,
-        @Size(max = 120) String contentWarning
+        @Size(max = 120) String contentWarning,
+        UUID categoryId,
+        PostType postType,
+        @Size(max = 30) String mood
 ) {
 }

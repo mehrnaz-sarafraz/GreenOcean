@@ -5,36 +5,44 @@ import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
-import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
-import { useProduct } from '@/features/product/product-provider';
 import { useAuth } from '@/features/auth/auth-provider';
-import { Notice } from '@/components/product-ui';
-
-const topics = ['Anxiety', 'Depression', 'Sleep', 'Relationships', 'Trauma', 'ADHD'];
+import { usePlatformData } from '@/features/platform/data-provider';
+import { apiRequest } from '@/lib/api/client';
+import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 export default function ArticleEditor() {
-  const { state, patch } = useProduct(); const { user } = useAuth(); const draft = state.articleDraft;
-  const [topic, setTopic] = useState(draft?.topic || 'Anxiety');
-  const [title, setTitle] = useState(draft?.title || '');
-  const [summary, setSummary] = useState(draft?.summary || '');
-  const [body, setBody] = useState(draft?.body || '');
-  const [references, setReferences] = useState(draft?.references || '');
-  const [pinned, setPinned] = useState(draft?.pinned ?? true);
+  const { user } = useAuth();
+  const { professionals, profile, categories } = usePlatformData();
+  const professional = professionals.find(item => item.id === user?.userId);
+  const [topic, setTopic] = useState('');
+  const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
+  const [body, setBody] = useState('');
+  const [references, setReferences] = useState('');
+  const [pinned, setPinned] = useState(true);
   const [error, setError] = useState('');
-  function saveDraft() { patch('articleDraft', { title, summary, body, references, topic, pinned }); setError('Draft saved on this device.'); }
-  function publish() { if (!title.trim() || !summary.trim() || !body.trim() || references.trim().length < 10) { setError('Add a title, summary, article body, and at least one source before submitting.'); return; } patch('submittedArticles', [{ id: `submitted-${Date.now()}`, title: title.trim(), summary: summary.trim(), body: body.trim(), references: references.trim(), topic, pinned, status: 'IN_REVIEW', createdAt: new Date().toISOString() }, ...state.submittedArticles]); patch('articleDraft', null); router.replace('/articles'); }
-  if (!user?.roles.includes('PROFESSIONAL')) return <Screen scroll style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Notice tone="warning" title="Verified professionals only" body="Apply and complete credential verification before accessing professional publishing tools." /><AppButton label="Start professional application" onPress={() => router.replace({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never)} /></View></Screen>;
+  const [publishing, setPublishing] = useState(false);
+  async function publish() {
+    if (!topic || !title.trim() || !summary.trim() || !body.trim()) { setError('Choose a topic and add a title, summary, and article body before publishing.'); return; }
+    setPublishing(true); setError('');
+    try {
+      await apiRequest('/api/v1/articles', { method: 'POST', body: JSON.stringify({ topic, title: title.trim(), summary: summary.trim(), body: body.trim(), references: references.trim() || null, pinned }) });
+      router.replace('/articles');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not submit the article');
+    } finally { setPublishing(false); }
+  }
   return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="close" color={colors.ocean700} /></Pressable><View style={{ alignItems: 'center' }}><Text style={styles.title}>Professional article studio</Text><Text style={styles.subtitle}>Educational content by verified professionals</Text></View><Pressable onPress={saveDraft} style={styles.draft}><Text style={styles.draftText}>Save draft</Text></Pressable></View>
-    <View style={styles.author}><Avatar name="Dr. Maya Bennett" size={48} verified /><View style={{ flex: 1 }}><Text style={styles.authorName}>Dr. Maya Bennett</Text><Text style={styles.authorMeta}>Clinical Psychologist · Verified author</Text></View><View style={styles.score}><Text style={styles.scoreValue}>96</Text><Text style={styles.scoreLabel}>SCORE</Text></View></View>
+    <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="close" color={colors.ocean700} /></Pressable><View style={{ alignItems: 'center' }}><Text style={styles.title}>Professional article studio</Text><Text style={styles.subtitle}>Educational content by verified professionals</Text></View><View style={{ width: 40 }} /></View>
+    <View style={styles.author}><Avatar name={professional?.displayName ?? profile?.displayName ?? 'Professional'} uri={professional?.avatarUrl ?? profile?.avatarUrl} size={48} verified={professional?.verified} /><View style={{ flex: 1 }}><Text style={styles.authorName}>{professional?.displayName ?? profile?.displayName}</Text><Text style={styles.authorMeta}>{professional ? `${professional.title} · Verified author` : 'Professional verification required'}</Text></View><View style={styles.score}><Text style={styles.scoreValue}>{professional?.greenOceanScore ?? '—'}</Text><Text style={styles.scoreLabel}>SCORE</Text></View></View>
     <View style={styles.notice}><AppIcon name="science" color={colors.ocean600} /><View style={{ flex: 1 }}><Text style={styles.noticeTitle}>Professional publishing standards</Text><Text style={styles.noticeText}>Use clear sources, separate education from personal medical advice, and include content notes where needed. Articles enter editorial review before publication.</Text></View></View>
-    <FieldLabel step="1" title="Article topic" required /><View style={styles.topics}>{topics.map(item => <Pressable key={item} onPress={() => setTopic(item)} style={[styles.topic, topic === item && styles.topicActive]}><Text style={[styles.topicText, topic === item && styles.topicTextActive]}>{item}</Text></Pressable>)}</View>
+    <FieldLabel step="1" title="Article topic" required /><View style={styles.topics}>{categories.map(item => <Pressable key={item.id} onPress={() => setTopic(item.name)} style={[styles.topic, topic === item.name && styles.topicActive]}><Text style={[styles.topicText, topic === item.name && styles.topicTextActive]}>{item.name}</Text></Pressable>)}</View>
     <FieldLabel step="2" title="Title" required /><TextInput value={title} onChangeText={setTitle} placeholder="Write a clear, specific title" placeholderTextColor={colors.muted} style={styles.input} />
     <FieldLabel step="3" title="Short summary" required /><TextInput value={summary} onChangeText={setSummary} multiline placeholder="What will readers understand or be able to try after reading?" placeholderTextColor={colors.muted} style={[styles.input, styles.summaryInput]} />
     <FieldLabel step="4" title="Article body" required /><TextInput value={body} onChangeText={setBody} multiline placeholder="Use short sections, accessible language, and practical examples…" placeholderTextColor={colors.muted} style={[styles.input, styles.bodyInput]} />
     <FieldLabel step="5" title="Sources and review notes" /><TextInput value={references} onChangeText={setReferences} multiline placeholder="Add research links, clinical guidelines, DOI references, or editorial notes" placeholderTextColor={colors.muted} style={[styles.input, styles.summaryInput]} />
     <View style={styles.pinSetting}><View style={styles.pinIcon}><AppIcon name="push_pin" filled color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.pinTitle}>Pin to professional profile</Text><Text style={styles.pinText}>Keep this article at the top of your profile and feature it in the Knowledge Hub.</Text></View><Switch value={pinned} onValueChange={setPinned} trackColor={{ true: colors.ocean500 }} /></View>
-    {!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Submit for editorial review" onPress={publish} />
+    {!!error && <Text style={styles.error}>{error}</Text>}<AppButton label={publishing ? 'Submitting…' : 'Submit for editorial review'} disabled={publishing || !professional} onPress={() => void publish()} />
     <Text style={styles.footerNote}>Publishing does not make the article medical advice. GreenOcean may add safety notes, request revisions, or remove content that does not meet professional standards.</Text>
   </View></Screen>;
 }

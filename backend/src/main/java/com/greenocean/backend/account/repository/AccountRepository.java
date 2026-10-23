@@ -1,0 +1,124 @@
+package com.greenocean.backend.account.repository;
+
+import com.greenocean.backend.account.dto.AccountActivityResponse;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public class AccountRepository {
+    private final JdbcTemplate jdbcTemplate;
+
+    public AccountRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public AccountActivityResponse activity(UUID userId) {
+        List<AccountActivityResponse.PostItem> posts = jdbcTemplate.query("""
+                SELECT p.id, p.body, c.name AS category, p.post_type, p.visibility, p.created_at
+                  FROM posts p LEFT JOIN support_categories c ON c.id = p.category_id
+                 WHERE p.author_id = ? AND p.deleted_at IS NULL ORDER BY p.created_at DESC
+                """, (rs, row) -> new AccountActivityResponse.PostItem(
+                rs.getObject("id", UUID.class), rs.getString("body"), rs.getString("category"),
+                rs.getString("post_type"), rs.getString("visibility"),
+                rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId);
+
+        List<AccountActivityResponse.CommentItem> comments = jdbcTemplate.query("""
+                SELECT id, post_id, body, created_at FROM comments
+                 WHERE author_id = ? AND deleted_at IS NULL ORDER BY created_at DESC
+                """, (rs, row) -> new AccountActivityResponse.CommentItem(
+                rs.getObject("id", UUID.class), rs.getObject("post_id", UUID.class), rs.getString("body"),
+                rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId);
+
+        List<AccountActivityResponse.CommunityMembership> communities = jdbcTemplate.query("""
+                SELECT c.id, c.name, c.slug, m.role, m.joined_at
+                  FROM community_members m JOIN communities c ON c.id = m.community_id
+                 WHERE m.user_id = ? ORDER BY m.joined_at DESC
+                """, (rs, row) -> new AccountActivityResponse.CommunityMembership(
+                rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("slug"), rs.getString("role"),
+                rs.getObject("joined_at", OffsetDateTime.class).toInstant()), userId);
+
+        List<AccountActivityResponse.SavedItem> saved = new ArrayList<>();
+        saved.addAll(jdbcTemplate.query("""
+                SELECT p.id, LEFT(p.body, 160) AS title, b.created_at FROM bookmarks b
+                  JOIN posts p ON p.id = b.post_id WHERE b.user_id = ? AND p.deleted_at IS NULL
+                 ORDER BY b.created_at DESC
+                """, (rs, row) -> new AccountActivityResponse.SavedItem("POST", rs.getObject("id", UUID.class),
+                rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
+        saved.addAll(jdbcTemplate.query("""
+                SELECT m.id, m.title, s.created_at FROM media_saves s
+                  JOIN media_recommendations m ON m.id = s.media_id WHERE s.user_id = ?
+                 ORDER BY s.created_at DESC
+                """, (rs, row) -> new AccountActivityResponse.SavedItem("MEDIA", rs.getObject("id", UUID.class),
+                rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
+        saved.addAll(jdbcTemplate.query("""
+                SELECT a.id, a.title, s.created_at FROM article_saves s
+                  JOIN professional_articles a ON a.id = s.article_id WHERE s.user_id = ?
+                 ORDER BY s.created_at DESC
+                """, (rs, row) -> new AccountActivityResponse.SavedItem("ARTICLE", rs.getObject("id", UUID.class),
+                rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
+
+        return new AccountActivityResponse(posts, comments, communities, List.copyOf(saved));
+    }
+
+    public java.util.List<String> professionalDocumentKeys(UUID userId) {
+        return jdbcTemplate.query("""
+                SELECT d.storage_key FROM professional_application_documents d
+                  JOIN professional_verifications v ON v.id = d.application_id
+                 WHERE v.professional_user_id = ?
+                """, (rs, row) -> rs.getString("storage_key"), userId);
+    }
+
+    public void erase(UUID userId) {
+        jdbcTemplate.update("UPDATE communities SET status = 'ARCHIVED' WHERE created_by = ?", userId);
+        jdbcTemplate.update("DELETE FROM promotion_campaigns WHERE professional_user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM consultation_requests WHERE requester_user_id = ? OR professional_user_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM professional_reviews WHERE reviewer_user_id = ? OR professional_user_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM professional_answers WHERE professional_user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM professional_articles WHERE author_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM professional_verifications WHERE professional_user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM professional_profiles WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM listener_applications WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM listener_profiles WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_check_ins WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_journal_entries WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_goals WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_reflections WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM user_growth_path_progress WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM bookmarks WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM article_saves WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM media_saves WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM post_likes WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM comment_likes WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM notifications WHERE user_id = ? OR actor_user_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM follows WHERE follower_id = ? OR following_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM follow_requests WHERE requester_id = ? OR target_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM blocks WHERE blocker_id = ? OR blocked_id = ?", userId, userId);
+        jdbcTemplate.update("DELETE FROM community_event_attendees WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM community_join_requests WHERE requester_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM community_members WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM conversation_members WHERE user_id = ?", userId);
+        jdbcTemplate.update("UPDATE messages SET body = '[Message removed]', deleted_at = CURRENT_TIMESTAMP WHERE sender_id = ?", userId);
+        jdbcTemplate.update("UPDATE comments SET body = '[Deleted]', is_anonymous = TRUE, status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
+        jdbcTemplate.update("UPDATE posts SET body = '[Deleted]', is_anonymous = TRUE, status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM user_sessions WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM user_preferences WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id = ?", userId);
+        String suffix = userId.toString().replace("-", "").substring(0, 16);
+        jdbcTemplate.update("""
+                UPDATE profiles SET username = ?, display_name = 'Deleted member', bio = NULL, avatar_url = NULL,
+                       country_code = NULL, city = NULL, birth_year = NULL, is_profile_private = TRUE,
+                       show_location = FALSE, show_birth_year = FALSE
+                 WHERE user_id = ?
+                """, "deleted_" + suffix, userId);
+        jdbcTemplate.update("""
+                UPDATE users SET email = ?, password_hash = 'DELETED', status = 'DELETED',
+                       email_verified = FALSE, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = ?
+                """, "deleted+" + suffix + "@greenocean.invalid", userId);
+    }
+}

@@ -11,6 +11,8 @@ public record NotificationResponse(
         AuthorSummary actor,
         UUID postId,
         UUID commentId,
+        String title,
+        String body,
         boolean read,
         Instant createdAt
 ) {

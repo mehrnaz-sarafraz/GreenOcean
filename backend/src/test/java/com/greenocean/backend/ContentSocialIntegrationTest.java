@@ -14,8 +14,12 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,17 +43,17 @@ class ContentSocialIntegrationTest {
         String publicPostId = createPost(author.token(), "PUBLIC", "A searchable ocean story");
         String followersPostId = createPost(author.token(), "FOLLOWERS", "Followers-only support story");
 
-        mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(1))
-                .andExpect(jsonPath("$.items[0].id").value(publicPostId));
+        Set<String> initialFeedIds = feedIds(reader.token());
+        assertTrue(initialFeedIds.contains(publicPostId));
+        assertFalse(initialFeedIds.contains(followersPostId));
 
         mockMvc.perform(put("/api/v1/social/follows/{target}", author.userId()).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
-                .andExpect(status().isNoContent());
-
-        mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(2));
+                .andExpect(jsonPath("$.status").value("FOLLOWING"));
+
+        Set<String> followedFeedIds = feedIds(reader.token());
+        assertTrue(followedFeedIds.contains(publicPostId));
+        assertTrue(followedFeedIds.contains(followersPostId));
 
         mockMvc.perform(put("/api/v1/posts/{id}/like", publicPostId).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isNoContent());
@@ -86,9 +90,9 @@ class ContentSocialIntegrationTest {
 
         mockMvc.perform(put("/api/v1/social/blocks/{target}", author.userId()).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(get("/api/v1/posts/feed").header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(0));
+        Set<String> blockedFeedIds = feedIds(reader.token());
+        assertFalse(blockedFeedIds.contains(publicPostId));
+        assertFalse(blockedFeedIds.contains(followersPostId));
         mockMvc.perform(get("/api/v1/search/users").queryParam("q", author.username()).header(HttpHeaders.AUTHORIZATION, auth(reader.token())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0));
@@ -103,6 +107,17 @@ class ContentSocialIntegrationTest {
                         .content(json(Map.of("body", body, "anonymous", false, "visibility", visibility))))
                 .andExpect(status().isCreated()).andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+    }
+
+    private Set<String> feedIds(String token) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/posts/feed")
+                        .header(HttpHeaders.AUTHORIZATION, auth(token)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode items = objectMapper.readTree(result.getResponse().getContentAsString()).get("items");
+        return items.valueStream()
+                .map(item -> item.get("id").asText())
+                .collect(Collectors.toSet());
     }
 
     private TestUser registerAndLogin(String prefix) throws Exception {

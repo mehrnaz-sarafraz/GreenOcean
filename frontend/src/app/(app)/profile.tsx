@@ -1,75 +1,119 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
 import { PostCard } from '@/features/content/post-card';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { Professional } from '@/features/platform/types';
 import { useLanguage } from '@/localization/language-provider';
-import { mockPosts, Professional, professionals } from '@/mocks/data';
-import { professionalArticles } from '@/mocks/discovery';
+import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
-import { useProduct } from '@/features/product/product-provider';
 import { useAuth } from '@/features/auth/auth-provider';
+import { PageResponse, PostItem } from '@/features/content/types';
+import { PublicProfile } from '@/features/profile/types';
 
 export default function ProfileScreen() {
   const { professional } = useLocalSearchParams<{ professional?: string }>();
   const { t } = useLanguage();
-  const { state } = useProduct(); const { user } = useAuth();
+  const { user } = useAuth();
+  const { profile, posts, professionals, preferences } = usePlatformData();
+  const [profileStats, setProfileStats] = useState<PublicProfile | null>(null);
+  const [authoredPosts, setAuthoredPosts] = useState<PostItem[] | null>(null);
   const selectedProfessional = professionals.find(item => item.id === professional);
+  const displayName = profile?.displayName ?? 'GreenOcean member';
+  const username = profile?.username ?? 'member';
+  const recentPosts = authoredPosts ?? posts.filter(post => post.author?.userId === user?.userId).slice(0, 4);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!profile?.username) return;
+      const encoded = encodeURIComponent(profile.username);
+      Promise.all([
+        apiRequest<PublicProfile>(`/api/v1/profiles/${encoded}`),
+        apiRequest<PageResponse<PostItem>>(`/api/v1/profiles/${encoded}/posts?size=4`),
+      ]).then(([nextProfile, page]) => { setProfileStats(nextProfile); setAuthoredPosts(page.items); })
+        .catch(() => undefined);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [profile?.username]);
+
   if (selectedProfessional) return <ProfessionalProfile professional={selectedProfessional} />;
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.cover}><View style={styles.orb} /><View style={styles.coverMark}><AppIcon name="waves" size={42} color="#ffffff18" /></View></View>
-    <View style={styles.identity}><Avatar name={state.profile.displayName} size={86} /><AppButton label={t('editProfile')} variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'profile-edit' } } as never)} /></View>
-    <Text style={styles.name}>{state.profile.displayName}</Text><Text style={styles.handle}>@{state.profile.username} · {state.profile.city}</Text>
-    <Text style={styles.bio}>{state.profile.bio}</Text>
-    <View style={styles.badges}><View style={styles.badge}><AppIcon name="favorite" size={16} color={colors.coral} /><Text style={styles.badgeText}>Supportive voice</Text></View><View style={styles.badge}><AppIcon name="calendar_month" size={16} color={colors.ocean600} /><Text style={styles.badgeText}>Member since 2026</Text></View></View>
-    <Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'followers' } } as never)} style={styles.counts}><Count value="128" label={t('followers')} /><Count value={String(state.followingUsernames.length + state.followedProfessionals.length)} label={t('following')} /><Count value={String(24 + state.posts.length)} label={t('stories')} /><Count value="486" label="Helpful reactions" /></Pressable>
+    <View style={styles.identity}><Avatar name={displayName} size={86} /><AppButton label={t('editProfile')} variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'profile-edit' } } as never)} /></View>
+    <Text style={styles.name}>{displayName}</Text><Text style={styles.handle}>@{username}{profile?.showLocation && profile.city ? ` · ${profile.city}` : ''}</Text>
+    <Text style={styles.bio}>{profile?.bio || 'Share a little about yourself when you are ready.'}</Text>
+    <View style={styles.badges}><View style={styles.badge}><AppIcon name="favorite" size={16} color={colors.coral} /><Text style={styles.badgeText}>Supportive voice</Text></View><View style={styles.badge}><AppIcon name="calendar_month" size={16} color={colors.ocean600} /><Text style={styles.badgeText}>Member since {profile ? new Date(profile.createdAt).getFullYear() : '—'}</Text></View></View>
+    <Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'followers' } } as never)} style={styles.counts}><Count value={String(profileStats?.followerCount ?? 0)} label={t('followers')} /><Count value={String(profileStats?.followingCount ?? 0)} label={t('following')} /><Count value={String(profileStats?.postCount ?? recentPosts.length)} label={t('stories')} /><Count value={String(profileStats?.helpfulReactionCount ?? 0)} label="Helpful reactions" /></Pressable>
     <View style={styles.profileTabs}><Text style={[styles.profileTab, styles.profileTabActive]}>{t('stories')}</Text><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'saved' } } as never)}><Text style={styles.profileTab}>{t('saved')}</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'profile-edit' } } as never)}><Text style={styles.profileTab}>{t('about')}</Text></Pressable></View>
-    <Text style={styles.sectionTitle}>Recent stories</Text>{mockPosts.slice(2, 4).map(post => <PostCard key={post.id} post={{ ...post, author: { userId: 'demo-user', username: 'taylor.m', displayName: 'Taylor Morgan', avatarUrl: null } }} />)}
-    <Text style={styles.sectionTitle}>Profile details</Text><View style={styles.infoCard}><Info icon="location_on" title="Location" text={`${state.profile.city}, ${state.profile.country}`} /><Info icon="language" title="Languages" text={state.profile.languages.join(' · ')} /><Info icon="interests" title="Topics I follow" text="Relationships · Self-esteem · Work & burnout" /><Info icon="lock" title="Visibility" text={state.profile.privateProfile ? 'Private profile' : 'Public profile'} /></View>
-    <Text style={styles.sectionTitle}>Account & safety</Text><View style={styles.settings}><Setting icon="self_improvement" title="Wellbeing hub" subtitle="Check-ins, goals, journal, and progress" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'wellbeing' } } as never)} /><Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} /><Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} /><Setting icon="shield" title="Privacy and safety" subtitle="Blocks, muted words, and content controls" onPress={() => router.push('/safety-settings')} /><Setting icon="notifications" title="Notification preferences" subtitle="Choose what you want to hear about" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'notification-settings' } } as never)} /><Setting icon="manage_accounts" title="Account & security" subtitle="Password, sessions, privacy, and export" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'account-security' } } as never)} /><Setting icon="workspace_premium" title="Apply as a professional" subtitle="Credentialed professional onboarding" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never)} />{user?.roles.includes('ADMIN') && <><Setting icon="admin_panel_settings" title="Admin dashboard" subtitle="Trust, safety, users, content, and audit" accent onPress={() => router.push('/admin')} /><Setting icon="fact_check" title="Admin workflow center" subtitle="Appeals, campaigns, communities, listeners, exports, and policies" accent onPress={() => router.push({ pathname: '/admin-tools/[section]' as never, params: { section: 'appeals' } } as never)} /></>}</View>
+    <Text style={styles.sectionTitle}>Recent stories</Text>{recentPosts.map(post => <PostCard key={post.id} post={post} />)}{!recentPosts.length && <Text style={styles.bio}>Your published stories will appear here.</Text>}
+    <Text style={styles.sectionTitle}>Profile details</Text><View style={styles.infoCard}><Info icon="location_on" title="Location" text={profile?.showLocation ? [profile.city, profile.countryCode].filter(Boolean).join(', ') || 'Not added' : 'Hidden'} /><Info icon="interests" title="Topics I follow" text={preferences?.supportTopics.join(' · ') || 'Not selected yet'} /><Info icon="lock" title="Visibility" text={profile?.profilePrivate ? 'Private profile' : 'Public profile'} /></View>
+    <Text style={styles.sectionTitle}>Account & safety</Text><View style={styles.settings}><Setting icon="self_improvement" title="Wellbeing hub" subtitle="Check-ins, goals, journal, and progress" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'wellbeing' } } as never)} /><Setting icon="chat_bubble" title="Messages" subtitle="Manage conversations and requests" onPress={() => router.push('/messages')} /><Setting icon="event_available" title="My consultation requests" subtitle="Review or cancel appointment requests" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'consultations' } } as never)} /><Setting icon="groups" title="Groups & channels" subtitle="Your joined support spaces" onPress={() => router.push('/channels')} /><Setting icon="shield" title="Privacy and safety" subtitle="Blocks, muted words, and content controls" onPress={() => router.push('/safety-settings')} /><Setting icon="notifications" title="Notification preferences" subtitle="Choose what you want to hear about" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'notification-settings' } } as never)} /><Setting icon="manage_accounts" title="Account & security" subtitle="Password, sessions, privacy, and export" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'account-security' } } as never)} />{user?.roles.includes('PROFESSIONAL') ? <Setting icon="medical_services" title="Professional consultations" subtitle="Confirm, decline, and complete requests" accent onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: 'me', action: 'consultations' } } as never)} /> : <Setting icon="workspace_premium" title="Apply as a professional" subtitle="Credentialed professional onboarding" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: 'apply', action: 'start' } } as never)} />}{user?.roles.includes('ADMIN') && <><Setting icon="admin_panel_settings" title="Admin dashboard" subtitle="Trust, safety, users, content, and audit" accent onPress={() => router.push('/admin')} /><Setting icon="fact_check" title="Admin workflow center" subtitle="Appeals, campaigns, communities, listeners, exports, and policies" accent onPress={() => router.push({ pathname: '/admin-tools/[section]' as never, params: { section: 'appeals' } } as never)} /></>}</View>
   </View></Screen>;
 }
 
 function ProfessionalProfile({ professional }: { professional: Professional }) {
-  const { state, toggleList } = useProduct(); const following = state.followedProfessionals.includes(professional.id);
-  const articles = professionalArticles.filter(article => article.authorId === professional.id);
-  const pinned = articles.find(article => article.pinned);
+  const { articles, posts } = usePlatformData();
+  const { user } = useAuth();
+  const [following, setFollowing] = useState(false);
+  const [followRequested, setFollowRequested] = useState(false);
+  const isOwnProfile = user?.userId === professional.id;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(professional.username)}`)
+        .then(result => { setFollowing(result.following); setFollowRequested(result.followRequested); })
+        .catch(() => undefined);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [professional.username]);
+  async function toggleFollow() {
+    try {
+      if (following) await apiRequest(`/api/v1/social/follows/${professional.id}`, { method: 'DELETE' });
+      else if (followRequested) await apiRequest(`/api/v1/social/follow-requests/outgoing/${professional.id}`, { method: 'DELETE' });
+      else await apiRequest(`/api/v1/social/follows/${professional.id}`, { method: 'PUT' });
+      const updated = await apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(professional.username)}`);
+      setFollowing(updated.following); setFollowRequested(updated.followRequested);
+    } catch { /* Keep the last server-confirmed state. */ }
+  }
+  const professionalArticles = articles.filter(article => article.authorId === professional.id);
+  const pinned = professionalArticles.find(article => article.pinned);
+  const recentAnswerPost = posts.find(post => post.professionalReply?.professional.userId === professional.id);
   return <Screen scroll style={styles.screen}><View style={styles.proContent}>
-    <View style={styles.proTop}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Pressable onPress={() => router.push('/article-editor')} style={styles.studioButton}><AppIcon name="edit_note" size={18} color={colors.ocean700} /><Text style={styles.studioText}>Article studio</Text></Pressable></View>
+    <View style={styles.proTop}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable>{isOwnProfile && <Pressable onPress={() => router.push('/article-editor')} style={styles.studioButton}><AppIcon name="edit_note" size={18} color={colors.ocean700} /><Text style={styles.studioText}>Article studio</Text></Pressable>}</View>
 
     <View style={styles.proHero}>
       <View style={styles.heroGlow} /><View style={styles.proIdentity}><Avatar name={professional.displayName} size={90} verified /><View style={{ flex: 1 }}><Text style={styles.proBigName}>{professional.displayName}</Text><Text style={styles.proRole}>{professional.title}</Text><Text style={styles.proHandle}>@{professional.username}</Text><View style={styles.verified}><AppIcon name="verified" filled size={17} color={colors.ocean300} /><Text style={styles.verifiedText}>Identity, license & education verified</Text></View></View><Score score={professional.greenOceanScore} /></View>
       <Text style={styles.proBio}>{professional.bio}</Text>
       <View style={styles.proStats}><Count value={String(professional.rating)} label="Rating" light /><Count value={String(professional.reviewCount)} label="Reviews" light /><Count value={String(professional.experienceYears)} label="Years experience" light /></View>
-      <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Contact" variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'contact' } } as never)} /></View><View style={{ flex: 1 }}><AppButton label={following ? 'Following' : 'Follow'} onPress={() => toggleList('followedProfessionals', professional.id)} /></View></View>
+      {!isOwnProfile && <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Contact" variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'contact' } } as never)} /></View><View style={{ flex: 1 }}><AppButton label={following ? 'Following' : followRequested ? 'Request sent' : 'Follow'} variant={following || followRequested ? 'secondary' : 'primary'} onPress={toggleFollow} /></View></View>}
     </View>
 
     <View style={styles.availability}><View style={[styles.availabilityDot, !professional.acceptingNewClients && { backgroundColor: colors.sun }]} /><View style={{ flex: 1 }}><Text style={styles.availabilityTitle}>{professional.acceptingNewClients ? 'Accepting new clients' : 'Waitlist currently active'}</Text><Text style={styles.availabilityText}>{professional.consultationModes.join(' · ')}</Text></View><AppIcon name="event_available" color={colors.ocean600} /></View>
-    <View style={styles.proActions}><View style={{ flex: 1 }}><AppButton label="Request appointment" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'book' } } as never)} /></View><View style={{ flex: 1 }}><AppButton label={`Reviews (${professional.reviewCount})`} variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'reviews' } } as never)} /></View></View>
+    <View style={styles.proActions}>{!isOwnProfile && <View style={{ flex: 1 }}><AppButton label="Request appointment" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'book' } } as never)} /></View>}<View style={{ flex: 1 }}><AppButton label={`Reviews (${professional.reviewCount})`} variant="secondary" onPress={() => router.push({ pathname: '/professional/[id]/[action]' as never, params: { id: professional.id, action: 'reviews' } } as never)} /></View></View>
 
     <Text style={styles.sectionTitle}>Professional profile</Text>
     <View style={styles.detailGrid}>
       <DetailCard icon="psychology" title="Specialties" value={professional.specialties.join(' · ')} />
-      <DetailCard icon="apartment" title="Workplace" value={professional.workplace} />
-      <DetailCard icon="medical_services" title="Clinic / practice" value={professional.clinicName} />
-      <DetailCard icon="location_on" title="Clinic location" value={`${professional.clinicAddress}\n${professional.city}, ${professional.country}`} />
+      <DetailCard icon="apartment" title="Workplace" value={professional.workplace || 'Not listed'} />
+      <DetailCard icon="medical_services" title="Clinic / practice" value={professional.clinicName || 'Not listed'} />
+      <DetailCard icon="location_on" title="Clinic location" value={[professional.clinicAddress, professional.city, professional.country].filter(Boolean).join(' · ') || 'Not listed'} />
       <DetailCard icon="language" title="Languages" value={professional.languages.join(' · ')} />
-      <DetailCard icon="person" title="Gender" value={professional.gender} />
-      <DetailCard icon="payments" title="Session fee" value={`${professional.sessionFee} ${professional.currency} · ${professional.insuranceAccepted ? 'Insurance accepted' : 'Self-pay'}`} />
-      <DetailCard icon="schedule" title="Time zone" value={professional.timeZone} />
+      <DetailCard icon="person" title="Gender" value={professional.gender || 'Not listed'} />
+      <DetailCard icon="videocam" title="Consultation modes" value={professional.consultationModes.join(' · ') || 'Not listed'} />
     </View>
 
-    <Text style={styles.sectionTitle}>Credentials</Text><View style={styles.infoCard}>{professional.education.map(item => <Info key={item} icon="school" title="Education" text={item} />)}<Info icon="workspace_premium" title="License" text={`${professional.licenseNumber} · Verified by GreenOcean`} /><Info icon="update" title="Last verification" text="August 2026" /></View>
+    <Text style={styles.sectionTitle}>Credentials</Text><View style={styles.infoCard}>{professional.education.map(item => <Info key={item} icon="school" title="Education" text={item} />)}<Info icon="workspace_premium" title="License" text={professional.licenseNumber ? `${professional.licenseNumber} · Verified by GreenOcean` : 'Verified credential record'} /></View>
 
     {pinned && <><View style={styles.sectionTitleRow}><View><Text style={styles.eyebrow}>PINNED BY THIS PROFESSIONAL</Text><Text style={styles.sectionTitle}>Scientific article</Text></View><Pressable onPress={() => router.push('/articles')}><Text style={styles.seeAll}>All articles</Text></Pressable></View><Pressable onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinned.id } })} style={styles.pinnedArticle}><View style={styles.pinnedFlag}><AppIcon name="push_pin" filled size={17} color={colors.white} /><Text style={styles.pinnedFlagText}>PINNED</Text></View><Text style={styles.articleTopic}>{pinned.evidenceLevel} · {pinned.readTime}</Text><Text style={styles.articleTitle}>{pinned.title}</Text><Text style={styles.articleSummary}>{pinned.summary}</Text><View style={styles.articleMeta}><AppIcon name="favorite" size={17} color={colors.coral} /><Text style={styles.articleMetaText}>{pinned.helpfulCount} found this helpful</Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></Pressable></>}
 
     <Text style={styles.sectionTitle}>How the GreenOcean Score works</Text><View style={styles.scoreExplainer}><Score score={professional.greenOceanScore} small /><View style={{ flex: 1 }}><Text style={styles.scoreTitle}>Trust and contribution score</Text><Text style={styles.scoreText}>Based on credential verification, profile completeness, helpful professional answers, response consistency, and community feedback. Sponsored placement never changes this score.</Text></View></View>
 
     <Text style={styles.sectionTitle}>Professional boundaries</Text><View style={styles.boundary}><AppIcon name="health_and_safety" color={colors.ocean600} /><Text style={styles.boundaryText}>Public replies, articles, and messages provide general educational support. They do not establish a therapeutic relationship or replace local medical care.</Text></View>
-    <Text style={styles.sectionTitle}>Professional answer</Text><View style={styles.answerCard}><Text style={styles.answerText}>A boundary is not necessarily a step away from someone. It can be a way to keep the relationship honest and sustainable. Start with small, clear statements.</Text><View style={styles.helpful}><AppIcon name="favorite" size={17} color={colors.coral} /><Text style={styles.helpfulText}>128 Helpful</Text></View></View>
+    <Text style={styles.sectionTitle}>Recent professional answer</Text>{recentAnswerPost?.professionalReply ? <Pressable onPress={() => router.push({ pathname: '/post/[id]', params: { id: recentAnswerPost.id } })} style={styles.answerCard}><Text style={styles.answerText}>{recentAnswerPost.professionalReply.body}</Text><View style={styles.helpful}><AppIcon name="favorite" size={17} color={colors.coral} /><Text style={styles.helpfulText}>{recentAnswerPost.professionalReply.helpfulCount} Helpful</Text></View></Pressable> : <Text style={styles.bio}>No published professional answers are visible in your feed yet.</Text>}
   </View></Screen>;
 }
 

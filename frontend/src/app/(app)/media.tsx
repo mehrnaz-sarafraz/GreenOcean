@@ -4,24 +4,30 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { Screen } from '@/components/screen';
-import { mediaPicks, MediaPick } from '@/mocks/discovery';
+import { usePlatformData } from '@/features/platform/data-provider';
+import { optionsIn } from '@/features/platform/catalog';
+import { MediaPick } from '@/features/platform/types';
+import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
-import { useProduct } from '@/features/product/product-provider';
-
-const filters = ['ALL', 'MOVIE', 'SERIES', 'DOCUMENTARY'] as const;
 
 export default function MediaGuide() {
-  const { state, toggleList } = useProduct();
-  const [filter, setFilter] = useState<(typeof filters)[number]>('ALL');
-  const saved = state.savedMedia;
-  const shown = useMemo(() => mediaPicks.filter(item => filter === 'ALL' || item.kind === filter), [filter]);
+  const { media: mediaPicks, setMedia, options } = usePlatformData();
+  const filters = [{ key: 'ALL', label: 'All picks' }, ...optionsIn(options, 'MEDIA_KIND')];
+  const [filter, setFilter] = useState('ALL');
+  const shown = useMemo(() => mediaPicks.filter(item => filter === 'ALL' || item.kind === filter), [filter, mediaPicks]);
   const featured = mediaPicks[0];
-  function toggleSaved(id: string) { toggleList('savedMedia', id); }
+  async function toggleSaved(item: MediaPick) {
+    const next = !item.saved;
+    setMedia(current => current.map(value => value.id === item.id ? { ...value, saved: next } : value));
+    try { await apiRequest(`/api/v1/media-recommendations/${item.id}/save`, { method: next ? 'PUT' : 'DELETE' }); }
+    catch { setMedia(current => current.map(value => value.id === item.id ? { ...value, saved: !next } : value)); }
+  }
+  if (!featured) return <Screen style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Text style={styles.count}>No media recommendations are available yet.</Text></View></Screen>;
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.topIcon}><AppIcon name="bookmark" color={colors.lavender} /></View></View>
     <View><Text style={styles.eyebrow}>WATCH · REFLECT · DISCUSS</Text><Text style={styles.title}>Psychology on screen</Text><Text style={styles.subtitle}>Movies, series, and documentaries selected as conversation starters—not as diagnostic or treatment resources.</Text></View>
 
-    <Pressable onPress={() => toggleSaved(featured.id)} style={styles.hero}>
+    <Pressable style={styles.hero}>
       <LinearGradient colors={['#2D2352', '#6B4F8D', '#F27D69']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroGradient}>
         <View style={styles.editorPick}><AppIcon name="stars" filled size={15} color={colors.sun} /><Text style={styles.editorPickText}>EDITOR&apos;S CONVERSATION PICK</Text></View>
         <View style={styles.heroArt}><View style={[styles.emotionOrb, { backgroundColor: '#F4B860', left: 10, top: 24 }]} /><View style={[styles.emotionOrb, { backgroundColor: '#5B9BD5', left: 55, top: 8 }]} /><View style={[styles.emotionOrb, { backgroundColor: '#F27D69', left: 95, top: 39 }]} /><AppIcon name="movie" size={60} color="#ffffff44" /></View>
@@ -31,10 +37,10 @@ export default function MediaGuide() {
     </Pressable>
 
     <View style={styles.safety}><AppIcon name="info" color={colors.ocean600} /><Text style={styles.safetyText}>Some titles include distressing topics. Read the content notes first and choose what feels safe for you today.</Text></View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>{filters.map(item => <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}><Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item === 'ALL' ? 'All picks' : item[0] + item.slice(1).toLowerCase()}</Text></Pressable>)}</ScrollView>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>{filters.map(item => <Pressable key={item.key} onPress={() => setFilter(item.key)} style={[styles.filter, filter === item.key && styles.filterActive]}><Text style={[styles.filterText, filter === item.key && styles.filterTextActive]}>{item.label}</Text></Pressable>)}</ScrollView>
     <View style={styles.sectionHead}><Text style={styles.sectionTitle}>{filter === 'ALL' ? 'Curated for thoughtful viewing' : `${filter[0] + filter.slice(1).toLowerCase()} picks`}</Text><Text style={styles.count}>{shown.length} titles</Text></View>
-    <View style={styles.grid}>{shown.map(item => <MediaCard key={item.id} item={item} saved={saved.includes(item.id)} onSave={() => toggleSaved(item.id)} />)}</View>
-    <View style={styles.club}><View style={styles.clubIcon}><AppIcon name="groups" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.clubLabel}>COMING THIS WEEK</Text><Text style={styles.clubTitle}>GreenOcean Watch Circle</Text><Text style={styles.clubText}>A moderated group discussion about anxiety and identity in Inside Out 2.</Text></View><Pressable onPress={() => router.push('/channels')} style={styles.clubButton}><Text style={styles.clubButtonText}>View group</Text></Pressable></View>
+    <View style={styles.grid}>{shown.map(item => <MediaCard key={item.id} item={item} saved={item.saved} onSave={() => void toggleSaved(item)} />)}</View>
+    <View style={styles.club}><View style={styles.clubIcon}><AppIcon name="groups" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.clubLabel}>MODERATED CONVERSATIONS</Text><Text style={styles.clubTitle}>Watch and reflect together</Text><Text style={styles.clubText}>Browse current support channels for available discussions and scheduled events.</Text></View><Pressable onPress={() => router.push('/channels')} style={styles.clubButton}><Text style={styles.clubButtonText}>Browse groups</Text></Pressable></View>
   </View></Screen>;
 }
 

@@ -55,7 +55,8 @@ public class PostService {
                 .orElseThrow(() -> new NotFoundException("User was not found"));
         Post post = new Post(
                 uuidGenerator.nextUuid(), author, request.communityId(), request.body().trim(), request.anonymous(),
-                request.visibility(), normalizeOptional(request.contentWarning())
+                request.visibility(), normalizeOptional(request.contentWarning()), request.categoryId(), request.postType(),
+                normalizeOptional(request.mood())
         );
         postRepository.saveAndFlush(post);
         return get(post.getId(), userId);

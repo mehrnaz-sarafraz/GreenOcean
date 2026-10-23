@@ -71,4 +71,24 @@ public class UserSession {
     public User getUser() {
         return user;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public Instant getLastUsedAt() {
+        return lastUsedAt;
+    }
 }

@@ -1,133 +1,85 @@
 # GreenOcean — Project Memory
 
-> This file is the durable, version-controlled context for GreenOcean. Update it when a product or architecture decision changes.
+This file records durable product and architecture decisions.
 
 ## Product definition
 
-GreenOcean is a privacy-conscious social and support platform for mental health and human experiences. It combines:
+GreenOcean is a privacy-conscious social and support platform for mental health and lived experience.
+It combines categorized social sharing, supportive communities, trained peer listeners, verified
+mental-health professionals, evidence-informed articles, psychology media discovery, messaging,
+wellbeing reflection tools, and trust-and-safety operations.
 
-- social sharing of feelings, stories, and lived experiences;
-- supportive community interaction (reactions, comments, follows, bookmarks, communities);
-- participation by verified mental-health professionals, including a future free-consultation capability.
+It is not a medical-record system, diagnostic tool, therapist, or crisis service. The product must not
+infer or present diagnoses, suicide-risk scores, or clinical conclusions from user activity.
 
-It is **not** a medical-record system. The product must not infer or store diagnoses, depression/anxiety scores, suicide-risk scores, or similar sensitive health profiles.
+Core promise: “A safe place to share your feelings, stories, and experiences.”
 
-Core promise: **“A safe place to share your feelings, stories and experiences.”**
+Values: No judgement · Human support · Verified professionals
 
-Values: **No judgement · Real support · Verified professionals**
-
-## Product principles
-
-- Safety, moderation, privacy, and respectful interaction are core product features.
-- Account deletion is handled with soft deletion where appropriate; historical content and moderation records are not accidentally destroyed.
-- Professionals are represented by a dedicated profile plus a verification history, never a simple `is_doctor` flag.
-- Uploaded media belongs in object storage, not PostgreSQL.
-
-## Technical decisions (locked for V1)
+## Locked technical decisions
 
 | Area | Decision |
 | --- | --- |
-| Mobile frontend | React Native + Expo + TypeScript |
-| Backend | Java + Spring Boot |
+| Frontend | React Native + Expo SDK 57 + TypeScript |
+| Web | Expo Router static rendering |
+| Backend | Java 21 + Spring Boot modular monolith |
 | Database | PostgreSQL |
-| API | REST |
-| Authentication | JWT access token + rotating/managed refresh-token sessions |
-| Backend architecture | Modular monolith; reconsider microservices only after real growth demands it |
-| Database migrations | Flyway is the source of truth; never make untracked manual schema changes |
-| Repositories | One Git repository with `frontend/` and `backend/` for initial development; split only if collaboration/release needs prove it necessary |
+| API | Versioned REST under `/api/v1` |
+| Authentication | JWT access token plus rotating, hashed refresh-token sessions |
+| Access revocation | Access JWTs are validated against an active server-side session |
+| Schema | Flyway is the source of truth |
+| Repository | One monorepo with `frontend/`, `backend/`, and documentation |
 
-Target repository layout:
+## Current language decision
 
-```text
-GreenOcean/
-  frontend/    # React Native / Expo
-  backend/     # Spring Boot
-  docs/
-```
+The current release is English-only and LTR. Persian/RTL remains a product requirement, but the user
+explicitly deferred its implementation until the English product is complete. Runtime language
+switching and Persian mock copy must not be reintroduced before that milestone.
 
-## Internationalization
+## Product and safety principles
 
-Localization is a first-class requirement, not a later translation pass:
+- Safety, privacy, moderation, and respectful interaction are product features.
+- Wellbeing tools use non-diagnostic language and keep private records separate from the social feed.
+- Anonymous publishing hides identity from peers, not from authorized safety operations.
+- Private profiles require explicit follow approval before activity is disclosed.
+- Private communities require membership approval and role-based management.
+- Professionals use a dedicated profile and verification history, never a single boolean flag.
+- Credential files live in file/object storage, not PostgreSQL; only metadata and hashes are persisted.
+- Appointment availability is explicitly published and collision-protected.
+- Account deletion revokes all sessions and removes or anonymizes data according to its purpose.
+- Administrative reads and changes are role-gated and sensitive operations are audited.
 
-- English uses LTR layout.
-- Persian and Arabic use RTL layout.
-- Text, alignment, navigation affordances, and layout direction must follow the active locale.
+## Implemented scope — 2026-09-13
 
-## Initial registration and onboarding
+- English/LTR design system, welcome and information pages, auth/onboarding, responsive navigation, feed,
+  categorized creation, post detail, profiles, search, notifications, communities, knowledge, media,
+  conversations, support channels, listeners, professionals, consultation booking, wellbeing, safety,
+  account controls, and administration.
+- API-backed runtime data; old frontend mock and preview-mode modules are removed.
+- PostgreSQL schema has 31 Flyway migrations through `V30`.
+- Configurable product choices, listener training, onboarding state, recent search history, and sourced urgent-help records are PostgreSQL-backed.
+- Historical development identities are deleted by migration; curated reference content remains in the database.
+- Authentication supports registration, login, refresh rotation, logout, logout-all, password change,
+  server-side access-token revocation, session inventory, and individual session revocation.
+- Professionals can apply, upload signature-validated documents, publish availability, receive
+  appointment requests, manage consultations, write articles, pin scientific content, and receive reviews.
+- Communities support private join requests, approval/decline, roles, rules, events, attendance, and removal.
+- Messaging uses API persistence and short polling; notifications use polling and durable read state.
+- Admin operations include moderation queues, users, communities, verification, document scan state,
+  listeners, campaigns, broadcasts, support, policies, exports, and audit activity.
+- The frontend passes TypeScript, ESLint, Expo dependency compatibility, and static Web export.
+- The backend integration/unit suite passes against a real PostgreSQL database.
+- Public urgent help is available before sign-in; source URLs and verification dates are stored with each resource.
 
-Registration needs: email, password, birth year, country, and city. Collect some fields in a slide-based onboarding flow for a better experience and later privacy-respecting personalization/analytics.
+## Production-only integrations still requiring external setup
 
-## Initial user-facing scope
+- SMTP/transactional-email provider and delivery worker for the implemented email outbox
+- Encrypted production object storage and malware-scanning service for credential uploads
+- APNs/FCM push delivery and a WebSocket/SSE gateway if real-time delivery replaces polling
+- Payment/billing provider for paid promotion or paid appointments
+- Deployment environment, DNS/TLS, secret management, backups, metrics, alerting, and log aggregation
+- Clinical/legal review of safety copy and country-specific urgent-help resources
+- Human accessibility audit and physical iOS/Android device QA
+- Persian translation and RTL pass, intentionally deferred
 
-1. Welcome and onboarding
-2. Authentication
-3. Home/feed
-4. Create post
-5. Post detail and nested comments
-6. Profile
-7. Search/explore
-8. Notifications
-9. Communities
-10. Professionals and verification
-11. Consultation (future V1 increment)
-12. Messaging (future V1 increment)
-
-## Visual direction
-
-The visual identity evokes a calm, deep green ocean: neither a stereotypical medical-app green nor a crypto-exchange green. The welcome screen uses an image background, a strong dark/transparent overlay, layered content, and a subtle animated entrance (in the emotional direction of 7 Cups, without copying it).
-
-## Data-contract summary
-
-The approved schema contract defines 23 tables across these domains:
-
-```text
-AUTH:        users, profiles, user_sessions, roles, user_roles
-SOCIAL:      follows, blocks, bookmarks
-CONTENT:     posts, comments, media, tags, post_tags
-COMMUNITY:   communities, community_members
-PROFESSIONAL: professional_profiles, professional_verifications
-ENGAGEMENT:  post_likes, comment_likes, notifications
-SAFETY:      reports, audit_logs
-```
-
-Common rules:
-
-- UUID primary keys; UTC `TIMESTAMPTZ` timestamps.
-- Case-insensitive uniqueness for email and username.
-- Composite primary keys for relationship tables when appropriate.
-- Strict foreign keys, explicit `CASCADE` / `RESTRICT` / `SET NULL` behavior.
-- CHECK constraints enforce invariants such as no self-follow, one report target, and community visibility requiring a community.
-- Passwords and refresh tokens are stored only as hashes; access JWTs are not stored.
-- Likes are domain-specific: `post_likes` and `comment_likes`, not a generic polymorphic table.
-
-The complete detailed schema contract is currently retained in the original pasted specification attached to this task. Before implementation, copy it into `docs/schema-contract-v1.md` and review any outstanding dependency-order adjustments in the Flyway migrations.
-
-## Backend package direction
-
-Use domain-oriented modules under `com.greenocean.backend`, such as `auth`, `profile`, `post`, `social`, `community`, `professional`, `engagement`, and `moderation`; each owns its controller, service, repository, entity, and DTOs. Avoid a single global `entity/` bucket.
-
-## Implementation order
-
-```text
-Local tools → Git/GitHub → repository scaffolding → PostgreSQL
-→ Spring Boot + Flyway schema → schema verification tests → JPA entities
-→ auth API → Expo app/navigation → onboarding/auth UI → feed and content
-→ remaining domains → security/deployment
-```
-
-## Current state — 2026-08-24
-
-- The private GitHub monorepo is connected on `main` with `backend/` and `frontend/` roots.
-- Backend runs on Java 21, Spring Boot 4.1, PostgreSQL 18 and Flyway. Ten migrations are applied and schema constraints have integration coverage.
-- Authentication is implemented end to end: registration, BCrypt passwords, JWT access tokens, rotating hashed refresh-token sessions, login, refresh, logout, logout-all and password change.
-- Profile APIs support own-profile reads/updates, privacy controls and privacy-filtered profile lookup by username.
-- Backend health, auth and profile flows have automated integration tests and PowerShell smoke tests.
-- The current tested milestone adds posts, visibility-aware feed, comments/replies, post and comment likes, bookmarks,
-  follow/block rules, user/post search, communities and notification delivery/read state.
-- Frontend uses Expo SDK 57, React Native 0.86, React 19 and strict TypeScript with Expo Router.
-- Frontend includes theme tokens, English/Persian localization, RTL-aware layout, Welcome/Login/Register, secure token
-  storage, automatic refresh, session restoration, Feed/Create/Post Detail/Search/Profile, Community and Notification routes.
-- Content/social/community/notification code compiles and the frontend passes type-check, lint and static web export.
-  Local PostgreSQL integration tests and the end-to-end smoke script must pass before this milestone is committed.
-- After that commit, the next milestone is Professionals + verification + Consultation, followed by Messaging,
-  Moderation/Media completion, deployment hardening and the dedicated GreenOcean branding/detail pass.
+The exact route map, completed-gap matrix, and verification evidence live in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).

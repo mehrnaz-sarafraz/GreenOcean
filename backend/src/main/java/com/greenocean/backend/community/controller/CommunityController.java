@@ -2,7 +2,12 @@ package com.greenocean.backend.community.controller;
 
 import com.greenocean.backend.common.api.PageResponse;
 import com.greenocean.backend.community.dto.CommunityResponse;
+import com.greenocean.backend.community.dto.CommunityDetailsResponse;
 import com.greenocean.backend.community.dto.CreateCommunityRequest;
+import com.greenocean.backend.community.dto.CommunityJoinRequestResponse;
+import com.greenocean.backend.community.dto.CreateCommunityEventRequest;
+import com.greenocean.backend.community.dto.UpdateCommunityMemberRoleRequest;
+import com.greenocean.backend.community.dto.UpdateCommunityRulesRequest;
 import com.greenocean.backend.community.service.CommunityService;
 import com.greenocean.backend.post.dto.PostResponse;
 import com.greenocean.backend.post.service.PostService;
@@ -22,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.List;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 @RestController
 @RequestMapping("/api/v1/communities")
@@ -66,12 +73,88 @@ public class CommunityController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{communityId}/join-request")
+    public ResponseEntity<Void> cancelJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId) {
+        communityService.cancelJoinRequest(communityId, userId(jwt));
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{communityId}/join-requests")
+    public List<CommunityJoinRequestResponse> joinRequests(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId) {
+        return communityService.joinRequests(communityId, userId(jwt));
+    }
+
+    @PostMapping("/{communityId}/join-requests/{requesterId}/approve")
+    public ResponseEntity<Void> approveJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                    @PathVariable UUID requesterId) {
+        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{communityId}/join-requests/{requesterId}")
+    public ResponseEntity<Void> declineJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                    @PathVariable UUID requesterId) {
+        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{communityId}/rules")
+    public CommunityDetailsResponse replaceRules(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                   @Valid @RequestBody UpdateCommunityRulesRequest request) {
+        return communityService.replaceRules(communityId, userId(jwt), request);
+    }
+
+    @PostMapping("/{communityId}/events")
+    public ResponseEntity<CommunityDetailsResponse> createEvent(@AuthenticationPrincipal Jwt jwt,
+                                                                 @PathVariable UUID communityId,
+                                                                 @Valid @RequestBody CreateCommunityEventRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(communityService.createEvent(communityId, userId(jwt), request));
+    }
+
+    @DeleteMapping("/{communityId}/events/{eventId}")
+    public CommunityDetailsResponse cancelEvent(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                  @PathVariable UUID eventId) {
+        return communityService.cancelEvent(communityId, eventId, userId(jwt));
+    }
+
+    @PatchMapping("/{communityId}/members/{memberId}/role")
+    public CommunityDetailsResponse updateMemberRole(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                       @PathVariable UUID memberId,
+                                                       @Valid @RequestBody UpdateCommunityMemberRoleRequest request) {
+        return communityService.updateMemberRole(communityId, memberId, userId(jwt), request.role());
+    }
+
+    @DeleteMapping("/{communityId}/members/{memberId}")
+    public CommunityDetailsResponse removeMember(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
+                                                   @PathVariable UUID memberId) {
+        return communityService.removeMember(communityId, memberId, userId(jwt));
+    }
+
     @GetMapping("/{communityId}/posts")
     public PageResponse<PostResponse> posts(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "20") int size) {
         validatePage(page, size);
         return postService.communityFeed(communityId, userId(jwt), page, size);
+    }
+
+    @GetMapping("/{communityId}/details")
+    public CommunityDetailsResponse details(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId) {
+        return communityService.details(communityId, userId(jwt));
+    }
+
+    @PutMapping("/{communityId}/events/{eventId}/attendance")
+    public CommunityDetailsResponse joinEvent(@AuthenticationPrincipal Jwt jwt,
+                                               @PathVariable UUID communityId,
+                                               @PathVariable UUID eventId) {
+        return communityService.joinEvent(communityId, eventId, userId(jwt));
+    }
+
+    @DeleteMapping("/{communityId}/events/{eventId}/attendance")
+    public CommunityDetailsResponse leaveEvent(@AuthenticationPrincipal Jwt jwt,
+                                                @PathVariable UUID communityId,
+                                                @PathVariable UUID eventId) {
+        return communityService.leaveEvent(communityId, eventId, userId(jwt));
     }
 
     private void validatePage(int page, int size) {
