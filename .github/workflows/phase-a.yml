@@ -3,6 +3,9 @@ on:
   pull_request:
   push:
     branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience]
+concurrency:
+  group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -54,7 +57,14 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npx expo export --platform all
-      - run: npx playwright install --with-deps chromium
+      - name: Select browser runtime
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+            echo "PLAYWRIGHT_CHANNEL=chrome" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
