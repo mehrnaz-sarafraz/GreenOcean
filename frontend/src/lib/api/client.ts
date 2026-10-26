@@ -37,7 +37,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if(authenticated&&requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
   if (!response.ok) {
-    if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
+    if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear(tokens?.accessToken?'sessionExpired':undefined);
     const body = await response.json().catch(() => null) as { message?: string; fieldErrors?: { field: string; message: string }[] } | null;
     const retry = Number(response.headers.get('Retry-After'));
     throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`, Array.isArray(body?.fieldErrors) ? body.fieldErrors : [], retry > 0 ? retry : null);
@@ -63,7 +63,7 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
   }
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { message?: string } | null;
-    if (response.status === 401 && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
+    if (response.status === 401 && requestEpoch === tokenStorage.generation()) await tokenStorage.clear(tokens?.accessToken?'sessionExpired':undefined);
     throw new ApiError(response.status, body?.message ?? `Download failed with status ${response.status}`);
   }
   if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');
@@ -86,7 +86,7 @@ async function performRefresh(refreshToken: string) {
   });
   if (!response.ok) {
     if(response.status!==401&&response.status!==403)throw new ApiError(response.status,'Could not confirm your session. Please retry.');
-    if (epoch === tokenStorage.generation()) await tokenStorage.clear();
+    if (epoch === tokenStorage.generation()){const active=await tokenStorage.get();await tokenStorage.clear(active?.accessToken?'sessionExpired':undefined);}
     return null;
   }
   const tokens = await response.json() as { accessToken: string; refreshToken: string };

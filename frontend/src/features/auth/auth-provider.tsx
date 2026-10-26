@@ -18,6 +18,7 @@ type AuthContextValue = {
   notice:string;
   clearNotice:()=>void;
   retryLogout:()=>Promise<void>;
+  retrySession:()=>Promise<void>;
   privacyHidden:boolean;
   signIn: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
@@ -33,7 +34,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string | null>(null);
   const [pendingEmailCorrected, setPendingEmailCorrected] = useState(false);
 
-  useEffect(() => tokenStorage.subscribeToClear(() => {
+  useEffect(() => tokenStorage.subscribeToClear((reason) => {
+    if(reason)setNotice(reason);
     setUser(null);
     setStatus('unauthenticated');
   }), []);
@@ -81,6 +83,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if(!response.ok)throw new Error('Sign-out could not be confirmed');
   }
   async function reconcileLogout(){const pending=await tokenStorage.pendingLogout();if(pending){await revoke(pending);await tokenStorage.allowRestore();}}
+  async function retrySession(){setStatus('loading');try{await reconcileLogout();const current=await apiRequest<CurrentUser>('/api/v1/auth/me');setUser(current);setStatus('authenticated');setNotice('');}catch{setUser(null);setStatus('unauthenticated');setNotice('connectionCheck');}}
   async function retryLogout(){try{await reconcileLogout();setNotice('signedOut');}catch{setNotice('logoutPending');}}
   async function signOut(options?: { correctedEmail?:string;notice?:string }) {
     setPendingRegistrationEmail(options?.correctedEmail??null);setPendingEmailCorrected(Boolean(options?.correctedEmail));
@@ -102,7 +105,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setStatus('authenticated');
       } catch {
         if (epoch !== tokenStorage.generation()) return;
-        await tokenStorage.clear();
+        setNotice('connectionCheck');
         setUser(null);
         setStatus('unauthenticated');
       }
@@ -121,7 +124,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   },[status]);
   useEffect(()=>{if(Platform.OS!=='web')return;const listener=()=>{void retryLogout();};globalThis.addEventListener('online',listener);return()=>globalThis.removeEventListener('online',listener);},[]);
 
-  const value = { status, user, pendingRegistrationEmail, pendingEmailCorrected, notice, clearNotice:()=>setNotice(''),retryLogout,privacyHidden, signIn, register, signOut };
+  const value = { status, user, pendingRegistrationEmail, pendingEmailCorrected, notice, clearNotice:()=>setNotice(''),retryLogout,retrySession,privacyHidden, signIn, register, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

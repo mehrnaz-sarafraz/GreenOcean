@@ -13,7 +13,7 @@ export function AssistanceForm({page,token}:{page:string;token?:string}) {
  const {signOut}=useAuth();const running=useRef(false);const [confirmation,setConfirmation]=useState('');const [complete,setComplete]=useState(false);
  const {language}=useLanguage();const c=publicCopy[language];const [email,setEmail]=useState(''),[value,setValue]=useState(()=>{if(page==='reset-password'&&Platform.OS==='web'){const fragment=new URLSearchParams(globalThis.location.hash.slice(1)).get('token');if(fragment&&safeRecoveryToken(fragment))return fragment;}return token??'';}),[password,setPassword]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const title=page==='contact'?c.contact:page==='verify-email'?c.verify:page==='reset-password'?c.reset:c.forgot;
- useEffect(()=>{if(page!=='reset-password'||Platform.OS!=='web')return;const fragment=new URLSearchParams(globalThis.location.hash.slice(1)).get('token');if(fragment||token){globalThis.history.replaceState(null,'',globalThis.location.pathname);}},[page,token]);
+ useEffect(()=>{if(page!=='reset-password')return;if(Platform.OS!=='web'){if(token)router.setParams({token:undefined});return;}const fragment=new URLSearchParams(globalThis.location.hash.slice(1)).get('token');if(fragment||token){globalThis.history.replaceState(null,'',globalThis.location.pathname);}},[page,token]);
  async function submit(confirm=false){
   if(running.current||complete)return;
   if((page!=='reset-password'&&!/^\S+@\S+\.\S+$/.test(email.trim()))||(page==='contact'&&value.trim().length<10)||(page==='verify-email'&&confirm&&!/^\d{6}$/.test(value))||(page==='reset-password'&&(!safeRecoveryToken(value)||!passwordBounds(password)||password!==confirmation))){setMessage(c.formError);return;}
