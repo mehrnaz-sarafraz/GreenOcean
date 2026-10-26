@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 /** Real HTTPS capture on loopback; certificate/private key generated at runtime, never committed. */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PhaseDMailGatewayTest {
- @TempDir Path directory;HttpsServer server;HttpClient client;String endpoint;
+ @TempDir static Path directory;HttpsServer server;HttpClient client;String endpoint;
  volatile int responseStatus=202;
  final java.util.List<tools.jackson.databind.JsonNode> received=new CopyOnWriteArrayList<>();
  final Set<String> accepted=ConcurrentHashMap.newKeySet();

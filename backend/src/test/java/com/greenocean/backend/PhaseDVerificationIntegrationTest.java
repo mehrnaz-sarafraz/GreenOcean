@@ -112,7 +112,7 @@ class PhaseDVerificationIntegrationTest {
  @Test @Tag("malicious") void pendingActionsAreDeniedAcrossEverySocialCategoryWithoutWrites()throws Exception{
    var in=input();register(in);String token=login(in),id="00000000-0000-0000-0000-000000000001";
    int before=db.queryForObject("SELECT (SELECT count(*) FROM posts)+(SELECT count(*) FROM comments)+(SELECT count(*) FROM messages)+(SELECT count(*) FROM follows)+(SELECT count(*) FROM post_likes)",Integer.class);
-   for(String route:List.of("posts","posts/"+id+"/comments","conversations/users/"+id,"conversations/"+id+"/messages","listeners/match","listener-applications","professionals/"+id+"/availability","admin/broadcasts"))
+   for(String route:List.of("posts","posts/"+id+"/comments","conversations/users/"+id,"conversations/"+id+"/messages","listeners/match","listener-applications","professional/availability","admin/broadcasts"))
      mvc.perform(post("/api/v1/"+route).header("Authorization","Bearer "+token).contentType("application/json").content("{}")).andExpect(status().isForbidden());
    for(String route:List.of("posts/"+id+"/like","comments/"+id+"/like","social/follows/"+id,"communities/"+id+"/membership"))
      mvc.perform(put("/api/v1/"+route).header("Authorization","Bearer "+token).contentType("application/json").content("{}")).andExpect(status().isForbidden());

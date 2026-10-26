@@ -10,12 +10,12 @@ import { useLanguage } from '@/localization/language-provider';
 import { cooldownSeconds,maskVerificationEmail,normalizeVerificationCode,validVerificationCode } from '@/features/auth/verification';
 import { validAccountEmail } from '@/features/auth/registration-validation';
 export default function ActivateScreen(){
- const {user,signIn,signOut,pendingRegistrationEmail}=useAuth();
+ const {user,signIn,signOut,pendingRegistrationEmail,pendingEmailCorrected}=useAuth();
  const {language}=useLanguage();const fa=language==='fa';const running=useRef(false);
  const [email,setEmail]=useState(user?.email??pendingRegistrationEmail??'');const [password,setPassword]=useState('');const [code,setCode]=useState('');
  const [country,setCountry]=useState('');const [adult,setAdult]=useState(false);const [accepted,setAccepted]=useState(false);
  const [query,setQuery]=useState('');const [countries,setCountries]=useState<{code:string;name:string}[]>([]);
- const [terms,setTerms]=useState(0);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
+ const [terms,setTerms]=useState(0);const [busy,setBusy]=useState(false);const [message,setMessage]=useState(pendingEmailCorrected?(fa?'اگر اصلاح امکان‌پذیر بوده باشد، درخواست تأیید برای آدرس جدید ثبت شده است. دوباره وارد شوید؛ در صورت نیاز آدرس قبلی یا بازیابی حساب را امتحان کنید.':'If the correction could be completed, verification was requested for the new address. Sign in again; if needed, use the original address or account recovery.'):'');
  const codeRef=useRef<TextInput>(null);const [deadline,setDeadline]=useState(0);const [now,setNow]=useState(0);
  const [editingEmail,setEditingEmail]=useState(false);const [newEmail,setNewEmail]=useState('');const [correctionPassword,setCorrectionPassword]=useState('');
  const remaining=cooldownSeconds(deadline,now);
@@ -68,7 +68,7 @@ export default function ActivateScreen(){
      <AppField label={fa?'رمز برای تأیید اصلاح ایمیل':'Password to confirm email correction'} value={correctionPassword} onChangeText={setCorrectionPassword} secureTextEntry autoComplete="current-password" autoCapitalize="none" autoCorrect={false} ltr editable={!busy}/>
      <AppButton label={fa?'تأیید اصلاح ایمیل':'Confirm email correction'} disabled={!validAccountEmail(newEmail)||!correctionPassword} loading={busy} onPress={()=>void run(async()=>{
        await apiRequest('/api/v1/account-assistance/pending-email',{method:'POST',body:JSON.stringify({newEmail:newEmail.trim(),password:correctionPassword})});
-       await signOut();setEmail(newEmail.trim());setNewEmail('');setCorrectionPassword('');setCode('');setDeadline(0);setEditingEmail(false);
+       await signOut({correctedEmail:newEmail.trim()});setEmail(newEmail.trim());setNewEmail('');setCorrectionPassword('');setCode('');setDeadline(0);setEditingEmail(false);
        setMessage(fa?'اگر اصلاح امکان‌پذیر بوده باشد، درخواست تأیید برای آدرس جدید ثبت شده است. دوباره وارد شوید؛ در صورت نیاز آدرس قبلی یا بازیابی حساب را امتحان کنید.':'If the correction could be completed, verification was requested for the new address. Sign in again; if needed, use the original address or account recovery.');
      })}/>
    </>}
