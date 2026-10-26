@@ -83,7 +83,6 @@ class ProfessionalAvailabilityIntegrationTest {
                 .andReturn();
         PhaseAFixtures.activate(jdbcTemplate, label + "-" + unique + "@example.test");
         fixtureEntities.clear();
-        return UUID.fromString(objectMapper.readTree(result.getResponse().getContentAsString())
-                .get("userId").asText());
+        return jdbcTemplate.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,label + "-" + unique + "@example.test");
     }
 }

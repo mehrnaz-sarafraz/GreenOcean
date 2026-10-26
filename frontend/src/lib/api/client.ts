@@ -7,7 +7,7 @@ const fallbackUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http:/
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? fallbackUrl;
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public fieldErrors: { field: string; message: string }[] = [], public retryAfter: number | null = null) {
     super(message);
   }
 }
@@ -35,8 +35,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (!response.ok) {
     if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
-    const body = await response.json().catch(() => null) as { message?: string } | null;
-    throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`);
+    const body = await response.json().catch(() => null) as { message?: string; fieldErrors?: { field: string; message: string }[] } | null;
+    const retry = Number(response.headers.get('Retry-After'));
+    throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`, Array.isArray(body?.fieldErrors) ? body.fieldErrors : [], retry > 0 ? retry : null);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

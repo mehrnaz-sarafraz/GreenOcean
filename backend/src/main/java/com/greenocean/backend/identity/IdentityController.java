@@ -44,7 +44,7 @@ public class IdentityController {
           """,Boolean.class,request.cityId(),country,request.subdivisionCode(),request.subdivisionCode()))) throw new IllegalArgumentException("City does not belong to the selected country and subdivision");
         if(request.subdivisionCode()!=null && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM geography_subdivisions WHERE code=? AND country_code=?)",Boolean.class,request.subdivisionCode(),country))) throw new IllegalArgumentException("Invalid subdivision");
         int version=policies.latestPublished("terms").orElseThrow().version();
-        if(request.termsVersion()!=version) throw new IllegalArgumentException("Accept the current Terms version");
+        if(request.termsVersion()!=version) throw new com.greenocean.backend.common.exception.RegistrationValidationException("termsVersion", "The Terms have changed. Review and accept the current version.");
         db.update("""
           INSERT INTO account_eligibility(user_id,age_result,age_method,checked_at,residence_country,current_country,preferred_language,city_id)
           VALUES (?,'ADULT','SELF_ATTESTED',CURRENT_TIMESTAMP,?,?,?,?)

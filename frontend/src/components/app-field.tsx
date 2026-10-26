@@ -1,21 +1,26 @@
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { Ref } from 'react';
 
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, spacing } from '@/theme/tokens';
 
-type Props = TextInputProps & { label: string };
+type Props = TextInputProps & { label: string; error?: string; ltr?: boolean; ref?: Ref<TextInput> };
 
-export function AppField({ label, ...inputProps }: Props) {
+export function AppField({ label, error, ltr, ref, ...inputProps }: Props) {
   const { isRtl } = useLanguage();
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { textAlign: isRtl ? 'right' : 'left' }]}>{label}</Text>
       <TextInput
+        ref={ref}
         accessibilityLabel={label}
+        accessibilityHint={error}
+        aria-invalid={!!error}
         {...inputProps}
         placeholderTextColor={colors.muted}
-        style={[styles.input, { textAlign: isRtl ? 'right' : 'left' }, inputProps.style]}
+        style={[styles.input, { textAlign: ltr ? 'left' : isRtl ? 'right' : 'left', writingDirection: ltr ? 'ltr' : 'auto' }, error ? { borderColor: colors.danger } : undefined, inputProps.style]}
       />
+      {!!error && <Text accessibilityRole="alert" style={{ color: colors.danger }}>{error}</Text>}
     </View>
   );
 }

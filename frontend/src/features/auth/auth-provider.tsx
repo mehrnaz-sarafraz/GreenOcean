@@ -11,6 +11,7 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 type AuthContextValue = {
   status: AuthStatus;
   user: CurrentUser | null;
+  pendingRegistrationEmail: string | null;
   signIn: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string | null>(null);
 
   useEffect(() => tokenStorage.subscribeToClear(() => {
     setUser(null);
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (epoch !== tokenStorage.generation()) return;
       setUser(currentUser);
       setStatus('authenticated');
+      setPendingRegistrationEmail(null);
     } catch (error) {
       if (epoch === tokenStorage.generation()) await tokenStorage.clear();
       throw error;
@@ -77,10 +80,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       authenticated: false,
       body: JSON.stringify(input),
     });
-
+    setPendingRegistrationEmail(input.email.trim());
   }
 
   async function signOut() {
+    setPendingRegistrationEmail(null);
     const tokens = await tokenStorage.get();
     await tokenStorage.clear();
     setUser(null);
@@ -94,7 +98,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }
 
-  const value = { status, user, signIn, register, signOut };
+  const value = { status, user, pendingRegistrationEmail, signIn, register, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

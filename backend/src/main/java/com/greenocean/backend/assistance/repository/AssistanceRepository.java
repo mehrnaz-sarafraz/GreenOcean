@@ -65,7 +65,15 @@ public class AssistanceRepository {
     }
 
     public void verifyUser(UUID userId) {
-        jdbcTemplate.update("UPDATE users SET email_verified = TRUE, status=CASE WHEN status='PENDING' AND EXISTS(SELECT 1 FROM account_eligibility e WHERE e.user_id=users.id AND e.age_result='ADULT') THEN 'ACTIVE' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status IN ('ACTIVE','PENDING')", userId);
+        jdbcTemplate.update("""
+            UPDATE users SET email_verified = TRUE, status=CASE WHEN status='PENDING'
+              AND EXISTS(SELECT 1 FROM account_eligibility e JOIN geography_countries c ON c.code=e.residence_country
+                         WHERE e.user_id=users.id AND e.age_result='ADULT')
+              AND EXISTS(SELECT 1 FROM policy_acceptances a WHERE a.user_id=users.id AND a.policy_key='terms'
+                         AND a.version=(SELECT MAX(version) FROM policy_documents WHERE policy_key='terms' AND status='PUBLISHED' AND content IS NOT NULL AND published_at<=CURRENT_TIMESTAMP))
+              THEN 'ACTIVE' ELSE status END, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND status IN ('ACTIVE','PENDING')
+            """, userId);
     }
 
     public void createSupportRequest(UUID id, UUID userId, String email, String message) {

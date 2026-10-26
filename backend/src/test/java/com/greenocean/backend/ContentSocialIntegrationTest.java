@@ -135,7 +135,7 @@ class ContentSocialIntegrationTest {
         PhaseAFixtures.activate(fixtureDb, email);
         fixtureEntities.clear();
         fixtureDb.update("UPDATE profiles SET username=?,is_profile_private=FALSE WHERE user_id=(SELECT id FROM users WHERE email=?)",username,email);
-        String userId = objectMapper.readTree(registerResult.getResponse().getContentAsString()).get("userId").asText();
+        String userId = fixtureDb.queryForObject("SELECT id::text FROM users WHERE email=?",String.class,email);
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("email", email, "password", password))))
