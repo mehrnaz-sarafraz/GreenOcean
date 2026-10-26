@@ -26,7 +26,7 @@ class PhaseAIntegrationTest {
     ResultActions postJson(String path,Object body) throws Exception {return mvc.perform(post(path).contentType("application/json").content(json.writeValueAsString(body)));}
     String register(Map<String,Object> input) throws Exception {postJson("/api/v1/auth/register",input).andExpect(status().isCreated());return db.queryForObject("SELECT id::text FROM users WHERE lower(email)=lower(?)",String.class,input.get("email"));}
     JsonNode login(Map<String,Object> input) throws Exception {return json.readTree(postJson("/api/v1/auth/login",Map.of("email",input.get("email"),"password",input.get("password"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());}
-    String code(Map<String,Object> input) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification' ORDER BY created_at DESC LIMIT 1",String.class,input.get("email")));}
+    String code(Map<String,Object> input) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification' AND jsonb_exists(payload,'encrypted') ORDER BY created_at DESC LIMIT 1",String.class,input.get("email")));}
     void verify(Map<String,Object> input) throws Exception {postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",input.get("email"),"code",code(input))).andExpect(status().isOk());entities.clear();}
     void enableCommunity() {db.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','COMMUNITY','AVAILABLE') ON CONFLICT DO NOTHING");}
     @Test @Tag("happy") void minimalRegistrationHasPendingUserAndPrivateDefaults() throws Exception {
@@ -96,7 +96,7 @@ class PhaseAIntegrationTest {
         for(int i=0;i<5;i++) postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code","xxxxxx")).andExpect(status().isBadRequest());
         // DTO failures are IP-limited; valid-format guesses consume the durable per-account limit.
         for(int i=0;i<5;i++) postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid.equals("000000")?"111111":"000000")).andExpect(status().isBadRequest());
-        postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid)).andExpect(status().isBadRequest());
+        postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid)).andExpect(status().isTooManyRequests());
     }
     @Test @Tag("malicious") void suspendedAccountCannotRefreshOrUseExistingAccess() throws Exception {
         var in=input();String id=register(in);verify(in);var tokens=login(in);db.update("UPDATE users SET status='SUSPENDED' WHERE id=?::uuid",id);entities.clear();

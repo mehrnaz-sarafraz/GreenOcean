@@ -1,5 +1,5 @@
 export async function installApi(page, options={}) {
-  const state={signedIn:false,emailVerified:false,onboardingComplete:false,termsVersion:1,registrations:[],registrationFailures:options.registrationFailures??0,countryFailures:options.countryFailures??0};
+  const state={signedIn:false,emailVerified:false,onboardingComplete:false,termsVersion:1,email:'synthetic-adult@example.test',corrections:[],verificationRequests:0,verificationFailures:options.verificationFailures??0,registrations:[],registrationFailures:options.registrationFailures??0,countryFailures:options.countryFailures??0};
   const registrationGate=options.holdRegistration?new Promise(resolve=>{state.releaseRegistration=resolve;}):null;
   await page.route('**/api/v1/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;
@@ -22,14 +22,19 @@ export async function installApi(page, options={}) {
       return reply({message:'If registration can proceed, check your email for verification. You can also sign in or use account recovery.'},201);
     }
     if(path==='/api/v1/account-assistance/email-verification/confirm'){
-      if(req.postDataJSON().code!=='123456')return reply({message:'Verification code is invalid or expired'},400);
+      if(state.verificationFailures-->0)return route.abort('internetdisconnected');
+      if(req.postDataJSON().code!==(options.verificationCode??'123456'))return reply({message:'Verification code is invalid or expired'},400);
       state.emailVerified=true;return reply({message:'Email address verified.'});
     }
-    if(path==='/api/v1/account-assistance/email-verification')return reply({message:'If the account exists, instructions have been queued.'},202);
+    if(path==='/api/v1/account-assistance/email-verification'){state.verificationRequests++;return reply({message:'If the account exists, instructions have been requested.',retryAfterSeconds:options.resendSeconds??0},202);}
+    if(path==='/api/v1/account-assistance/pending-email'){
+      state.corrections.push(req.postDataJSON());state.email=req.postDataJSON().newEmail;
+      return reply({message:'If the correction could be completed, verification was requested for the new address.'},202);
+    }
     if(path==='/api/v1/auth/web/login'){state.signedIn=true;return reply({accessToken:'synthetic-access',refreshToken:'cookie',tokenType:'Bearer',expiresIn:900});}
     if(path==='/api/v1/auth/web/refresh')return state.signedIn?reply({accessToken:'synthetic-access',refreshToken:'cookie',tokenType:'Bearer',expiresIn:900}):reply({message:'No session'},401);
     if(path==='/api/v1/auth/web/logout'){state.signedIn=false;return route.fulfill({status:204,headers});}
-    if(path==='/api/v1/auth/me')return state.signedIn&&req.headers().authorization==='Bearer synthetic-access'?reply({userId:'00000000-0000-0000-0000-000000000001',email:'synthetic-adult@example.test',roles:['USER']}):reply({message:'No session'},401);
+    if(path==='/api/v1/auth/me')return state.signedIn&&req.headers().authorization==='Bearer synthetic-access'?reply({userId:'00000000-0000-0000-0000-000000000001',email:state.email,roles:['USER']}):reply({message:'No session'},401);
     if(path==='/api/v1/identity')return reply({status:state.emailVerified?'ACTIVE':'PENDING',email_verified:state.emailVerified,eligibility:{},services:{COMMUNITY:!!options.completeActivation&&state.signedIn&&state.emailVerified,LISTENER:false,PROFESSIONAL_CARE:false}});
     if(path==='/api/v1/posts/feed'||path==='/api/v1/communities'||path==='/api/v1/notifications')return reply({items:[],page:0,size:20,hasNext:false});
     if(path==='/api/v1/profiles/me')return reply({userId:'00000000-0000-0000-0000-000000000001',username:'member_synthetic',displayName:'New member',profilePrivate:true});

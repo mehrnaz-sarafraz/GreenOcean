@@ -22,6 +22,10 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ApiError> handleRateLimit(TooManyRequestsException exception,HttpServletRequest request) {
+        return ResponseEntity.status(429).header("Retry-After",String.valueOf(exception.retryAfter())).body(new ApiError(Instant.now(),429,"Too Many Requests",exception.getMessage(),request.getRequestURI(),List.of()));
+    }
 
     @ExceptionHandler(RegistrationValidationException.class)
     public ResponseEntity<ApiError> handleRegistrationValidation(RegistrationValidationException exception, HttpServletRequest request) {

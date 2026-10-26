@@ -12,9 +12,10 @@ type AuthContextValue = {
   status: AuthStatus;
   user: CurrentUser | null;
   pendingRegistrationEmail: string | null;
+  pendingEmailCorrected: boolean;
   signIn: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (options?: { correctedEmail: string }) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string | null>(null);
+  const [pendingEmailCorrected, setPendingEmailCorrected] = useState(false);
 
   useEffect(() => tokenStorage.subscribeToClear(() => {
     setUser(null);
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setUser(currentUser);
       setStatus('authenticated');
       setPendingRegistrationEmail(null);
+      setPendingEmailCorrected(false);
     } catch (error) {
       if (epoch === tokenStorage.generation()) await tokenStorage.clear();
       throw error;
@@ -81,10 +84,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       body: JSON.stringify(input),
     });
     setPendingRegistrationEmail(input.email.trim());
+    setPendingEmailCorrected(false);
   }
 
-  async function signOut() {
-    setPendingRegistrationEmail(null);
+  async function signOut(options?: { correctedEmail: string }) {
+    setPendingRegistrationEmail(options?.correctedEmail ?? null);
+    setPendingEmailCorrected(Boolean(options?.correctedEmail));
     const tokens = await tokenStorage.get();
     await tokenStorage.clear();
     setUser(null);
@@ -98,7 +103,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }
 
-  const value = { status, user, pendingRegistrationEmail, signIn, register, signOut };
+  const value = { status, user, pendingRegistrationEmail, pendingEmailCorrected, signIn, register, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

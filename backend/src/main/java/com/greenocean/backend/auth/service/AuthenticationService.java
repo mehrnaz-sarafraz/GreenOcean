@@ -55,9 +55,9 @@ public class AuthenticationService {
     @Transactional
     public TokenResponse login(LoginRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElse(null);
         boolean allowed=limits.allow("login:"+email,10,java.time.Duration.ofMinutes(15));
+        User user = userRepository.lockByEmail(email)
+                .orElse(null);
         boolean matches=passwordEncoder.matches(request.password(),user==null?dummyHash:user.getPasswordHash());
         if(user==null || !allowed) throw new UnauthorizedException(INVALID_CREDENTIALS);
 

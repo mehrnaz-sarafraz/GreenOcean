@@ -55,10 +55,12 @@ public class PhaseCLiveServer {
                 data.put("code",delivered.get(email));
                 data.put("deliveries",deliveries.getOrDefault(email,0));
                 data.put("accounts",db.queryForObject("SELECT count(*) FROM users WHERE lower(email)=lower(?)",Integer.class,email));
-                var rows=db.queryForList("SELECT u.status,u.email_verified,p.username,p.display_name,p.city,p.birth_year,p.is_profile_private,u.password_hash LIKE '{pbkdf2}%' AS modern_hash FROM users u JOIN profiles p ON p.user_id=u.id WHERE u.email=?",email);
+                var rows=db.queryForList("SELECT u.id,u.status,u.email_verified,p.username,p.display_name,p.city,p.birth_year,p.is_profile_private,u.password_hash LIKE '{pbkdf2}%' AS modern_hash FROM users u JOIN profiles p ON p.user_id=u.id WHERE u.email=?",email);
                 data.put("account",rows.isEmpty()?null:rows.getFirst());
                 data.put("roles",db.queryForList("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id=r.id JOIN users u ON u.id=ur.user_id WHERE u.email=?",String.class,email));
                 data.put("acceptances",db.queryForObject("SELECT count(*) FROM policy_acceptances a JOIN users u ON u.id=a.user_id WHERE u.email=?",Integer.class,email));
+                data.put("currentChallenges",db.queryForObject("SELECT count(*) FROM email_verification_codes c JOIN users u ON u.id=c.user_id WHERE u.email=? AND c.used_at IS NULL",Integer.class,email));
+                data.put("retiredChallenges",db.queryForObject("SELECT count(*) FROM email_verification_codes c JOIN users u ON u.id=c.user_id WHERE u.email=? AND c.used_at IS NOT NULL",Integer.class,email));
                 byte[] body=json.writeValueAsBytes(data);exchange.getResponseHeaders().set("Content-Type","application/json");
                 exchange.sendResponseHeaders(200,body.length);exchange.getResponseBody().write(body);
             } finally {exchange.close();}
