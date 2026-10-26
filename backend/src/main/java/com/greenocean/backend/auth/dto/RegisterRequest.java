@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
-        @NotBlank @Email @Size(max = 320) String email,
-        @NotBlank @Size(min = 15, max = 256) String password,
+        @NotBlank @Pattern(regexp = com.greenocean.backend.auth.service.EmailIdentity.PATTERN, message = "Enter a valid email address using an ASCII mailbox and domain") @Size(max = 320) String email,
+        @NotBlank @Size(max = 256) String password,
         @Pattern(regexp = "^[A-Za-z0-9_]{3,30}$") String username,
         @Size(max = 80) String displayName,
         @Min(1900) @Max(2100) Short birthYear,
@@ -19,4 +19,8 @@ public record RegisterRequest(
         @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.AssertTrue Boolean adultSelfAttested,
         @jakarta.validation.constraints.NotNull @Min(1) Integer termsVersion
 ) {
+    public RegisterRequest {
+        email = com.greenocean.backend.auth.service.EmailIdentity.normalize(email);
+        countryCode = countryCode == null ? null : countryCode.trim().toUpperCase(java.util.Locale.ROOT);
+    }
 }

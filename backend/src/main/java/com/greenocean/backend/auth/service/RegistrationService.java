@@ -37,18 +37,28 @@ public class RegistrationService {
     }
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
-        PasswordPolicy.validate(request.password());
+        try { PasswordPolicy.validate(request.password()); }
+        catch (IllegalArgumentException e) { throw new com.greenocean.backend.common.exception.RegistrationValidationException("password", e.getMessage()); }
         if (!Boolean.TRUE.equals(request.adultSelfAttested()) ||
             (request.birthYear()!=null && request.birthYear()>Year.now(java.time.ZoneOffset.UTC).getValue()-18))
-            throw new IllegalArgumentException("Social accounts are for adults 18+. Public resources are available without an account.");
+            throw new com.greenocean.backend.common.exception.RegistrationValidationException("adultSelfAttested", "Social accounts are for adults 18+. Public resources are available without an account.");
         var terms=policies.latestPublished("terms").orElseThrow(() -> new IllegalStateException("Published terms are unavailable"));
-        if (!Objects.equals(request.termsVersion(),terms.version())) throw new IllegalArgumentException("Review and accept the current Terms version");
+        if (!Objects.equals(request.termsVersion(),terms.version())) throw new com.greenocean.backend.common.exception.RegistrationValidationException("termsVersion", "The Terms have changed. Review and accept the current version before trying again.");
         String country=request.countryCode().trim().toUpperCase(Locale.ROOT);
-        access.country(country);
+        try { access.country(country); }
+        catch (IllegalArgumentException e) { throw new com.greenocean.backend.common.exception.RegistrationValidationException("countryCode", e.getMessage()); }
         String email=request.email().trim().toLowerCase(Locale.ROOT);
-        if (users.existsByEmailIgnoreCase(email)) throw new ConflictException("Unable to create account. Try account recovery or sign in.");
-        String username="member_"+UUID.randomUUID().toString().replace("-", "").substring(0,22);
-        var user=new User(ids.nextUuid(),email,passwords.encode(request.password()));
+        // Hash on both paths: avoid the obvious existing-account timing shortcut.
+        String hash=passwords.encode(request.password());
+        // Serialize same-email attempts across application instances. The unique index remains authoritative.
+        db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", "registration:"+email);
+        if (users.existsByEmailIgnoreCase(email)) return RegisterResponse.pending();
+        String username;
+        do {
+            username="member_"+UUID.randomUUID().toString().replace("-", "").substring(0,22);
+            db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", "registration-username:"+username);
+        } while (Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM profiles WHERE lower(username)=lower(?))",Boolean.class,username)));
+        var user=new User(ids.nextUuid(),email,hash);
         user.enrollPhaseA();
         user.assignRole(roles.findByName("USER").orElseThrow());
         users.saveAndFlush(user);
@@ -56,6 +66,6 @@ public class RegistrationService {
         db.update("INSERT INTO account_eligibility(user_id,age_result,age_method,checked_at,residence_country) VALUES (?,'ADULT','SELF_ATTESTED',CURRENT_TIMESTAMP,?)",user.getId(),country);
         db.update("INSERT INTO policy_acceptances(user_id,policy_key,version) VALUES (?,'terms',?)",user.getId(),terms.version());
         assistance.requestEmailVerification(new EmailRequest(email));
-        return new RegisterResponse(user.getId(),email,username);
+        return RegisterResponse.pending();
     }
 }

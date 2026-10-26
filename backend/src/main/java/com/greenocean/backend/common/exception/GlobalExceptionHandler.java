@@ -23,6 +23,12 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(RegistrationValidationException.class)
+    public ResponseEntity<ApiError> handleRegistrationValidation(RegistrationValidationException exception, HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(new ApiError(Instant.now(), 400, "Bad Request",
+                exception.getMessage(), request.getRequestURI(), List.of(new FieldViolation(exception.field(), exception.getMessage()))));
+    }
+
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException exception, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiError(
