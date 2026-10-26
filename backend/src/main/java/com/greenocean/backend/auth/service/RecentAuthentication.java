@@ -12,7 +12,7 @@ import com.greenocean.backend.auth.repository.UserRepository;import com.greenoce
   if(!(value instanceof java.sql.Timestamp time)||!time.toInstant().isAfter(clock.instant().minus(policy.recent())))throw new ForbiddenException(strong?"Verify a security key again to continue":"Confirm your password again to continue");
  }
  @Transactional(noRollbackFor=ForbiddenException.class) public void password(UUID user,UUID session,String password){
-  if(!limits.allow("reauth:"+user,5,Duration.ofMinutes(15)))throw new ForbiddenException("Wait before confirming your password again");
+  if(!limits.allowInCurrentTransaction("reauth:"+user,5,Duration.ofMinutes(15)))throw new ForbiddenException("Wait before confirming your password again");
   var account=users.lockById(user).orElseThrow(()->new UnauthorizedException("Sign in again"));
   if(!passwords.matches(password,account.getPasswordHash())){events.record(user,session,SecurityEvents.Event.REAUTH_FAILURE);throw new ForbiddenException("Password confirmation failed");}
   int updated=db.update("UPDATE user_sessions SET reauthenticated_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL AND expires_at>? AND overall_expires_at>? AND idle_expires_at>?",java.sql.Timestamp.from(clock.instant()),session,user,java.sql.Timestamp.from(clock.instant()),java.sql.Timestamp.from(clock.instant()),java.sql.Timestamp.from(clock.instant()));

@@ -33,6 +33,7 @@ public class AccountController {
     public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt jwt,
                                        @Valid @RequestBody DeleteAccountRequest request) {
         if(recent.privileged(UUID.fromString(jwt.getSubject())))recent.require(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),true);
+        recent.password(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),request.password());
         service.delete(UUID.fromString(jwt.getSubject()), request.password());
         return ResponseEntity.noContent().build();
     }

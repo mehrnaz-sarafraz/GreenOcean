@@ -46,7 +46,7 @@ public class AssistanceService {
     @Transactional
     public AssistanceResponse requestPasswordReset(EmailRequest request) {
         UUID requestId = uuidGenerator.nextUuid();
-        if (!limits.allow("delivery:"+normalize(request.email()),5,java.time.Duration.ofMinutes(15))) return new AssistanceResponse(requestId, GENERIC_RESET_MESSAGE);
+        if (!limits.allowInCurrentTransaction("delivery:"+normalize(request.email()),5,java.time.Duration.ofMinutes(15))) return new AssistanceResponse(requestId, GENERIC_RESET_MESSAGE);
         users.lockByEmail(normalize(request.email())).ifPresent(user -> {
             if(user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE && user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.PENDING)return;
             events.record(user.getId(),null,com.greenocean.backend.auth.service.SecurityEvents.Event.RESET_REQUESTED);

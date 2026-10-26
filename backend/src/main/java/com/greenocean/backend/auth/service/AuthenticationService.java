@@ -59,7 +59,7 @@ public class AuthenticationService {
     @Transactional(noRollbackFor={UnauthorizedException.class,com.greenocean.backend.common.exception.TooManyRequestsException.class})
     public TokenResponse login(LoginRequest request,String client) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
-        boolean allowed=limits.allow("login:"+email,10,java.time.Duration.ofMinutes(15));
+        boolean allowed=limits.allowInCurrentTransaction("login:"+email,10,java.time.Duration.ofMinutes(15));
         if(!allowed){events.record(null,null,SecurityEvents.Event.AUTH_RATE_LIMITED);throw new com.greenocean.backend.common.exception.TooManyRequestsException(INVALID_CREDENTIALS+". Wait before trying again.",900);}
         User user = userRepository.lockByEmail(email)
                 .orElse(null);
@@ -147,9 +147,10 @@ public class AuthenticationService {
         session.revoke();sessionRepository.saveAndFlush(session);events.record(userId,sessionId,SecurityEvents.Event.SESSION_REVOKED);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor=com.greenocean.backend.common.exception.ForbiddenException.class)
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
         PasswordPolicy.validate(newPassword);
+        if(!limits.allowInCurrentTransaction("password-change:"+userId,5,java.time.Duration.ofMinutes(15)))throw new com.greenocean.backend.common.exception.ForbiddenException("Wait before changing your password again");
         User user = userRepository.lockById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User account is not available"));
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {

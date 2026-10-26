@@ -22,10 +22,10 @@ import java.time.*;import java.net.URI;import java.util.*;
   if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_sessions WHERE id=? AND user_id=? AND session_scope='PRIVILEGED')",Boolean.class,session,user)))throw new ForbiddenException("Sign in again before staff authentication");
   recent.require(user,session,false);
  }
- private void budget(UUID user){if(!limits.allow("webauthn:"+user,10,Duration.ofMinutes(15)))throw new ForbiddenException("Wait before trying the security key again");}
+ private void budget(UUID user){if(!limits.allowInCurrentTransaction("webauthn:"+user,10,Duration.ofMinutes(15)))throw new ForbiddenException("Wait before trying the security key again");}
  public record Start(UUID ceremonyId,String optionsJson){}
  private Start save(UUID user,UUID session,String purpose,String stored,String options){UUID id=UUID.randomUUID();db.update("UPDATE webauthn_ceremonies SET used_at=CURRENT_TIMESTAMP WHERE user_id=? AND session_id=? AND used_at IS NULL",user,session);db.update("INSERT INTO webauthn_ceremonies(id,user_id,session_id,purpose,request_json,expires_at) VALUES (?,?,?,?,?,?)",id,user,session,purpose,stored,java.sql.Timestamp.from(clock.instant().plusSeconds(300)));return new Start(id,options);}
- @Transactional public Start register(UUID user,UUID session,String permit)throws Exception{
+ @Transactional(noRollbackFor=ForbiddenException.class) public Start register(UUID user,UUID session,String permit)throws Exception{
   budget(user);owner(user,session);
   int count=db.queryForObject("SELECT count(*) FROM webauthn_credentials WHERE user_id=? AND revoked_at IS NULL",Integer.class,user);
   if(count>=5)throw new ForbiddenException("At most five security keys may be registered");
@@ -34,7 +34,7 @@ import java.time.*;import java.net.URI;import java.util.*;
   var request=rp.startRegistration(StartRegistrationOptions.builder().user(UserIdentity.builder().name(user.toString()).displayName("GreenOcean staff").id(WebAuthnCredentials.handle(user)).build()).authenticatorSelection(AuthenticatorSelectionCriteria.builder().userVerification(UserVerificationRequirement.REQUIRED).build()).timeout(300000).build());
   return save(user,session,"REGISTER",request.toJson(),request.toCredentialsCreateJson());
  }
- @Transactional public Start authenticate(UUID user,UUID session)throws Exception{
+ @Transactional(noRollbackFor=ForbiddenException.class) public Start authenticate(UUID user,UUID session)throws Exception{
   budget(user);owner(user,session);
   var request=rp.startAssertion(StartAssertionOptions.builder().username(user.toString()).userVerification(UserVerificationRequirement.REQUIRED).timeout(300000).build());
   return save(user,session,"AUTHENTICATE",request.toJson(),request.toCredentialsGetJson());
