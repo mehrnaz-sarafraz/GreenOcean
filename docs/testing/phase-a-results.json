@@ -3,14 +3,14 @@
   "timezone": "Asia/Tehran",
   "environment": "Disposable PostgreSQL 18.6, Java 21, Node 24",
   "backend": {
-    "passed": 55,
+    "passed": 56,
     "failed": 0,
     "skipped": 0,
     "groups": {
       "happy": 11,
       "creative": 9,
       "confused": 7,
-      "malicious": 14,
+      "malicious": 15,
       "regression": 14
     },
     "suites": [
@@ -51,7 +51,7 @@
       },
       {
         "name": "com.greenocean.backend.PhaseAIntegrationTest",
-        "tests": 30,
+        "tests": 31,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -206,6 +206,11 @@
         "className": "com.greenocean.backend.PhaseAIntegrationTest",
         "name": "publicResourcesAreSeparateAndAnonymous",
         "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verifiedProfessionalStillNeedsExplicitUnexpiredCareScope",
+        "persona": "malicious"
       },
       {
         "className": "com.greenocean.backend.PhaseAIntegrationTest",
@@ -396,8 +401,28 @@
     },
     "command": "node --experimental-strip-types --test frontend/tests/*.test.mjs"
   },
-  "browserE2E": "not run",
+  "browserE2E": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "environment": "Chromium on GitHub Actions, actual Expo UI with controlled API transport",
+    "groups": {
+      "happy": 3,
+      "creative": 3,
+      "confused": 3,
+      "malicious": 3
+    }
+  },
   "android": "not run",
   "ios": "not run",
-  "productionDelivery": "not run"
+  "productionDelivery": "not run",
+  "ci": {
+    "sourceCommit": "21ce213eb87c3b088743cbfa67e2bc4f8b6cef1b",
+    "runUrl": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40311371746",
+    "backend": "success",
+    "frontendTypecheck": "success",
+    "frontendLint": "success",
+    "frontendExport": "success",
+    "browserUi": "success"
+  }
 }

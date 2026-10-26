@@ -6,7 +6,7 @@ Start with [the requirements/audit](docs/product/phase-a-requirements.md), [test
 
 Run isolated Windows QA with `powershell -File scripts/run-phase-a-qa.ps1` (PostgreSQL 18 binaries required). It creates a new temporary cluster and does not use the developer/user database. On Linux/CI use a disposable PostgreSQL database and set GREENOCEAN_TEST_DB_URL, GREENOCEAN_TEST_DB_USER and GREENOCEAN_TEST_DB_PASSWORD before `backend/mvnw clean verify`. Tests intentionally refuse an unspecified database.
 
-Frontend checks: Node 24, `npm ci`, `npx expo customize tsconfig.json`, `npm run typecheck`, `npm run lint`, `npm test`, `npx expo export --platform web`. Native-helper tests need Node 24 but no package download. Android/iOS device testing is separate.
+Frontend checks: Node 24, `npm ci`, `npx expo customize tsconfig.json`, `npm run typecheck`, `npm run lint`, `npm test`, `npx expo export --platform web`, `npx playwright install chromium`, `npm run test:e2e`. Native-helper tests need Node 24 but no package download. Android/iOS device testing is separate.
 
 The optional `embedded-local` Maven profile retains the old packaged Windows PostgreSQL launcher dependency; normal production/CI builds do not download Windows database binaries.
 

@@ -1,6 +1,6 @@
 # Phase A test matrix
 
-All tests use synthetic identities and an explicitly isolated PostgreSQL instance. Backend coverage is JUnit/Spring MockMvc, database/repository and real transaction concurrency; frontend coverage is Node 24's native test runner over the actual validation/network/refresh helpers. These are not presented as device or browser end-to-end tests.
+All tests use synthetic identities and an explicitly isolated PostgreSQL instance. Backend coverage is JUnit/Spring MockMvc, database/repository and real transaction concurrency; frontend coverage is Node 24's native test runner over the actual validation/network/refresh helpers. An additional 12 Chromium UI scenarios exercise the actual Expo app against controlled API responses; they are not full-stack or device tests.
 
 ## Personas
 
@@ -13,8 +13,8 @@ All tests use synthetic identities and an explicitly isolated PostgreSQL instanc
 
 | ID | Executable evidence | Status / limitation |
 |---|---|---|
-| E2E-01 Welcome/Register/Verify/Activate/Login | `verifyActivateLoginLogoutFlow`, `minimalRegistrationHasPendingUserAndPrivateDefaults` | Backend API chain tested; full UI journey pending |
-| E2E-02 Underage/public alternative | `minorCannotRegisterByDirectApi`, `publicResourcesAreSeparateAndAnonymous`, frontend attestation test | Backend/form helpers tested; browser navigation pending |
+| E2E-01 Welcome/Register/Verify/Activate/Login | `verifyActivateLoginLogoutFlow`, `minimalRegistrationHasPendingUserAndPrivateDefaults` | Backend API chain tested; registration/verification and login UI tested with controlled transport; complete combined full-stack journey pending |
+| E2E-02 Underage/public alternative | `minorCannotRegisterByDirectApi`, `publicResourcesAreSeparateAndAnonymous`, frontend attestation test | Backend/form helpers tested; public-resource and underage-alternative browser navigation tested |
 | E2E-03 Skip optional preferences | existing `ProductConfigurationIntegrationTest`, minimal registration/empty topics tests | API tested; onboarding UI pending |
 | E2E-04 Login/profile/logout/login | existing `ProfileAccountIntegrationTest`, `AuthFlowIntegrationTest` | API tested; UI pending |
 | E2E-05 Invalid Terms | `missingOrStaleTermsAreRejected`, frontend Terms validation | API/helpers tested |
@@ -27,8 +27,10 @@ All tests use synthetic identities and an explicitly isolated PostgreSQL instanc
 | E2E-12 Unavailable services | `unconfiguredCountryGivesAlternativeWithoutGrantingService` | API tested; UI presentation pending |
 | E2E-13 Anonymous public/private separation | `publicResourcesAreSeparateAndAnonymous` | API tested |
 | E2E-14 Concurrent refresh | `simultaneousRefreshHasOneWinnerAndNoTwoUsableTokens`, frontend single-flight test | Real independent backend transactions and frontend helper tested |
-| E2E-15 Network failure/recovery | native timeout/network/retry tests | Helpers tested; browser form interruption pending |
+| E2E-15 Network failure/recovery | native timeout/network/retry tests | Helpers tested; browser form interruption/retry passed with controlled transport |
 
 Fixtures are generated per test: pending, active verified, suspended, deleted, applicant/role-injection, underage request, unknown country and synthetic city. Existing professional availability, content/social, community, profile and database-invariant tests are preserved and adapted explicitly to eligible adult fixtures.
+
+Chromium UI (Happy/Creative/Confused/Malicious: three scenarios each) passed in CI: public resources; register/verify; opening Terms; long Unicode/minimal payload; password visibility; changing country; invalid fields; interrupted registration/retry; expired-code correction; adult-attestation requirement; Terms requirement; memory-only web token storage.
 
 No Android or iOS emulator/device tests have run. No production SMTP/gateway delivery has run. The fake MailTransport tests exercise protected queue delivery, payload purge and failed delivery retry without contacting a real recipient.
