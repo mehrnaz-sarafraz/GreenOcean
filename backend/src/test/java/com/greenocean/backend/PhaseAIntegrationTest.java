@@ -182,4 +182,15 @@ class PhaseAIntegrationTest {
         assertThat(db.queryForObject("SELECT COUNT(*) FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=?::uuid AND r.name='PROFESSIONAL'",Integer.class,id)).isZero();
         mvc.perform(get("/api/v1/professional/availability").header("Authorization","Bearer "+token)).andExpect(status().isNotFound());
     }
+    @Test @Tag("malicious") void verifiedProfessionalStillNeedsExplicitUnexpiredCareScope() throws Exception {
+        var requester=input();String userId=register(requester);verify(requester);var provider=input();String providerId=register(provider);verify(provider);
+        db.update("INSERT INTO professional_profiles(user_id,professional_type,title,verification_status,verified_at) VALUES (?::uuid,'PSYCHOLOGIST','Synthetic professional','VERIFIED',CURRENT_TIMESTAMP)",providerId);
+        db.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','PROFESSIONAL_CARE','AVAILABLE')");
+        var access=new com.greenocean.backend.identity.AccessPolicy(db,java.time.Instant.MAX);
+        assertThatThrownBy(()->access.requireCare(UUID.fromString(userId),UUID.fromString(providerId))).isInstanceOf(com.greenocean.backend.common.exception.ForbiddenException.class);
+        db.update("INSERT INTO professional_care_regions(professional_user_id,country_code,approved_by,expires_at) VALUES (?::uuid,'IR',?::uuid,CURRENT_TIMESTAMP+INTERVAL '1 day')",providerId,providerId);
+        assertThatCode(()->access.requireCare(UUID.fromString(userId),UUID.fromString(providerId))).doesNotThrowAnyException();
+        db.update("UPDATE professional_care_regions SET approved_at=CURRENT_TIMESTAMP-INTERVAL '2 days',expires_at=CURRENT_TIMESTAMP-INTERVAL '1 day' WHERE professional_user_id=?::uuid",providerId);
+        assertThatThrownBy(()->access.requireCare(UUID.fromString(userId),UUID.fromString(providerId))).isInstanceOf(com.greenocean.backend.common.exception.ForbiddenException.class);
+    }
 }

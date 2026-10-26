@@ -17,9 +17,11 @@ public class ProfessionalWorkflowService {
     private final ProfessionalWorkflowRepository repository;
     private final DatabaseUuidGenerator uuidGenerator;
     private final ProfessionalDocumentStorage documentStorage;
+    private final com.greenocean.backend.identity.AccessPolicy access;
 
     public ProfessionalWorkflowService(ProfessionalWorkflowRepository repository, DatabaseUuidGenerator uuidGenerator,
-                                       ProfessionalDocumentStorage documentStorage) {
+                                       ProfessionalDocumentStorage documentStorage,com.greenocean.backend.identity.AccessPolicy access) {
+        this.access=access;
         this.repository = repository;
         this.uuidGenerator = uuidGenerator;
         this.documentStorage = documentStorage;
@@ -103,6 +105,7 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ConsultationResponse requestConsultation(UUID professionalId, UUID userId, CreateConsultationRequest request) {
+        access.requireCare(userId,professionalId);
         requireProfessional(professionalId);
         if (professionalId.equals(userId)) throw new ConflictException("You cannot request a consultation with yourself");
         if (request.availabilitySlotId() == null) throw new IllegalArgumentException("Select a published availability slot");

@@ -69,7 +69,7 @@ test('Creative: long Unicode password needs no optional identity or medical fiel
 test('Creative: password visibility can be toggled accessibly',async({page})=>{
   await installApi(page);await page.goto('/register');const input=page.getByLabel('Password (15–128 characters)',{exact:true});
   await input.fill(password);await expect(input).toHaveAttribute('type','password');
-  await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(input).toHaveAttribute('type','text');
+  await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(input).toHaveJSProperty('type','text');
   await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(input).toHaveValue(password);
 });
 test('Creative: country choice can be changed before submission',async({page})=>{

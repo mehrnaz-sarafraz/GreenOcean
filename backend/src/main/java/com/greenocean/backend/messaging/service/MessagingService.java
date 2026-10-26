@@ -70,8 +70,7 @@ public class MessagingService {
 
     @Transactional
     public UUID startProfessionalConversation(UUID professionalId, UUID userId) {
-        access.require(userId,"PROFESSIONAL_CARE");
-        access.require(professionalId,"PROFESSIONAL_CARE");
+        access.requireCare(userId,professionalId);
         if (catalogRepository.professional(professionalId).isEmpty()) {
             throw new NotFoundException("Professional was not found");
         }
@@ -99,8 +98,14 @@ public class MessagingService {
         return repository.channel(id, userId).orElseThrow(() -> new NotFoundException("Support channel was not found"));
     }
     private void requireConversation(UUID id, UUID userId) {
+        if (repository.conversation(id, userId).isEmpty()) throw new ForbiddenException("Conversation is not available");
         String service=db.queryForList("SELECT service_kind FROM conversations WHERE id=?",String.class,id).stream().findFirst().orElse("COMMUNITY");
         access.require(userId,service);
-        if (repository.conversation(id, userId).isEmpty()) throw new ForbiddenException("Conversation is not available");
+        if("PROFESSIONAL_CARE".equals(service)) {
+            UUID professional=db.queryForObject("SELECT professional_user_id FROM conversations WHERE id=?",UUID.class,id);
+            if(professional==null) throw new ForbiddenException("Professional conversation is unavailable");
+            UUID requester=professional.equals(userId)?db.queryForObject("SELECT user_id FROM conversation_members WHERE conversation_id=? AND user_id<>? LIMIT 1",UUID.class,id,professional):userId;
+            access.requireCare(requester,professional);
+        }
     }
 }

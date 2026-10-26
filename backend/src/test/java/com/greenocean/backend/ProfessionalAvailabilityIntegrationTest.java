@@ -47,6 +47,8 @@ class ProfessionalAvailabilityIntegrationTest {
                     (user_id, professional_type, title, verification_status, verified_at)
                 VALUES (?, 'PSYCHOLOGIST', 'Clinical Psychologist', 'VERIFIED', CURRENT_TIMESTAMP)
                 """, professionalId);
+        jdbcTemplate.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','PROFESSIONAL_CARE','AVAILABLE')");
+        jdbcTemplate.update("INSERT INTO professional_care_regions(professional_user_id,country_code,approved_by,expires_at) VALUES (?,'IR',?,CURRENT_TIMESTAMP+INTERVAL '1 day')",professionalId,professionalId);
 
         OffsetDateTime startsAt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(2);
         var slot = workflowService.createAvailability(professionalId,

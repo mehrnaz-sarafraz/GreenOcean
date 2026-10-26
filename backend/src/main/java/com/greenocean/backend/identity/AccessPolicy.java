@@ -36,6 +36,20 @@ public class AccessPolicy {
           SELECT EXISTS(SELECT 1 FROM regional_services WHERE country_code=? AND service=? AND status='AVAILABLE')
           """, Boolean.class, country, service));
     }
+    public void requireCare(UUID requester,UUID professional) {
+        require(requester,"PROFESSIONAL_CARE");require(professional,"PROFESSIONAL_CARE");
+        if(!Boolean.TRUE.equals(db.queryForObject("""
+          SELECT EXISTS(SELECT 1 FROM professional_care_regions scope
+          JOIN professional_profiles p ON p.user_id=scope.professional_user_id
+          JOIN account_eligibility e ON e.residence_country=scope.country_code
+          WHERE e.user_id=? AND scope.professional_user_id=? AND p.verification_status='VERIFIED'
+          AND scope.expires_at>CURRENT_TIMESTAMP
+          AND (e.current_country IS NULL OR e.current_country=scope.country_code OR EXISTS
+            (SELECT 1 FROM professional_care_regions current_scope WHERE current_scope.professional_user_id=scope.professional_user_id
+             AND current_scope.country_code=e.current_country AND current_scope.expires_at>CURRENT_TIMESTAMP)))
+          """,Boolean.class,requester,professional)))
+            throw new ForbiddenException("Professional care is not approved for this professional in your region");
+    }
     public void country(String code) {
         if (code == null || !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM geography_countries WHERE code=?)", Boolean.class, code)))
             throw new IllegalArgumentException("Select a valid country of residence");
