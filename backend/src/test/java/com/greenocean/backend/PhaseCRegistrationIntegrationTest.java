@@ -33,7 +33,7 @@ class PhaseCRegistrationIntegrationTest {
         postJson("/api/v1/auth/register",in).andExpect(status().isCreated()).andExpect(jsonPath("$.message").isString()).andExpect(jsonPath("$.userId").doesNotExist());
         return db.queryForObject("SELECT id::text FROM users WHERE lower(email)=lower(?)",String.class,in.get("email").toString().trim());
     }
-    String code(Map<String,Object> in) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification'",String.class,in.get("email").toString().trim().toLowerCase(Locale.ROOT)));}
+    String code(Map<String,Object> in) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification' AND jsonb_exists(payload,'encrypted')",String.class,in.get("email").toString().trim().toLowerCase(Locale.ROOT)));}
     void verify(Map<String,Object> in,String code) throws Exception {postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email").toString().trim(),"code",code)).andExpect(status().isOk());entities.clear();}
     @Test @Tag("happy") void minimalRegistrationCreatesOnePrivatePendingAccountWithEvidence() throws Exception {
         var in=input();String id=register(in);

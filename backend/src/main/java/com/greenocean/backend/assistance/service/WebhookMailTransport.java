@@ -11,21 +11,45 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 public class WebhookMailTransport implements MailTransport {
     private final URI gateway;private final String authorization;private final ObjectMapper json;
-    private final HttpClient client=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
-    public WebhookMailTransport(@Value("${greenocean.mail.gateway-url:}") String gateway,@Value("${greenocean.mail.gateway-token:}") String token,ObjectMapper json) {
+    private final HttpClient client;
+    private final String sender,mode;
+    private final Set<String> authorizedRecipients;
+    @org.springframework.beans.factory.annotation.Autowired
+    public WebhookMailTransport(@Value("${greenocean.mail.gateway-url:}") String gateway,@Value("${greenocean.mail.gateway-token:}") String token,ObjectMapper json,
+      @Value("${greenocean.mail.from:no-reply@greenocean.invalid}") String sender,@Value("${greenocean.mail.mode:development}") String mode,
+      @Value("${greenocean.mail.staging-recipients:}") String recipients) {
+        this(gateway,token,json,sender,mode,recipients,HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build());
+    }
+    public WebhookMailTransport(String gateway,String token,ObjectMapper json,String sender,String mode,String recipients,HttpClient client) {
         this.gateway=gateway.isBlank()?null:URI.create(gateway);this.authorization=token;this.json=json;
+        this.client=client;this.sender=sender;this.mode=mode;
+        this.authorizedRecipients=new HashSet<>();for(String address:recipients.split(","))if(!address.isBlank())authorizedRecipients.add(address.trim().toLowerCase(Locale.ROOT));
         if(this.gateway!=null && (!"https".equals(this.gateway.getScheme()) || this.gateway.getUserInfo()!=null || this.gateway.getFragment()!=null || token.isBlank()))
             throw new IllegalStateException("Mail gateway requires HTTPS and a private authorization token");
     }
     public void send(UUID deliveryId,String recipient,String template,String secret) {
-        if(gateway==null) throw new IllegalStateException("Mail delivery is not configured");
+        submit(deliveryId,sender,recipient,template,secret,"en");
+    }
+    @Override public Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language) {
+        if(gateway==null) throw new MailDeliveryFailure(MailDeliveryFailure.Kind.RETRYABLE);
+        if(!Set.of("email-verification","password-reset").contains(template) ||
+           !sender.matches(com.greenocean.backend.auth.service.EmailIdentity.PATTERN) ||
+           ("staging".equals(mode)&&!authorizedRecipients.contains(recipient.toLowerCase(Locale.ROOT))))
+            throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);
         try {
-            var body=json.writeValueAsString(Map.of("deliveryId",deliveryId.toString(),"recipient",recipient,"template",template,"secret",secret));
+            var body=json.writeValueAsString(Map.of("deliveryId",deliveryId.toString(),"sender",sender,"recipient",recipient,"template",template,"templateVersion",1,"language",Set.of("en","fa").contains(language)?language:"en","secret",secret));
             var request=HttpRequest.newBuilder(gateway).timeout(Duration.ofSeconds(10)).header("Authorization","Bearer "+authorization)
               .header("Content-Type","application/json").header("Idempotency-Key",deliveryId.toString()).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             var response=client.send(request,HttpResponse.BodyHandlers.discarding());
-            if(response.statusCode()<200 || response.statusCode()>=300) throw new IllegalStateException("Mail gateway did not accept delivery");
-        } catch(InterruptedException e) {Thread.currentThread().interrupt();throw new IllegalStateException("Delivery interrupted");}
-        catch(Exception e) {throw new IllegalStateException("Mail gateway delivery failed");}
+            int status=response.statusCode();
+            if(status>=200&&status<300) {
+                String reference=response.headers().firstValue("X-Provider-Reference").orElse(null);
+                if(reference!=null&&!reference.matches("[A-Za-z0-9_.:-]{1,160}"))reference=null;
+                return new Receipt(reference);
+            }
+            throw new MailDeliveryFailure(status==408||status==409?MailDeliveryFailure.Kind.UNCERTAIN:status==429||status>=500?MailDeliveryFailure.Kind.RETRYABLE:MailDeliveryFailure.Kind.PERMANENT);
+        } catch(MailDeliveryFailure e){throw e;}
+        catch(InterruptedException e) {Thread.currentThread().interrupt();throw new MailDeliveryFailure(MailDeliveryFailure.Kind.UNCERTAIN);}
+        catch(Exception e) {throw new MailDeliveryFailure(MailDeliveryFailure.Kind.UNCERTAIN);}
     }
 }

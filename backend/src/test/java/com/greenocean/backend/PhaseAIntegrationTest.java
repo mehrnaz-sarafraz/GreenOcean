@@ -26,7 +26,7 @@ class PhaseAIntegrationTest {
     ResultActions postJson(String path,Object body) throws Exception {return mvc.perform(post(path).contentType("application/json").content(json.writeValueAsString(body)));}
     String register(Map<String,Object> input) throws Exception {postJson("/api/v1/auth/register",input).andExpect(status().isCreated());return db.queryForObject("SELECT id::text FROM users WHERE lower(email)=lower(?)",String.class,input.get("email"));}
     JsonNode login(Map<String,Object> input) throws Exception {return json.readTree(postJson("/api/v1/auth/login",Map.of("email",input.get("email"),"password",input.get("password"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());}
-    String code(Map<String,Object> input) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification' ORDER BY created_at DESC LIMIT 1",String.class,input.get("email")));}
+    String code(Map<String,Object> input) {return cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE recipient=? AND template_key='email-verification' AND jsonb_exists(payload,'encrypted') ORDER BY created_at DESC LIMIT 1",String.class,input.get("email")));}
     void verify(Map<String,Object> input) throws Exception {postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",input.get("email"),"code",code(input))).andExpect(status().isOk());entities.clear();}
     void enableCommunity() {db.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','COMMUNITY','AVAILABLE') ON CONFLICT DO NOTHING");}
     @Test @Tag("happy") void minimalRegistrationHasPendingUserAndPrivateDefaults() throws Exception {

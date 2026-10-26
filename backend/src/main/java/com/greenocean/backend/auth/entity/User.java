@@ -76,6 +76,10 @@ public class User {
 
     public void enrollPhaseA() { this.phaseAEnrolled=true; this.status=UserStatus.PENDING; }
     public boolean isEmailVerified() { return emailVerified; }
+    public void correctPendingEmail(String email) {
+        if(status!=UserStatus.PENDING || emailVerified) throw new IllegalStateException("Pending unverified account required");
+        this.email=email;this.updatedAt=Instant.now();
+    }
 
     public void recordLogin() {
         this.lastLoginAt = Instant.now();

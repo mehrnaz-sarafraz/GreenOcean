@@ -34,6 +34,7 @@ public class IdentityController {
     @PostMapping("/activate") @Transactional
     public Map<String,Object> activate(@AuthenticationPrincipal Jwt jwt,@Valid @RequestBody Activation request) {
         UUID id=UUID.fromString(jwt.getSubject());
+        db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE",id);
         String country=request.residenceCountry().trim().toUpperCase(Locale.ROOT); access.country(country);
         if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM account_eligibility WHERE user_id=? AND age_method='INDEPENDENT' AND age_result<>'ADULT')",Boolean.class,id)))
             throw new com.greenocean.backend.common.exception.ForbiddenException("An independent eligibility decision requires review");
@@ -52,7 +53,7 @@ public class IdentityController {
           checked_at=CURRENT_TIMESTAMP,residence_country=EXCLUDED.residence_country,current_country=EXCLUDED.current_country,preferred_language=EXCLUDED.preferred_language,city_id=EXCLUDED.city_id
           """,id,country,request.currentCountry(),request.preferredLanguage(),request.cityId());
         db.update("INSERT INTO policy_acceptances(user_id,policy_key,version) VALUES (?,'terms',?) ON CONFLICT DO NOTHING",id,version);
-        db.update("UPDATE users SET phase_a_enrolled=TRUE,status=CASE WHEN email_verified THEN 'ACTIVE' ELSE 'PENDING' END WHERE id=? AND status IN ('ACTIVE','PENDING')",id);
+        db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP,phase_a_enrolled=TRUE,status=CASE WHEN email_verified THEN 'ACTIVE' ELSE 'PENDING' END WHERE id=? AND status IN ('ACTIVE','PENDING')",id);
         return get(jwt);
     }
     @PostMapping("/display-reviewed") public void displayReviewed(@AuthenticationPrincipal Jwt jwt) {

@@ -75,7 +75,7 @@ public class AccountRepository {
 
     public void erase(UUID userId) {
         jdbcTemplate.update("INSERT INTO account_deletions(user_id,status) VALUES (?,'PROCESSING') ON CONFLICT(user_id) DO UPDATE SET status='PROCESSING'",userId);
-        jdbcTemplate.update("DELETE FROM email_outbox WHERE recipient=(SELECT email FROM users WHERE id=?)",userId);
+        jdbcTemplate.update("DELETE FROM email_outbox WHERE owner_user_id=? OR recipient=(SELECT email FROM users WHERE id=?)",userId,userId);
         jdbcTemplate.update("DELETE FROM email_verification_codes WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM password_reset_tokens WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM account_eligibility WHERE user_id=?",userId);

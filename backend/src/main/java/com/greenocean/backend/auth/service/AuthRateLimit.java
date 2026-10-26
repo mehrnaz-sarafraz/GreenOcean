@@ -11,6 +11,10 @@ public class AuthRateLimit {
     public AuthRateLimit(JdbcTemplate db,TokenService tokens) {this.db=db;this.tokens=tokens;}
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public boolean allow(String key,int maximum,Duration window) {
+        return allowInCurrentTransaction(key,maximum,window);
+    }
+    /** Initial signup mail joins the signup transaction; avoids a second connection while enrolling. */
+    public boolean allowInCurrentTransaction(String key,int maximum,Duration window) {
         String hash=tokens.hashRefreshToken(key);
         Integer attempts=db.queryForObject("""
           INSERT INTO auth_rate_windows(key_hash,attempts,expires_at) VALUES (?,1,CURRENT_TIMESTAMP + (? * INTERVAL '1 second'))
