@@ -3,6 +3,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useRef, useSta
 
 import { apiRequest } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/storage/token-storage';
+import { browserSessionLock } from '@/lib/api/browser-session';
 import { fetchWithTimeout } from '@/lib/api/request';
 import { API_URL } from '@/lib/api/client';
 
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } catch (error) { if (epoch === tokenStorage.generation()) setStatus('unauthenticated'); throw error; }
     if (epoch !== tokenStorage.generation()) throw new Error('Sign-in was cancelled. Please try again.');
     try {
-      await tokenStorage.set(tokens);
+      await tokenStorage.set(tokens);tokenStorage.announceLogin();
       const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
       if (epoch !== tokenStorage.generation()) return;
       setUser(currentUser);
@@ -97,7 +98,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function revoke(refreshToken:string){
-    const response=await fetchWithTimeout(`${API_URL}/api/v1/auth/${Platform.OS==='web'?'web/logout':'logout'}`,{method:'POST',credentials:Platform.OS==='web'?'include':'omit',headers:{'Content-Type':'application/json','X-GreenOcean-CSRF':'1'},body:JSON.stringify({refreshToken})});
+    const send=()=>fetchWithTimeout(`${API_URL}/api/v1/auth/${Platform.OS==='web'?'web/logout':'logout'}`,{method:'POST',credentials:Platform.OS==='web'?'include':'omit',headers:{'Content-Type':'application/json','X-GreenOcean-CSRF':'1'},body:JSON.stringify({refreshToken})});
+    const response=await(Platform.OS==='web'?browserSessionLock(send):send());
     if(!response.ok)throw new Error('Sign-out could not be confirmed');
   }
   async function reconcileLogout(){const pending=await tokenStorage.pendingLogout();if(pending){await revoke(pending);await tokenStorage.allowRestore();}}
@@ -106,7 +108,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setPendingRegistrationEmail(options?.correctedEmail??null);setPendingEmailCorrected(Boolean(options?.correctedEmail));
     const tokens=await tokenStorage.get();
     // Establish the guard before clearing so no tab/reload can silently restore the cookie.
-    try{await tokenStorage.blockRestore(tokens?.refreshToken);}finally{await tokenStorage.clear();setUser(null);setStatus('unauthenticated');setPrivacyHidden(false);setNotice(options?.notice??'signedOut');}
+    try{await tokenStorage.blockRestore(tokens?.refreshToken);}catch{setNotice('logoutPending');}finally{await tokenStorage.clear();setUser(null);setStatus('unauthenticated');setPrivacyHidden(false);setNotice(options?.notice??(options?.correctedEmail?'':'signedOut'));}
     try{if(tokens?.refreshToken)await revoke(tokens.refreshToken);await tokenStorage.allowRestore();}catch{setNotice('logoutPending');}
   }
   useEffect(()=>{

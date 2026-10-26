@@ -9,9 +9,10 @@ const clearListeners=new Set<()=>void>();
 function purgeLegacyWebStorage(){if(Platform.OS!=='web')return;try{for(const storage of [globalThis.localStorage,globalThis.sessionStorage]){storage?.removeItem(ACCESS_TOKEN_KEY);storage?.removeItem(REFRESH_TOKEN_KEY);}}catch{/* Storage disabled: memory still clears. */}}
 function webBlocked(){try{return blocked||globalThis.localStorage?.getItem(LOGOUT_PENDING)==='1';}catch{return blocked;}}
 function clearMemory(){epoch+=1;browserTokens=null;clearListeners.forEach(listener=>listener());}
-if(Platform.OS==='web'&&typeof globalThis.addEventListener==='function')globalThis.addEventListener('storage',event=>{if(event.key===LOGOUT_PENDING&&event.newValue==='1'){blocked=true;clearMemory();}});
+if(Platform.OS==='web'&&typeof globalThis.addEventListener==='function')globalThis.addEventListener('storage',event=>{if(event.key===LOGOUT_PENDING&&event.newValue==='1'){blocked=true;clearMemory();}if(event.key==='greenocean.authChanged'){clearMemory();}});
 export const tokenStorage={
  generation:()=>epoch,
+ announceLogin(){if(Platform.OS==='web')try{globalThis.localStorage?.setItem('greenocean.authChanged',String(Date.now())+Math.random());}catch{/* no bearer data; storage unavailable limits cross-tab signals */}},
  subscribeToClear(listener:()=>void){clearListeners.add(listener);return()=>{clearListeners.delete(listener);};},
  async get():Promise<StoredTokens|null>{
   if(Platform.OS==='web'){purgeLegacyWebStorage();return webBlocked()?null:browserTokens??{accessToken:'',refreshToken:'cookie'};}

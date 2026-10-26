@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 
+import { browserSessionLock } from './browser-session';
 import { fetchWithTimeout, singleFlight } from './request';
 import { tokenStorage } from '@/lib/storage/token-storage';
 
@@ -24,7 +25,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (typeof requestInit.body === 'string' && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (authenticated && tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
 
-  let response = await fetchWithTimeout(`${API_URL}${path}`, { ...requestInit, headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
+  const send=()=>fetchWithTimeout(`${API_URL}${path}`,{...requestInit,headers,credentials:Platform.OS==='web'?'include':'omit'});
+  let response=await(Platform.OS==='web'&&(path==='/api/v1/auth/web/login'||path==='/api/v1/auth/web/mfa/authentication/verify')?browserSessionLock(async()=>{if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Sign-in cancelled.');return send();}):send());
   if (response.status === 401 && authenticated && retryAfterRefresh && tokens?.refreshToken) {
     const refreshed = await refreshTokens(tokens.refreshToken);
     if (refreshed && requestEpoch===tokenStorage.generation()) {
@@ -71,7 +73,7 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
 }
 
 const refreshTokens=singleFlight(async(refreshToken:string)=>{
-  if(Platform.OS==='web'&&typeof navigator!=='undefined'&&navigator.locks)return navigator.locks.request('greenocean-refresh',()=>performRefresh(refreshToken));
+  if(Platform.OS==='web')return browserSessionLock(()=>performRefresh(refreshToken));
   return performRefresh(refreshToken);
 });
 async function performRefresh(refreshToken: string) {

@@ -148,7 +148,7 @@ public class AuthenticationService {
         User user = userRepository.lockById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User account is not available"));
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new UnauthorizedException("Current password is incorrect");
+            throw new com.greenocean.backend.common.exception.ForbiddenException("Current password is incorrect");
         }
         if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("New password must be different from the current password");
