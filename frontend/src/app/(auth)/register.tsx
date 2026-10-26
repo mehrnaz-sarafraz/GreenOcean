@@ -22,7 +22,13 @@ export default function RegisterScreen() {
     try {const [list,policy]=await Promise.all([apiRequest<Country[]>('/api/v1/geography/countries',{authenticated:false}),apiRequest<{version:number}>('/api/v1/policies/terms',{authenticated:false})]);setCountries(list);setTerms(policy.version);setError('');}
     catch {setError(isRtl?'بارگذاری اطلاعات ممکن نشد؛ دوباره تلاش کنید.':'Could not load registration details. Retry when connected.');}
   }
-  useEffect(()=>{void load();},[]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let active = true;
+    Promise.all([apiRequest<Country[]>('/api/v1/geography/countries',{authenticated:false}),apiRequest<{version:number}>('/api/v1/policies/terms',{authenticated:false})])
+      .then(([list,policy]) => { if (active) { setCountries(list); setTerms(policy.version); setError(''); } })
+      .catch(() => { if (active) setError(isRtl?'بارگذاری اطلاعات ممکن نشد؛ دوباره تلاش کنید.':'Could not load registration details. Retry when connected.'); });
+    return () => { active = false; };
+  }, [isRtl]);
   async function submit() {
     if(busy) return;
     const violations=validateRegistration({email,password,countryCode:country,adultSelfAttested:adult,termsVersion:terms,accepted});

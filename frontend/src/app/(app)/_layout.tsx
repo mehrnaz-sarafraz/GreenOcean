@@ -2,8 +2,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api/client';
 import { AppButton } from '@/components/app-button';
-import { Text } from 'react-native';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { useAuth } from '@/features/auth/auth-provider';
 import { usePlatformData } from '@/features/platform/data-provider';
@@ -20,7 +19,14 @@ export default function AppLayout() {
     try { const result = await apiRequest<{services:{COMMUNITY:boolean}}>('/api/v1/identity'); setAllowed(result.services.COMMUNITY); setError(''); }
     catch { setError('Could not check account access. Please retry.'); }
   }
-  useEffect(() => { if (status === 'authenticated') void checkAccess(); }, [status,user?.userId]);
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    let active = true;
+    apiRequest<{services:{COMMUNITY:boolean}}>('/api/v1/identity')
+      .then(result => { if (active) { setAllowed(result.services.COMMUNITY); setError(''); } })
+      .catch(() => { if (active) setError('Could not check account access. Please retry.'); });
+    return () => { active = false; };
+  }, [status,user?.userId]);
   if (status === 'authenticated' && allowed === false) return <Redirect href="/(auth)/activate" />;
   if (status === 'authenticated' && allowed === null) return <View style={{padding:24}}><Text>{error || 'Checking account access…'}</Text>{!!error && <AppButton label="Retry" onPress={()=>void checkAccess()} />}</View>;
   if (status === 'unauthenticated') return <Redirect href="/(auth)/welcome" />;
