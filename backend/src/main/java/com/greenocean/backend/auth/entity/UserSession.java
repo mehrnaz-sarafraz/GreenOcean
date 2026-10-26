@@ -40,15 +40,15 @@ public class UserSession {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
-    @Column(name="client_type",nullable=false) private String clientType="MOBILE";
-    @Column(name="session_scope",nullable=false) private String sessionScope="MEMBER";
-    @Column(name="overall_expires_at",nullable=false) private Instant overallExpiresAt;
-    @Column(name="last_activity_at",nullable=false) private Instant lastActivityAt;
-    @Column(name="idle_expires_at",nullable=false) private Instant idleExpiresAt;
-    @Column(name="reauthenticated_at") private Instant reauthenticatedAt;
-    @Column(name="mfa_authenticated_at") private Instant mfaAuthenticatedAt;
+    @Column(name="client_type",updatable=false,nullable=false) private String clientType="MOBILE";
+    @Column(name="session_scope",updatable=false,nullable=false) private String sessionScope="MEMBER";
+    @Column(name="overall_expires_at",updatable=false,nullable=false) private Instant overallExpiresAt;
+    @Column(name="last_activity_at",updatable=false,nullable=false) private Instant lastActivityAt;
+    @Column(name="idle_expires_at",updatable=false,nullable=false) private Instant idleExpiresAt;
+    @Column(name="reauthenticated_at",updatable=false) private Instant reauthenticatedAt;
+    @Column(name="mfa_authenticated_at",updatable=false) private Instant mfaAuthenticatedAt;
 
-    @Column(name="token_version",nullable=false) private int tokenVersion;
+    @Column(name="token_version",updatable=false,nullable=false) private int tokenVersion;
     protected UserSession() {
     }
 

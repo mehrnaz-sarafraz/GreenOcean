@@ -30,6 +30,7 @@ public class AuthenticationService {
     private final org.springframework.jdbc.core.JdbcTemplate db;
     private final AuthRateLimit limits;
     private final SessionPolicy policy;private final java.time.Clock clock;private final SecurityEvents events;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entities;
     private final String dummyHash;private final java.util.concurrent.Semaphore passwordWork=new java.util.concurrent.Semaphore(4,true);
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
@@ -110,16 +111,18 @@ public class AuthenticationService {
                 tokenService.hashRefreshToken(rotatedRefreshToken),
                 SessionPolicy.earlier(now.plus(tokenService.refreshTokenTtl()),session.getOverallExpiresAt())
         );
+        sessionRepository.saveAndFlush(session);
         return tokensFor(user, rotatedRefreshToken, session.getId());
     }
 
     @Transactional
     public void logout(String refreshToken) {
+        sessionRepository.flush();
         String hash=tokenService.hashRefreshToken(refreshToken);
         var owners=db.queryForList("SELECT user_id FROM user_sessions WHERE refresh_token_hash=? UNION SELECT s.user_id FROM user_sessions s JOIN retired_refresh_tokens r ON r.session_id=s.id WHERE r.token_hash=?",UUID.class,hash,hash);
         if(owners.isEmpty())return;userRepository.lockById(owners.getFirst());
         db.update("UPDATE user_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND (refresh_token_hash=? OR id IN (SELECT session_id FROM retired_refresh_tokens WHERE token_hash=?))",hash,hash);
-        events.record(owners.getFirst(),null,SecurityEvents.Event.LOGOUT);
+        entities.clear();events.record(owners.getFirst(),null,SecurityEvents.Event.LOGOUT);
     }
     @Transactional
     public void logoutAll(UUID userId) {
@@ -140,7 +143,7 @@ public class AuthenticationService {
         userRepository.lockById(userId);
         UserSession session = sessionRepository.findOwned(sessionId, userId)
                 .orElseThrow(() -> new NotFoundException("Session was not found"));
-        session.revoke();events.record(userId,sessionId,SecurityEvents.Event.SESSION_REVOKED);
+        session.revoke();sessionRepository.saveAndFlush(session);events.record(userId,sessionId,SecurityEvents.Event.SESSION_REVOKED);
     }
 
     @Transactional

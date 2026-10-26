@@ -123,6 +123,9 @@ jobs:
           done
           tail -100 target/live-server.log
           exit 1
+      - name: Prepare test-only HTTPS WebAuthn origin
+        run: |
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout backend/target/qa-tls.key -out backend/target/qa-tls.crt -days 1 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1
       - name: Real browser registration against PostgreSQL and test mail delivery
         working-directory: frontend
         run: npx playwright test --config playwright.live.config.mjs

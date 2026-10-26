@@ -5,7 +5,7 @@ import { fetchWithTimeout, singleFlight } from './request';
 import { tokenStorage } from '@/lib/storage/token-storage';
 
 const fallbackUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? fallbackUrl;
+export const API_URL = Platform.OS==='web'&&process.env.EXPO_PUBLIC_WEB_API_ORIGIN==='same-origin'?globalThis.location.origin:process.env.EXPO_PUBLIC_API_URL??fallbackUrl;
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public fieldErrors: { field: string; message: string }[] = [], public retryAfter: number | null = null) {

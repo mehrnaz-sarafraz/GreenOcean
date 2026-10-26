@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {passwordBounds,safeRecoveryToken,needsBackgroundReauthentication,securityEventLabel} from '../src/features/auth/security-contracts.ts';
+test('Happy EF: approved password bounds use Unicode code points',()=>{assert.equal(passwordBounds('🌊'.repeat(15)),true);assert.equal(passwordBounds('🌊'.repeat(128)),true);assert.equal(passwordBounds('🌊'.repeat(129)),false);assert.equal(passwordBounds('a'.repeat(14)),false);});
+test('Malicious EF: only bounded URL-safe recovery tokens are accepted',()=>{assert.equal(safeRecoveryToken('a'.repeat(64)),true);for(const value of ['','a'.repeat(63),'a'.repeat(65),'javascript:alert(1)','a'.repeat(63)+'%','../../private'])assert.equal(safeRecoveryToken(value),false);});
+test('Creative EF: local background lock starts exactly at five minutes',()=>{assert.equal(needsBackgroundReauthentication(1000,300999),false);assert.equal(needsBackgroundReauthentication(1000,301000),true);});
+test('Confused EF: event labels have safe localized fallbacks',()=>{assert.equal(securityEventLabel('LOGIN_SUCCESS',false),'Signed in');assert.equal(securityEventLabel('<script>',false),'Security event');assert.equal(securityEventLabel('LOGIN_SUCCESS',true),'ورود به حساب');});

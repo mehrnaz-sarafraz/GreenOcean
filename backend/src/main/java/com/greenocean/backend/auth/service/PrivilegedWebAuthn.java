@@ -53,7 +53,7 @@ import java.time.*;import java.net.URI;import java.util.*;
    int active=db.update("UPDATE user_sessions SET token_version=token_version+1,mfa_authenticated_at=?,reauthenticated_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL AND overall_expires_at>? AND idle_expires_at>?",java.sql.Timestamp.from(clock.instant()),java.sql.Timestamp.from(clock.instant()),session,user,java.sql.Timestamp.from(clock.instant()),java.sql.Timestamp.from(clock.instant()));if(active!=1)throw new IllegalArgumentException();events.record(user,session,SecurityEvents.Event.MFA_SUCCESS);
   }catch(Exception failure){events.record(user,session,SecurityEvents.Event.MFA_FAILURE);throw new ForbiddenException("Security key verification failed");}
  }
- @Transactional public com.greenocean.backend.auth.dto.TokenResponse completeAuthentication(UUID user,UUID session,UUID ceremony,String response,String refresh){
+ @Transactional(noRollbackFor=ForbiddenException.class) public com.greenocean.backend.auth.dto.TokenResponse completeAuthentication(UUID user,UUID session,UUID ceremony,String response,String refresh){
   if(refresh==null||!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_sessions WHERE id=? AND user_id=? AND refresh_token_hash=? AND revoked_at IS NULL)",Boolean.class,session,user,tokens.hashRefreshToken(refresh))))throw new ForbiddenException("Use the current session to verify the security key");
   finishAuthentication(user,session,ceremony,response);
   return auth.refresh(refresh);
