@@ -32,7 +32,7 @@ export function UrgentHelpContent(){
   <AppField label={c.searchCountry} value={query} onChangeText={setQuery}/>
   <View style={{gap:8}}>{countries.filter(item=>(item.name+' '+item.code+' '+Object.values(item.local_names??{}).join(' ')).toLowerCase().includes(query.toLowerCase())).slice(0,query?20:8).map(item=>{
    const name=language==='fa'?item.local_names?.fa??item.name:item.name;
-   return <AppButton key={item.code} label={(country===item.code?'✓ ':'')+name} variant="secondary" onPress={()=>{setCountry(item.code);setQuery(name);}}/>;
+   return <AppButton key={item.code} selected={country===item.code} label={(country===item.code?'✓ ':'')+name} variant="secondary" onPress={()=>{setCountry(item.code);setQuery(name);}}/>;
   })}</View>
   {loading&&<Text role="status" style={publicStyles.body}>{c.loading}</Text>}
   {!loading&&!error&&country&&local.length===0&&<Text role="status" style={publicStyles.body}>{c.noLocal}</Text>}

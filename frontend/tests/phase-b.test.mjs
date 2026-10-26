@@ -12,7 +12,12 @@ test('Creative B-09: Persian public copy mirrors English structure',()=>{functio
 test('Confused B-03/B-04: loading is not treated as signed out',()=>{assert.equal(accountEntry('loading'),'loading');assert.equal(accountEntry('authenticated'),'account');assert.equal(accountEntry('unauthenticated'),'guest');});
 test('Confused B-05: missing region and network errors have explicit copy',()=>{for(const c of Object.values(publicCopy))assert.ok(c.noCountry&&c.noLocal&&c.directoryError&&c.retry);});
 test('Confused B-07: policy failure never claims a cached policy is current',()=>{assert.match(publicCopy.en.policyUnavailable,/cannot show a hardcoded or older copy/);});
-test('Malicious B-07/B-10: unknown, array and redirect-like route parameters fail closed',()=>{for(const v of ['https://evil.test','//evil.test','../admin','privacy<script>',{},['terms'],null]){assert.equal(isInformationId(v),false);assert.equal(isAssistanceId(v),false);assert.equal(policyKey(v),null);}});
+test('Malicious B-07/B-10: unknown, array and redirect-like route parameters fail closed',()=>{for(const v of ['https://evil.test','//evil.test','../admin','privacy<script>','__proto__','constructor','toString',{},['terms'],null]){assert.equal(isInformationId(v),false);assert.equal(isAssistanceId(v),false);assert.equal(policyKey(v),null);}});
 test('Malicious B-05: untrusted protocols, credentials, controls and USSD are rejected',()=>{for(const url of ['javascript:alert(1)','data:text/html,attack','file:///tmp/private','https://user:pass@evil.test','https://example.test/\nattack','tel:*123#','tel:12;secret','//evil.test'])assert.equal(safeResourceUrl(url,true),null);});
 test('Happy B-05: approved HTTPS URLs survive validation without redirects',()=>{assert.equal(safeResourceUrl('https://example.test/official'),'https://example.test/official');});
 test('Malicious B-06/B-08: no fabricated counts or instantaneous-capacity promises',()=>{const copy=JSON.stringify(publicCopy.en);assert.doesNotMatch(copy,/\d+ listeners online|instant matching|guaranteed improvement|24\/7/i);assert.match(publicCopy.en.availability,/does not guarantee/);});
+import { colors } from '../src/theme/tokens.ts';
+test('Creative B-09: public body, CTA, error and focus text meet AA contrast',()=>{
+ function luminance(hex){const rgb=hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4);return rgb[0]*0.2126+rgb[1]*0.7152+rgb[2]*0.0722;}
+ for(const [fg,bg] of [[colors.inkSoft,colors.white],[colors.ocean900,colors.foam],[colors.white,colors.ocean600],[colors.ocean700,colors.sunSoft],[colors.danger,colors.foam]]){const a=luminance(fg),b=luminance(bg);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,`${fg} on ${bg}`);}
+});

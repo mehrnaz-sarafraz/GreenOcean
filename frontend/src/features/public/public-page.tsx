@@ -32,8 +32,8 @@ export function PublicPage({children,back=true}:PropsWithChildren<{back?:boolean
     <View style={publicStyles.header}>
       <View style={publicStyles.brand}><AppIcon name="waves" color={colors.ocean700} /><Text style={publicStyles.brandText}>GreenOcean</Text></View>
       <View accessibilityLabel={copy.language} style={publicStyles.languages}>
-        <AppButton label="English" variant="secondary" onPress={()=>void setLanguage('en')} />
-        <AppButton label="فارسی" variant="secondary" onPress={()=>void setLanguage('fa')} />
+        <AppButton label="English" selected={language==='en'} variant="secondary" onPress={()=>void setLanguage('en')} />
+        <AppButton label="فارسی" selected={language==='fa'} variant="secondary" onPress={()=>void setLanguage('fa')} />
       </View>
     </View>
     <View style={publicStyles.navigation}>

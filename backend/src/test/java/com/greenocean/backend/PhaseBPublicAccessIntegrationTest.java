@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test") @Transactional
 class PhaseBPublicAccessIntegrationTest {
     @Autowired MockMvc mvc;@Autowired JdbcTemplate db;@Autowired PlatformTransactionManager manager;
-    @BeforeEach void independentBudgetReset(){var tx=new TransactionTemplate(manager);tx.setPropagationBehavior(3);tx.executeWithoutResult(s->db.update("DELETE FROM auth_rate_windows"));}
+    @BeforeEach void independentBudgetReset(){var tx=new TransactionTemplate(manager);tx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);tx.executeWithoutResult(s->db.update("DELETE FROM auth_rate_windows"));}
     @Test @Tag("happy") void publishedPoliciesArePublicAndVersioned() throws Exception {
         for(String key:new String[]{"terms","privacy","community-guidelines"})mvc.perform(get("/api/v1/policies/"+key)).andExpect(status().isOk()).andExpect(jsonPath("$.version").isNumber()).andExpect(jsonPath("$.content").isNotEmpty()).andExpect(jsonPath("$.publishedAt").exists());
     }
@@ -55,7 +55,7 @@ class PhaseBPublicAccessIntegrationTest {
         String body=mvc.perform(get("/api/v1/crisis-resources")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();assertThat(body).doesNotContain("Unreviewed QA","Inactive QA");
     }
     @Test @Tag("malicious") void privateEndpointsRemainUnavailableEvenWithLocaleAndCountryParameters() throws Exception {
-        for(String path:new String[]{"posts/feed","conversations","preferences/me","profiles/me","listeners","professionals","communities","admin/operations"})
+        for(String path:new String[]{"posts/feed","posts/00000000-0000-0000-0000-000000000001","articles","media-recommendations","profiles/qa-private","conversations","preferences/me","profiles/me","listeners","professionals","communities","admin/operations"})
             mvc.perform(get("/api/v1/"+path).param("locale","fa").param("country","IR")).andExpect(status().isUnauthorized());
     }
     @Test @Tag("malicious") void draftsAndFuturePublicationAreNeverLeaked() throws Exception {

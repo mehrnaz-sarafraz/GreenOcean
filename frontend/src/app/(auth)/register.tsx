@@ -47,7 +47,7 @@ export default function RegisterScreen() {
     <Text>{isRtl?'حساب تعاملی برای افراد ۱۸ سال به بالا است. منابع عمومی بدون حساب در دسترس‌اند.':'Social accounts are for adults 18+. Public resources are available at every age without an account.'}</Text>
     <AppField label={isRtl?'ایمیل':'Email'} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
     <AppField label={isRtl?'رمز عبور (۱۵ تا ۱۲۸ نویسه)':'Password (15–128 characters)'} value={password} onChangeText={setPassword} secureTextEntry={!visible} autoComplete="new-password" />
-    <AppButton label={visible?'Hide password':'Show password'} variant="secondary" onPress={()=>setVisible(!visible)} />
+    <AppButton label={visible?publicCopy[language].hidePassword:publicCopy[language].showPassword} variant="secondary" onPress={()=>setVisible(!visible)} />
     <Text>{isRtl?'از مدیر رمز عبور و جای‌گذاری می‌توانید استفاده کنید.':'You can paste a password or use a password manager. No required mix of symbols or numbers.'}</Text>
     <AppField label={isRtl?'جست‌وجوی کشور محل اقامت':'Search country of residence'} value={query} onChangeText={setQuery} />
     {!!country && <Text>{isRtl?'کشور انتخاب‌شده: ':'Selected country: '}{countries.find(c=>c.code===country)?.name}</Text>}
@@ -57,8 +57,8 @@ export default function RegisterScreen() {
     <AppButton label={isRtl?'مطالعه قوانین':'Read Terms'} variant="secondary" onPress={()=>router.push({pathname:'/(auth)/info/[page]',params:{page:'terms'}})} />
     <Pressable accessibilityRole="checkbox" accessibilityState={{checked:accepted}} onPress={()=>setAccepted(!accepted)} style={styles.choice}><Text>{accepted?'☑':'☐'} {isRtl?'نسخه قوانین را می‌پذیرم: ':'I accept Terms version '}{terms||'…'}</Text></Pressable>
     <AppButton label={isRtl?'اطلاعیه حریم خصوصی':'Privacy notice'} variant="secondary" onPress={()=>router.push({pathname:'/(auth)/info/[page]',params:{page:'privacy'}})} />
-    {Object.entries(errors).map(([field,message])=><Text key={field} accessibilityRole="alert" style={styles.error}>{message}</Text>)}
-    {!!error && <><Text accessibilityRole="alert" style={styles.error}>{error}</Text><AppButton label="Retry loading" variant="secondary" onPress={()=>void load()} /></>}
+    {Object.entries(errors).map(([field,message])=><Text key={field} accessibilityRole="alert" style={styles.error}>{language==='fa'?publicCopy.fa.registrationErrors[field as keyof typeof publicCopy.fa.registrationErrors]??message:message}</Text>)}
+    {!!error && <><Text accessibilityRole="alert" style={styles.error}>{error}</Text><AppButton label={publicCopy[language].retry} variant="secondary" onPress={()=>void load()} /></>}
     <AppButton label={isRtl?'ثبت‌نام':'Create account'} disabled={!terms} loading={busy} onPress={()=>void submit()} />
     <AppButton label={isRtl?'منابع عمومی':'Browse public resources'} variant="secondary" onPress={()=>router.push('/(auth)/resources')} />
     <AppButton label={isRtl?'ورود':'Sign in'} variant="secondary" onPress={()=>router.push('/(auth)/login')} />

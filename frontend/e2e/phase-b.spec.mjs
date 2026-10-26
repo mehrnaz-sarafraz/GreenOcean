@@ -88,3 +88,7 @@ test('Malicious B-05: unsafe resource URL cannot execute script',async({page})=>
 test('Malicious B-07: absent age policy is not replaced by a fabricated document',async({page})=>{
  await setup(page);await page.goto('/info/age-eligibility');await expect(page.getByRole('alert')).toContainText('current published document is unavailable');await expect(page.getByText(/Version \d/)).toHaveCount(0);
 });
+test('Confused B-07: a late policy response cannot replace a newer document',async({page})=>{
+ await setup(page);await page.route('**/api/v1/policies/privacy',async route=>{await new Promise(r=>setTimeout(r,1200));await route.fulfill({status:200,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8081','Access-Control-Allow-Credentials':'true'},body:JSON.stringify({key:'privacy',version:1,title:'Old delayed privacy',content:'Stale QA document',publishedAt:'2026-01-01T00:00:00Z'})});});
+ await page.goto('/info/privacy');await expect(page.getByText('Loading the current published document…')).toBeVisible();await page.getByRole('button',{name:'Terms of use',exact:true}).click();await expect(page.getByRole('heading',{name:'QA published terms'})).toBeVisible();await page.waitForTimeout(1400);await expect(page.getByText('Stale QA document')).toHaveCount(0);
+});
