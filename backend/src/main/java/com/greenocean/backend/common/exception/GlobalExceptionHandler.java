@@ -109,6 +109,11 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleMissingRoute(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(Instant.now(),404,"Not Found","Resource was not found",request.getRequestURI(),List.of()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpectedException(Exception exception, HttpServletRequest request) {
         log.error("Unhandled API exception type {}", exception.getClass().getSimpleName());

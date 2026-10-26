@@ -1,45 +1,44 @@
-import { useEffect, useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
-
+import { useEffect,useState } from 'react';
+import { Linking,Text,View } from 'react-native';
 import { AppButton } from '@/components/app-button';
-import { EmptyState, Notice, Pill, ProductCard } from '@/components/product-ui';
+import { AppField } from '@/components/app-field';
 import { CrisisResource } from '@/features/platform/types';
+import { PublicCard,PublicHeading,PublicText,publicStyles } from '@/features/public/public-page';
+import { safeResourceUrl } from '@/features/public/contracts';
+import { useLanguage } from '@/localization/language-provider';
+import { publicCopy } from '@/localization/public-copy';
 import { apiRequest } from '@/lib/api/client';
-import { colors, spacing } from '@/theme/tokens';
-
-export function UrgentHelpContent() {
-  const [countryCode, setCountryCode] = useState('US');
-  const [allResources, setAllResources] = useState<CrisisResource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    apiRequest<CrisisResource[]>('/api/v1/crisis-resources', { authenticated: false })
-      .then(setAllResources)
-      .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load urgent resources.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const regions = Array.from(new Map(allResources.filter(item => item.countryCode !== 'GLOBAL').map(item => [item.countryCode, item.regionName])).entries());
-  const resources = allResources.filter(item => item.countryCode === countryCode);
-  const globalResources = allResources.filter(item => item.countryCode === 'GLOBAL');
-
-  return <>
-    <Notice tone="warning" icon="emergency" title="If someone is in immediate danger" body="Call the local emergency number now or go to the nearest emergency department. GreenOcean cannot monitor this page or dispatch help." />
-    <Text style={styles.label}>Choose your location</Text>
-    <View style={styles.wrap}>{regions.map(([code, name]) => <Pill key={code} label={name} active={countryCode === code} onPress={() => setCountryCode(code)} />)}</View>
-    {resources.map(item => <ProductCard key={item.id}><Text style={styles.cardTitle}>{item.title}</Text><Text style={styles.body}>{item.detail}</Text><Text style={styles.verified}>Source checked {new Date(item.lastVerifiedOn).toLocaleDateString()}</Text><View style={styles.actions}><AppButton label={item.actionUrl.startsWith('tel:') ? 'Call now' : 'Open resource'} onPress={() => void Linking.openURL(item.actionUrl)} />{item.sourceUrl !== item.actionUrl && <AppButton label="Official source" variant="secondary" onPress={() => void Linking.openURL(item.sourceUrl)} />}</View></ProductCard>)}
-    {globalResources.map(item => <ProductCard key={item.id} tone="soft"><Text style={styles.cardTitle}>{item.regionName}</Text><Text style={styles.body}>{item.detail}</Text><Text style={styles.verified}>Source checked {new Date(item.lastVerifiedOn).toLocaleDateString()}</Text><AppButton label={item.title} variant="secondary" onPress={() => void Linking.openURL(item.actionUrl)} /></ProductCard>)}
-    {loading && <EmptyState icon="hourglass_top" title="Loading verified resources" body="Retrieving the current crisis-support directory." />}
-    {!!error && <Notice tone="warning" title="Urgent directory unavailable" body={`${error} Call your local emergency number or go to the nearest emergency department now if there is immediate danger.`} />}
-  </>;
+type Country={code:string;name:string;local_names?:Record<string,string>};
+export function UrgentHelpContent(){
+ const {language}=useLanguage();const c=publicCopy[language];
+ const [country,setCountry]=useState(''),[query,setQuery]=useState(''),[countries,setCountries]=useState<Country[]>([]),[all,setAll]=useState<CrisisResource[]>([]);
+ const [loading,setLoading]=useState(true),[error,setError]=useState(false),[linkError,setLinkError]=useState(false),[attempt,setAttempt]=useState(0);
+ useEffect(()=>{let active=true;Promise.allSettled([apiRequest<CrisisResource[]>('/api/v1/crisis-resources',{authenticated:false}),apiRequest<Country[]>('/api/v1/geography/countries',{authenticated:false})]).then(([directory,locations])=>{
+   if(!active)return;
+   if(directory.status==='fulfilled'){setAll(directory.value);setError(false);}else setError(true);
+   if(locations.status==='fulfilled')setCountries(locations.value);
+   else if(directory.status==='fulfilled')setCountries(Array.from(new Map(directory.value.filter(r=>r.countryCode!=='GLOBAL').map(r=>[r.countryCode,{code:r.countryCode,name:r.regionName}])).values()));
+   setLoading(false);
+ });return()=>{active=false;};},[attempt]);
+ async function open(value:string,telephone=false){const url=safeResourceUrl(value,telephone);if(!url){setLinkError(true);return;}try{await Linking.openURL(url);setLinkError(false);}catch{setLinkError(true);}}
+ function resource(item:CrisisResource){return <PublicCard key={item.id}><PublicHeading level={3}>{item.title}</PublicHeading><PublicText>{item.detail}</PublicText><PublicText>{c.sourceChecked}: {item.lastVerifiedOn}</PublicText>
+  <AppButton label={item.actionUrl.startsWith('tel:')?c.call:c.openResource} disabled={!safeResourceUrl(item.actionUrl,true)} onPress={()=>void open(item.actionUrl,true)}/>
+  {item.sourceUrl!==item.actionUrl&&<AppButton label={c.officialSource} variant="secondary" disabled={!safeResourceUrl(item.sourceUrl)} onPress={()=>void open(item.sourceUrl)}/>}
+ </PublicCard>;}
+ const local=all.filter(r=>r.countryCode===country),global=all.filter(r=>r.countryCode==='GLOBAL');
+ return <>
+  <PublicCard><PublicHeading>{c.immediateTitle}</PublicHeading><PublicText>{c.immediateBody}</PublicText></PublicCard>
+  <PublicHeading>{c.chooseCountry}</PublicHeading><PublicText>{c.noCountry}</PublicText>
+  <AppField label={c.searchCountry} value={query} onChangeText={setQuery}/>
+  <View style={{gap:8}}>{countries.filter(item=>(item.name+' '+item.code+' '+Object.values(item.local_names??{}).join(' ')).toLowerCase().includes(query.toLowerCase())).slice(0,query?20:8).map(item=>{
+   const name=language==='fa'?item.local_names?.fa??item.name:item.name;
+   return <AppButton key={item.code} label={(country===item.code?'✓ ':'')+name} variant="secondary" onPress={()=>{setCountry(item.code);setQuery(name);}}/>;
+  })}</View>
+  {loading&&<Text role="status" style={publicStyles.body}>{c.loading}</Text>}
+  {!loading&&!error&&country&&local.length===0&&<Text role="status" style={publicStyles.body}>{c.noLocal}</Text>}
+  {error&&<><Text accessibilityRole="alert" style={publicStyles.status}>{c.directoryError}</Text><AppButton label={c.retry} onPress={()=>{setError(false);setLoading(true);setAttempt(n=>n+1);}}/></>}
+  {local.map(resource)}
+  {global.length>0&&<PublicHeading>{c.globalResources}</PublicHeading>}{global.map(resource)}
+  {linkError&&<Text accessibilityRole="alert" style={publicStyles.status}>{c.linkError}</Text>}
+ </>;
 }
-
-const styles = StyleSheet.create({
-  label: { color: colors.ink, fontSize: 11, fontWeight: '900' },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' },
-  actions: { gap: spacing.sm },
-  cardTitle: { color: colors.ink, fontSize: 13, fontWeight: '900' },
-  body: { color: colors.inkSoft, fontSize: 10, lineHeight: 17 },
-  verified: { color: colors.muted, fontSize: 9, fontWeight: '700' },
-});

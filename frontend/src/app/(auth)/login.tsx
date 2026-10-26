@@ -1,16 +1,18 @@
-import { router } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
 import { AppField } from '@/components/app-field';
+import { PublicPage, PublicText } from '@/features/public/public-page';
+import { publicCopy } from '@/localization/public-copy';
 import { Screen } from '@/components/screen';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function LoginScreen() {
-  const { signIn } = useAuth(); const { t, isRtl } = useLanguage();
+  const { signIn, status } = useAuth(); const { t, isRtl, language } = useLanguage();
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
   async function submit() {
@@ -20,15 +22,17 @@ export default function LoginScreen() {
     catch (exception) { setError(exception instanceof Error ? exception.message : t('genericError')); }
     finally { setLoading(false); }
   }
+  if(status==='authenticated')return <Redirect href="/(app)"/>;
+  if(status==='loading')return <PublicPage><PublicText>{publicCopy[language].checking}</PublicText></PublicPage>;
   return (
     <Screen scroll style={styles.content}>
-      <Pressable onPress={() => router.back()}><Text style={styles.back}>←</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={publicCopy[language].back} onPress={() => router.canGoBack()?router.back():router.replace('/(auth)/welcome')}><Text style={styles.back}>←</Text></Pressable>
       <Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{t('loginTitle')}</Text>
       <Text style={[styles.subtitle, { textAlign: isRtl ? 'right' : 'left' }]}>{t('loginSubtitle')}</Text>
       <View style={styles.form}>
-        <AppField label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+        <AppField label={t('email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" style={{writingDirection:'ltr',textAlign:'left'}} />
         <AppField label={t('password')} value={password} onChangeText={setPassword} secureTextEntry />
-        <Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'forgot-password' } } as never)}><Text style={styles.forgot}>Forgot password?</Text></Pressable>
+        <Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'forgot-password' } } as never)}><Text style={styles.forgot}>{publicCopy[language].forgot}</Text></Pressable>
         {!!error && <Text style={[styles.error, { textAlign: isRtl ? 'right' : 'left' }]}>{error}</Text>}
         <AppButton label={t('signIn')} loading={loading} onPress={submit} />
         <AppButton label={t('createAccount')} variant="secondary" onPress={() => router.push('/(auth)/register')} />

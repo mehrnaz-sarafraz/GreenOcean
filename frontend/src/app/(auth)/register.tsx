@@ -1,8 +1,10 @@
-import { router } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppField } from '@/components/app-field';
+import { PublicPage, PublicText } from '@/features/public/public-page';
+import { publicCopy } from '@/localization/public-copy';
 import { Screen } from '@/components/screen';
 import { useAuth } from '@/features/auth/auth-provider';
 import { validateRegistration } from '@/features/auth/registration-validation';
@@ -11,7 +13,7 @@ import { apiRequest } from '@/lib/api/client';
 import { colors, spacing } from '@/theme/tokens';
 type Country = { code: string; name: string; local_names: Record<string,string> };
 export default function RegisterScreen() {
-  const { register } = useAuth(); const { isRtl } = useLanguage();
+  const { register, status } = useAuth(); const { isRtl, language } = useLanguage();
   const [email,setEmail]=useState(''); const [password,setPassword]=useState('');
   const [country,setCountry]=useState(''); const [query,setQuery]=useState('');
   const [countries,setCountries]=useState<Country[]>([]); const [terms,setTerms]=useState(0);
@@ -38,6 +40,8 @@ export default function RegisterScreen() {
     catch(e) {setError(e instanceof Error?e.message:'Could not register. Please retry.');}
     finally {setBusy(false);}
   }
+  if(status==='authenticated')return <Redirect href="/(app)"/>;
+  if(status==='loading')return <PublicPage><PublicText>{publicCopy[language].checking}</PublicText></PublicPage>;
   return <Screen scroll style={styles.content}>
     <Text style={styles.title}>{isRtl?'ساخت حساب پایه':'Create your account'}</Text>
     <Text>{isRtl?'حساب تعاملی برای افراد ۱۸ سال به بالا است. منابع عمومی بدون حساب در دسترس‌اند.':'Social accounts are for adults 18+. Public resources are available at every age without an account.'}</Text>

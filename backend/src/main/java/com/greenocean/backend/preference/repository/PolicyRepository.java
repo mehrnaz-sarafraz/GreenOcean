@@ -20,6 +20,7 @@ public class PolicyRepository {
                 SELECT policy_key, version, title, summary, content, published_at
                   FROM policy_documents
                  WHERE policy_key = ? AND status = 'PUBLISHED' AND content IS NOT NULL
+                   AND published_at IS NOT NULL AND published_at <= CURRENT_TIMESTAMP
                  ORDER BY version DESC LIMIT 1
                 """, (rs, row) -> new PublishedPolicyResponse(rs.getString("policy_key"), rs.getInt("version"),
                 rs.getString("title"), rs.getString("summary"), rs.getString("content"),

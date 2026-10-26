@@ -24,6 +24,7 @@ public class PublicCatalogController {
     @GetMapping("/geography/cities") public List<Map<String,Object>> cities(@RequestParam String country,@RequestParam(defaultValue="") String q,@RequestParam(defaultValue="") String subdivision) {
         access.country(country);
         if(q.length()>100) throw new IllegalArgumentException("Search is too long");
+        if(subdivision.length()>16) throw new IllegalArgumentException("Invalid subdivision");
         return localized(db.queryForList("SELECT geonames_id,name,subdivision_code,local_names FROM geography_cities WHERE country_code=? AND (?='' OR subdivision_code=?) AND (name ILIKE ? OR local_names::text ILIKE ?) ORDER BY name LIMIT 50",country,subdivision,subdivision,"%"+q+"%","%"+q+"%"));
     }
     @GetMapping("/geography/services") public List<Map<String,Object>> services(@RequestParam String country) {

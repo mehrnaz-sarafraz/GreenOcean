@@ -1,6 +1,7 @@
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api/client';
+import { publicCopy } from '@/localization/public-copy';
 import { AppButton } from '@/components/app-button';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
@@ -11,7 +12,7 @@ import { colors, radius, shadow } from '@/theme/tokens';
 
 const icon = (name: string, focused: boolean) => <AppIcon name={name} filled={focused} size={25} color={focused ? colors.ocean700 : colors.muted} />;
 export default function AppLayout() {
-  const { status, user } = useAuth(); const { t } = useLanguage();
+  const { status, user } = useAuth(); const { t, language } = useLanguage();
   const { preferences } = usePlatformData();
   const [allowed, setAllowed] = useState<boolean|null>(null);
   const [error, setError] = useState('');
@@ -27,6 +28,7 @@ export default function AppLayout() {
       .catch(() => { if (active) setError('Could not check account access. Please retry.'); });
     return () => { active = false; };
   }, [status,user?.userId]);
+  if(status==='loading')return <View style={{padding:24,gap:16}}><Text>{publicCopy[language].checking}</Text><AppButton label={publicCopy[language].urgent} onPress={()=>router.push('/(auth)/urgent-help')}/></View>;
   if (status === 'authenticated' && allowed === false) return <Redirect href="/(auth)/activate" />;
   if (status === 'authenticated' && allowed === null) return <View style={{padding:24}}><Text>{error || 'Checking account access…'}</Text>{!!error && <AppButton label="Retry" onPress={()=>void checkAccess()} />}</View>;
   if (status === 'unauthenticated') return <Redirect href="/(auth)/welcome" />;

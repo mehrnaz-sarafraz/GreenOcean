@@ -1,8 +1,8 @@
-name: Phase A quality gates
+name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [main, feature/phase-a-identity-privacy-access]
+    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience]
 permissions:
   contents: read
 jobs:
