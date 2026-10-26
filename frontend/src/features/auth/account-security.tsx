@@ -26,6 +26,7 @@ export function AccountSecurityPanel(){
    <AppButton label={fa?'تغییر رمز':'Update password'} loading={busy} disabled={!current||!passwordBounds(next)||next!==confirm} onPress={()=>void run(async()=>{await apiRequest('/api/v1/auth/change-password',{method:'POST',retryAfterRefresh:false,body:JSON.stringify({currentPassword:current,newPassword:next})});setCurrent('');setNext('');setConfirm('');await signOut({notice:'passwordChanged'});router.replace('/(auth)/login');})}/>
   </View>
   <ErrorMessage message={message}/>
+  <AppButton label={fa?'خروج':'Sign out'} variant="secondary" onPress={()=>void signOut().then(()=>router.replace('/(auth)/welcome'))}/>
   <AppButton label={fa?'نشست‌های فعال':'Active sessions'} variant="secondary" onPress={()=>router.push({pathname:'/(app)/tools/[tool]',params:{tool:'session-management'}})}/>
   <AppButton label={fa?'دانلود داده‌های من':'Download my data'} variant="secondary" onPress={()=>router.push({pathname:'/(app)/tools/[tool]',params:{tool:'data-export'}})}/>
   {user?.roles.some(role=>role==='ADMIN'||role==='MODERATOR')&&<StaffKeys/>}
