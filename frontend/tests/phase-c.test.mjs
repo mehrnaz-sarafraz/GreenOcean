@@ -19,7 +19,7 @@ test('Confused C: server fields are actionable and policy changes request a refr
  assert.equal(failure.refreshTerms,true);assert.equal(failure.fields.termsVersion,'Review the current Terms');
 });
 test('Malicious C: unrelated server fields and internals are not displayed',()=>{
- const failure=registrationFailure({status:500,message:'SQL credentials secret',fieldErrors:[{field:'internal',message:'secret'}]});
+ const failure=registrationFailure({status:500,message:'SQL credentials secret',fieldErrors:[{field:'internal',message:'secret'},{field:'password',message:'secret'}]});
  assert.deepEqual(failure.fields,{});assert.doesNotMatch(failure.message,/secret|SQL/);
 });
 test('Confused C: rate limits include a bounded recovery instruction',()=>assert.match(registrationFailure({status:429,retryAfter:120}).message,/Wait 120 seconds/));

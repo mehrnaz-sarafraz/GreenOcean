@@ -38,9 +38,10 @@ test('Confused C: changed Terms refresh version and require a new explicit accep
  await terms.click();await submit(page);await expect(page).toHaveURL(/\/activate/);expect(state.registrations[1].termsVersion).toBe(2);
 });
 test('Confused C: pending registration prevents duplicate clicks',async({page})=>{
- const state=await installApi(page,{registrationDelay:800});await fill(page);await submit(page);
+ const state=await installApi(page,{holdRegistration:true});await fill(page);await submit(page);
  await expect(page.getByText('Submitting registration…',{exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Create account',exact:true})).toBeDisabled();
+ state.releaseRegistration();
  await expect(page).toHaveURL(/\/activate/);expect(state.registrations).toHaveLength(1);
 });
 test('Confused C: unknown outcome can continue verification without resubmitting',async({page})=>{

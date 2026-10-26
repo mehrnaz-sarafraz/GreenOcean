@@ -17,12 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /** Explicitly opt-in CI server. Test classes are not part of the production application jar. */
 public class PhaseCLiveServer {
     static final Map<String,String> delivered=new ConcurrentHashMap<>();
+    static final Map<String,Integer> deliveries=new ConcurrentHashMap<>();
     @TestConfiguration(proxyBeanMethods=false)
     static class TestMail {
         @Bean @Primary MailTransport isolatedDelivery() {
             return (id,to,template,secret)->{
                 if(!to.endsWith("@example.test"))throw new IllegalArgumentException("Synthetic recipients only");
-                if(template.equals("email-verification"))delivered.put(to,secret);
+                if(template.equals("email-verification")){delivered.put(to,secret);deliveries.merge(to,1,Integer::sum);}
             };
         }
     }
@@ -52,6 +53,7 @@ public class PhaseCLiveServer {
                 if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
                 var data=new LinkedHashMap<String,Object>();
                 data.put("code",delivered.get(email));
+                data.put("deliveries",deliveries.getOrDefault(email,0));
                 data.put("accounts",db.queryForObject("SELECT count(*) FROM users WHERE lower(email)=lower(?)",Integer.class,email));
                 var rows=db.queryForList("SELECT u.status,u.email_verified,p.username,p.display_name,p.city,p.birth_year,p.is_profile_private,u.password_hash LIKE '{pbkdf2}%' AS modern_hash FROM users u JOIN profiles p ON p.user_id=u.id WHERE u.email=?",email);
                 data.put("account",rows.isEmpty()?null:rows.getFirst());

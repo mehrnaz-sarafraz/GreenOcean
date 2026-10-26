@@ -16,7 +16,7 @@ export function validateRegistration(input: RegistrationValues): Record<string, 
 export function registrationFailure(error: { status?: number; fieldErrors?: { field: string; message: string }[]; message?: string; retryAfter?: number | null }, fa = false) {
   const fields: Record<string, string> = {};
   const allowed = new Set(['email', 'password', 'countryCode', 'adultSelfAttested', 'termsVersion']);
-  for (const violation of error.fieldErrors ?? []) {
+  for (const violation of (error.status === 400 || error.status === 422) ? error.fieldErrors ?? [] : []) {
     if (allowed.has(violation.field)) fields[violation.field] = violation.message;
   }
   let message = fa ? 'ثبت‌نام تأیید نشد. دوباره تلاش کنید یا تأیید ایمیل را ادامه دهید.' : 'Registration was not confirmed. Try again or continue email verification if you already submitted.';

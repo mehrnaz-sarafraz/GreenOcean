@@ -1,5 +1,6 @@
 export async function installApi(page, options={}) {
   const state={signedIn:false,emailVerified:false,onboardingComplete:false,termsVersion:1,registrations:[],registrationFailures:options.registrationFailures??0,countryFailures:options.countryFailures??0};
+  const registrationGate=options.holdRegistration?new Promise(resolve=>{state.releaseRegistration=resolve;}):null;
   await page.route('**/api/v1/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;
     const headers={'Access-Control-Allow-Origin':'http://127.0.0.1:8081','Access-Control-Allow-Credentials':'true','Access-Control-Allow-Headers':'Authorization,Content-Type,Accept,X-GreenOcean-CSRF','Access-Control-Allow-Methods':'GET,POST,PATCH,DELETE,OPTIONS'};
@@ -13,6 +14,7 @@ export async function installApi(page, options={}) {
     if(path==='/api/v1/public/resources')return reply({items:[{id:'qa-grounding',title:'Public grounding practice',body:'A synthetic all-age resource.'}],boundaries:['Listeners offer non-clinical support.','GreenOcean is not an emergency service.']});
     if(path==='/api/v1/auth/register'){
       state.registrations.push(req.postDataJSON());
+      if(registrationGate)await registrationGate;
       if(options.registrationDelay)await new Promise(resolve=>setTimeout(resolve,options.registrationDelay));
       if(state.registrationFailures-->0)return route.abort('internetdisconnected');
       if(options.staleTerms&&state.registrations.length===1){state.termsVersion=2;return reply({message:'The Terms have changed.',fieldErrors:[{field:'termsVersion',message:'Review and accept the current Terms version.'}]},400);}

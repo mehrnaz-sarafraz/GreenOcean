@@ -52,7 +52,7 @@ test('Confused live C: wrong code, resend, duplicate signup and reopen remain re
  const original=(await snapshot(email)).code;const wrong=original==='000000'?'111111':'000000';
  await page.getByLabel('Verification code',{exact:true}).fill(wrong);await page.getByRole('button',{name:'Verify email',exact:true}).click();await expect(page.getByRole('alert')).toContainText('invalid or expired');
  await page.getByRole('button',{name:'Resend code',exact:true}).click();await expect(page.getByRole('alert')).toContainText('If the account exists');
- await expect.poll(async()=>(await snapshot(email)).code).not.toBe(original);
+ await expect.poll(async()=>(await snapshot(email)).deliveries).toBe(2);
  const duplicate=await request.post(`${api}/auth/register`,{data:{email:email.toUpperCase(),password:secret,countryCode:'IR',adultSelfAttested:true,termsVersion:1}});expect(duplicate.status()).toBe(201);expect(Object.keys(await duplicate.json())).toEqual(['message']);
  expect((await snapshot(email)).accounts).toBe(1);await verify(page,email);
 });

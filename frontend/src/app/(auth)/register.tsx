@@ -25,7 +25,12 @@ export default function RegisterScreen() {
   const emailRef=useRef<TextInput>(null);const passwordRef=useRef<TextInput>(null);const countryRef=useRef<TextInput>(null);
   const adultRef=useRef<View>(null);const termsRef=useRef<View>(null);
   function clear(field:string) {setErrors(old=>{const next={...old};delete next[field];return next;});setError('');}
-  function fieldError(field:string) {return !errors[field]?undefined:language==='fa'?publicCopy.fa.registrationErrors[field as keyof typeof publicCopy.fa.registrationErrors]??errors[field]:errors[field];}
+  function fieldError(field:string) {
+    if(!errors[field])return undefined;
+    if(language!=='fa')return errors[field];
+    if(field==='password'&&/common|compromised|another/i.test(errors[field]))return 'رمز عبور رایج یا افشاشده است. یک عبارت امن‌تر انتخاب کنید.';
+    return publicCopy.fa.registrationErrors[field as keyof typeof publicCopy.fa.registrationErrors]??errors[field];
+  }
   function focusErrors(fields:Record<string,string>) {
     const refs={email:emailRef,password:passwordRef,countryCode:countryRef,adultSelfAttested:adultRef,termsVersion:termsRef};
     const first=Object.keys(refs).find(key=>fields[key]);

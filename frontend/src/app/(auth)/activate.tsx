@@ -25,7 +25,21 @@ export default function ActivateScreen(){
    }catch{if(epoch===loadEpoch.current){setDetailsFailed(true);setTerms(0);setAccepted(false);}}
  },[]);
  useFocusEffect(useCallback(()=>{void load();return()=>{++loadEpoch.current;};},[load]));
- async function run(action:()=>Promise<unknown>){if(running.current)return;running.current=true;setBusy(true);setMessage('');try{await action();}catch(e){setMessage(e instanceof ApiError&&e.status===429?(fa?'تلاش‌های زیادی انجام شده است. کمی صبر کنید.':`Too many attempts. Wait ${e.retryAfter??60} seconds before trying again.`):fa?'عملیات تأیید نشد. اتصال و اطلاعات را بررسی کنید و دوباره تلاش کنید.':e instanceof Error?e.message:'Please try again.');}finally{running.current=false;setBusy(false);}}
+ async function run(action:()=>Promise<unknown>){
+   if(running.current)return;
+   running.current=true;setBusy(true);setMessage('');
+   try{await action();}
+   catch(e){
+     if(e instanceof ApiError && e.fieldErrors.some(field=>field.field==='termsVersion')){
+       setAccepted(false);await load();
+       setMessage(fa?'نسخه قوانین تغییر کرده است. نسخه جدید را بررسی کنید و بپذیرید.':'The Terms have changed. Review and accept the new version.');
+     }else if(e instanceof ApiError && e.status===429){
+       setMessage(fa?'تلاش‌های زیادی انجام شده است. کمی صبر کنید.':`Too many attempts. Wait ${e.retryAfter??60} seconds before trying again.`);
+     }else{
+       setMessage(fa?'عملیات تأیید نشد. اتصال و اطلاعات را بررسی کنید و دوباره تلاش کنید.':e instanceof Error?e.message:'Please try again.');
+     }
+   }finally{running.current=false;setBusy(false);}
+ }
  return <Screen scroll style={{gap:16,maxWidth:560,width:'100%',alignSelf:'center'}}>
  <Text accessibilityRole="header" style={{fontSize:28,fontWeight:'700'}}>{fa?'فعال‌سازی حساب':'Activate your account • فعال‌سازی حساب'}</Text>
  <Text>{fa?'پیش از استفاده از فضای تعاملی، ایمیل خود را تأیید کنید. شرایط سن و منطقه در سرور بررسی می‌شوند.':'Verify your email before joining social spaces. Regional availability and age eligibility are checked by the server.'}</Text>
@@ -42,7 +56,7 @@ export default function ActivateScreen(){
  <Pressable disabled={busy} accessibilityRole="checkbox" aria-checked={adult} accessibilityState={{checked:adult,disabled:busy}} onPress={()=>setAdult(!adult)}><Text>{adult?'☑':'☐'} {fa?'خوداظهاری می‌کنم که حداقل ۱۸ سال دارم.':'I self-attest that I am at least 18.'}</Text></Pressable>
  <AppButton label={fa?'مطالعه قوانین':'Read Terms'} disabled={busy} variant="secondary" onPress={()=>router.push({pathname:'/(auth)/info/[page]',params:{page:'terms'}})} />
  <Pressable disabled={busy||!terms} accessibilityRole="checkbox" aria-checked={accepted} accessibilityState={{checked:accepted,disabled:busy||!terms}} onPress={()=>setAccepted(!accepted)}><Text>{accepted?'☑':'☐'} {fa?'نسخه قوانین را می‌پذیرم: ':'I accept Terms version '}{terms}.</Text></Pressable>
- <AppButton label="Save eligibility and continue" disabled={!adult||!accepted||!country||!terms} loading={busy} onPress={()=>void run(async()=>{const identity=await apiRequest<{services:{COMMUNITY:boolean}}>('/api/v1/identity/activate',{method:'POST',body:JSON.stringify({adultSelfAttested:adult,residenceCountry:country,termsVersion:terms})});if(identity.services.COMMUNITY)router.replace('/(app)');else setMessage('Your account details are saved. Social services are not yet available for this account or region. Public resources remain available.');})} />
+ <AppButton label={fa?'ذخیره شرایط و ادامه':'Save eligibility and continue'} disabled={!adult||!accepted||!country||!terms} loading={busy} onPress={()=>void run(async()=>{const identity=await apiRequest<{services:{COMMUNITY:boolean}}>('/api/v1/identity/activate',{method:'POST',body:JSON.stringify({adultSelfAttested:adult,residenceCountry:country,termsVersion:terms})});if(identity.services.COMMUNITY)router.replace('/(app)');else setMessage(fa?'اطلاعات حساب ذخیره شد. خدمات تعاملی هنوز برای این حساب یا منطقه در دسترس نیست. منابع عمومی باز هستند.':'Your account details are saved. Social services are not yet available for this account or region. Public resources remain available.');})} />
  <AppField label={fa?'رمز عبور برای حذف حساب':'Password to delete your account'} value={password} onChangeText={setPassword} secureTextEntry ltr />
  <AppButton label={fa?'حذف دائمی حساب من':'Delete my account permanently'} variant="secondary" disabled={!password} loading={busy} onPress={()=>void run(async()=>{await apiRequest('/api/v1/account',{method:'DELETE',body:JSON.stringify({password})});await signOut();router.replace('/(auth)/welcome');})} />
  <AppButton label={fa?'خروج':'Sign out'} variant="secondary" onPress={()=>void run(signOut)} />

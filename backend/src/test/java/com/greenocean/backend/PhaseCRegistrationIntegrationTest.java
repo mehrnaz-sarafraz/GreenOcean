@@ -53,6 +53,21 @@ class PhaseCRegistrationIntegrationTest {
         var in=input();in.put("password","🌊🌍🌱🔑".repeat(32));register(in);
         postJson("/api/v1/auth/login",Map.of("email",in.get("email"),"password",in.get("password"))).andExpect(status().isOk());
     }
+    @Test @Tag("creative") void generatedUsernameCollisionRetriesWithoutChangingExistingProfile() throws Exception {
+        String existing=register(input());
+        UUID collision=UUID.fromString("12345678-1234-1234-1234-123456789abc");
+        UUID replacement=UUID.fromString("abcdef12-abcd-abcd-abcd-abcdef123456");
+        String taken="member_"+collision.toString().replace("-", "").substring(0,22);
+        String expected="member_"+replacement.toString().replace("-", "").substring(0,22);
+        db.update("UPDATE profiles SET username=? WHERE user_id=?::uuid",taken,existing);
+        var in=input();
+        try(var uuids=org.mockito.Mockito.mockStatic(UUID.class,org.mockito.Mockito.CALLS_REAL_METHODS)) {
+            uuids.when(UUID::randomUUID).thenReturn(collision,replacement);
+            String created=register(in);
+            assertThat(db.queryForObject("SELECT username FROM profiles WHERE user_id=?::uuid",String.class,created)).isEqualTo(expected);
+        }
+        assertThat(db.queryForObject("SELECT username FROM profiles WHERE user_id=?::uuid",String.class,existing)).isEqualTo(taken);
+    }
     @Test @Tag("confused") void duplicateAndNewResponsesMatchWithoutChangingCredentialsOrSendingMail() throws Exception {
         var in=input();String first=postJson("/api/v1/auth/register",in).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         String hash=db.queryForObject("SELECT password_hash FROM users WHERE email=?",String.class,in.get("email"));
