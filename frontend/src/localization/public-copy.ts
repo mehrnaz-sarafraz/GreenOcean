@@ -26,7 +26,7 @@ const en = {
   guestTitle: 'Start without an account', guestBody: 'Read separately curated resources or learn how GreenOcean works. Public pages never include private feeds, member profiles, messages or support preferences.',
   policyTitle: 'Read, ask and decide', invitation: 'Join when you are ready', invitationBody: 'Create an account if you are eligible, or keep exploring the public information. There is no need to register just to learn more.',
   error: 'This information could not be loaded. Check your connection and try again.', loading: 'Loading…',
-  policyUnavailable: 'The current published document is unavailable. We cannot show a hardcoded or older copy as the current policy.',
+  policyUnavailable: 'The current published document is unavailable. Please try again or return to public resources.',
   policyLoading: 'Loading the current published document…', policyVersion: 'Version', published: 'Published', policyLanguage: 'This document is shown as published. A translation may not be available in your interface language.',
   notFoundTitle: 'Information page not found', notFoundBody: 'This link is unavailable. Choose a public page below or return to Welcome.',
   policyLinks: [
@@ -89,7 +89,7 @@ const fa: typeof en = {
   noDisclosure:'برای دیدن این صفحات نیازی به بیان تشخیص، علائم، دارو، تجربه آسیب‌زا یا مشکلات شخصی ندارید.',
   guestTitle:'بدون حساب شروع کنید',guestBody:'منابع عمومی منتخب را بخوانید یا با روش کار آشنا شوید. صفحات عمومی، فید خصوصی، پروفایل اعضا، پیام‌ها و ترجیحات حمایتی را نمایش نمی‌دهند.',
   policyTitle:'بخوانید، بپرسید و تصمیم بگیرید',invitation:'هر زمان آماده بودید بپیوندید',invitationBody:'اگر واجد شرایط هستید حساب بسازید یا به مرور اطلاعات عمومی ادامه دهید. برای شناخت خدمات نیازی به ثبت‌نام نیست.',
-  error:'دریافت اطلاعات ممکن نشد. اتصال را بررسی کنید و دوباره تلاش کنید.',loading:'در حال دریافت…',policyUnavailable:'سند منتشرشده فعلی در دسترس نیست. متن ثابت یا نسخه قدیمی را به‌عنوان سیاست فعلی نمایش نمی‌دهیم.',policyLoading:'در حال دریافت سند منتشرشده فعلی…',policyVersion:'نسخه',published:'تاریخ انتشار',policyLanguage:'سند به همان زبان منتشرشده نمایش داده می‌شود. ممکن است ترجمه‌ای به زبان رابط موجود نباشد.',
+  error:'دریافت اطلاعات ممکن نشد. اتصال را بررسی کنید و دوباره تلاش کنید.',loading:'در حال دریافت…',policyUnavailable:'سند منتشرشده فعلی در دسترس نیست. دوباره تلاش کنید یا به منابع عمومی برگردید.',policyLoading:'در حال دریافت سند منتشرشده فعلی…',policyVersion:'نسخه',published:'تاریخ انتشار',policyLanguage:'سند به همان زبان منتشرشده نمایش داده می‌شود. ممکن است ترجمه‌ای به زبان رابط موجود نباشد.',
   notFoundTitle:'صفحه اطلاعات پیدا نشد',notFoundBody:'این پیوند در دسترس نیست. یکی از صفحات عمومی را انتخاب کنید یا به خوش‌آمدگویی برگردید.',
   policyLinks:[{id:'terms',label:'شرایط استفاده'},{id:'privacy',label:'اطلاعیه حریم خصوصی'},{id:'guidelines',label:'راهنمای جامعه'},{id:'age-eligibility',label:'سیاست سن و شرایط دسترسی'},{id:'service-boundaries',label:'مرزهای خدمات'},{id:'data-retention',label:'نگهداری و حذف داده'}],
   infoLinks:[{id:'how-it-works',label:'نحوه کار'},{id:'faq',label:'پرسش‌های رایج'},{id:'accessibility',label:'دسترس‌پذیری'},{id:'cookies',label:'اطلاعات کوکی'}],
