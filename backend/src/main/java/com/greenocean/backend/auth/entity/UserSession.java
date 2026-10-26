@@ -48,6 +48,7 @@ public class UserSession {
     @Column(name="reauthenticated_at") private Instant reauthenticatedAt;
     @Column(name="mfa_authenticated_at") private Instant mfaAuthenticatedAt;
 
+    @Column(name="token_version",nullable=false) private int tokenVersion;
     protected UserSession() {
     }
 

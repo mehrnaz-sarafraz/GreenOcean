@@ -31,8 +31,9 @@ public class AuthAbuseFilter extends OncePerRequestFilter {
         }
         if((path.startsWith("/api/v1/auth/")||path.startsWith("/api/v1/account-assistance/")) && "POST".equals(req.getMethod())) {
             // Bound bytes before JSON parsing/hashing, including requests with no Content-Length.
-            byte[] body=req.getInputStream().readNBytes(8193);
-            if(body.length>8192) {
+            int maximum=path.startsWith("/api/v1/auth/mfa/")?49152:8192;
+            byte[] body=req.getInputStream().readNBytes(maximum+1);
+            if(body.length>maximum) {
                 res.setStatus(413);res.setContentType("application/json");
                 res.getWriter().write("{\"status\":413,\"message\":\"Registration request is too large.\"}");return;
             }

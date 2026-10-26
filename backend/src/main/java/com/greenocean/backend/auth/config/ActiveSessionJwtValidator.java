@@ -30,6 +30,7 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
         try {
             UUID userId = UUID.fromString(jwt.getSubject());
             UUID sessionId = UUID.fromString(jwt.getClaimAsString("sid"));
+            Number version=jwt.getClaim("sv");if(!java.util.Objects.equals(version==null?0:version.intValue(),db.queryForObject("SELECT token_version FROM user_sessions WHERE id=? AND user_id=?",Integer.class,sessionId,userId)))return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
             var currentRoles=db.queryForList("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=? ORDER BY r.name",String.class,userId);
             var tokenRoles=jwt.getClaimAsStringList("roles");
             if(tokenRoles==null || !new java.util.TreeSet<>(tokenRoles).equals(new java.util.TreeSet<>(currentRoles))) return OAuth2TokenValidatorResult.failure(INVALID_SESSION);

@@ -74,6 +74,10 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM webauthn_ceremonies WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM webauthn_credentials WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM webauthn_enrollment_permits WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM audit_logs WHERE actor_user_id=? AND entity_type='SECURITY'",userId);
         jdbcTemplate.update("INSERT INTO account_deletions(user_id,status) VALUES (?,'PROCESSING') ON CONFLICT(user_id) DO UPDATE SET status='PROCESSING'",userId);
         jdbcTemplate.update("DELETE FROM email_outbox WHERE owner_user_id=? OR recipient=(SELECT email FROM users WHERE id=?)",userId,userId);
         jdbcTemplate.update("DELETE FROM email_verification_codes WHERE user_id=?",userId);
