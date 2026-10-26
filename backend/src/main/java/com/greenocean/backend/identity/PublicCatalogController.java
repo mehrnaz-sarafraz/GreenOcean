@@ -8,18 +8,23 @@ import java.util.*;
 public class PublicCatalogController {
     private final JdbcTemplate db;
     private final AccessPolicy access;
-    public PublicCatalogController(JdbcTemplate db,AccessPolicy access) { this.db=db;this.access=access; }
+    private final tools.jackson.databind.ObjectMapper json;
+    public PublicCatalogController(JdbcTemplate db,AccessPolicy access,tools.jackson.databind.ObjectMapper json) { this.db=db;this.access=access;this.json=json; }
+    private List<Map<String,Object>> localized(List<Map<String,Object>> rows) {
+        for(var row:rows) if(row.get("local_names")!=null) row.put("local_names",json.readTree(row.get("local_names").toString()));
+        return rows;
+    }
     @GetMapping("/geography/countries") public List<Map<String,Object>> countries(@RequestParam(defaultValue="") String q) {
         if(q.length()>100) throw new IllegalArgumentException("Search is too long");
-        return db.queryForList("SELECT code,name,local_names,catalog_version FROM geography_countries WHERE name ILIKE ? OR code ILIKE ? OR local_names::text ILIKE ? ORDER BY name LIMIT 250","%"+q+"%","%"+q+"%","%"+q+"%");
+        return localized(db.queryForList("SELECT code,name,local_names,catalog_version FROM geography_countries WHERE name ILIKE ? OR code ILIKE ? OR local_names::text ILIKE ? ORDER BY name LIMIT 250","%"+q+"%","%"+q+"%","%"+q+"%"));
     }
     @GetMapping("/geography/subdivisions") public List<Map<String,Object>> subdivisions(@RequestParam String country) {
-        access.country(country); return db.queryForList("SELECT code,name,local_names FROM geography_subdivisions WHERE country_code=? ORDER BY name",country);
+        access.country(country); return localized(db.queryForList("SELECT code,name,local_names FROM geography_subdivisions WHERE country_code=? ORDER BY name",country));
     }
     @GetMapping("/geography/cities") public List<Map<String,Object>> cities(@RequestParam String country,@RequestParam(defaultValue="") String q,@RequestParam(defaultValue="") String subdivision) {
         access.country(country);
         if(q.length()>100) throw new IllegalArgumentException("Search is too long");
-        return db.queryForList("SELECT geonames_id,name,subdivision_code,local_names FROM geography_cities WHERE country_code=? AND (?='' OR subdivision_code=?) AND (name ILIKE ? OR local_names::text ILIKE ?) ORDER BY name LIMIT 50",country,subdivision,subdivision,"%"+q+"%","%"+q+"%");
+        return localized(db.queryForList("SELECT geonames_id,name,subdivision_code,local_names FROM geography_cities WHERE country_code=? AND (?='' OR subdivision_code=?) AND (name ILIKE ? OR local_names::text ILIKE ?) ORDER BY name LIMIT 50",country,subdivision,subdivision,"%"+q+"%","%"+q+"%"));
     }
     @GetMapping("/geography/services") public List<Map<String,Object>> services(@RequestParam String country) {
         access.country(country);

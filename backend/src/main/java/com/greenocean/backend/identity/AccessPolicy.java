@@ -22,6 +22,7 @@ public class AccessPolicy {
         if (rows.isEmpty()) throw new ForbiddenException("Account is unavailable");
         var row = rows.getFirst();
         if (!"ACTIVE".equals(row.get("status"))) throw new ForbiddenException("Activate your account before using social services");
+        if("INELIGIBLE".equals(row.get("age_result"))) throw new ForbiddenException("This account is limited to public resources");
         boolean legacyGrace = !Boolean.TRUE.equals(row.get("phase_a_enrolled")) && Instant.now().isBefore(legacyDeadline);
         if (!legacyGrace && (!Boolean.TRUE.equals(row.get("email_verified")) || !"ADULT".equals(row.get("age_result"))))
             throw new ForbiddenException("Verify your email and adult eligibility in account activation");

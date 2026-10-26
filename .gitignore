@@ -22,3 +22,7 @@ frontend/dist/
 !.env.example
 backend/src/main/resources/application-local.properties
 backend/src/main/resources/application-*.local.properties
+
+# Browser QA artifacts
+frontend/playwright-report/
+frontend/test-results/

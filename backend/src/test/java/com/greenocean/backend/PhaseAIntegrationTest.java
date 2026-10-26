@@ -140,6 +140,7 @@ class PhaseAIntegrationTest {
     }
     @Test @Tag("creative") void countryCatalogSearchSupportsLocalNamesAndNoImplicitServices() throws Exception {
         mvc.perform(get("/api/v1/geography/countries").param("q","Iran")).andExpect(status().isOk()).andExpect(jsonPath("$[0].code").value("IR"));
+        mvc.perform(get("/api/v1/geography/countries").param("q","ایران")).andExpect(status().isOk()).andExpect(jsonPath("$[0].code").value("IR")).andExpect(jsonPath("$[0].local_names.fa").value("ایران"));
         mvc.perform(get("/api/v1/geography/services").param("country","IR")).andExpect(status().isOk()).andExpect(jsonPath("$[0].status").value("UNDER_REVIEW"));
         mvc.perform(get("/api/v1/geography/cities").param("country","IR")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
     }
