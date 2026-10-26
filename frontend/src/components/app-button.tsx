@@ -10,6 +10,7 @@ export function AppButton({ label, onPress, loading = false, disabled = false, s
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       disabled={loading || disabled}
       onPress={onPress}
       onFocus={()=>setFocused(true)}

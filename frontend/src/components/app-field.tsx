@@ -15,6 +15,7 @@ export function AppField({ label, error, ltr, ref, ...inputProps }: Props) {
         ref={ref}
         accessibilityLabel={label}
         accessibilityHint={error}
+        aria-invalid={!!error}
         {...inputProps}
         placeholderTextColor={colors.muted}
         style={[styles.input, { textAlign: ltr ? 'left' : isRtl ? 'right' : 'left', writingDirection: ltr ? 'ltr' : 'auto' }, error ? { borderColor: colors.danger } : undefined, inputProps.style]}
