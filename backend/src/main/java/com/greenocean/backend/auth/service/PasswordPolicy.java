@@ -5,7 +5,7 @@ import java.util.Set;
 
 public final class PasswordPolicy {
     private PasswordPolicy() {}
-    private static final Set<String> BLOCKED = Set.of("passwordpassword", "123456789012345", "1234567890123456", "qwertyuiopasdfgh", "letmeinletmeinletmein");
+    private static final Set<String> BLOCKED = Set.of("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "greenoceangreenocean", "greenoceanpassword", "passwordpassword", "123456789012345", "1234567890123456", "qwertyuiopasdfgh", "letmeinletmeinletmein");
     private static final Set<String> COMPROMISED = loadBlocklist();
     private static Set<String> loadBlocklist() {
         String file=System.getenv("GREENOCEAN_PASSWORD_BLOCKLIST_SHA256");

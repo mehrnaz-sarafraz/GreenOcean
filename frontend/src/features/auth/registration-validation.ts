@@ -1,7 +1,7 @@
 export type RegistrationValues = { email: string; password: string; countryCode: string; adultSelfAttested: boolean; termsVersion: number; accepted: boolean };
 // Mirrors EmailIdentity.PATTERN. ASCII mailboxes and DNS/punycode domains; no dot/plus rewriting.
 const emailPattern = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
-const commonPasswords = new Set(['passwordpassword', '123456789012345', '1234567890123456', 'qwertyuiopasdfgh', 'letmeinletmeinletmein']);
+const commonPasswords = new Set(['xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'greenoceangreenocean', 'greenoceanpassword', 'passwordpassword', '123456789012345', '1234567890123456', 'qwertyuiopasdfgh', 'letmeinletmeinletmein']);
 export function validAccountEmail(email: string): boolean { return emailPattern.test(email.trim()); }
 export function validateRegistration(input: RegistrationValues): Record<string, string> {
   const errors: Record<string, string> = {};

@@ -27,12 +27,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   let response = await fetchWithTimeout(`${API_URL}${path}`, { ...requestInit, headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
   if (response.status === 401 && authenticated && retryAfterRefresh && tokens?.refreshToken) {
     const refreshed = await refreshTokens(tokens.refreshToken);
-    if (refreshed) {
+    if (refreshed && requestEpoch===tokenStorage.generation()) {
       headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
       response = await fetchWithTimeout(`${API_URL}${path}`, { ...requestInit, headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
     }
   }
 
+  if(authenticated&&requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
   if (!response.ok) {
     if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
     const body = await response.json().catch(() => null) as { message?: string; fieldErrors?: { field: string; message: string }[] } | null;
@@ -40,7 +41,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`, Array.isArray(body?.fieldErrors) ? body.fieldErrors : [], retry > 0 ? retry : null);
   }
   if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  const value=await response.json() as T;
+  if(authenticated&&requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
+  return value;
 }
 
 export async function apiDownloadText(path: string): Promise<{ filename: string; text: string }> {
@@ -51,7 +54,7 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
   let response = await fetchWithTimeout(`${API_URL}${path}`, { headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
   if (response.status === 401 && tokens?.refreshToken) {
     const refreshed = await refreshTokens(tokens.refreshToken);
-    if (refreshed) {
+    if (refreshed && requestEpoch===tokenStorage.generation()) {
       headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
       response = await fetchWithTimeout(`${API_URL}${path}`, { headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
     }
@@ -61,12 +64,16 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
     if (response.status === 401 && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
     throw new ApiError(response.status, body?.message ?? `Download failed with status ${response.status}`);
   }
+  if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');
   const disposition = response.headers.get('Content-Disposition') || '';
   const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || 'greenocean-export.csv';
-  return { filename, text: await response.text() };
+  const text=await response.text();if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');return {filename,text};
 }
 
-const refreshTokens = singleFlight(performRefresh);
+const refreshTokens=singleFlight(async(refreshToken:string)=>{
+  if(Platform.OS==='web'&&typeof navigator!=='undefined'&&navigator.locks)return navigator.locks.request('greenocean-refresh',()=>performRefresh(refreshToken));
+  return performRefresh(refreshToken);
+});
 async function performRefresh(refreshToken: string) {
   const epoch = tokenStorage.generation();
   const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/${Platform.OS === 'web' ? 'web/refresh' : 'refresh'}`, {
@@ -76,6 +83,7 @@ async function performRefresh(refreshToken: string) {
     body: JSON.stringify({ refreshToken }),
   });
   if (!response.ok) {
+    if(response.status!==401&&response.status!==403)throw new ApiError(response.status,'Could not confirm your session. Please retry.');
     if (epoch === tokenStorage.generation()) await tokenStorage.clear();
     return null;
   }
