@@ -16,6 +16,7 @@ type RequestOptions = RequestInit & { authenticated?: boolean; retryAfterRefresh
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { authenticated = true, retryAfterRefresh = true, ...requestInit } = options;
+  const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
   const headers = new Headers(requestInit.headers);
   if (Platform.OS === 'web') headers.set('X-GreenOcean-CSRF', '1');
@@ -33,6 +34,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!response.ok) {
+    if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
     const body = await response.json().catch(() => null) as { message?: string } | null;
     throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`);
   }
@@ -41,6 +43,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 }
 
 export async function apiDownloadText(path: string): Promise<{ filename: string; text: string }> {
+  const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
   const headers = new Headers({ Accept: 'text/csv' });
   if (tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
@@ -54,6 +57,7 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
   }
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { message?: string } | null;
+    if (response.status === 401 && requestEpoch === tokenStorage.generation()) await tokenStorage.clear();
     throw new ApiError(response.status, body?.message ?? `Download failed with status ${response.status}`);
   }
   const disposition = response.headers.get('Content-Disposition') || '';

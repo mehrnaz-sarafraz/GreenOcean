@@ -22,6 +22,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<CurrentUser | null>(null);
 
+  useEffect(() => tokenStorage.subscribeToClear(() => {
+    setUser(null);
+    setStatus('unauthenticated');
+  }), []);
+
   useEffect(() => {
     async function restoreSession() {
       const epoch = tokenStorage.generation();
@@ -54,11 +59,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
     } catch (error) { if (epoch === tokenStorage.generation()) setStatus('unauthenticated'); throw error; }
     if (epoch !== tokenStorage.generation()) throw new Error('Sign-in was cancelled. Please try again.');
-    await tokenStorage.set(tokens);
-    const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
-    if (epoch !== tokenStorage.generation()) return;
-    setUser(currentUser);
-    setStatus('authenticated');
+    try {
+      await tokenStorage.set(tokens);
+      const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
+      if (epoch !== tokenStorage.generation()) return;
+      setUser(currentUser);
+      setStatus('authenticated');
+    } catch (error) {
+      if (epoch === tokenStorage.generation()) await tokenStorage.clear();
+      throw error;
+    }
   }
 
   async function register(input: RegisterInput) {

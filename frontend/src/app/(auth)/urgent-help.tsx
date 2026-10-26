@@ -1,6 +1,5 @@
-import { ProductHeader, ProductPage } from '@/components/product-ui';
+import { PublicPage,PublicHeading,PublicText } from '@/features/public/public-page';
 import { UrgentHelpContent } from '@/features/safety/urgent-help';
-
-export default function PublicUrgentHelp() {
-  return <ProductPage><ProductHeader eyebrow="NOT A CRISIS SERVICE" title="Urgent help" subtitle="Immediate, country-aware routes to crisis and emergency support." /><UrgentHelpContent /></ProductPage>;
-}
+import { useLanguage } from '@/localization/language-provider';
+import { publicCopy } from '@/localization/public-copy';
+export default function PublicUrgentHelp(){const {language}=useLanguage();const c=publicCopy[language];return <PublicPage><PublicHeading level={1}>{c.urgentTitle}</PublicHeading><PublicText>{c.urgentIntro}</PublicText><UrgentHelpContent/></PublicPage>;}

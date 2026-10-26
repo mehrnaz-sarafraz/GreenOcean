@@ -5,6 +5,7 @@ const REFRESH_TOKEN_KEY = 'greenocean.refreshToken';
 export type StoredTokens = { accessToken: string; refreshToken: string };
 let browserTokens: StoredTokens | null = null;
 let epoch = 0;
+const clearListeners = new Set<() => void>();
 function purgeLegacyWebStorage() {
   if (Platform.OS !== 'web') return;
   try {
@@ -15,6 +16,10 @@ function purgeLegacyWebStorage() {
 }
 export const tokenStorage = {
   generation: () => epoch,
+  subscribeToClear(listener: () => void) {
+    clearListeners.add(listener);
+    return () => { clearListeners.delete(listener); };
+  },
   async get(): Promise<StoredTokens | null> {
     if (Platform.OS === 'web') { purgeLegacyWebStorage(); return browserTokens ?? { accessToken: '', refreshToken: 'cookie' }; }
     const [accessToken, refreshToken] = await Promise.all([SecureStore.getItemAsync(ACCESS_TOKEN_KEY), SecureStore.getItemAsync(REFRESH_TOKEN_KEY)]);
@@ -26,6 +31,7 @@ export const tokenStorage = {
   },
   async clear() {
     epoch += 1; browserTokens = null;
+    clearListeners.forEach(listener => listener());
     if (Platform.OS === 'web') { purgeLegacyWebStorage(); return; }
     await Promise.all([SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY), SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY)]);
   },

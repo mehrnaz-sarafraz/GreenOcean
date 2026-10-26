@@ -15,8 +15,8 @@ function AccountData({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ MaterialSymbols_400Regular, MaterialSymbols_600SemiBold });
-  if (!fontsLoaded) return null;
+  useFonts({ MaterialSymbols_400Regular, MaterialSymbols_600SemiBold });
+  // Public urgent information remains usable if decorative icon fonts fail to load.
   return (
     <LanguageProvider>
       <AuthProvider>

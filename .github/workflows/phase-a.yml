@@ -1,8 +1,11 @@
-name: Phase A quality gates
+name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [main, feature/phase-a-identity-privacy-access]
+    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience]
+concurrency:
+  group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -53,8 +56,15 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npx expo export --platform web
-      - run: npx playwright install --with-deps chromium
+      - run: npx expo export --platform all
+      - name: Select browser runtime
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+            echo "PLAYWRIGHT_CHANNEL=chrome" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: always()
@@ -66,5 +76,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: frontend-web
+          name: frontend-platform-bundles
           path: frontend/dist
