@@ -19,6 +19,7 @@ import java.time.*;import java.net.URI;import java.util.*;
   if(rp==null)throw new ForbiddenException("Security key access is not configured. Staff access remains disabled.");
   var account=users.lockById(user).orElseThrow(()->new ForbiddenException("Security key access unavailable"));
   if(account.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE||!account.isEmailVerified()||!recent.privileged(user))throw new ForbiddenException("Security key access unavailable");
+  if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_sessions WHERE id=? AND user_id=? AND session_scope='PRIVILEGED')",Boolean.class,session,user)))throw new ForbiddenException("Sign in again before staff authentication");
   recent.require(user,session,false);
  }
  private void budget(UUID user){if(!limits.allow("webauthn:"+user,10,Duration.ofMinutes(15)))throw new ForbiddenException("Wait before trying the security key again");}

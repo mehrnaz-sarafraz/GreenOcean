@@ -87,10 +87,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function retryLogout(){try{await reconcileLogout();setNotice('signedOut');}catch{setNotice('logoutPending');}}
   async function signOut(options?: { correctedEmail?:string;notice?:string }) {
     setPendingRegistrationEmail(options?.correctedEmail??null);setPendingEmailCorrected(Boolean(options?.correctedEmail));
-    const tokens=await tokenStorage.get();
+    let tokens:Awaited<ReturnType<typeof tokenStorage.get>>=null;let storageFailed=false;try{tokens=await tokenStorage.get();}catch{storageFailed=true;}
     // Establish the guard before clearing so no tab/reload can silently restore the cookie.
-    try{await tokenStorage.blockRestore(tokens?.refreshToken);}catch{setNotice('logoutPending');}finally{await tokenStorage.clear();setUser(null);setStatus('unauthenticated');setPrivacyHidden(false);setNotice(options?.notice??(options?.correctedEmail?'':'signedOut'));}
-    try{if(tokens?.refreshToken)await revoke(tokens.refreshToken);await tokenStorage.allowRestore();}catch{setNotice('logoutPending');}
+    try{await tokenStorage.blockRestore(tokens?.refreshToken);}catch{storageFailed=true;}finally{try{await tokenStorage.clear();}catch{storageFailed=true;}setUser(null);setStatus('unauthenticated');setPrivacyHidden(false);setNotice(storageFailed?'logoutPending':options?.notice??(options?.correctedEmail?'':'signedOut'));}
+    try{if(storageFailed&&!tokens?.refreshToken)throw new Error('Secure storage needs retry');if(tokens?.refreshToken)await revoke(tokens.refreshToken);await tokenStorage.allowRestore();}catch{setNotice('logoutPending');}
   }
   useEffect(() => {
     async function restoreSession() {
