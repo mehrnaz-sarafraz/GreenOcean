@@ -30,7 +30,7 @@ public class AuthenticationService {
     private final org.springframework.jdbc.core.JdbcTemplate db;
     private final AuthRateLimit limits;
     private final SessionPolicy policy;private final java.time.Clock clock;private final SecurityEvents events;
-    private final String dummyHash;
+    private final String dummyHash;private final java.util.concurrent.Semaphore passwordWork=new java.util.concurrent.Semaphore(4,true);
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
@@ -62,7 +62,8 @@ public class AuthenticationService {
         if(!allowed){events.record(null,null,SecurityEvents.Event.AUTH_RATE_LIMITED);throw new com.greenocean.backend.common.exception.TooManyRequestsException(INVALID_CREDENTIALS+". Wait before trying again.",900);}
         User user = userRepository.lockByEmail(email)
                 .orElse(null);
-        boolean matches=passwordEncoder.matches(request.password(),user==null?dummyHash:user.getPasswordHash());
+        if(!passwordWork.tryAcquire())throw new com.greenocean.backend.common.exception.TooManyRequestsException("Sign-in is busy. Please retry.",2);
+        boolean matches;try{matches=passwordEncoder.matches(request.password(),user==null?dummyHash:user.getPasswordHash());}finally{passwordWork.release();}
         if(user==null){events.record(null,null,SecurityEvents.Event.LOGIN_FAILURE);throw new UnauthorizedException(INVALID_CREDENTIALS);}
 
         if ((user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING) || !matches) {

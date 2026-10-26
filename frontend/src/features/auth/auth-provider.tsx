@@ -1,11 +1,10 @@
 import { AppState, Platform } from 'react-native';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
-import { apiRequest } from '@/lib/api/client';
+import { apiRequest,API_URL } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/storage/token-storage';
 import { browserSessionLock } from '@/lib/api/browser-session';
 import { fetchWithTimeout } from '@/lib/api/request';
-import { API_URL } from '@/lib/api/client';
 
 import { CurrentUser, LoginInput, RegisterInput, TokenResponse } from './types';
 
@@ -38,27 +37,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setUser(null);
     setStatus('unauthenticated');
   }), []);
-
-  useEffect(() => {
-    async function restoreSession() {
-      try{await reconcileLogout();}catch{setNotice('logoutPending');setStatus('unauthenticated');return;}
-      const epoch = tokenStorage.generation();
-      try {
-        const tokens = await tokenStorage.get();
-        if (!tokens) throw new Error('No session');
-        const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
-        if (epoch !== tokenStorage.generation()) return;
-        setUser(currentUser);
-        setStatus('authenticated');
-      } catch {
-        if (epoch !== tokenStorage.generation()) return;
-        await tokenStorage.clear();
-        setUser(null);
-        setStatus('unauthenticated');
-      }
-    }
-    void restoreSession();
-  }, []);
 
   async function signIn(input: LoginInput) {
     await reconcileLogout();setPrivacyHidden(false);setNotice('');
@@ -111,6 +89,27 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try{await tokenStorage.blockRestore(tokens?.refreshToken);}catch{setNotice('logoutPending');}finally{await tokenStorage.clear();setUser(null);setStatus('unauthenticated');setPrivacyHidden(false);setNotice(options?.notice??(options?.correctedEmail?'':'signedOut'));}
     try{if(tokens?.refreshToken)await revoke(tokens.refreshToken);await tokenStorage.allowRestore();}catch{setNotice('logoutPending');}
   }
+  useEffect(() => {
+    async function restoreSession() {
+      try{await reconcileLogout();}catch{setNotice('logoutPending');setStatus('unauthenticated');return;}
+      const epoch = tokenStorage.generation();
+      try {
+        const tokens = await tokenStorage.get();
+        if (!tokens) throw new Error('No session');
+        const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
+        if (epoch !== tokenStorage.generation()) return;
+        setUser(currentUser);
+        setStatus('authenticated');
+      } catch {
+        if (epoch !== tokenStorage.generation()) return;
+        await tokenStorage.clear();
+        setUser(null);
+        setStatus('unauthenticated');
+      }
+    }
+    void restoreSession();
+  }, []);
+
   useEffect(()=>{
     if(Platform.OS==='web')return;
     const subscription=AppState.addEventListener('change',next=>{
