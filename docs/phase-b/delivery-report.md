@@ -85,9 +85,28 @@ CI, from `backend/`, against disposable PostgreSQL 18:
 ./mvnw -B clean verify
 ```
 
-Local backend: 70 passed, 0 failed/skipped (56 retained A + 14 B). Local helper/unit tests: 32 passed, 0 failed/skipped (17 A + 15 B). Final browser/CI totals and inspected screenshot evidence follow in `test-evidence.json`.
+| Check | Passed | Failed | Skipped | Scope |
+|---|---:|---:|---:|---|
+| Backend unit | 10 | 0 | 0 | Password/encryption/storage tests |
+| Backend integration | 60 | 0 | 0 | Spring/PostgreSQL, migration, concurrency, public access and protected API regressions |
+| Frontend helper/unit | 32 | 0 | 0 | 17 A + 15 B pure TypeScript contract/copy/request checks |
+| Browser E2E | 40 | 0 | 0 | 12 A + 28 B against actual Expo UI and synthetic API contracts |
+| Total | 142 | 0 | 0 | 85 retained + 57 added |
+
+Local backend verification passed all 70; CI independently repeats the backend tests against a fresh PostgreSQL service. Local frontend helper tests passed all 32. TypeScript, ESLint and web/Android/iOS JavaScript/asset exports passed in CI. Browser tests passed with no retries or skips. Exact tested revision, CI links and every test name are in `test-evidence.json`.
+
+| Added B persona | Backend | Helper/unit | Browser | Total |
+|---|---:|---:|---:|---:|
+| Happy | 3 | 5 | 5 | 13 |
+| Creative | 3 | 4 | 10 | 17 |
+| Confused | 3 | 3 | 8 | 14 |
+| Malicious | 5 | 3 | 5 | 13 |
+
+An earlier browser run had 37 passes and two test-selector failures: an ambiguous duplicate label and a check that counted hidden previous-route text. These were corrected to select the intended action and verify visible current-document content; the subsequent complete run passed all 40 scenarios. Nothing was skipped or disabled to obtain the pass.
 
 Accessibility checks cover body/button/error/focus contrast, semantic headings, decorative icon suppression, keyboard focus and order, six widths (320/375/390/768/1024/1440), Persian persistence/RTL, enlarged browser text, landscape and reduced-motion functionality. This is not a full WCAG conformance audit. Screen-reader and native device results are not claimed.
+
+[Visual review and retained screenshots](visual-review.md) document the actual desktop, narrow mobile, Persian and error-state inspection. ScrollView screenshots represent individual scroll positions rather than a stitched page.
 
 Android/iOS JavaScript/asset exports are build checks, not native binary builds, simulator runs, store release checks or device tests. The exact unexecuted device steps are in `mobile-smoke-checklist.md`.
 
