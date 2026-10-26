@@ -22,6 +22,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<CurrentUser | null>(null);
 
+  useEffect(() => tokenStorage.subscribeToClear(() => {
+    setUser(null);
+    setStatus('unauthenticated');
+  }), []);
+
   useEffect(() => {
     async function restoreSession() {
       const epoch = tokenStorage.generation();

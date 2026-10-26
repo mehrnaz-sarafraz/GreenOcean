@@ -13,7 +13,7 @@ export function PublicInformation({page}:{page:unknown}) {
   useEffect(()=>{
     if(!key)return;let active=true;
     apiRequest<Policy>(`/api/v1/policies/${key}`,{authenticated:false}).then(document=>{
-      if(!document.content?.trim()||document.key!==key||!Number.isInteger(document.version)||document.version<1||!Number.isFinite(Date.parse(document.publishedAt))||Date.parse(document.publishedAt)>Date.now())throw new Error('Invalid published policy');
+      if(!document.content?.trim()||document.key!==key||!Number.isInteger(document.version)||document.version<1||!Number.isFinite(Date.parse(document.publishedAt)))throw new Error('Invalid published policy');
       if(active)setResult({key,document,failed:false});
     }).catch(()=>{if(active)setResult({key,document:null,failed:true});});return()=>{active=false;};
   },[key,request]);

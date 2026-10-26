@@ -73,6 +73,12 @@ test('Confused B-05: failed urgent directory keeps emergency guidance available'
 test('Confused B-04: an authenticated visitor returns to permitted activation',async({page})=>{
  const state=await setup(page);state.signedIn=true;await page.goto('/welcome');await expect(page.getByRole('button',{name:'Continue to your account'}).first()).toBeVisible();await expect(page.getByRole('button',{name:'Create account',exact:true})).toHaveCount(0);await page.getByRole('button',{name:'Continue to your account'}).first().click();await expect(page).toHaveURL(/\/activate/);
 });
+test('Confused B-04: an expired session returns to a usable guest welcome',async({page})=>{
+ const state=await setup(page);state.signedIn=true;await page.goto('/welcome');await expect(page.getByRole('button',{name:'Continue to your account'}).first()).toBeVisible();state.signedIn=false;
+ await page.route('**/api/v1/identity',route=>route.fulfill({status:401,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8081','Access-Control-Allow-Credentials':'true'},body:'{}'}));
+ await page.getByRole('button',{name:'Continue to your account'}).first().click();await expect(page.getByRole('button',{name:'Create account',exact:true}).first()).toBeVisible();await expect(page).toHaveURL(/\/welcome/);await expect(page.getByRole('button',{name:'Continue to your account'})).toHaveCount(0);
+});
+
 test('Malicious B-10: guest Welcome does not request private member endpoints',async({page})=>{
  const requests=[];page.on('request',r=>requests.push(new URL(r.url()).pathname));await setup(page);await page.goto('/welcome');await expect(page.getByRole('button',{name:'Create account',exact:true}).first()).toBeVisible();expect(requests.some(p=>/\/api\/v1\/(posts|conversations|professionals|listeners|preferences|profiles)/.test(p))).toBe(false);
 });
