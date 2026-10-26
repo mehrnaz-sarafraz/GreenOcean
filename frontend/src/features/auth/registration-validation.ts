@@ -2,9 +2,10 @@ export type RegistrationValues = { email: string; password: string; countryCode:
 // Mirrors EmailIdentity.PATTERN. ASCII mailboxes and DNS/punycode domains; no dot/plus rewriting.
 const emailPattern = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
 const commonPasswords = new Set(['passwordpassword', '123456789012345', '1234567890123456', 'qwertyuiopasdfgh', 'letmeinletmeinletmein']);
+export function validAccountEmail(email: string): boolean { return emailPattern.test(email.trim()); }
 export function validateRegistration(input: RegistrationValues): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (!emailPattern.test(input.email.trim())) errors.email = 'Enter a valid email address.';
+  if (!validAccountEmail(input.email)) errors.email = 'Enter a valid email address.';
   if ([...input.password].length < 15 || [...input.password].length > 128) errors.password = 'Use 15–128 characters. Spaces and Unicode are welcome.';
   else if (commonPasswords.has(input.password.toLowerCase()) || new Set([...input.password]).size < 4) errors.password = 'Choose a less common password.';
   if (!/^[A-Z]{2}$/.test(input.countryCode)) errors.countryCode = 'Select a country of residence.';

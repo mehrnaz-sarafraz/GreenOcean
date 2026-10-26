@@ -31,13 +31,17 @@ public class WebhookMailTransport implements MailTransport {
         submit(deliveryId,sender,recipient,template,secret,"en");
     }
     @Override public Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language) {
+        return submit(deliveryId,sender,recipient,template,secret,language,java.time.Instant.now().plusSeconds(900));
+    }
+    @Override public Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language,java.time.Instant expiresAt) {
         if(gateway==null) throw new MailDeliveryFailure(MailDeliveryFailure.Kind.RETRYABLE);
+        if(!expiresAt.isAfter(java.time.Instant.now()))throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);
         if(!Set.of("email-verification","password-reset").contains(template) ||
            !sender.matches(com.greenocean.backend.auth.service.EmailIdentity.PATTERN) ||
            ("staging".equals(mode)&&!authorizedRecipients.contains(recipient.toLowerCase(Locale.ROOT))))
             throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);
         try {
-            var body=json.writeValueAsString(Map.of("deliveryId",deliveryId.toString(),"sender",sender,"recipient",recipient,"template",template,"templateVersion",1,"language",Set.of("en","fa").contains(language)?language:"en","secret",secret));
+            var body=json.writeValueAsString(Map.of("deliveryId",deliveryId.toString(),"sender",sender,"recipient",recipient,"template",template,"templateVersion",1,"language",Set.of("en","fa").contains(language)?language:"en","expiresAt",expiresAt.toString(),"secret",secret));
             var request=HttpRequest.newBuilder(gateway).timeout(Duration.ofSeconds(10)).header("Authorization","Bearer "+authorization)
               .header("Content-Type","application/json").header("Idempotency-Key",deliveryId.toString()).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             var response=client.send(request,HttpResponse.BodyHandlers.discarding());

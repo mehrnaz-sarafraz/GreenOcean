@@ -39,6 +39,9 @@ public class PendingAccountCleanup {
         AND NOT EXISTS(SELECT 1 FROM professional_verifications p WHERE p.professional_user_id=u.id)
         AND NOT EXISTS(SELECT 1 FROM listener_applications p WHERE p.user_id=u.id)
         AND NOT EXISTS(SELECT 1 FROM reports r WHERE r.reporter_id=u.id)
+        AND NOT EXISTS(SELECT 1 FROM communities c WHERE c.created_by=u.id)
+        AND NOT EXISTS(SELECT 1 FROM conversation_members c WHERE c.user_id=u.id)
+        AND NOT EXISTS(SELECT 1 FROM support_requests s WHERE s.user_id=u.id)
         """;
     public record Result(int candidates,int erased,int failures,boolean paused) {}
     @Scheduled(fixedDelayString="${greenocean.pending-cleanup.poll-ms:3600000}")

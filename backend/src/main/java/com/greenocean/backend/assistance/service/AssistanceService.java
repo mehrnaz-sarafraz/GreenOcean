@@ -78,15 +78,21 @@ public class AssistanceService {
         String budget="verification-delivery:"+candidate.map(u->u.getId().toString()).orElse(email);
         boolean enclosing=org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
         boolean allowed=enclosing?limits.allowInCurrentTransaction(budget,policy.deliveries(),policy.window()):limits.allow(budget,policy.deliveries(),policy.window());
-        if(!allowed)return queued(requestId);
+        if(!allowed)return new AssistanceResponse(requestId,queued(requestId).message(),(int)Math.min(3600,policy.window().toSeconds()));
         return transaction.execute(status->{
             var found=users.lockByEmail(email);
             if(found.isEmpty())return queued(requestId);
             var user=found.get();
             if (user.isEmailVerified() || (user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE && user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.PENDING)) return queued(requestId);
             if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM email_verification_codes WHERE user_id=? AND used_at IS NULL AND expires_at>CURRENT_TIMESTAMP AND created_at>CURRENT_TIMESTAMP-(? * INTERVAL '1 second'))",Boolean.class,user.getId(),policy.cooldownSeconds())))return queued(requestId);
+            var previous=db.queryForList("SELECT code_hash FROM email_verification_codes WHERE user_id=? ORDER BY created_at DESC,id DESC LIMIT 1",String.class,user.getId());
+            String code=null;
+            for(int attempt=0;attempt<20;attempt++){
+                String candidateCode=String.format(Locale.ROOT,"%06d",random.nextInt(1_000_000));
+                if(previous.isEmpty()||!cipher.verificationHashes(email,candidateCode).contains(previous.getFirst())){code=candidateCode;break;}
+            }
+            if(code==null)throw new IllegalStateException("Verification generation is temporarily unavailable");
             repository.invalidateVerificationCodes(user.getId());
-            String code = String.format(Locale.ROOT,"%06d", random.nextInt(1_000_000));
             repository.createVerificationCode(requestId, user.getId(), cipher.codeHash(email,code), OffsetDateTime.now(java.time.ZoneOffset.UTC).plusMinutes(15));
             repository.enqueueVerification(uuidGenerator.nextUuid(),user.getId(),requestId,user.getEmail(),cipher.encrypt(code));
             db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP WHERE id=?",user.getId());
@@ -102,7 +108,7 @@ public class AssistanceService {
         String email=normalize(request.email());
         var candidate=users.findByEmailIgnoreCase(email);
         if (!limits.allow("verify:"+candidate.map(u->u.getId().toString()).orElse(email),policy.attempts(),policy.window()))
-            throw new IllegalArgumentException("Verification code is invalid or expired. Wait before trying again.");
+            throw new com.greenocean.backend.common.exception.TooManyRequestsException("Verification was not completed. Wait before trying again.",policy.window().toSeconds());
         return transaction.execute(status->{
         User user = users.lockByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Verification code is invalid or expired"));
@@ -117,7 +123,7 @@ public class AssistanceService {
 
     public AssistanceResponse correctPendingEmail(UUID userId,PendingEmailRequest request) {
         if(!limits.allow("email-correction:"+userId,policy.correctionAttempts(),policy.window()))
-            throw new com.greenocean.backend.common.exception.ForbiddenException("Please wait before trying this account change again");
+            throw new com.greenocean.backend.common.exception.TooManyRequestsException("Please wait before trying this account change again",policy.window().toSeconds());
         return transaction.execute(status->{
             var user=users.lockById(userId).orElseThrow(()->new com.greenocean.backend.common.exception.ForbiddenException("Account change could not be completed"));
             if(user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.PENDING || user.isEmailVerified() || !passwordEncoder.matches(request.password(),user.getPasswordHash()))

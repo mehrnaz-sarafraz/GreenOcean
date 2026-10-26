@@ -96,7 +96,7 @@ class PhaseAIntegrationTest {
         for(int i=0;i<5;i++) postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code","xxxxxx")).andExpect(status().isBadRequest());
         // DTO failures are IP-limited; valid-format guesses consume the durable per-account limit.
         for(int i=0;i<5;i++) postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid.equals("000000")?"111111":"000000")).andExpect(status().isBadRequest());
-        postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid)).andExpect(status().isBadRequest());
+        postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",valid)).andExpect(status().isTooManyRequests());
     }
     @Test @Tag("malicious") void suspendedAccountCannotRefreshOrUseExistingAccess() throws Exception {
         var in=input();String id=register(in);verify(in);var tokens=login(in);db.update("UPDATE users SET status='SUSPENDED' WHERE id=?::uuid",id);entities.clear();

@@ -8,6 +8,7 @@ import { ApiError, apiRequest } from '@/lib/api/client';
 import { useAuth } from '@/features/auth/auth-provider';
 import { useLanguage } from '@/localization/language-provider';
 import { cooldownSeconds,maskVerificationEmail,normalizeVerificationCode,validVerificationCode } from '@/features/auth/verification';
+import { validAccountEmail } from '@/features/auth/registration-validation';
 export default function ActivateScreen(){
  const {user,signIn,signOut,pendingRegistrationEmail}=useAuth();
  const {language}=useLanguage();const fa=language==='fa';const running=useRef(false);
@@ -15,10 +16,10 @@ export default function ActivateScreen(){
  const [country,setCountry]=useState('');const [adult,setAdult]=useState(false);const [accepted,setAccepted]=useState(false);
  const [query,setQuery]=useState('');const [countries,setCountries]=useState<{code:string;name:string}[]>([]);
  const [terms,setTerms]=useState(0);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
- const codeRef=useRef<TextInput>(null);const [deadline,setDeadline]=useState(0);const [now,setNow]=useState(Date.now());
+ const codeRef=useRef<TextInput>(null);const [deadline,setDeadline]=useState(0);const [now,setNow]=useState(0);
  const [editingEmail,setEditingEmail]=useState(false);const [newEmail,setNewEmail]=useState('');const [correctionPassword,setCorrectionPassword]=useState('');
  const remaining=cooldownSeconds(deadline,now);
- useEffect(()=>{if(!deadline)return;const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[deadline]);
+ useEffect(()=>{if(!deadline)return;const timer=setInterval(()=>{const current=Date.now();setNow(current);if(current>=deadline)clearInterval(timer);},1000);return()=>clearInterval(timer);},[deadline]);
  const [detailsFailed,setDetailsFailed]=useState(false);const loadEpoch=useRef(0);const version=useRef(0);
  const load=useCallback(async()=>{
    const epoch=++loadEpoch.current;
@@ -39,9 +40,10 @@ export default function ActivateScreen(){
        setAccepted(false);await load();
        setMessage(fa?'نسخه قوانین تغییر کرده است. نسخه جدید را بررسی کنید و بپذیرید.':'The Terms have changed. Review and accept the new version.');
      }else if(e instanceof ApiError && e.status===429){
-       setMessage(fa?'تلاش‌های زیادی انجام شده است. کمی صبر کنید.':`Too many attempts. Wait ${e.retryAfter??60} seconds before trying again.`);
+       const retry=e.retryAfter??60;setDeadline(Date.now()+Math.min(3600,retry)*1000);setNow(Date.now());
+       setMessage(fa?`تلاش‌های زیادی انجام شده است. ${retry} ثانیه صبر کنید.`:`Too many attempts. Wait ${retry} seconds before trying again.`);
      }else{
-       setMessage(fa?'عملیات تأیید نشد. کد نادرست، منقضی یا جایگزین‌شده قابل استفاده نیست. اتصال را بررسی کنید و در صورت نیاز کد تازه بخواهید.':e instanceof Error?e.message:'Please try again.');
+       setMessage(fa?(editingEmail&&user?'اصلاح ایمیل انجام نشد. رمز عبور، آدرس جدید و اتصال را بررسی کنید.':'عملیات تأیید نشد. کد نادرست، منقضی یا جایگزین‌شده قابل استفاده نیست. اتصال را بررسی کنید و در صورت نیاز کد تازه بخواهید.'):e instanceof Error?e.message:'Please try again.');
      }
      codeRef.current?.focus();AccessibilityInfo.announceForAccessibility(fa?'تأیید انجام نشد؛ پیام راهنما را بررسی کنید.':'Verification was not completed. Review the recovery message.');
    }finally{running.current=false;setBusy(false);}
@@ -62,9 +64,9 @@ export default function ActivateScreen(){
  {editingEmail&&<>
    <Text>{fa?'برای اصلاح ایمیل حساب در انتظار تأیید، ابتدا با آدرس قبلی وارد شوید؛ سپس رمز را دوباره وارد کنید. این مسیر برای حساب تأییدشده نیست.':'To correct a pending account, first sign in using the address originally entered, then confirm your password. This flow is not for verified accounts.'}</Text>
    {user&&<>
-     <AppField label={fa?'ایمیل جدید':'New email'} value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" autoComplete="email" autoCapitalize="none" autoCorrect={false} ltr editable={!busy}/>
+     <AppField label={fa?'ایمیل جدید':'New email'} value={newEmail} onChangeText={setNewEmail} error={newEmail&&!validAccountEmail(newEmail)?(fa?'ایمیل معتبر وارد کنید.':'Enter a valid email address.'):undefined} keyboardType="email-address" autoComplete="email" autoCapitalize="none" autoCorrect={false} ltr editable={!busy}/>
      <AppField label={fa?'رمز برای تأیید اصلاح ایمیل':'Password to confirm email correction'} value={correctionPassword} onChangeText={setCorrectionPassword} secureTextEntry autoComplete="current-password" autoCapitalize="none" autoCorrect={false} ltr editable={!busy}/>
-     <AppButton label={fa?'تأیید اصلاح ایمیل':'Confirm email correction'} disabled={!newEmail.trim()||!correctionPassword} loading={busy} onPress={()=>void run(async()=>{
+     <AppButton label={fa?'تأیید اصلاح ایمیل':'Confirm email correction'} disabled={!validAccountEmail(newEmail)||!correctionPassword} loading={busy} onPress={()=>void run(async()=>{
        await apiRequest('/api/v1/account-assistance/pending-email',{method:'POST',body:JSON.stringify({newEmail:newEmail.trim(),password:correctionPassword})});
        await signOut();setEmail(newEmail.trim());setNewEmail('');setCorrectionPassword('');setCode('');setDeadline(0);setEditingEmail(false);
        setMessage(fa?'اگر اصلاح امکان‌پذیر بوده باشد، درخواست تأیید برای آدرس جدید ثبت شده است. دوباره وارد شوید؛ در صورت نیاز آدرس قبلی یا بازیابی حساب را امتحان کنید.':'If the correction could be completed, verification was requested for the new address. Sign in again; if needed, use the original address or account recovery.');

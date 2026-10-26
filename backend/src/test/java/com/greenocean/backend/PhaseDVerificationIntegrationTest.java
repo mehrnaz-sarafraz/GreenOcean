@@ -68,18 +68,18 @@ class PhaseDVerificationIntegrationTest {
    postJson("/api/v1/account-assistance/email-verification",Map.of("email",in.get("email"))).andExpect(status().isAccepted());
    assertThat(db.queryForObject("SELECT count(*) FROM email_verification_codes WHERE user_id=? AND used_at IS NULL",Integer.class,id)).isEqualTo(1);
    String current=code(in);
-   // A randomly repeated numeric value is allowed, but the previous challenge itself is always retired.
+   assertThat(current).isNotEqualTo(old);
    assertThat(db.queryForObject("SELECT count(*) FROM email_verification_codes WHERE user_id=? AND used_at IS NOT NULL",Integer.class,id)).isEqualTo(1);
-   if(!old.equals(current))postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",old)).andExpect(status().isBadRequest());
+   postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",old)).andExpect(status().isBadRequest());
    postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",current)).andExpect(status().isOk());
  }
  @Test @Tag("malicious") void resendCannotResetAccountGuessingBudgetAcrossClients()throws Exception{
    var in=input();UUID id=register(in);String wrong=code(in).equals("000000")?"111111":"000000";
    for(int i=0;i<5;i++)mvc.perform(post("/api/v1/account-assistance/email-verification/confirm").with(r->{r.setRemoteAddr("192.0.2."+new java.util.Random().nextInt(200));return r;}).contentType("application/json").content(json.writeValueAsString(Map.of("email",in.get("email"),"code",wrong)))).andExpect(status().isBadRequest());
    postJson("/api/v1/account-assistance/email-verification",Map.of("email",in.get("email"))).andExpect(status().isAccepted());
-   postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",code(in))).andExpect(status().isBadRequest());
+   postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",code(in))).andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After","900"));
    assertThat(db.queryForObject("SELECT email_verified FROM users WHERE id=?",Boolean.class,id)).isFalse();
-   db.update("UPDATE auth_rate_windows SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1 second'");
+   var expiry=new org.springframework.transaction.support.TransactionTemplate(manager);expiry.setPropagationBehavior(3);expiry.executeWithoutResult(s->db.update("UPDATE auth_rate_windows SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1 second'"));
    postJson("/api/v1/account-assistance/email-verification/confirm",Map.of("email",in.get("email"),"code",code(in))).andExpect(status().isOk());
  }
  @Test @Tag("happy") void pendingOwnerCorrectsEmailWithReauthenticationAndSessionRevocation()throws Exception{

@@ -42,7 +42,7 @@ public class EmailOutboxWorker {
             ORDER BY created_at LIMIT ? FOR UPDATE SKIP LOCKED
           ) UPDATE email_outbox o SET status='SENDING',attempts=attempts+1,lease_token=?,
               lease_until=CURRENT_TIMESTAMP+(? * INTERVAL '1 second')
-            FROM due WHERE o.id=due.id RETURNING o.id,o.recipient,o.template_key,o.attempts,o.payload->>'encrypted' AS encrypted
+            FROM due WHERE o.id=due.id RETURNING o.id,o.recipient,o.template_key,o.attempts,floor(extract(epoch from o.expires_at))::bigint AS expiry_epoch,o.payload->>'encrypted' AS encrypted
           """,maximumAttempts,1,lease,leaseSeconds);
         if(rows.isEmpty())break;
         for(var row:rows) {
@@ -64,7 +64,7 @@ public class EmailOutboxWorker {
                 String plaintext;
                 try {plaintext=cipher.decrypt((String)row.get("encrypted"));}
                 catch(RuntimeException e){finish(id,lease,"DEAD","KEY_OR_PAYLOAD_ERROR",null);continue;}
-                var receipt=mail.submit(id,from,(String)row.get("recipient"),template,plaintext,"en");
+                var receipt=mail.submit(id,from,(String)row.get("recipient"),template,plaintext,"en",java.time.Instant.ofEpochSecond(((Number)row.get("expiry_epoch")).longValue()));
                 finish(id,lease,"SENT","PROVIDER_ACCEPTED",receipt.providerReference());
             } catch(Exception failure) {
                 boolean permanent=failure instanceof MailDeliveryFailure e && e.kind()==MailDeliveryFailure.Kind.PERMANENT;
@@ -89,5 +89,15 @@ public class EmailOutboxWorker {
             WHERE id=? AND status='SENDING' AND lease_token=?
             """,status,outcome,status,reference,status,id,lease);
         if(changed>0)log.info("mail_delivery outcome={}",outcome);
+    }
+    @Scheduled(fixedDelayString="${greenocean.mail.metrics-poll-ms:60000}")
+    public void reportQueue() {
+        if(!enabled||(readiness!=null&&!readiness.ready()))return;
+        var counts=db.queryForMap("""
+          SELECT count(*) FILTER(WHERE status='PENDING') AS pending,count(*) FILTER(WHERE status='FAILED') AS retry,
+            count(*) FILTER(WHERE status='DEAD') AS terminal,count(*) FILTER(WHERE status='SENDING' AND lease_until<CURRENT_TIMESTAMP) AS stuck,
+            count(*) FILTER(WHERE delivery_state='BOUNCED') AS bounced FROM email_outbox
+          """);
+        log.info("mail_queue pending={} retry={} terminal={} stuck={} bounced={}",counts.get("pending"),counts.get("retry"),counts.get("terminal"),counts.get("stuck"),counts.get("bounced"));
     }
 }

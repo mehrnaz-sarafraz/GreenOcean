@@ -6,4 +6,7 @@ public interface MailTransport {
     default Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language) {
         send(deliveryId,recipient,template,secret);return new Receipt(null);
     }
+    default Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language,java.time.Instant expiresAt) {
+        return submit(deliveryId,sender,recipient,template,secret,language);
+    }
 }
