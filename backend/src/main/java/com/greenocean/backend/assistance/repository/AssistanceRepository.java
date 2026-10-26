@@ -44,26 +44,28 @@ public class AssistanceRepository {
                 UPDATE email_verification_codes SET used_at = CURRENT_TIMESTAMP
                  WHERE id = (SELECT id FROM email_verification_codes
                               WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
-                                AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1)
+                                AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1) AND used_at IS NULL
                 """, userId, hash) == 1;
     }
 
     public void enqueuePasswordReset(UUID id, String email, String token) {
+        jdbcTemplate.update("DELETE FROM email_outbox WHERE recipient=? AND template_key='password-reset'",email);
         jdbcTemplate.update("""
                 INSERT INTO email_outbox (id, recipient, template_key, payload)
-                VALUES (?, ?, 'password-reset', jsonb_build_object('token', CAST(? AS TEXT)))
+                VALUES (?, ?, 'password-reset', jsonb_build_object('encrypted', CAST(? AS TEXT)))
                 """, id, email, token);
     }
 
     public void enqueueVerification(UUID id, String email, String code) {
+        jdbcTemplate.update("DELETE FROM email_outbox WHERE recipient=? AND template_key='email-verification'",email);
         jdbcTemplate.update("""
-                INSERT INTO email_outbox (id, recipient, template_key, payload)
-                VALUES (?, ?, 'email-verification', jsonb_build_object('code', CAST(? AS TEXT)))
+                INSERT INTO email_outbox (id, recipient, template_key, payload,expires_at)
+                VALUES (?, ?, 'email-verification', jsonb_build_object('encrypted', CAST(? AS TEXT)),CURRENT_TIMESTAMP+INTERVAL '15 minutes')
                 """, id, email, code);
     }
 
     public void verifyUser(UUID userId) {
-        jdbcTemplate.update("UPDATE users SET email_verified = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?", userId);
+        jdbcTemplate.update("UPDATE users SET email_verified = TRUE, status=CASE WHEN status='PENDING' AND EXISTS(SELECT 1 FROM account_eligibility e WHERE e.user_id=users.id AND e.age_result='ADULT') THEN 'ACTIVE' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status IN ('ACTIVE','PENDING')", userId);
     }
 
     public void createSupportRequest(UUID id, UUID userId, String email, String message) {

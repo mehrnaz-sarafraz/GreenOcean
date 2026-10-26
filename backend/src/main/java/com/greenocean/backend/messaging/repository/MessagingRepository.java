@@ -130,8 +130,8 @@ public class MessagingRepository {
         String name = jdbcTemplate.queryForObject("SELECT display_name FROM profiles WHERE user_id = ?", String.class, professionalId);
         String title = jdbcTemplate.queryForObject("SELECT title FROM professional_profiles WHERE user_id = ?", String.class, professionalId);
         jdbcTemplate.update("""
-                INSERT INTO conversations (id, conversation_kind, title, subtitle, professional_user_id)
-                VALUES (?, 'PROFESSIONAL', ?, ?, ?)
+                INSERT INTO conversations (id, conversation_kind, title, subtitle, professional_user_id,service_kind)
+                VALUES (?, 'PROFESSIONAL', ?, ?, ?,'PROFESSIONAL_CARE')
                 """, id, name, title, professionalId);
         jdbcTemplate.update("INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)",
                 id, userId, id, professionalId);
@@ -154,8 +154,8 @@ public class MessagingRepository {
     public void createListenerConversation(UUID id, UUID systemMessageId, UUID userId, UUID listenerId) {
         String name = jdbcTemplate.queryForObject("SELECT display_name FROM profiles WHERE user_id = ?", String.class, listenerId);
         jdbcTemplate.update("""
-                INSERT INTO conversations (id, conversation_kind, title, subtitle)
-                VALUES (?, 'DIRECT', ?, 'Peer listener conversation')
+                INSERT INTO conversations (id, conversation_kind, title, subtitle,service_kind)
+                VALUES (?, 'DIRECT', ?, 'Peer listener conversation','LISTENER')
                 """, id, name);
         jdbcTemplate.update("INSERT INTO conversation_members (conversation_id, user_id) VALUES (?, ?), (?, ?)",
                 id, userId, id, listenerId);
@@ -180,7 +180,7 @@ public class MessagingRepository {
                        AND (
                            EXISTS (SELECT 1 FROM follows f WHERE f.follower_id = target.id AND f.following_id = ?)
                            OR (
-                               COALESCE(preferences.allow_message_requests, TRUE)
+                               COALESCE(preferences.allow_message_requests, FALSE)
                                AND (
                                    NOT COALESCE(preferences.professionals_only_messages, FALSE)
                                    OR EXISTS (

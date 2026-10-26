@@ -27,6 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @ActiveProfiles("test")
 class ProfileAccountIntegrationTest {
+    @Autowired private jakarta.persistence.EntityManager fixtureEntities;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate fixtureDb;
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,8 +44,8 @@ class ProfileAccountIntegrationTest {
 
         mockMvc.perform(get("/api/v1/profiles/me").header("Authorization", auth(firstUser.accessToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.countryCode").value("IR"))
-                .andExpect(jsonPath("$.city").value("Tehran"));
+                .andExpect(jsonPath("$.countryCode").doesNotExist())
+                .andExpect(jsonPath("$.city").doesNotExist());
 
         mockMvc.perform(patch("/api/v1/profiles/me")
                         .header("Authorization", auth(firstUser.accessToken()))
@@ -115,9 +117,11 @@ class ProfileAccountIntegrationTest {
                                 "displayName", "Profile Test User",
                                 "birthYear", 2000,
                                 "countryCode", "IR",
-                                "city", "Tehran"
+                                "city", "Tehran", "adultSelfAttested", true, "termsVersion", 1
                         ))))
                 .andExpect(status().isCreated());
+        PhaseAFixtures.activate(fixtureDb, email);
+        fixtureEntities.clear();
         return login(email, password);
     }
 

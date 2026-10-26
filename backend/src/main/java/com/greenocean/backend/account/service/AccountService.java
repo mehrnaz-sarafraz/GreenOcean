@@ -31,11 +31,13 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final ProfessionalDocumentStorage documentStorage;
     private final SearchService search;
+    private final org.springframework.jdbc.core.JdbcTemplate db;
 
     public AccountService(ProfileService profiles, UserPreferencesService preferences, WellbeingService wellbeing,
                           ReportService reports, SocialService social, AccountRepository repository,
                           UserRepository users, PasswordEncoder passwordEncoder,
-                          ProfessionalDocumentStorage documentStorage, SearchService search) {
+                          ProfessionalDocumentStorage documentStorage, SearchService search, org.springframework.jdbc.core.JdbcTemplate db) {
+        this.db=db;
         this.profiles = profiles;
         this.preferences = preferences;
         this.wellbeing = wellbeing;
@@ -61,6 +63,7 @@ public class AccountService {
         if (!passwordEncoder.matches(password, user.getPasswordHash())) throw new ForbiddenException("Password is incorrect");
         var keys = repository.professionalDocumentKeys(userId);
         repository.erase(userId);
-        keys.forEach(documentStorage::delete);
+        for(String key:keys) db.update("INSERT INTO account_file_erasures(user_id,storage_key) VALUES (?,?) ON CONFLICT DO NOTHING",userId,key);
+        if(!keys.isEmpty()) db.update("UPDATE account_deletions SET status='PROCESSING',completed_at=NULL WHERE user_id=?",userId);
     }
 }

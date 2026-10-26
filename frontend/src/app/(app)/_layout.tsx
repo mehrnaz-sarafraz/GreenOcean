@@ -1,4 +1,8 @@
 import { Redirect, Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { apiRequest } from '@/lib/api/client';
+import { AppButton } from '@/components/app-button';
+import { Text } from 'react-native';
 import { Platform, StyleSheet, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { useAuth } from '@/features/auth/auth-provider';
@@ -8,8 +12,17 @@ import { colors, radius, shadow } from '@/theme/tokens';
 
 const icon = (name: string, focused: boolean) => <AppIcon name={name} filled={focused} size={25} color={focused ? colors.ocean700 : colors.muted} />;
 export default function AppLayout() {
-  const { status } = useAuth(); const { t } = useLanguage();
+  const { status, user } = useAuth(); const { t } = useLanguage();
   const { preferences } = usePlatformData();
+  const [allowed, setAllowed] = useState<boolean|null>(null);
+  const [error, setError] = useState('');
+  async function checkAccess() {
+    try { const result = await apiRequest<{services:{COMMUNITY:boolean}}>('/api/v1/identity'); setAllowed(result.services.COMMUNITY); setError(''); }
+    catch { setError('Could not check account access. Please retry.'); }
+  }
+  useEffect(() => { if (status === 'authenticated') void checkAccess(); }, [status,user?.userId]);
+  if (status === 'authenticated' && allowed === false) return <Redirect href="/(auth)/activate" />;
+  if (status === 'authenticated' && allowed === null) return <View style={{padding:24}}><Text>{error || 'Checking account access…'}</Text>{!!error && <AppButton label="Retry" onPress={()=>void checkAccess()} />}</View>;
   if (status === 'unauthenticated') return <Redirect href="/(auth)/welcome" />;
   if (status === 'authenticated' && preferences && !preferences.onboardingComplete) return <Redirect href="/(auth)/onboarding" />;
   return <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.ocean700, tabBarInactiveTintColor: colors.muted, tabBarLabelStyle: styles.label, tabBarStyle: styles.bar, tabBarItemStyle: styles.item }}>

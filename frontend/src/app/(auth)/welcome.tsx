@@ -54,7 +54,7 @@ export default function Welcome() {
           <Text style={styles.safety}>{t('safetyNote')}</Text>
           <View style={styles.infoLinks}><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'how-it-works' } } as never)}><Text style={styles.infoLink}>How it works</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'faq' } } as never)}><Text style={styles.infoLink}>FAQ</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'guidelines' } } as never)}><Text style={styles.infoLink}>Guidelines</Text></Pressable><Pressable onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'privacy' } } as never)}><Text style={styles.infoLink}>Privacy</Text></Pressable></View>
         </View>
-      </ScrollView>
+      <AppButton label="Public resources • منابع عمومی" variant="secondary" onPress={() => router.push('/(auth)/resources')} /></ScrollView>
     </SafeAreaView>
   </LinearGradient>;
 }

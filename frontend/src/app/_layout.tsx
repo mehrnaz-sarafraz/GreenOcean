@@ -4,10 +4,15 @@ import { useFonts } from '@expo-google-fonts/material-symbols/useFonts';
 import { MaterialSymbols_400Regular } from '@expo-google-fonts/material-symbols/400Regular';
 import { MaterialSymbols_600SemiBold } from '@expo-google-fonts/material-symbols/600SemiBold';
 
-import { AuthProvider } from '@/features/auth/auth-provider';
+import { AuthProvider, useAuth } from '@/features/auth/auth-provider';
 import { DataProvider } from '@/features/platform/data-provider';
 import { LanguageProvider } from '@/localization/language-provider';
 import { colors } from '@/theme/tokens';
+
+function AccountData({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return <DataProvider key={user?.userId ?? 'visitor'}>{children}</DataProvider>;
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ MaterialSymbols_400Regular, MaterialSymbols_600SemiBold });
@@ -15,10 +20,10 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <DataProvider>
+        <AccountData>
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.foam } }} />
-        </DataProvider>
+        </AccountData>
       </AuthProvider>
     </LanguageProvider>
   );

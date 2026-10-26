@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
 
 import { apiRequest } from '@/lib/api/client';
@@ -23,13 +24,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     async function restoreSession() {
+      const epoch = tokenStorage.generation();
       try {
         const tokens = await tokenStorage.get();
         if (!tokens) throw new Error('No session');
         const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
+        if (epoch !== tokenStorage.generation()) return;
         setUser(currentUser);
         setStatus('authenticated');
       } catch {
+        if (epoch !== tokenStorage.generation()) return;
         await tokenStorage.clear();
         setUser(null);
         setStatus('unauthenticated');
@@ -39,13 +43,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   async function signIn(input: LoginInput) {
-    const tokens = await apiRequest<TokenResponse>('/api/v1/auth/login', {
+    await tokenStorage.clear();
+    const epoch = tokenStorage.generation();
+    setUser(null); setStatus('loading');
+    let tokens: TokenResponse;
+    try { tokens = await apiRequest<TokenResponse>(Platform.OS === 'web' ? '/api/v1/auth/web/login' : '/api/v1/auth/login', {
       method: 'POST',
       authenticated: false,
       body: JSON.stringify(input),
     });
+    } catch (error) { if (epoch === tokenStorage.generation()) setStatus('unauthenticated'); throw error; }
+    if (epoch !== tokenStorage.generation()) throw new Error('Sign-in was cancelled. Please try again.');
     await tokenStorage.set(tokens);
     const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
+    if (epoch !== tokenStorage.generation()) return;
     setUser(currentUser);
     setStatus('authenticated');
   }
@@ -56,23 +67,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
       authenticated: false,
       body: JSON.stringify(input),
     });
-    await signIn({ email: input.email, password: input.password, deviceName: 'GreenOcean mobile app' });
+
   }
 
   async function signOut() {
     const tokens = await tokenStorage.get();
-    try {
-      if (tokens?.refreshToken) {
-        await apiRequest('/api/v1/auth/logout', {
+    await tokenStorage.clear();
+    setUser(null);
+    setStatus('unauthenticated');
+    if (tokens?.refreshToken) {
+        await apiRequest(Platform.OS === 'web' ? '/api/v1/auth/web/logout' : '/api/v1/auth/logout', {
           method: 'POST',
           authenticated: false,
           body: JSON.stringify({ refreshToken: tokens.refreshToken }),
         });
-      }
-    } finally {
-      await tokenStorage.clear();
-      setUser(null);
-      setStatus('unauthenticated');
     }
   }
 

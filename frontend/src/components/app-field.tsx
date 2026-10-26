@@ -11,6 +11,7 @@ export function AppField({ label, ...inputProps }: Props) {
     <View style={styles.container}>
       <Text style={[styles.label, { textAlign: isRtl ? 'right' : 'left' }]}>{label}</Text>
       <TextInput
+        accessibilityLabel={label}
         {...inputProps}
         placeholderTextColor={colors.muted}
         style={[styles.input, { textAlign: isRtl ? 'right' : 'left' }, inputProps.style]}

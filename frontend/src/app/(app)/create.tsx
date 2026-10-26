@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { DisplayReview } from '@/features/auth/display-review';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
@@ -18,6 +19,8 @@ export default function Create() {
   const moods = optionsIn(options, 'POST_MOOD');
   const postTypes = optionsIn(options, 'POST_TYPE');
   const groupOptions = optionsIn(options, 'CATEGORY_GROUP');
+  const [reviewed,setReviewed]=useState<boolean|null>(null);
+  useEffect(()=>{void apiRequest<{eligibility:{display_reviewed_at?:string}}>('/api/v1/identity').then(identity=>setReviewed(Boolean(identity.eligibility.display_reviewed_at))).catch(()=>setReviewed(false));},[]);
   const [body, setBody] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [mood, setMood] = useState('');
@@ -54,6 +57,7 @@ export default function Create() {
     }
   }
 
+  if(reviewed !== true) return <Screen scroll><DisplayReview onReviewed={()=>setReviewed(true)} /></Screen>;
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <View style={styles.header}>
       <Pressable onPress={() => router.back()}><AppIcon name="close" color={colors.ink} /></Pressable>

@@ -14,11 +14,13 @@ import java.util.UUID;
 
 @Service
 public class ListenerService {
+    private final com.greenocean.backend.identity.AccessPolicy access;
     private final ListenerRepository repository;
     private final MessagingRepository messagingRepository;
     private final DatabaseUuidGenerator uuidGenerator;
     public ListenerService(ListenerRepository repository, MessagingRepository messagingRepository,
-                           DatabaseUuidGenerator uuidGenerator) {
+                           DatabaseUuidGenerator uuidGenerator,com.greenocean.backend.identity.AccessPolicy access) {
+        this.access=access;
         this.repository = repository; this.messagingRepository = messagingRepository; this.uuidGenerator = uuidGenerator;
     }
 
@@ -40,6 +42,7 @@ public class ListenerService {
             listener = available.getFirst();
         }
         UUID listenerId = listener.id();
+        access.require(listenerId,"LISTENER");
         UUID conversationId = messagingRepository.directConversation(userId, listenerId).orElseGet(() -> {
             UUID id = uuidGenerator.nextUuid();
             messagingRepository.createListenerConversation(id, uuidGenerator.nextUuid(), userId, listenerId);

@@ -17,8 +17,10 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
             "invalid_token", "The access-token session is no longer active", null);
 
     private final UserSessionRepository sessionRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate db;
 
-    public ActiveSessionJwtValidator(UserSessionRepository sessionRepository) {
+    public ActiveSessionJwtValidator(UserSessionRepository sessionRepository,org.springframework.jdbc.core.JdbcTemplate db) {
+        this.db=db;
         this.sessionRepository = sessionRepository;
     }
 
@@ -27,6 +29,9 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
         try {
             UUID userId = UUID.fromString(jwt.getSubject());
             UUID sessionId = UUID.fromString(jwt.getClaimAsString("sid"));
+            var currentRoles=db.queryForList("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=? ORDER BY r.name",String.class,userId);
+            var tokenRoles=jwt.getClaimAsStringList("roles");
+            if(tokenRoles==null || !new java.util.TreeSet<>(tokenRoles).equals(new java.util.TreeSet<>(currentRoles))) return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
             return sessionRepository.isActive(sessionId, userId, Instant.now(), UserStatus.ACTIVE)
                     ? OAuth2TokenValidatorResult.success()
                     : OAuth2TokenValidatorResult.failure(INVALID_SESSION);

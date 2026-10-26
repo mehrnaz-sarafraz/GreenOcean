@@ -9,12 +9,14 @@ import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
         @NotBlank @Email @Size(max = 320) String email,
-        @NotBlank @Size(min = 12, max = 72) String password,
-        @NotBlank @Pattern(regexp = "^[A-Za-z0-9_]{3,30}$") String username,
-        @NotBlank @Size(max = 80) String displayName,
-        @Min(1900) @Max(2100) short birthYear,
+        @NotBlank @Size(min = 15, max = 256) String password,
+        @Pattern(regexp = "^[A-Za-z0-9_]{3,30}$") String username,
+        @Size(max = 80) String displayName,
+        @Min(1900) @Max(2100) Short birthYear,
         @NotBlank @Pattern(regexp = "^[A-Za-z]{2}$") String countryCode,
-        @NotBlank @Size(max = 100) String city,
-        @Pattern(regexp = "MEMBER|PROFESSIONAL") String intendedRole
+        @Size(max = 100) String city,
+        @Pattern(regexp = "MEMBER") String intendedRole,
+        @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.AssertTrue Boolean adultSelfAttested,
+        @jakarta.validation.constraints.NotNull @Min(1) Integer termsVersion
 ) {
 }

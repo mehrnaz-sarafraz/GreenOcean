@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpectedException(Exception exception, HttpServletRequest request) {
-        log.error("Unhandled API exception for {}", request.getRequestURI(), exception);
+        log.error("Unhandled API exception type {}", exception.getClass().getSimpleName());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiError(
                 Instant.now(),

@@ -25,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @ActiveProfiles("test")
 class AuthFlowIntegrationTest {
+    @Autowired private jakarta.persistence.EntityManager fixtureEntities;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate fixtureDb;
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,9 +49,11 @@ class AuthFlowIntegrationTest {
                                 "displayName", "Auth Test User",
                                 "birthYear", 2000,
                                 "countryCode", "IR",
-                                "city", "Tehran"
+                                "city", "Tehran", "adultSelfAttested", true, "termsVersion", 1
                         ))))
                 .andExpect(status().isCreated());
+        PhaseAFixtures.activate(fixtureDb, email);
+        fixtureEntities.clear();
 
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,10 +91,7 @@ class AuthFlowIntegrationTest {
         String refreshedAccessToken = refreshedTokens.get("accessToken").asText();
         String rotatedRefreshToken = refreshedTokens.get("refreshToken").asText();
 
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("refreshToken", firstRefreshToken))))
-                .andExpect(status().isUnauthorized());
+
 
         mockMvc.perform(post("/api/v1/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)

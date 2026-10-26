@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public interface UserSessionRepository extends JpaRepository<UserSession, UUID> {
 
-    @EntityGraph(attributePaths = {"user", "user.roles"})
+    @Query("select s from UserSession s join fetch s.user u where s.refreshTokenHash = :refreshTokenHash")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<UserSession> findByRefreshTokenHash(String refreshTokenHash);
 
@@ -52,7 +52,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
                and session.user.id = :userId
                and session.revokedAt is null
                and session.expiresAt > :now
-               and session.user.status = :userStatus
+               and (session.user.status = :userStatus or session.user.status = com.greenocean.backend.auth.entity.UserStatus.PENDING)
             """)
     boolean isActive(@Param("sessionId") UUID sessionId,
                      @Param("userId") UUID userId,

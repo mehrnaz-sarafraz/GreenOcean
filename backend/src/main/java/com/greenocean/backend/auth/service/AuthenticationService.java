@@ -27,6 +27,9 @@ public class AuthenticationService {
     private static final String INVALID_CREDENTIALS = "Invalid email or password";
     private static final String INVALID_REFRESH_TOKEN = "Refresh token is invalid or expired";
 
+    private final org.springframework.jdbc.core.JdbcTemplate db;
+    private final AuthRateLimit limits;
+    private final String dummyHash;
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,8 +41,10 @@ public class AuthenticationService {
             UserSessionRepository sessionRepository,
             PasswordEncoder passwordEncoder,
             TokenService tokenService,
-            DatabaseUuidGenerator databaseUuidGenerator
+            DatabaseUuidGenerator databaseUuidGenerator,
+            org.springframework.jdbc.core.JdbcTemplate db, AuthRateLimit limits
     ) {
+        this.db=db;this.limits=limits;this.dummyHash=passwordEncoder.encode("dummy login timing password");
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
@@ -51,13 +56,16 @@ public class AuthenticationService {
     public TokenResponse login(LoginRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
         User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UnauthorizedException(INVALID_CREDENTIALS));
+                .orElse(null);
+        boolean allowed=limits.allow("login:"+email,10,java.time.Duration.ofMinutes(15));
+        boolean matches=passwordEncoder.matches(request.password(),user==null?dummyHash:user.getPasswordHash());
+        if(user==null || !allowed) throw new UnauthorizedException(INVALID_CREDENTIALS);
 
-        if (user.getStatus() != UserStatus.ACTIVE
-                || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        if ((user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING) || !matches) {
             throw new UnauthorizedException(INVALID_CREDENTIALS);
         }
 
+        if(passwordEncoder.upgradeEncoding(user.getPasswordHash())) user.changePassword(passwordEncoder.encode(request.password()));
         user.recordLogin();
         String refreshToken = tokenService.createRefreshToken();
         UserSession session = new UserSession(
@@ -71,16 +79,21 @@ public class AuthenticationService {
         return tokensFor(user, refreshToken, session.getId());
     }
 
-    @Transactional
+    @Transactional(noRollbackFor=UnauthorizedException.class)
     public TokenResponse refresh(String refreshToken) {
-        UserSession session = sessionRepository.findByRefreshTokenHash(tokenService.hashRefreshToken(refreshToken))
-                .orElseThrow(() -> new UnauthorizedException(INVALID_REFRESH_TOKEN));
+        String hash=tokenService.hashRefreshToken(refreshToken);
+        UserSession session = sessionRepository.findByRefreshTokenHash(hash).orElse(null);
+        if(session==null) {
+            db.update("UPDATE user_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE id IN (SELECT session_id FROM retired_refresh_tokens WHERE token_hash=?)",hash);
+            throw new UnauthorizedException(INVALID_REFRESH_TOKEN);
+        }
         Instant now = Instant.now();
         User user = session.getUser();
-        if (!session.isUsableAt(now) || user.getStatus() != UserStatus.ACTIVE) {
+        if (!session.isUsableAt(now) || (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING)) {
             throw new UnauthorizedException(INVALID_REFRESH_TOKEN);
         }
 
+        db.update("INSERT INTO retired_refresh_tokens(token_hash,session_id,expires_at) VALUES (?,?,?) ON CONFLICT DO NOTHING",hash,session.getId(),java.sql.Timestamp.from(session.getExpiresAt()));
         String rotatedRefreshToken = tokenService.createRefreshToken();
         session.rotate(
                 tokenService.hashRefreshToken(rotatedRefreshToken),
@@ -118,6 +131,7 @@ public class AuthenticationService {
 
     @Transactional
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
+        PasswordPolicy.validate(newPassword);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User account is not available"));
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {

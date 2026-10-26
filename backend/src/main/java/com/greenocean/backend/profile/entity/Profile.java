@@ -68,7 +68,7 @@ public class Profile {
     protected Profile() {
     }
 
-    public Profile(User user, String username, String displayName, String countryCode, String city, short birthYear) {
+    public Profile(User user, String username, String displayName, String countryCode, String city, Short birthYear) {
         Instant now = Instant.now();
         this.user = user;
         this.username = username;
@@ -76,7 +76,7 @@ public class Profile {
         this.countryCode = countryCode;
         this.city = city;
         this.birthYear = birthYear;
-        this.profilePrivate = false;
+        this.profilePrivate = true;
         this.showLocation = false;
         this.showBirthYear = false;
         this.createdAt = now;

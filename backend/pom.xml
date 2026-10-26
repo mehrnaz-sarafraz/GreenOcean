@@ -44,12 +44,6 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.zonky.test.postgres</groupId>
-			<artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
-			<version>14.22.0</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
 			<version>1.28.0</version>
@@ -84,6 +78,14 @@
 		</dependency>
 	</dependencies>
 
+	<profiles><profile><id>embedded-local</id><dependencies>
+		<dependency>
+			<groupId>io.zonky.test.postgres</groupId>
+			<artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
+			<version>14.22.0</version>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies></profile></profiles>
 	<build>
 		<plugins>
 			<plugin>

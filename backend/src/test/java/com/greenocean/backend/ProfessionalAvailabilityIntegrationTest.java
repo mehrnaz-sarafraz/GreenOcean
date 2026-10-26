@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @ActiveProfiles("test")
 class ProfessionalAvailabilityIntegrationTest {
+    @Autowired private jakarta.persistence.EntityManager fixtureEntities;
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JdbcTemplate jdbcTemplate;
@@ -75,9 +76,11 @@ class ProfessionalAvailabilityIntegrationTest {
                                 "displayName", label,
                                 "birthYear", 2000,
                                 "countryCode", "IR",
-                                "city", "Tehran"))))
+                                "city", "Tehran", "adultSelfAttested", true, "termsVersion", 1))))
                 .andExpect(status().isCreated())
                 .andReturn();
+        PhaseAFixtures.activate(jdbcTemplate, label + "-" + unique + "@example.test");
+        fixtureEntities.clear();
         return UUID.fromString(objectMapper.readTree(result.getResponse().getContentAsString())
                 .get("userId").asText());
     }

@@ -36,6 +36,9 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+    @Column(name="phase_a_enrolled", nullable=false)
+    private boolean phaseAEnrolled;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -70,6 +73,9 @@ public class User {
     public void assignRole(Role role) {
         roles.add(role);
     }
+
+    public void enrollPhaseA() { this.phaseAEnrolled=true; this.status=UserStatus.PENDING; }
+    public boolean isEmailVerified() { return emailVerified; }
 
     public void recordLogin() {
         this.lastLoginAt = Instant.now();
