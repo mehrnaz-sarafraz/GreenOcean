@@ -28,7 +28,9 @@ public class SecurityConfig {
     ) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
+                // Cookie-authenticated writes have explicit Origin + custom-header checks in WebSessionController.
+                // Bearer-only APIs never authenticate from the refresh cookie.
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(

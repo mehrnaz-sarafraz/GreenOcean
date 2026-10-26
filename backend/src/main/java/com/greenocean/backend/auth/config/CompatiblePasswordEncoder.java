@@ -10,8 +10,7 @@ public final class CompatiblePasswordEncoder implements PasswordEncoder {
     public String encode(CharSequence raw) { return PREFIX+modern.encode(raw); }
     public boolean matches(CharSequence raw,String encoded) {
         if(encoded==null) return false;
-        if(encoded.startsWith(PREFIX)) return modern.matches(raw,encoded.substring(PREFIX.length()));
-        try { return encoded.startsWith("$2") && legacy.matches(raw,encoded); }
+        try { if(encoded.startsWith(PREFIX)) return modern.matches(raw,encoded.substring(PREFIX.length())); return encoded.startsWith("$2") && legacy.matches(raw,encoded); }
         catch(IllegalArgumentException e) { return false; }
     }
     public boolean upgradeEncoding(String encoded) { return !encoded.startsWith(PREFIX); }

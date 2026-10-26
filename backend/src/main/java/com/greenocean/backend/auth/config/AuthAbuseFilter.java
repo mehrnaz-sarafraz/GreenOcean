@@ -23,13 +23,13 @@ public class AuthAbuseFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req,HttpServletResponse res,FilterChain chain) throws ServletException,IOException {
         String path=req.getRequestURI();
         boolean registration=path.equals("/api/v1/auth/register");
-        res.setHeader("Cache-Control","no-store");
+        res.setHeader("Cache-Control","no-store");res.setHeader("Referrer-Policy","no-referrer");
         if("POST".equals(req.getMethod()) && (path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/account-assistance/")) &&
            !limits.allow("ip:"+req.getRemoteAddr()+":"+path,registration?registrationAttempts:30,Duration.ofSeconds(registration?registrationWindow:60))) {
             res.setStatus(429);res.setHeader("Retry-After",String.valueOf(registration?registrationWindow:60));res.setContentType("application/json");
             res.getWriter().write("{\"status\":429,\"message\":\"Too many attempts. Please wait before trying again.\"}");return;
         }
-        if(registration && "POST".equals(req.getMethod())) {
+        if((path.startsWith("/api/v1/auth/")||path.startsWith("/api/v1/account-assistance/")) && "POST".equals(req.getMethod())) {
             // Bound bytes before JSON parsing/hashing, including requests with no Content-Length.
             byte[] body=req.getInputStream().readNBytes(8193);
             if(body.length>8192) {

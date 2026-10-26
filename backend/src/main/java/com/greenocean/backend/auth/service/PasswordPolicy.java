@@ -20,7 +20,7 @@ public final class PasswordPolicy {
     public static void validate(String password) {
         int length = password == null ? 0 : password.codePointCount(0, password.length());
         if (length < 15 || length > 128) throw new IllegalArgumentException("Use a password between 15 and 128 characters");
-        if (BLOCKED.contains(password.toLowerCase(Locale.ROOT)) || password.codePoints().distinct().count() < 4)
+        if (BLOCKED.contains(password.toLowerCase(Locale.ROOT)))
             throw new IllegalArgumentException("Choose a less common password");
         try {
             String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8)));

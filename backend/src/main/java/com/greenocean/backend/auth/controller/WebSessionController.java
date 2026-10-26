@@ -21,7 +21,7 @@ public class WebSessionController {
             throw new ForbiddenException("Invalid browser session request");
     }
     @PostMapping("/login") public ResponseEntity<TokenResponse> login(HttpServletRequest request,@Valid @RequestBody LoginRequest input) {
-        csrf(request);return response(auth.login(input));
+        csrf(request);return response(auth.login(input,"WEB"));
     }
     @PostMapping("/refresh") public ResponseEntity<TokenResponse> refresh(HttpServletRequest request,@CookieValue(name="greenocean_refresh",defaultValue="") String token) {
         csrf(request);return response(auth.refresh(token));
@@ -33,7 +33,7 @@ public class WebSessionController {
         return ResponseCookie.from("greenocean_refresh",token).httpOnly(true).secure(secure).sameSite("Strict").path("/api/v1/auth/web").maxAge(age).build().toString();
     }
     private ResponseEntity<TokenResponse> response(TokenResponse tokens) {
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie(tokens.refreshToken(),Duration.ofDays(30)))
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie(tokens.refreshToken(),Duration.ofHours(24)))
           .header(HttpHeaders.CACHE_CONTROL,"no-store").body(new TokenResponse(tokens.accessToken(),"cookie",tokens.tokenType(),tokens.expiresIn()));
     }
 }
