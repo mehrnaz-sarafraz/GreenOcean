@@ -1,7 +1,7 @@
 import { AppState, Platform } from 'react-native';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
-import { apiRequest,API_URL } from '@/lib/api/client';
+import { apiRequest,API_URL,assertApiTransport } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/storage/token-storage';
 import { browserSessionLock } from '@/lib/api/browser-session';
 import { fetchWithTimeout } from '@/lib/api/request';
@@ -78,6 +78,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function revoke(refreshToken:string){
+    assertApiTransport();
     const send=()=>fetchWithTimeout(`${API_URL}/api/v1/auth/${Platform.OS==='web'?'web/logout':'logout'}`,{method:'POST',credentials:Platform.OS==='web'?'include':'omit',headers:{'Content-Type':'application/json','X-GreenOcean-CSRF':'1'},body:JSON.stringify({refreshToken})});
     const response=await(Platform.OS==='web'?browserSessionLock(send):send());
     if(!response.ok)throw new Error('Sign-out could not be confirmed');

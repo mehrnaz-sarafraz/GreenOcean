@@ -7,6 +7,8 @@ import { tokenStorage } from '@/lib/storage/token-storage';
 const fallbackUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
 export const API_URL = Platform.OS==='web'&&process.env.EXPO_PUBLIC_WEB_API_ORIGIN==='same-origin'?(typeof globalThis.location==='undefined'?'':globalThis.location.origin):process.env.EXPO_PUBLIC_API_URL??fallbackUrl;
 
+export function assertApiTransport(){if(!__DEV__&&!API_URL.startsWith('https://'))throw new Error('A secure HTTPS API connection is required.');}
+
 export class ApiError extends Error {
   constructor(public status: number, message: string, public fieldErrors: { field: string; message: string }[] = [], public retryAfter: number | null = null) {
     super(message);
@@ -16,6 +18,7 @@ export class ApiError extends Error {
 type RequestOptions = RequestInit & { authenticated?: boolean; retryAfterRefresh?: boolean };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  assertApiTransport();
   const { authenticated = true, retryAfterRefresh = true, ...requestInit } = options;
   const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
@@ -49,6 +52,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 }
 
 export async function apiDownloadText(path: string): Promise<{ filename: string; text: string }> {
+  assertApiTransport();
   const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
   const headers = new Headers({ Accept: 'text/csv' });
@@ -77,6 +81,7 @@ const refreshTokens=singleFlight(async(refreshToken:string)=>{
   return performRefresh(refreshToken);
 });
 async function performRefresh(refreshToken: string) {
+  assertApiTransport();
   const epoch = tokenStorage.generation();
   const response = await fetchWithTimeout(`${API_URL}/api/v1/auth/${Platform.OS === 'web' ? 'web/refresh' : 'refresh'}`, {
     method: 'POST',

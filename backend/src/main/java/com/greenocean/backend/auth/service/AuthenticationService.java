@@ -64,7 +64,8 @@ public class AuthenticationService {
         User user = userRepository.lockByEmail(email)
                 .orElse(null);
         if(!passwordWork.tryAcquire())throw new com.greenocean.backend.common.exception.TooManyRequestsException("Sign-in is busy. Please retry.",2);
-        boolean matches;try{matches=passwordEncoder.matches(request.password(),user==null?dummyHash:user.getPasswordHash());}finally{passwordWork.release();}
+        String stored=user==null?null:user.getPasswordHash();boolean validStored=stored!=null&&(stored.matches("\\{pbkdf2\\}[a-fA-F0-9]{96}")||stored.startsWith("$2"));
+        boolean matches;try{matches=passwordEncoder.matches(request.password(),validStored?stored:dummyHash);matches=validStored&&matches;}finally{passwordWork.release();}
         if(user==null){events.record(null,null,SecurityEvents.Event.LOGIN_FAILURE);throw new UnauthorizedException(INVALID_CREDENTIALS);}
 
         if ((user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING) || !matches) {
