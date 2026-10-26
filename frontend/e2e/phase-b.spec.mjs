@@ -56,7 +56,7 @@ test('Creative B-09: enlarged text, landscape and reduced motion remain function
  await page.evaluate(()=>{document.querySelectorAll('[data-testid="public-text"],[role="heading"]').forEach(el=>{const s=getComputedStyle(el);el.style.fontSize=parseFloat(s.fontSize)*2+'px';el.style.lineHeight=parseFloat(s.lineHeight)*2+'px';});});await noOverflow(page);await screenshot(page,testInfo,'welcome-large-text');await page.setViewportSize({width:844,height:390});await noOverflow(page);await page.getByRole('button',{name:'Public resources',exact:true}).first().click();await expect(page).toHaveURL(/\/resources/);
 });
 test('Creative B-07/B-10: back and forward preserve public navigation',async({page})=>{
- await setup(page);await page.goto('/welcome');await page.getByRole('button',{name:'How it works',exact:true}).click();await expect(page).toHaveURL(/\/info\/how-it-works/);await page.goBack();await expect(page).toHaveURL(/\/welcome/);await page.goForward();await expect(page.getByRole('heading',{level:1,name:'How GreenOcean works'})).toBeVisible();
+ await setup(page);await page.goto('/welcome');await page.getByRole('button',{name:'How it works',exact:true}).first().click();await expect(page).toHaveURL(/\/info\/how-it-works/);await page.goBack();await expect(page).toHaveURL(/\/welcome/);await page.goForward();await expect(page.getByRole('heading',{level:1,name:'How GreenOcean works'})).toBeVisible();
 });
 test('Confused B-03: repeated CTA taps do not duplicate navigation',async({page})=>{
  await setup(page);await page.goto('/welcome');const button=page.getByRole('button',{name:'Create account',exact:true}).first();await expect(button).toBeVisible();await button.evaluate(el=>{el.click();el.click();});await expect(page).toHaveURL(/\/register/);await page.goBack();await expect(page).toHaveURL(/\/welcome/);
@@ -79,6 +79,12 @@ test('Confused B-04: an expired session returns to a usable guest welcome',async
  await page.getByRole('button',{name:'Continue to your account'}).first().click();await expect(page.getByRole('button',{name:'Create account',exact:true}).first()).toBeVisible();await expect(page).toHaveURL(/\/welcome/);await expect(page.getByRole('button',{name:'Continue to your account'})).toHaveCount(0);
 });
 
+test('Confused B-04: interrupted session confirmation keeps sign-in recoverable',async({page})=>{
+ const state=await setup(page);await page.route('**/api/v1/auth/me',route=>state.signedIn?route.abort('internetdisconnected'):route.fallback());await page.goto('/login');
+ await page.getByLabel('Email',{exact:true}).fill('synthetic-adult@example.test');await page.getByLabel('Password',{exact:true}).fill('synthetic password for controlled QA');await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.getByRole('alert')).toBeVisible();await expect(page.getByLabel('Email',{exact:true})).toHaveValue('synthetic-adult@example.test');await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeEnabled();
+});
+
 test('Malicious B-10: guest Welcome does not request private member endpoints',async({page})=>{
  const requests=[];page.on('request',r=>requests.push(new URL(r.url()).pathname));await setup(page);await page.goto('/welcome');await expect(page.getByRole('button',{name:'Create account',exact:true}).first()).toBeVisible();expect(requests.some(p=>/\/api\/v1\/(posts|conversations|professionals|listeners|preferences|profiles)/.test(p))).toBe(false);
 });
@@ -96,5 +102,5 @@ test('Malicious B-07: absent age policy is not replaced by a fabricated document
 });
 test('Confused B-07: a late policy response cannot replace a newer document',async({page})=>{
  await setup(page);await page.route('**/api/v1/policies/privacy',async route=>{await new Promise(r=>setTimeout(r,1200));await route.fulfill({status:200,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8081','Access-Control-Allow-Credentials':'true'},body:JSON.stringify({key:'privacy',version:1,title:'Old delayed privacy',content:'Stale QA document',publishedAt:'2026-01-01T00:00:00Z'})});});
- await page.goto('/info/privacy');await expect(page.getByText('Loading the current published document…')).toBeVisible();await page.getByRole('button',{name:'Terms of use',exact:true}).click();await expect(page.getByRole('heading',{name:'QA published terms'})).toBeVisible();await page.waitForTimeout(1400);await expect(page.getByText('Stale QA document')).toHaveCount(0);
+ await page.goto('/info/privacy');await expect(page.getByText('Loading the current published document…')).toBeVisible();await page.getByRole('button',{name:'Terms of use',exact:true}).click();await expect(page.getByRole('heading',{name:'QA published terms'})).toBeVisible();await page.waitForTimeout(1400);await expect(page.getByText('Stale QA document')).toBeHidden();await expect(page.getByRole('heading',{name:'QA published terms'})).toBeVisible();
 });
