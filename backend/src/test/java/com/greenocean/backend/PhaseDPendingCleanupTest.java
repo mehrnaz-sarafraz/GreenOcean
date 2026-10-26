@@ -17,9 +17,9 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest @ActiveProfiles("test")
 class PhaseDPendingCleanupTest {
- @Autowired JdbcTemplate db;@Autowired AccountRepository accounts;@Autowired PlatformTransactionManager manager;@Autowired RegistrationService registration;@Autowired AssistanceService assistance;
- List<UUID> ids=new ArrayList<>();
- UUID account(boolean old){String email="cleanup-"+UUID.randomUUID()+"@example.test";registration.register(new RegisterRequest(email,"a synthetic cleanup account passphrase",null,null,null,"IR",null,null,true,1));UUID id=db.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,email);ids.add(id);if(old){db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '8 days',last_login_at=NULL WHERE id=?",id);db.update("UPDATE email_outbox SET status='SENT',delivery_state='ACCEPTED',payload='{}',created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',sent_at=CURRENT_TIMESTAMP-INTERVAL '8 days' WHERE owner_user_id=?",id);}return id;}
+ @Autowired JdbcTemplate db;@Autowired AccountRepository accounts;@Autowired PlatformTransactionManager manager;@Autowired RegistrationService registration;@Autowired AssistanceService assistance;@Autowired com.greenocean.backend.assistance.service.OutboxCipher cipher;
+ List<UUID> ids=new ArrayList<>();Map<UUID,String> issuedCodes=new HashMap<>();
+ UUID account(boolean old){String email="cleanup-"+UUID.randomUUID()+"@example.test";registration.register(new RegisterRequest(email,"a synthetic cleanup account passphrase",null,null,null,"IR",null,null,true,1));UUID id=db.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,email);ids.add(id);issuedCodes.put(id,cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE owner_user_id=?",String.class,id)));if(old){db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '8 days',last_login_at=NULL WHERE id=?",id);db.update("UPDATE email_outbox SET status='SENT',delivery_state='ACCEPTED',payload='{}',created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',sent_at=CURRENT_TIMESTAMP-INTERVAL '8 days' WHERE owner_user_id=?",id);}return id;}
  PendingAccountCleanup cleanup(boolean dry,boolean pause,int batch){return new PendingAccountCleanup(db,accounts,manager,true,dry,pause,java.time.Duration.ofDays(7),batch);}
  @AfterEach void clean(){for(UUID id:ids){db.update("DELETE FROM audit_logs WHERE actor_user_id=?",id);db.update("DELETE FROM email_outbox WHERE owner_user_id=?",id);db.update("DELETE FROM account_deletions WHERE user_id=?",id);db.update("DELETE FROM users WHERE id=?",id);}}
  @Test @Tag("happy") void oldAbandonedAccountIsAnonymizedUsingExistingLifecycleAndCleanupIsIdempotent(){
@@ -51,10 +51,26 @@ class PhaseDPendingCleanupTest {
  @Test @Tag("creative") void authorizedOperationHoldingAccountLockIsSkipped()throws Exception{
    UUID id=account(true);var locked=new CountDownLatch(1);var release=new CountDownLatch(1);
    try(var pool=Executors.newSingleThreadExecutor()){
-     var operation=pool.submit(()->new org.springframework.transaction.support.TransactionTemplate(manager).execute(s->{db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE",id);db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP WHERE id=?",id);locked.countDown();try{release.await(10,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}return true;}));
+     var operation=pool.submit(()->new org.springframework.transaction.support.TransactionTemplate(manager).execute(s->{db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE",id);locked.countDown();try{release.await(10,TimeUnit.SECONDS);}catch(InterruptedException e){Thread.currentThread().interrupt();}assistance.verifyEmail(new com.greenocean.backend.assistance.dto.VerifyEmailRequest(db.queryForObject("SELECT email FROM users WHERE id=?",String.class,id),issuedCodes.get(id)));return true;}));
      assertThat(locked.await(5,TimeUnit.SECONDS)).isTrue();assertThat(cleanup(false,false,10).run().erased()).isZero();release.countDown();operation.get(5,TimeUnit.SECONDS);
    }finally{release.countDown();}
-   assertThat(db.queryForObject("SELECT status FROM users WHERE id=?",String.class,id)).isEqualTo("PENDING");
+   assertThat(db.queryForObject("SELECT status FROM users WHERE id=?",String.class,id)).isEqualTo("ACTIVE");assertThat(cleanup(false,false,10).run().erased()).isZero();
+ }
+ @Test @Tag("confused") void bouncedDeliveryAndLiveRecoveryCredentialProtectOldAccounts(){
+   UUID bounced=account(true),recovering=account(true);
+   db.update("UPDATE email_outbox SET delivery_state='BOUNCED' WHERE owner_user_id=?",bounced);
+   db.update("INSERT INTO password_reset_tokens(id,user_id,token_hash,expires_at) VALUES (?,?,?,CURRENT_TIMESTAMP+INTERVAL '10 minutes')",UUID.randomUUID(),recovering,"synthetic-recovery-"+UUID.randomUUID());
+   assertThat(cleanup(false,false,10).run().erased()).isZero();
+ }
+ @Test @Tag("creative") void sevenDayBoundaryUsesServerTimeAndConfigurableThreshold(){
+   UUID id=account(true);var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
+   tx.executeWithoutResult(status->{
+     db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-INTERVAL '7 days',verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '7 days' WHERE id=?",id);
+     assertThat(new PendingAccountCleanup(db,accounts,manager,true,true,false,java.time.Duration.ofDays(8),10).run().candidates()).isZero();
+     assertThat(cleanup(true,false,10).run().candidates()).isEqualTo(1);
+     db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '7 days'+INTERVAL '1 second' WHERE id=?",id);
+     assertThat(cleanup(true,false,10).run().candidates()).isZero();
+   });
  }
  @Test @Tag("confused") void erasureTransactionFailureRollsBackAndCanBeRetried(){
    UUID id=account(true);String suffix=UUID.randomUUID().toString().replace("-","");String function="qa_cleanup_"+suffix,trigger="qa_cleanup_trigger_"+suffix;
