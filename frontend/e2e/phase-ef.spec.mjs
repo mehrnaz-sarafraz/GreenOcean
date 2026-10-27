@@ -1,4 +1,9 @@
 import {test,expect} from '@playwright/test';import {installApi} from './fixtures/public-api.mjs';
+test('Confused EF UI: reconnecting an active session does not claim sign-out',async({page})=>{
+ await setup(page);await page.goto('/tools/account-security');await expect(page.getByLabel('Current password',{exact:true})).toBeVisible();
+ await page.evaluate(async()=>{globalThis.dispatchEvent(new Event('online'));await new Promise(resolve=>setTimeout(resolve,100));});
+ await expect(page.getByText('You are signed out.',{exact:true})).toHaveCount(0);await expect(page.getByLabel('Current password',{exact:true})).toBeVisible();
+});
 async function setup(page,options={}){const state=await installApi(page,{completeActivation:true});state.signedIn=true;state.emailVerified=true;state.onboardingComplete=true;const events={changes:[],proofs:[],revokes:[],logoutAll:0};
  await page.route('**/api/v1/auth/security-events',r=>r.fulfill({json:[{action:'LOGIN_SUCCESS',created_at:'2026-10-26T00:00:00Z'}]}));
  await page.route('**/api/v1/auth/sessions',r=>r.fulfill({json:[{id:'current',deviceName:'Current synthetic browser',createdAt:'2026-10-26T00:00:00Z',lastUsedAt:'2026-10-26T00:10:00Z',expiresAt:'2026-10-27T00:00:00Z',current:true},{id:'other',deviceName:'دستگاه دیگر 🌊',createdAt:'2026-10-26T00:00:00Z',lastUsedAt:null,expiresAt:'2026-10-27T00:00:00Z',current:false}].filter(x=>!events.revokes.includes(x.id))}));

@@ -22,8 +22,13 @@ public class PhaseAInterceptor implements HandlerInterceptor {
         if (!(auth instanceof JwtAuthenticationToken jwt)) return true;
         if(path.startsWith("/api/v1/admin")){
             var user=UUID.fromString(jwt.getToken().getSubject());var session=UUID.fromString(jwt.getToken().getClaimAsString("sid"));
-            if(!adminEnabled){events.record(user,session,com.greenocean.backend.auth.service.SecurityEvents.Event.PRIVILEGED_DENIED);throw new com.greenocean.backend.common.exception.ForbiddenException("Administrative access is disabled until strong authentication is configured");}
-            recent.require(user,session,true);
+            try {
+                if(!adminEnabled)throw new com.greenocean.backend.common.exception.ForbiddenException("Administrative access is disabled until strong authentication is configured");
+                recent.require(user,session,true);
+            } catch(com.greenocean.backend.common.exception.ForbiddenException denied) {
+                events.record(user,session,com.greenocean.backend.auth.service.SecurityEvents.Event.PRIVILEGED_DENIED);
+                throw denied;
+            }
         }
         if (!path.startsWith("/api/v1/") || path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/identity") ||
             path.startsWith("/api/v1/profiles/me") || path.startsWith("/api/v1/preferences/me") || path.startsWith("/api/v1/account") ||

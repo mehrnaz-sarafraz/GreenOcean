@@ -7,12 +7,12 @@ export type StoredTokens={accessToken:string;refreshToken:string};
 let browserTokens:StoredTokens|null=null,epoch=0,blocked=false;
 const clearListeners=new Set<(reason?:string)=>void>();
 const channel=Platform.OS==='web'&&typeof BroadcastChannel!=='undefined'?new BroadcastChannel('greenocean-auth-state'):null;
-channel?.addEventListener('message',event=>{if(event.data==='logout'){blocked=true;clearMemory();}if(event.data==='login')clearMemory();});
+channel?.addEventListener('message',event=>{if(event.data==='logout'){blocked=true;clearMemory();}if(event.data==='login'){blocked=false;clearMemory();}});
 function persistentGuardAvailable(){try{const storage=globalThis.localStorage;if(!storage)return false;const probe='greenocean.storageProbe';storage.setItem(probe,'1');storage.removeItem(probe);return true;}catch{return false;}}
 function purgeLegacyWebStorage(){if(Platform.OS!=='web')return;try{for(const storage of [globalThis.localStorage,globalThis.sessionStorage]){storage?.removeItem(ACCESS_TOKEN_KEY);storage?.removeItem(REFRESH_TOKEN_KEY);}}catch{/* Storage disabled: memory still clears. */}}
 function webBlocked(){try{return blocked||globalThis.localStorage?.getItem(LOGOUT_PENDING)==='1'||globalThis.document?.cookie.split('; ').includes('greenocean_logout_pending=1');}catch{return blocked;}}
 function clearMemory(reason?:string){epoch+=1;browserTokens=null;clearListeners.forEach(listener=>listener(reason));}
-if(Platform.OS==='web'&&typeof globalThis.addEventListener==='function')globalThis.addEventListener('storage',event=>{if(event.key===LOGOUT_PENDING&&event.newValue==='1'){blocked=true;clearMemory();}if(event.key==='greenocean.authChanged'){clearMemory();}});
+if(Platform.OS==='web'&&typeof globalThis.addEventListener==='function')globalThis.addEventListener('storage',event=>{if(event.key===LOGOUT_PENDING&&event.newValue==='1'){blocked=true;clearMemory();}if(event.key==='greenocean.authChanged'){blocked=false;clearMemory();}});
 export const tokenStorage={
  generation:()=>epoch,
  announceLogin(){if(Platform.OS==='web')try{channel?.postMessage('login');globalThis.localStorage?.setItem('greenocean.authChanged',String(Date.now())+Math.random());}catch{/* no bearer data; storage unavailable limits cross-tab signals */}},

@@ -83,9 +83,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const response=await(Platform.OS==='web'?browserSessionLock(send):send());
     if(!response.ok)throw new Error('Sign-out could not be confirmed');
   }
-  async function reconcileLogout(){const pending=await tokenStorage.pendingLogout();if(pending){await revoke(pending);await tokenStorage.allowRestore();}}
+  async function reconcileLogout(){const pending=await tokenStorage.pendingLogout();if(!pending)return false;await revoke(pending);await tokenStorage.allowRestore();return true;}
   async function retrySession(){setStatus('loading');try{await reconcileLogout();const current=await apiRequest<CurrentUser>('/api/v1/auth/me');setUser(current);setStatus('authenticated');setNotice('');}catch{setUser(null);setStatus('unauthenticated');setNotice('connectionCheck');}}
-  async function retryLogout(){try{await reconcileLogout();setNotice('signedOut');}catch{setNotice('logoutPending');}}
+  async function retryLogout(){try{if(await reconcileLogout())setNotice('signedOut');}catch{setNotice('logoutPending');}}
   async function signOut(options?: { correctedEmail?:string;notice?:string }) {
     setPendingRegistrationEmail(options?.correctedEmail??null);setPendingEmailCorrected(Boolean(options?.correctedEmail));
     let tokens:Awaited<ReturnType<typeof tokenStorage.get>>=null;let storageFailed=false;try{tokens=await tokenStorage.get();}catch{storageFailed=true;}

@@ -30,5 +30,13 @@ test('Malicious EF live: genuine WebAuthn proof required, replay and pre-MFA bea
  await context.close();
 });
 test('Creative EF live: two browser tabs restore and refresh the same cookie without replay logout',async({page,context,request})=>{
- const email=await account(request);await login(page,email);await page.goto('/tools/session-management');const other=await context.newPage();await other.goto('/tools/session-management');await expect(other.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await page.reload();await expect(page.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await other.reload();await expect(other.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await other.close();
+ const email=await account(request);await login(page,email);await page.goto('/tools/session-management');const other=await context.newPage();await other.goto('/tools/session-management');await expect(other.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await Promise.all([page.reload(),other.reload()]);await expect(page.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await expect(other.getByRole('button',{name:'Sign out this device',exact:true})).toBeVisible();await other.close();
+});
+
+test('Creative EF live: a new cross-tab login clears the completed logout guard without revoking it again',async({page,context,request})=>{
+ const email=await account(request);await login(page,email);await page.goto('/tools/account-security');const other=await context.newPage();await other.goto('/tools/account-security');await expect(other.getByLabel('Current password',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page).toHaveURL(/\/welcome$/);await expect(other).toHaveURL(/\/welcome$/);
+ await page.getByRole('button',{name:'Sign in',exact:true}).first().click();await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('Password',{exact:true}).fill(password);const response=page.waitForResponse(r=>r.url().endsWith('/api/v1/auth/web/login'));await page.getByRole('button',{name:'Sign in',exact:true}).click();const first=await(await response).json();await expect(page).not.toHaveURL(/\/login$/);
+ await other.getByRole('button',{name:'Sign in',exact:true}).first().click();await other.getByLabel('Email',{exact:true}).fill(email);await other.getByLabel('Password',{exact:true}).fill(password);await other.getByRole('button',{name:'Sign in',exact:true}).click();await expect(other).not.toHaveURL(/\/login$/);
+ expect((await request.get(`${api}/auth/me`,{headers:{Authorization:`Bearer ${first.accessToken}`}})).status()).toBe(200);await other.close();
 });
