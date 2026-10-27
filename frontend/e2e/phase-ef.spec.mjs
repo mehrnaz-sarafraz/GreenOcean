@@ -1,4 +1,9 @@
 import {test,expect} from '@playwright/test';import {installApi} from './fixtures/public-api.mjs';
+test('Creative EF UI: registration has one visibility control and remasks after focus leaves',async({page})=>{
+ await installApi(page);await page.goto('/register');const input=page.getByLabel('Password (15–128 characters)',{exact:true});await input.fill('A synthetic password visibility passphrase');
+ await expect(page.getByRole('button',{name:/^Show /})).toHaveCount(1);await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(input).toHaveAttribute('type','text');
+ await page.getByLabel('Email',{exact:true}).click();await expect(input).toHaveAttribute('type','password');await expect(page.getByRole('button',{name:'Show password',exact:true})).toBeVisible();
+});
 test('Confused EF UI: reconnecting an active session does not claim sign-out',async({page})=>{
  await setup(page);await page.goto('/tools/account-security');await expect(page.getByLabel('Current password',{exact:true})).toBeVisible();
  await page.evaluate(async()=>{globalThis.dispatchEvent(new Event('online'));await new Promise(resolve=>setTimeout(resolve,100));});

@@ -18,7 +18,7 @@ export default function RegisterScreen() {
   const [country,setCountry]=useState(''); const [query,setQuery]=useState('');
   const [countries,setCountries]=useState<Country[]>([]); const [terms,setTerms]=useState(0);
   const [adult,setAdult]=useState(false); const [accepted,setAccepted]=useState(false);
-  const [visible,setVisible]=useState(false);const [busy,setBusy]=useState(false);
+  const [busy,setBusy]=useState(false);
   const [errors,setErrors]=useState<Record<string,string>>({});const [error,setError]=useState('');
   const [loading,setLoading]=useState(true); const [detailsFailed,setDetailsFailed]=useState(false);
   const submitting=useRef(false);const epoch=useRef(0);const version=useRef(0);
@@ -69,8 +69,7 @@ export default function RegisterScreen() {
     <Text style={styles.title}>{isRtl?'ساخت حساب پایه':'Create your account'}</Text>
     <Text>{isRtl?'حساب تعاملی برای افراد ۱۸ سال به بالا است. منابع عمومی بدون حساب در دسترس‌اند.':'Social accounts are for adults 18+. Public resources are available at every age without an account.'}</Text>
     <AppField ref={emailRef} label={isRtl?'ایمیل':'Email'} value={email} onChangeText={value=>{setEmail(value);clear('email');}} error={fieldError('email')} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="emailAddress" ltr editable={!busy} />
-    <AppField ref={passwordRef} label={isRtl?'رمز عبور (۱۵ تا ۱۲۸ نویسه)':'Password (15–128 characters)'} value={password} onChangeText={value=>{setPassword(value);clear('password');}} error={fieldError('password')} secureTextEntry={!visible} autoComplete="new-password" textContentType="newPassword" autoCapitalize="none" autoCorrect={false} ltr editable={!busy} />
-    <AppButton label={visible?publicCopy[language].hidePassword:publicCopy[language].showPassword} variant="secondary" onPress={()=>setVisible(!visible)} />
+    <AppField ref={passwordRef} label={isRtl?'رمز عبور (۱۵ تا ۱۲۸ نویسه)':'Password (15–128 characters)'} value={password} onChangeText={value=>{setPassword(value);clear('password');}} error={fieldError('password')} secureTextEntry visibilityLabels={{show:publicCopy[language].showPassword,hide:publicCopy[language].hidePassword}} autoComplete="new-password" textContentType="newPassword" autoCapitalize="none" autoCorrect={false} ltr editable={!busy} />
     <Text>{isRtl?'از مدیر رمز عبور و جای‌گذاری می‌توانید استفاده کنید.':'You can paste a password or use a password manager. No required mix of symbols or numbers.'}</Text>
     <Text>{isRtl?'ایمیل باید با حروف لاتین باشد. ساخت حساب به معنی دسترسی به خدمات در کشور شما نیست.':'Use an ASCII email mailbox and domain. Creating an account does not guarantee services in your country.'}</Text>
     <AppField ref={countryRef} label={isRtl?'جست‌وجوی کشور محل اقامت':'Search country of residence'} value={query} onChangeText={setQuery} error={fieldError('countryCode')} editable={!busy} />
