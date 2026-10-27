@@ -1,6 +1,6 @@
 # Native validation — NOT RUN
 
-CI exports Android/iOS JavaScript/assets with the same Expo code. This does not launch a device, exercise SecureStore/native networking, or prove VoiceOver/TalkBack behavior. Physical Android/iOS validation remains a release gate; Windows cannot run iOS Simulator. No native test is counted passed.
+CI exports Android/iOS JavaScript/assets with the same Expo code. This does not launch a device, exercise SecureStore/native networking, or prove VoiceOver/TalkBack behavior. Physical Android/iOS validation remains a release gate. The continuation ran in a Linux container without an Android/iOS device or iOS Simulator. No native test is counted passed.
 
 | Scenario | Android / TalkBack | iOS / VoiceOver | Expected |
 |---|---|---|---|

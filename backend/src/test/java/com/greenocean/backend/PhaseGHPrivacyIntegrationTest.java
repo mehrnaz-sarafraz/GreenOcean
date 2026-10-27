@@ -98,6 +98,49 @@ class PhaseGHPrivacyIntegrationTest {
   db.update("DELETE FROM blocks WHERE blocker_id=? AND blocked_id=?",a.id,stranger.id);read("/api/v1/posts/"+broad,stranger);
   mvc.perform(delete("/api/v1/posts/"+broad).header("Authorization","Bearer "+a.token)).andExpect(status().isNoContent());denied("/api/v1/posts/"+broad,stranger);
  }
+ @Test @Tag("malicious") void savedExportPreviewsRespectBlocksInBothDirectionsWithoutErasingBookmarks() throws Exception {
+  var author=member();var reader=member();String id=publish(author,"PUBLIC",true,null,null);
+  mvc.perform(put("/api/v1/posts/"+id+"/bookmark").header("Authorization","Bearer "+reader.token)).andExpect(status().isNoContent());
+  String body=read("/api/v1/posts/"+id,reader).get("body").asText();
+  assertThat(read("/api/v1/account/archive",reader).get("activity").get("savedItems").toString()).contains(id,body);
+  for(var pair:List.of(List.of(author.id,reader.id),List.of(reader.id,author.id))) {
+   db.update("INSERT INTO blocks(blocker_id,blocked_id) VALUES (?,?)",pair.get(0),pair.get(1));
+   denied("/api/v1/posts/"+id,reader);
+   assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
+   assertThat(db.queryForObject("SELECT count(*) FROM bookmarks WHERE user_id=? AND post_id=?",Integer.class,reader.id,UUID.fromString(id))).isEqualTo(1);
+   db.update("DELETE FROM blocks WHERE blocker_id=? AND blocked_id=?",pair.get(0),pair.get(1));
+   assertThat(read("/api/v1/account/archive",reader).get("activity").get("savedItems").toString()).contains(id,body).doesNotContain(author.username,author.email);
+  }
+ }
+ @Test @Tag("malicious") void savedExportPreviewsDisappearAfterCommunityMembershipIsRevoked() throws Exception {
+  var author=member();var reader=member();follow(reader,author);
+  UUID community=db.queryForObject("INSERT INTO communities(name,slug,is_private,created_by) VALUES ('GH export synthetic',?,TRUE,?) RETURNING id",UUID.class,"gh-export-"+UUID.randomUUID(),author.id);
+  db.update("INSERT INTO community_members(community_id,user_id,role) VALUES (?,?,'OWNER')",community,author.id);
+  db.update("INSERT INTO community_members(community_id,user_id) VALUES (?,?)",community,reader.id);
+  String id=publish(author,"COMMUNITY",false,community,null);
+  mvc.perform(put("/api/v1/posts/"+id+"/bookmark").header("Authorization","Bearer "+reader.token)).andExpect(status().isNoContent());
+  String body=read("/api/v1/posts/"+id,reader).get("body").asText();
+  assertThat(read("/api/v1/account/archive",reader).get("activity").get("savedItems").toString()).contains(id,body);
+  db.update("DELETE FROM community_members WHERE community_id=? AND user_id=?",community,reader.id);
+  denied("/api/v1/posts/"+id,reader);
+  assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
+  assertThat(db.queryForObject("SELECT count(*) FROM bookmarks WHERE user_id=? AND post_id=?",Integer.class,reader.id,UUID.fromString(id))).isEqualTo(1);
+ }
+ @Test @Tag("malicious") void savedExportPreviewsRespectModerationAndInactiveAuthors() throws Exception {
+  var author=member();var reader=member();String id=publish(author,"PUBLIC",false,null,null);
+  mvc.perform(put("/api/v1/posts/"+id+"/bookmark").header("Authorization","Bearer "+reader.token)).andExpect(status().isNoContent());
+  String body=read("/api/v1/posts/"+id,reader).get("body").asText();
+  for(String state:List.of("HIDDEN","UNDER_REVIEW","DELETED")) {
+   db.update("UPDATE posts SET status=? WHERE id=?",state,UUID.fromString(id));
+   denied("/api/v1/posts/"+id,reader);
+   assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
+  }
+  db.update("UPDATE posts SET status='PUBLISHED' WHERE id=?",UUID.fromString(id));
+  assertThat(read("/api/v1/account/archive",reader).get("activity").get("savedItems").toString()).contains(id,body);
+  db.update("UPDATE users SET status='SUSPENDED' WHERE id=?",author.id);
+  denied("/api/v1/posts/"+id,reader);
+  assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
+ }
  @Test @Tag("malicious") void broaderAudienceRequiresExplicitPerPostConfirmation() throws Exception {
   var a=member();mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("body","No accidental broad publication","anonymous",false,"visibility","PUBLIC")))).andExpect(status().isBadRequest());
   assertThat(db.queryForObject("SELECT count(*) FROM posts WHERE author_id=?",Integer.class,a.id)).isZero();

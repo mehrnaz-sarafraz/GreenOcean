@@ -7,7 +7,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.util.*;
 import static org.assertj.core.api.Assertions.*;
 
-class PhaseGHMigrationTest {
+class PhaseGHMigrationTest extends MigrationTestSupport {
  @Test @Tag("creative") void populatedEfDatabasePreservesChoicesAndConservativelyFreezesHistoricalAudiences() {
   String url=System.getenv("GREENOCEAN_TEST_DB_URL");assertThat(url).isNotBlank();String schema="qa_gh_"+UUID.randomUUID().toString().replace("-","");
   var source=new DriverManagerDataSource(url,System.getenv().getOrDefault("GREENOCEAN_TEST_DB_USER","postgres"),System.getenv().getOrDefault("GREENOCEAN_TEST_DB_PASSWORD",""));

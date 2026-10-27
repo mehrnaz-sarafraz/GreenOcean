@@ -6,7 +6,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
-class PhaseDMigrationTest {
+class PhaseDMigrationTest extends MigrationTestSupport {
  @Test @Tag("creative") void populatedV35UpgradesWithoutChangingAccountsOrLosingQueuedCiphertext(){
    String url=System.getenv("GREENOCEAN_TEST_DB_URL");assertThat(url).isNotBlank();
    String schema="qa_d_"+UUID.randomUUID().toString().replace("-","");
