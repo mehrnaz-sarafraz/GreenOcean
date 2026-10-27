@@ -1,5 +1,15 @@
 # Phase I executed test evidence
 
+## Foreground continuation (2026-10-27)
+
+Continuation executable source: `4e3bfb4bfcd3b0f080831ffa991e7dab0940174b`, based on original delivered head `1b267c85c85e61ab37c21c5ec257ec7a21fdc43c`. The newly attached specification matches `supplied-specification.md` exactly after newline normalization. Original evidence below remains the original snapshot, not new local execution.
+
+Local command: `node --experimental-strip-types --test frontend/tests/*.test.mjs` from repository root: **68 passed, 0 failed, 0 skipped**. Four added tests in `phase-i-foreground.test.mjs` hold actual promises across hidden/visible transitions, return before resolution, close/unmount, overlapping polls and network failure. They verify that stale responses cannot renew readiness, update a resumed visit or revive a closed screen, and that new legitimate polling remains possible.
+
+Added fixture browser test: `I-04 UI: a late availability response cannot renew a previous foreground visit`. It holds the listener availability HTTP response, dispatches hidden then visible lifecycle events on the actual rendered workspace, and requires a new availability read before any incoming-request lookup/heartbeat. It uses synthetic transport; it does not claim native OS behavior.
+
+Full final-source CI: [40534723099](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40534723099). **Completed successfully on that exact executable SHA:** backend 234/234 (0 failures/errors/skips); frontend helpers 68/68; fixture browser 84/84; real-server browser 20/20. Total **406 passed**, no failed/skipped tests. TypeScript, lint (0 errors, 11 existing warnings) and web/Android/iOS JS/assets export passed. All three jobs succeeded. The duplicate push run was cancelled by configured concurrency; this is not a failed test. This report update changes documentation only; it preserves the tested executable source. Physical Android/iOS, TalkBack/VoiceOver, real staffing and launch approvals remain unexecuted or external. This Windows workspace has no `adb`, `emulator` or `xcrun` command available; the manual matrix remains in `phase-j-k-handoff.md`.
+
 Recorded 2026-10-27. All users, listener approvals, code content and regional fixture permissions are synthetic in disposable local PostgreSQL18 databases. No production connection or data is used. The actual source files/test inventory are recorded in `test-evidence.json`. Release restrictions and unexecuted work are in [J/K handoff](phase-j-k-handoff.md).
 
 ## Commands and results

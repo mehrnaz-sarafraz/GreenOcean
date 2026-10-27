@@ -29,6 +29,8 @@ Rehearse fresh and populated V40 upgrades on sanitized isolated data; inspect in
 
 ## Human service launch checklist
 
+Client lifecycle regression: after background/blur, an in-flight availability or session response must not renew readiness, restore chat sending or update a later foreground visit. Returning starts a new server-confirmed read. The I-04 fixture browser case and deferred-response helper tests cover this ordering; repeat the same slow-network sequence on each real native device in the existing manual matrix. Already-sent network requests cannot be recalled; explicit readiness-off is best effort and bounded server leases remain the fallback when the device cannot reach the server.
+
 - Owner approval for Model A timing expectations and published service boundaries.
 - Genuine approved listener roster, practice/code evidence, capacity expectations and revocation process.
 - Actual supervisory/incident-response staffing, coverage hours and report handling; no 24/7 claim without evidence.
