@@ -33,7 +33,7 @@ public class SocialReviewService {
         staff(actor);
         var result=db.queryForList("""
             SELECT a.id,a.post_id,a.comment_id,a.revision,a.policy_version,a.outcome,a.reason_code,a.assessed_at,
-                   COALESCE(p.body,c.body) AS body,ap.id AS appeal_id,ap.reason AS appeal_reason
+                   COALESCE(p.body,c.body) AS body,ap.id AS appeal_id,ap.reason AS appeal_reason,ap.status AS appeal_status
             FROM social_assessments a LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id
             LEFT JOIN moderation_appeals ap ON ap.assessment_id=a.id AND ap.status IN ('OPEN','REVIEWING')
             WHERE a.revision=COALESCE(p.revision,c.revision) AND COALESCE(p.deleted_at,c.deleted_at) IS NULL
@@ -66,6 +66,14 @@ public class SocialReviewService {
         UUID appeal=UUID.randomUUID();
         db.update("INSERT INTO moderation_appeals(id,appellant_user_id,assessment_id,reason) VALUES(?,?,?,?)",appeal,owner,id,reason.trim());
         return appeal;
+    }
+    @Transactional
+    public void beginReview(UUID actor,UUID id,long revision) {
+        staff(actor);var a=lock(id);var c=content(a);
+        if(revision!=((Number)a.get("revision")).longValue())throw new ConflictException("Content changed; reload before reviewing");
+        if(actor.equals(c.get("author_id")) || actor.equals(a.get("reviewer_id")))throw new ForbiddenException("An independent moderator must review the appeal");
+        if(db.update("UPDATE moderation_appeals SET status='REVIEWING' WHERE assessment_id=? AND status IN ('OPEN','REVIEWING')",id)==0)throw new ConflictException("No active appeal is available");
+        audit(actor,"SOCIAL_APPEAL_REVIEW",id);
     }
     @Transactional
     public void decide(UUID actor,UUID id,long revision,String outcome,String note) {

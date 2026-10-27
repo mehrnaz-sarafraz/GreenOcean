@@ -51,6 +51,8 @@ class PhaseL3ReviewTest extends PhaseLFixtures {
   submit("/api/v1/social-moderation/"+id+"/appeal",author,Map.of("reason","This is a synthetic quotation."),201);
   submit("/api/v1/social-moderation/"+id+"/appeal",author,Map.of("reason","Duplicate appeal"),409);
   assertThatThrownBy(()->reviews.decide(first,id,1,"ALLOW","Own decision appeal")).isInstanceOf(ForbiddenException.class);
+  assertThatThrownBy(()->reviews.beginReview(first,id,1)).isInstanceOf(ForbiddenException.class);
+  reviews.beginReview(second,id,1);assertThat(reviews.mine(author.id()).toString()).contains("REVIEWING");
   reviews.decide(second,id,1,"ALLOW","Independent context review permits the text.");
   assertThat(reviews.mine(author.id()).toString()).contains("OVERTURNED").doesNotContain(first.toString(),second.toString());
   read("/api/v1/posts/"+post,other);
@@ -98,6 +100,12 @@ class PhaseL3ReviewTest extends PhaseLFixtures {
   var author=member();String post=publish(author,"Initial edit flood story",true).path("id").asText();
   for(int revision=1;revision<=9;revision++)mvc.perform(put("/api/v1/posts/"+post).header("Authorization","Bearer "+author.token()).contentType("application/json").content(json.writeValueAsString(Map.of("body","Synthetic revision "+revision,"revision",revision)))).andExpect(status().isOk());
   mvc.perform(put("/api/v1/posts/"+post).header("Authorization","Bearer "+author.token()).contentType("application/json").content(json.writeValueAsString(Map.of("body","Excess synthetic revision","revision",10)))).andExpect(status().isConflict());
+ }
+ @Test void repeatedReportsAreBoundedWithoutPublishingOrSuspendingAnything()throws Exception{
+  var author=member();var reporter=member();String post=publish(author,"Report rate scenario",true).path("id").asText();
+  db.update("INSERT INTO reports(reporter_id,post_id,reason,status,resolved_at) SELECT ?,?,'OTHER','RESOLVED',CURRENT_TIMESTAMP FROM generate_series(1,20)",reporter.id(),UUID.fromString(post));
+  submit("/api/v1/reports",reporter,Map.of("targetType","POST","targetId",post,"reason","OTHER"),409);
+  read("/api/v1/posts/"+post,reporter);assertThat(db.queryForObject("SELECT status FROM users WHERE id=?",String.class,reporter.id())).isEqualTo("ACTIVE");
  }
  @Test void genericAppealEndpointCannotBypassLinkedRevisionReview()throws Exception{
   var author=member();UUID reviewer=staff("MODERATOR"),id=assessment(held(author));UUID appeal=reviews.appeal(author.id(),id,"Synthetic appeal");
