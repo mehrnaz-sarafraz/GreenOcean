@@ -10,13 +10,13 @@ import { UserPreferences, SocialConnection } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 
 export default function SafetySettings() {
-  const { preferences, setPreferences } = usePlatformData(); const [word, setWord] = useState(''); const [blocked, setBlocked] = useState<SocialConnection[]>([]);
+  const { preferences, setPreferences, error, refresh } = usePlatformData(); const [word, setWord] = useState(''); const [blocked, setBlocked] = useState<SocialConnection[]>([]);
   const [saving,setSaving]=useState(false);const [saveError,setSaveError]=useState('');
   const muted = preferences?.mutedTerms ?? [];
   useEffect(() => { apiRequest<SocialConnection[]>('/api/v1/social/blocks').then(setBlocked).catch(() => undefined); }, []);
   const save = async (change: Partial<UserPreferences>) => { if (!preferences||saving) return; setSaving(true);setSaveError('');const previous=preferences;setPreferences({...previous,...change});try{setPreferences(await apiRequest<UserPreferences>('/api/v1/preferences/me',{method:'PATCH',body:JSON.stringify(change)}));}catch{setPreferences(previous);setSaveError('Changes were not saved. Your previous settings have been restored. Try again.');}finally{setSaving(false);} };
   function addWord() { const value = word.trim(); if (value && !muted.includes(value)) void save({ mutedTerms: [...muted, value] }); setWord(''); }
-  if(!preferences)return <Screen><Text>Loading saved privacy settings…</Text></Screen>;
+  if(!preferences)return <Screen><Text>{error || 'Loading saved privacy settings…'}</Text>{!!error&&<AppButton label="Retry" onPress={()=>void refresh()}/>}</Screen>;
   return <Screen scroll style={styles.screen}><View style={styles.content}><AppButton variant="secondary" label="Edit optional preferences" onPress={()=>router.push('/(auth)/onboarding')}/>{!!saveError&&<Text accessibilityRole="alert" style={{color:colors.danger}}>{saveError}</Text>}<Text>{saving?'Saving…':'Saved settings'}</Text>
     <View style={styles.top}><Pressable onPress={() => router.back()} style={styles.back}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><View style={styles.saved}><AppIcon name="check_circle" filled size={16} color={colors.ocean600} /><Text style={styles.savedText}>Changes save automatically</Text></View></View>
     <View><Text style={styles.eyebrow}>YOUR SPACE, YOUR BOUNDARIES</Text><Text style={styles.title}>Privacy & safety</Text><Text style={styles.subtitle}>Choose what you see, who can reach you, and which topics need an extra pause before they appear.</Text></View>

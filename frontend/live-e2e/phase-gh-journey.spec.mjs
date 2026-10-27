@@ -1,5 +1,10 @@
 import {test,expect} from '@playwright/test';import {randomUUID} from 'node:crypto';import {readFile} from 'node:fs/promises';
 const api='http://127.0.0.1:8080/api/v1',password='Synthetic GH live passphrase 🌊';
+test.beforeEach(async()=>{
+ const key=await readFile('../backend/target/qa-mailbox-token','utf8');
+ const reset=await fetch('http://127.0.0.1:8099/reset-rate-window',{method:'POST',headers:{'X-QA-Key':key}});
+ expect(reset.status).toBe(204);
+});
 async function account(request){
  const email=`gh-live-${randomUUID()}@example.test`;expect((await request.post(`${api}/auth/register`,{data:{email,password,countryCode:'IR',adultSelfAttested:true,termsVersion:1}})).status()).toBe(201);
  const key=await readFile('../backend/target/qa-mailbox-token','utf8');const mailbox=async()=>{const r=await fetch(`http://127.0.0.1:8099/snapshot?email=${encodeURIComponent(email)}`,{headers:{'X-QA-Key':key}});expect(r.status).toBe(200);return r.json();};

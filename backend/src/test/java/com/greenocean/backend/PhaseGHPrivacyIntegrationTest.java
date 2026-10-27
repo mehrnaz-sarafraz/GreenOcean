@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PhaseGHPrivacyIntegrationTest {
  @Autowired MockMvc mvc; @Autowired JdbcTemplate db; @Autowired ObjectMapper json;
  @Autowired jakarta.persistence.EntityManager entities;
+ @Autowired com.greenocean.backend.notification.repository.NotificationRepository notifications;
  @Autowired org.springframework.transaction.PlatformTransactionManager manager;
  @BeforeEach void clearSyntheticRateWindows() {
   var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
@@ -157,5 +158,27 @@ class PhaseGHPrivacyIntegrationTest {
   assertThat(db.queryForObject("SELECT count(*) FROM user_preferences WHERE user_id=?",Integer.class,a.id)).isZero();
   assertThat(db.queryForObject("SELECT avatar_url FROM profiles WHERE user_id=?",String.class,a.id)).isNull();
   mvc.perform(get("/api/v1/preferences/me").header("Authorization","Bearer "+a.token)).andExpect(status().isUnauthorized());
+ }
+ @Test @Tag("malicious") void revokedAudienceNotificationsAndAnonymousRepliesDoNotDiscloseProtectedInformation() throws Exception {
+  var author=member();var reader=member();follow(reader,author);String post=publish(author,"FOLLOWERS",false,null,null);
+  db.update("INSERT INTO notifications(user_id,actor_user_id,type,post_id) VALUES (?,?,'COMMENT',?)",reader.id,author.id,UUID.fromString(post));
+  assertThat(read("/api/v1/notifications",reader).toString()).contains(post);assertThat(notifications.unreadCount(reader.id)).isEqualTo(1);
+  db.update("DELETE FROM follows WHERE follower_id=? AND following_id=?",reader.id,author.id);
+  assertThat(read("/api/v1/notifications",reader).get("items").isEmpty()).isTrue();assertThat(notifications.unreadCount(reader.id)).isZero();
+  follow(reader,author);
+  mvc.perform(post("/api/v1/posts/"+post+"/comments").header("Authorization","Bearer "+reader.token).contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"Anonymous reply\",\"anonymous\":true}")).andExpect(status().isCreated()).andExpect(jsonPath("$.author").doesNotExist());
+  var notice=read("/api/v1/notifications",author).get("items").get(0);assertThat(notice.get("actor").isNull()).isTrue();assertThat(notice.toString()).doesNotContain(reader.username,reader.id.toString());
+ }
+ @Test @Tag("creative") void paginatedDiscoveryNeverReturnsFollowersOnlyPostsToStrangers() throws Exception {
+  var author=member();var viewer=member();String restricted=publish(author,"FOLLOWERS",false,null,null);publish(author,"PUBLIC",false,null,null);publish(author,"PUBLIC",true,null,null);
+  for(int page=0;page<4;page++)assertThat(read("/api/v1/posts/feed?size=1&page="+page,viewer).toString()).doesNotContain(restricted);
+ }
+ @Test @Tag("malicious") void professionalOnlyRequestsRequireVerifiedSenderAndRemainSeparateFromCare() throws Exception {
+  var target=member();var sender=member();change("/api/v1/preferences/me",target,Map.of("allowMessageRequests",true,"professionalsOnlyMessages",true));
+  String path="/api/v1/conversations/users/"+target.id;
+  mvc.perform(post(path).header("Authorization","Bearer "+sender.token)).andExpect(status().isForbidden());
+  db.update("INSERT INTO professional_profiles(user_id,professional_type,verification_status,verified_at) VALUES (?,'COUNSELOR','VERIFIED',CURRENT_TIMESTAMP)",sender.id);
+  mvc.perform(post(path).header("Authorization","Bearer "+sender.token)).andExpect(status().isCreated());
+  mvc.perform(post("/api/v1/conversations/professionals/"+sender.id).header("Authorization","Bearer "+target.token)).andExpect(status().isForbidden());
  }
 }

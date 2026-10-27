@@ -47,7 +47,7 @@ public class ProfileService {
         Profile profile = profileRepository.findForUpdate(userId).orElseThrow(() -> new NotFoundException("Profile was not found"));
         if(request.countryCode()!=null && !request.countryCode().isBlank()) access.country(request.countryCode().toUpperCase(java.util.Locale.ROOT));
         String username = normalizeUsername(request.username());
-        if (username != null && java.util.Set.of("admin","administrator","support","greenocean","moderator","system","official","staff").contains(username))
+        if (username != null && username.matches("(admin|administrator|support|greenocean|moderator|system|official|staff)([._].*)?"))
             throw new IllegalArgumentException("This username is reserved");
         validateAvatar(request.avatarUrl());
         if (username != null
@@ -154,7 +154,7 @@ public class ProfileService {
 
     private String normalizeRequiredText(String value, String fieldName) {
         if (value == null) return null;
-        String trimmed = value.trim();
+        String trimmed = java.text.Normalizer.normalize(value.trim(), java.text.Normalizer.Form.NFC);
         if (trimmed.isEmpty()) throw new IllegalArgumentException(fieldName + " cannot be blank");
         if (trimmed.codePoints().anyMatch(c -> Character.isISOControl(c) || (c >= 0x202a && c <= 0x202e) || (c >= 0x2066 && c <= 0x2069)))
             throw new IllegalArgumentException(fieldName + " contains unsupported control characters");

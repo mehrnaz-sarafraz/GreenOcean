@@ -21,7 +21,7 @@ export default function PublicProfileScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async (isCurrent = () => true) => {
+  const load = useCallback(async (isCurrent: () => boolean = () => true) => {
     setError('');
     try {
       const next = await apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(username)}`);

@@ -46,6 +46,15 @@ public class PhaseCLiveServer {
         try {Files.setPosixFilePermissions(token,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));}
         catch(UnsupportedOperationException ignored) { /* Windows development files inherit workspace ACL. */ }
         var mailbox=HttpServer.create(new InetSocketAddress("127.0.0.1",8099),0);
+        // Per-scenario isolation: many synthetic accounts share one loopback IP in this test server.
+        // This fixture is not in the production jar and never changes production rate policy.
+        mailbox.createContext("/reset-rate-window",exchange->{try {
+            if(!"POST".equals(exchange.getRequestMethod()) || !key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))) {
+                exchange.sendResponseHeaders(403,-1);return;
+            }
+            db.update("DELETE FROM auth_rate_windows");
+            exchange.sendResponseHeaders(204,-1);
+        } finally {exchange.close();}});
         mailbox.createContext("/snapshot",exchange->{
             try {
                 if(!"GET".equals(exchange.getRequestMethod()) || !key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))) {
