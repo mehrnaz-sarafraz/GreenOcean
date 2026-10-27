@@ -74,8 +74,8 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException exception, HttpServletRequest request) {
+    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class})
+    public ResponseEntity<ApiError> handleIllegalArgumentException(RuntimeException exception, HttpServletRequest request) {
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 exception.getMessage(), request.getRequestURI(), List.of()

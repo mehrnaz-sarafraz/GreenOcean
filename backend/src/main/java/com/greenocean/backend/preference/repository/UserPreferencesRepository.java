@@ -44,23 +44,23 @@ public class UserPreferencesRepository {
             return find(userId).orElseThrow();
         });
         if (request.supportTopics() != null && !request.supportTopics().isEmpty()) {
-            if (!topicCollectionEnabled) throw new IllegalArgumentException("Topic collection is currently unavailable; you can continue without selecting topics");
+            if (!topicCollectionEnabled) throw new com.greenocean.backend.common.exception.PreferenceValidationException("Topic collection is currently unavailable; you can continue without selecting topics");
             for (String topic : request.supportTopics()) {
                 if (topic == null || !Boolean.TRUE.equals(jdbcTemplate.queryForObject(
                     "SELECT EXISTS(SELECT 1 FROM support_categories WHERE slug=? AND is_active)", Boolean.class, topic)))
-                    throw new IllegalArgumentException("Unknown support topic identifier");
+                    throw new com.greenocean.backend.common.exception.PreferenceValidationException("Unknown support topic identifier");
             }
         }
         if (request.supportStyle() != null && !request.supportStyle().isEmpty() &&
             (!java.util.Set.of("SHARED_EXPERIENCES","SUPPORT_GROUPS","LISTENER","PROFESSIONAL_KNOWLEDGE").contains(request.supportStyle()) ||
              !Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM catalog_options WHERE option_group='SUPPORT_STYLE' AND option_key=? AND is_active)", Boolean.class, request.supportStyle()))))
-            throw new IllegalArgumentException("Unknown support style");
+            throw new com.greenocean.backend.common.exception.PreferenceValidationException("Unknown support style");
         String onboardingStatus = request.onboardingStatus() != null ? request.onboardingStatus() : current.onboardingStatus();
         int step = request.onboardingStep() == null ? current.onboardingStep() : request.onboardingStep();
         if (request.onboardingStatus() == null && request.onboardingComplete() != null && request.onboardingComplete())
             onboardingStatus = "LEGACY_UNKNOWN";
         if ("COMPLETED".equals(onboardingStatus) && step != 3)
-            throw new IllegalArgumentException("Complete the final onboarding step before finishing");
+            throw new com.greenocean.backend.common.exception.PreferenceValidationException("Complete the final onboarding step before finishing");
         boolean dismissed = java.util.Set.of("SKIPPED","COMPLETED","LEGACY_UNKNOWN").contains(onboardingStatus);
         jdbcTemplate.update("""
                 UPDATE user_preferences

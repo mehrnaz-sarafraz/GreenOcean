@@ -17,6 +17,6 @@ public record CreatePostRequest(
         UUID categoryId,
         PostType postType,
         @Size(max = 30) String mood,
-        boolean broaderAudienceConfirmed
+        Boolean broaderAudienceConfirmed
 ) {
 }

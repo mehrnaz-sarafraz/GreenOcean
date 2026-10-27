@@ -19,8 +19,8 @@ function relativeTime(value: string) {
 export function PostCard({ post: initialPost, elevated = true }: { post: PostItem; elevated?: boolean }) {
   const { t } = useLanguage(); const [post, setPost] = useState(initialPost);
   const {preferences}=usePlatformData();
-  const [revealed,setSensitiveRevealed]=useState(false);
-  const sensitiveRevealed=!post.contentWarning||preferences?.blurSensitiveContent===false||revealed;
+  const [revealed,setSensitiveRevealed]=useState<boolean|null>(null);
+  const sensitiveRevealed=!post.contentWarning||(revealed??preferences?.blurSensitiveContent===false);
   const category = post.category;
   const postType = post.postType ?? 'EXPERIENCE';
   async function toggleLike() { const next = !post.liked; setPost(c => ({ ...c, liked: next, likeCount: c.likeCount + (next ? 1 : -1) })); try { await apiRequest(`/api/v1/posts/${post.id}/like`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, liked: !next, likeCount: c.likeCount + (next ? -1 : 1) })); } }

@@ -50,7 +50,7 @@ public class PostService {
 
     @Transactional
     public PostResponse create(UUID userId, CreatePostRequest request) {
-        if (request.visibility() == PostVisibility.PUBLIC && !request.broaderAudienceConfirmed())
+        if (request.visibility() == PostVisibility.PUBLIC && !Boolean.TRUE.equals(request.broaderAudienceConfirmed()))
             throw new IllegalArgumentException("Confirm the broader eligible-member audience before publishing");
         validateVisibility(userId, request.visibility(), request.communityId());
         User author = userRepository.findById(userId)
@@ -82,6 +82,7 @@ public class PostService {
                 .orElseThrow(() -> new NotFoundException("Post was not found"));
         if (!post.getAuthorId().equals(userId)) throw new ForbiddenException("Only the author can delete this post");
         if (post.getStatus() != ContentStatus.DELETED) post.softDelete();
+        postRepository.flush();
     }
 
     @Transactional

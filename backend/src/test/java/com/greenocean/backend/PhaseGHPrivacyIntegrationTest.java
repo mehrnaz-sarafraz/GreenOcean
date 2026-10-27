@@ -19,6 +19,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PhaseGHPrivacyIntegrationTest {
  @Autowired MockMvc mvc; @Autowired JdbcTemplate db; @Autowired ObjectMapper json;
  @Autowired jakarta.persistence.EntityManager entities;
+ @Autowired org.springframework.transaction.PlatformTransactionManager manager;
+ @BeforeEach void clearSyntheticRateWindows() {
+  var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
+  tx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+  tx.executeWithoutResult(status->db.update("DELETE FROM auth_rate_windows"));
+ }
  record Member(UUID id,String username,String token,String email) {}
  Member member() throws Exception {
   String email="gh-"+UUID.randomUUID()+"@example.test";
@@ -89,7 +95,7 @@ class PhaseGHPrivacyIntegrationTest {
  @Test @Tag("malicious") void communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess() throws Exception {
   var a=member();var b=member();follow(b,a);
   UUID community=db.queryForObject("INSERT INTO communities(name,slug,is_private,created_by) VALUES ('GH synthetic',?,TRUE,?) RETURNING id",UUID.class,"gh-"+UUID.randomUUID(),a.id);
-  db.update("INSERT INTO community_members(community_id,user_id,member_role) VALUES (?,?,'OWNER')",community,a.id);
+  db.update("INSERT INTO community_members(community_id,user_id,role) VALUES (?,?,'OWNER')",community,a.id);
   String id=publish(a,"COMMUNITY",false,community,null);denied("/api/v1/posts/"+id,b);
   db.update("INSERT INTO community_members(community_id,user_id) VALUES (?,?)",community,b.id);read("/api/v1/posts/"+id,b);
   db.update("DELETE FROM community_members WHERE community_id=? AND user_id=?",community,b.id);denied("/api/v1/posts/"+id,b);
