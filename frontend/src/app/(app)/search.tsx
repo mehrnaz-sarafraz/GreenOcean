@@ -86,7 +86,7 @@ export default function ExploreScreen() {
       const groupCategories = visibleCategories.filter(category => category.group === group.id);
       return groupCategories.length > 0 && <View key={group.id} style={styles.groupBlock}>
         <Section title={group.title} subtitle={group.subtitle} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}</ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>Explore stories</Text></Pressable>)}</ScrollView>
       </View>;
     })}
 

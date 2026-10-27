@@ -66,7 +66,7 @@ export default function PublicProfileScreen() {
       <View style={styles.identity}><Avatar name={profile.displayName} uri={profile.avatarUrl} size={86} /><View style={styles.follow}><AppButton loading={busy} label={profile.following ? 'Following' : profile.followRequested ? 'Request sent' : 'Follow'} variant={profile.following || profile.followRequested ? 'secondary' : 'primary'} onPress={() => void toggleFollow()} /></View></View>
       <Text style={styles.name}>{profile.displayName}</Text><Text style={styles.handle}>@{profile.username}</Text>
       <Text style={styles.bio}>{profile.bio || 'This member has not added a bio yet.'}</Text>
-      <View style={styles.counts}><Count value={profile.followerCount} label="Followers" /><Count value={profile.followingCount} label="Following" /><Count value={profile.postCount} label="Stories" /><Count value={profile.helpfulReactionCount} label="Helpful" /></View>
+      <View style={styles.counts}><Count value={profile.followerCount} label="Followers" /><Count value={profile.followingCount} label="Following" /><Count value={profile.postCount} label="Stories" /></View>
       {(profile.city || profile.countryCode) && <View style={styles.meta}><AppIcon name="location_on" size={18} color={colors.muted} /><Text style={styles.metaText}>{[profile.city, profile.countryCode].filter(Boolean).join(', ')}</Text></View>}
       <View style={styles.meta}><AppIcon name="calendar_month" size={18} color={colors.muted} /><Text style={styles.metaText}>Member since {new Date(profile.memberSince).getFullYear()}</Text></View>
       {!!error && <Text style={styles.error}>{error}</Text>}
