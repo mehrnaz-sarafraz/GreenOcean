@@ -60,6 +60,26 @@ class PhaseL1PublishingTest extends PhaseLFixtures {
   var a=member();var d=submit("/api/v1/posts/drafts",a,Map.of("payload",Map.of("body","Draft publication"),"revision",0),200);
   String path="/api/v1/posts/drafts/"+d.path("id").asText()+"/publish";submit(path,a,payload("Draft publication",true),200);submit(path,a,payload("Draft publication",true),404);
  }
+ @Test void optimisticDraftSaveAndExpiryWorkerRespectOwnership()throws Exception{
+  var a=member();var b=member();var data=Map.of("payload",Map.of("body","Private saved text"),"revision",0);
+  var draft=submit("/api/v1/posts/drafts",a,data,200);String id=draft.path("id").asText();
+  var next=Map.of("payload",Map.of("body","Updated private text"),"revision",1);
+  mvc.perform(put("/api/v1/posts/drafts/"+id).header("Authorization","Bearer "+b.token()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(next))).andExpect(status().isConflict());
+  mvc.perform(put("/api/v1/posts/drafts/"+id).header("Authorization","Bearer "+a.token()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(next))).andExpect(status().isOk()).andExpect(jsonPath("$.revision").value(2));
+  mvc.perform(put("/api/v1/posts/drafts/"+id).header("Authorization","Bearer "+a.token()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(next))).andExpect(status().isConflict());
+  db.update("UPDATE social_drafts SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1 second' WHERE id=?",UUID.fromString(id));
+  new com.greenocean.backend.post.service.SocialDrafts(db,json,null).expire();
+  assertThat(db.queryForObject("SELECT count(*) FROM social_drafts WHERE id=?",Integer.class,UUID.fromString(id))).isZero();
+ }
+ @Test void accountErasureRemovesDraftsAndSafetyMetadataWithoutChangingHistoricalIdentity()throws Exception{
+  var a=member();String id=publish(a,"An originally named story",false).path("id").asText();
+  submit("/api/v1/posts/drafts",a,Map.of("payload",Map.of("body","Private erase marker"),"revision",0),200);
+  mvc.perform(delete("/api/v1/account").header("Authorization","Bearer "+a.token()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("password","Synthetic L passphrase 2026")))).andExpect(status().isNoContent());
+  assertThat(db.queryForObject("SELECT count(*) FROM social_drafts WHERE owner_id=?",Integer.class,a.id())).isZero();
+  assertThat(db.queryForObject("SELECT count(*) FROM social_assessments WHERE post_id=?",Integer.class,UUID.fromString(id))).isZero();
+  assertThat(db.queryForObject("SELECT is_anonymous FROM posts WHERE id=?",Boolean.class,UUID.fromString(id))).isFalse();
+  assertThat(db.queryForObject("SELECT body FROM posts WHERE id=?",String.class,UUID.fromString(id))).isEqualTo("[Deleted]");
+ }
  @Test void anonymousOwnerCommentDoesNotRevealOwnership()throws Exception{
   var a=member();var b=member();String id=publish(a,"An anonymous story",true).path("id").asText();
   var c=submit("/api/v1/posts/"+id+"/comments",a,Map.of("body","Thank you for listening","anonymous",false),201);

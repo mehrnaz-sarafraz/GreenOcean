@@ -44,7 +44,7 @@ export default function Create() {
   }catch(e){if(epoch===tokenStorage.generation())setError(e instanceof Error?e.message:tr('Unable to publish; text preserved.','انتشار انجام نشد؛ متن حفظ شد.'));}finally{setBusy(false);}
  }
  if(reviewed===null)return <Screen><Text>{tr('Loading…','در حال بارگیری…')}</Text></Screen>;
- if(!reviewed)return <Screen scroll><DisplayReview onReviewed={()=>setReviewed(true)}/></Screen>;
+ if(!reviewed&&stage!==1)return <Screen scroll><DisplayReview onReviewed={()=>setReviewed(true)}/></Screen>;
  const direction={textAlign:language==='fa'?'right' as const:'left' as const,writingDirection:language==='fa'?'rtl' as const:'ltr' as const};
  const audience=(a:string)=>a==='PUBLIC'?tr('Eligible members','اعضای مجاز'):a==='FOLLOWERS'?tr('Approved followers','دنبال‌کنندگان تأییدشده'):tr('Community members','اعضای گروه');
  return <Screen scroll><View style={styles.content}>
@@ -53,9 +53,9 @@ export default function Create() {
   <AppButton label={tr('My posts and decisions','پست‌های من و تصمیم‌ها')} variant="secondary" onPress={()=>router.push('/(app)/my-posts' as never)}/>
   {stage===1&&<>
    <Text accessibilityRole="header" style={[styles.title,direction]}>{tr('How would you like this post to appear to other members?','می‌خواهید این پست چگونه به اعضای دیگر نمایش داده شود؟')}</Text>
-   <AppButton label={tr('Anonymous','ناشناس')} variant={value.publicationIdentity==='ANONYMOUS'?'primary':'secondary'} onPress={()=>patch({publicationIdentity:'ANONYMOUS'})}/>
+   <AppButton label={tr('Anonymous','ناشناس')} selected={value.publicationIdentity==='ANONYMOUS'} variant={value.publicationIdentity==='ANONYMOUS'?'primary':'secondary'} onPress={()=>patch({publicationIdentity:'ANONYMOUS'})}/>
    <Text style={direction}>{tr('Members cannot see your username or profile link. Authorized safety staff may identify the author for necessary investigations.','اعضا نام کاربری یا پیوند پروفایل را نمی‌بینند. کارکنان مجاز ایمنی در بررسی ضروری می‌توانند نویسنده را شناسایی کنند.')}</Text>
-   <AppButton label={tr('Social identity','هویت اجتماعی')} variant={value.publicationIdentity==='SOCIAL_IDENTITY'?'primary':'secondary'} onPress={()=>patch({publicationIdentity:'SOCIAL_IDENTITY'})}/>
+   <AppButton label={tr('Social identity','هویت اجتماعی')} selected={value.publicationIdentity==='SOCIAL_IDENTITY'} variant={value.publicationIdentity==='SOCIAL_IDENTITY'?'primary':'secondary'} onPress={()=>patch({publicationIdentity:'SOCIAL_IDENTITY'})}/>
    <Text style={direction}>{tr('Your social display name and username appear with eligible profile access. No email or legal name is automatically disclosed.','نام نمایشی و نام کاربری اجتماعی با دسترسی مجاز به پروفایل نمایش داده می‌شود؛ ایمیل یا نام قانونی خودکار افشا نمی‌شود.')}</Text>
    <AppButton label={tr('Continue to writing','ادامه به نوشتن')} disabled={!value.publicationIdentity||busy} onPress={()=>{setStage(2);setNotice('');}}/>
    <Text style={direction}>{tr('Private drafts · deleted 7 days after last edit','پیش‌نویس‌های خصوصی · حذف ۷ روز پس از آخرین ویرایش')}</Text>
