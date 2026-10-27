@@ -39,7 +39,7 @@ export async function installApi(page, options={}) {
     if(path==='/api/v1/posts/feed'||path==='/api/v1/communities'||path==='/api/v1/notifications')return reply({items:[],page:0,size:20,hasNext:false});
     if(path==='/api/v1/profiles/me')return reply({userId:'00000000-0000-0000-0000-000000000001',username:'member_synthetic',displayName:'New member',profilePrivate:true});
     if(path==='/api/v1/preferences/me'){
-      if(req.method()==='PATCH')state.onboardingComplete=req.postDataJSON().onboardingComplete;
+      if(req.method()==='PATCH'){const patch=req.postDataJSON();state.onboardingComplete=patch.onboardingComplete??(['SKIPPED','COMPLETED'].includes(patch.onboardingStatus));}
       return reply({onboardingComplete:state.onboardingComplete,supportTopics:[],strongerContentControls:true,blurSensitiveContent:true,allowMessageRequests:false});
     }
     return reply([]);

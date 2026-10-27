@@ -16,8 +16,8 @@ import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
-  const { posts } = usePlatformData();
-  const [post, setPost] = useState<PostItem | null>(posts.find(item => item.id === id) ?? null);
+  
+  const [post, setPost] = useState<PostItem | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ export default function PostDetail() {
         ]);
         if (active) { setPost(loadedPost); setComments(loadedComments.items); }
       } catch (caught) {
-        if (active) setError(caught instanceof Error ? caught.message : 'Could not load this story');
+        if (active) {setPost(null);setComments([]);setError(caught instanceof Error ? caught.message : 'Could not load this story');}
       } finally {
         if (active) setLoading(false);
       }
