@@ -1,0 +1,18 @@
+# External dependency verification ledger
+
+2026-10-27 inspection. No real provider, device, staff or legal approval is inferred from synthetic tests. Required owner means an accountable role to appoint, not a fabricated named person.
+
+| ID / scope | Available technical evidence | Missing external evidence / owner | Release effect |
+|---|---|---|---|
+| X01 mail | D idempotent controlled transport/outcomes/outage/key overlap; actual synthetic inbox journeys | Provider credentials, verified sender/domain, SPF/DKIM/DMARC, approved templates, authorized real inbox/bounce/alerts/secret rotation; delivery operator | Public account launch blocked |
+| X02 staff MFA | Genuine browser virtual WebAuthn with exact test RP/origin, independent permit, replay/no-password-bypass tests | Approved real RP/origins, physical primary/backup authenticators, enrollment custody/recovery and staff drill; security owner | Privileged operations remain disabled; no real admin readiness |
+| X03 geography/care | Server region/account/credential checks and synthetic isolated regional fixtures | Approved pilot countries/service types/scope and actual professional-care licenses/authorization; service/legal owner | No market or care activation |
+| X04 listener operations | I genuine synthetic acceptance/activation/capacity/shutdown tests | Real qualified roster/full approved code/training/practice, staffing/supervisors/coverage/escalation/report responsibility; listener operations | Live flag stays false; core live-service launch not complete |
+| X05 urgent directory | Existing country-aware public verified/published filtering and honest boundary copy | Actual listing provenance, review schedule/owner and continued correctness; resource curator | No invented numbers or24/7 coverage claim; actual release directory review required |
+| X06 legal/privacy | J immutable/versioned evidence/current purposes/withdrawal/rights/matrices and DPIA screening | Controller/contact, actual applicable law, approved Terms/Privacy/translations, sensitive-data basis, formal DPIA if needed; owner/counsel | Unreviewed publication/processing off; public launch blocked |
+| X07 processors/retention/backups | J technical data/flow/retention inventory, K isolated logical restore | Actual host/regions/contracts/transfers, category schedules/holds, backup access/retention and independent deletion replay; privacy/infrastructure owner | No real backup/erase compliance or recovery SLA claim |
+| X08 monitoring/incidents | Fixed bounded security events, delivery queue/outcomes, restricted reports/rights/erasure status | Real alert destination, on-call operator/response target, trigger rehearsal and evidence custody; operations/security owner | Logs alone do not establish operational readiness |
+| X09 native release | Web/Android/iOS JS/assets export; exact native checklist | Signed binaries/provisioning/store disclosures, real devices/TalkBack/VoiceOver/OS storage/capture tests; native owner | NOT_EXECUTED_DEVICE_REQUIRED; native release blocked |
+| X10 capacity/deployment | Four-worker loopback synthetic measurements and restored disposable PG | Owner-selected rollout capacity/SLO, real hardware/load/DDL/timeouts/TLS/CSP and failure rehearsal; infrastructure/service owner | No binding capacity/RTO/RPO; staging infrastructure still unverified |
+
+No alert was sent to a real team, no external account configured, no legal text published, no country enabled and no production data accessed. Missing destinations/staff are blockers, not invented exercises. Meaningful owner decisions are required before enabling affected operations; independent QA/fixes proceed with safe disabled defaults.

@@ -1,0 +1,553 @@
+{
+  "date": "2026-10-27",
+  "integratedBaseline": "ab16a953511dcc075cb0bd4c12c6380893561d7d",
+  "finalExecutable": "4075561ccfd6585b00f7dd9b8b95b96e5000a2c4",
+  "ci": {
+    "run": 40541904020,
+    "url": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40541904020",
+    "conclusion": "success",
+    "jobs": {
+      "backend": 122323079637,
+      "frontend": 122323079656,
+      "registrationLive": 122323079005,
+      "releaseScans": 122323079568
+    }
+  },
+  "tests": {
+    "backend": 260,
+    "helpers": 69,
+    "componentBrowser": 92,
+    "trueFullstackBrowser": 24,
+    "passed": 445,
+    "failed": 0,
+    "skipped": 0
+  },
+  "newKCases": [
+    "PhaseKReportConcurrencyTest.parallelDuplicateReportsCreateExactlyOneOpenRecord",
+    "K dependency regression: shell-quote rejects line terminators after comment tokens without executing a shell",
+    "K integrated happy: one account from public signup through privacy, support, governance, password change and erasure",
+    "K bounded synthetic reliability: four workers, auth/pagination/live contention/messages/report/export/erase"
+  ],
+  "typecheck": "passed",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "jsAssetExports": [
+    "web",
+    "android",
+    "ios"
+  ],
+  "native": "NOT_EXECUTED_DEVICE_REQUIRED",
+  "backupRestore": {
+    "environment": "disposable PostgreSQL18 only",
+    "status": "passed",
+    "compared": [
+      "users",
+      "profiles",
+      "posts",
+      "sessions",
+      "live_requests",
+      "authorizations",
+      "deletions",
+      "migration_history"
+    ],
+    "productionRestoreAndOlderErasureReplay": "NOT_VERIFIED"
+  },
+  "sourceScan": {
+    "commit": "39e9125f4cdd3484c91aad6d84e5bbb3806625ee",
+    "scope": "current tracked UTF-8 files <=2MB; four credential patterns; no history or entropy claim",
+    "filesScanned": 554,
+    "findings": [],
+    "baseline": "ab44bc19fe72877b35f2709adc8a771c29cd2c00",
+    "originalMigrations": [
+      {
+        "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+        "sha256": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+        "sha256": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+        "sha256": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+        "sha256": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+        "sha256": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+        "sha256": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+        "sha256": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+        "sha256": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+        "sha256": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+        "sha256": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+        "sha256": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+        "sha256": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+        "sha256": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+        "sha256": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+        "sha256": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+        "sha256": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+        "sha256": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+        "sha256": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+        "sha256": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+        "sha256": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+        "sha256": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+        "sha256": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+        "sha256": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+        "sha256": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+        "sha256": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+        "sha256": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+        "sha256": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+        "sha256": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+        "sha256": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+        "sha256": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881",
+        "unchanged": true
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+        "sha256": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296",
+        "unchanged": true
+      }
+    ]
+  },
+  "baselineAncestryAndMigrationHashes": {
+    "heads": {
+      "main": "ab44bc19fe72877b35f2709adc8a771c29cd2c00",
+      "A": "745c24d5a59968ba7c685507578120bdb8ca8c13",
+      "B": "b370ea00b72abb04bd9e6d85b2b2e126413d8214",
+      "C": "9aaacc1e81c478b848996b4202bbe87c00ebe447",
+      "D": "d1353287352121c11eb2eae41b2143e1fa8784ae",
+      "EF": "9086d3a86e611ad559b2d1362463ff9039f43526",
+      "GH": "38c114add7ce1d0c8ffcce8c68239b43ca004eaa",
+      "I": "beb5b78e2b7bc6a7b48ed9715b4152630b3c4411",
+      "J": "ab16a953511dcc075cb0bd4c12c6380893561d7d"
+    },
+    "ancestors": {
+      "main": true,
+      "A": true,
+      "B": true,
+      "C": true,
+      "D": true,
+      "EF": true,
+      "GH": true,
+      "I": true,
+      "J": true
+    },
+    "migrations": [
+      {
+        "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+        "sameAsJ": true,
+        "sha256LF": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+        "sameAsJ": true,
+        "sha256LF": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+        "sameAsJ": true,
+        "sha256LF": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+        "sameAsJ": true,
+        "sha256LF": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+        "sameAsJ": true,
+        "sha256LF": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+        "sameAsJ": true,
+        "sha256LF": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+        "sameAsJ": true,
+        "sha256LF": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+        "sameAsJ": true,
+        "sha256LF": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+        "sameAsJ": true,
+        "sha256LF": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+        "sameAsJ": true,
+        "sha256LF": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+        "sameAsJ": true,
+        "sha256LF": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+        "sameAsJ": true,
+        "sha256LF": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+        "sameAsJ": true,
+        "sha256LF": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+        "sameAsJ": true,
+        "sha256LF": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+        "sameAsJ": true,
+        "sha256LF": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+        "sameAsJ": true,
+        "sha256LF": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+        "sameAsJ": true,
+        "sha256LF": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+        "sameAsJ": true,
+        "sha256LF": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+        "sameAsJ": true,
+        "sha256LF": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+        "sameAsJ": true,
+        "sha256LF": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+        "sameAsJ": true,
+        "sha256LF": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+        "sameAsJ": true,
+        "sha256LF": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V31__phase_a_identity_privacy_access.sql",
+        "sameAsJ": true,
+        "sha256LF": "bc43708b33235a5714aa7a424ae2af76dec36d6ad78f1170e75542a67bfa34d1"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V32__reference_country_catalog.sql",
+        "sameAsJ": true,
+        "sha256LF": "e44c68f6029697a5dd28ddcda6162fa7a7736fd236c45d67ce4f199e978f6bef"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V33__phase_a_conversation_boundaries_and_token_rollout.sql",
+        "sameAsJ": true,
+        "sha256LF": "a33d7450c4aa14733bac1c8cefa0634d92b0cce25598ed3a64abd4490b475769"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V34__correct_localized_reference_country_names.sql",
+        "sameAsJ": true,
+        "sha256LF": "907e250777207f6251401918d9244d8dfca91e4977abb80ac1c3c475223d9ef2"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V35__explicit_professional_care_regions.sql",
+        "sameAsJ": true,
+        "sha256LF": "e8f7c04123378404631c2329c0622ad7cc81765fa85572775f3fb239766661da"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V36__verification_delivery_and_pending_retention.sql",
+        "sameAsJ": true,
+        "sha256LF": "314941691a54aa0d1658ff8626213935ab7dc2258ebe5e6f24f36e7a5aabe6d2"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V37__bounded_sessions_and_privileged_authenticators.sql",
+        "sameAsJ": true,
+        "sha256LF": "2bd2fdead0fad49dd6bc85dcff0f0c4fd91c43c6d2c7642f953223861a8f2a8b"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V38__privileged_enrollment_permits.sql",
+        "sameAsJ": true,
+        "sha256LF": "23c6e6020f3efd158df28fada3ef8c053772e5cac791fb30ea3d6c4e6ee95568"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V39__session_assurance_token_version.sql",
+        "sameAsJ": true,
+        "sha256LF": "8f0ade75181ea2afce93f392a00f6246f8eb5f7d214a1ff29d621c6df1d15782"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+        "sameAsJ": true,
+        "sha256LF": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+        "sameAsJ": true,
+        "sha256LF": "82737d96998e0ee822529e68f56f7e211b58e36937d757a5b85ead14d99ebd57"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V41__live_listener_acceptance_and_sessions.sql",
+        "sameAsJ": true,
+        "sha256LF": "50c52ae9b85a737ddf44b7b7928455654a1331015085dca9777fdecd8c89e40c"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V42__policy_review_and_purpose_authorization.sql",
+        "sameAsJ": true,
+        "sha256LF": "fb6062d743bee5f7ac8a8da28c8e05fb499693f53b8eeb4dc144467f6887b1a7"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V43__preserve_policy_review_evidence.sql",
+        "sameAsJ": true,
+        "sha256LF": "fa07809959d967673eeb827137b8fc92b43d6718fd38cb1da4c81239afb82884"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881"
+      },
+      {
+        "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+        "sameAsJ": true,
+        "sha256LF": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296"
+      }
+    ]
+  },
+  "performance": {
+    "artifact": 12752350087,
+    "requests": 72,
+    "scenarios": 17,
+    "workersMax": 4,
+    "file": "performance-results.json",
+    "productionSLO": "NOT_APPROVED"
+  },
+  "advisories": {
+    "artifact": 12751097967,
+    "runtimeMavenCoordinates": 113,
+    "mavenPackageAdvisoryMatches": 31,
+    "npmPackageRecords": 12,
+    "npmCritical": 0,
+    "status": "NOT_CLEARED_FOR_PILOT_OR_PRODUCTION",
+    "file": "dependency-findings.json"
+  },
+  "initialFailure": {
+    "source": "bb6d3bf5d48dc04df10ab5a5f72dc0ed6be2901f",
+    "run": 40540741385,
+    "test": "K bounded synthetic reliability",
+    "actualReportStatuses": [
+      201,
+      201,
+      201,
+      409
+    ],
+    "requiredStatuses": [
+      201,
+      409,
+      409,
+      409
+    ],
+    "fixedBy": "4075561",
+    "assertionWeakened": false
+  },
+  "readiness": {
+    "development": "TECHNICALLY_COMPLETE_IN_APPROVED_SOFTWARE_SCOPE",
+    "integration": "INTEGRATION_VERIFIED",
+    "actualStaging": "STAGING_BLOCKED",
+    "pilot": "PILOT_BLOCKED",
+    "production": "PRODUCTION_NO_GO"
+  },
+  "changedExecutableFiles": [
+    {
+      "path": ".github/workflows/phase-a.yml",
+      "sha256LF": "f9d25301dd62aa8c8d7e80c74e26215e7b35c7acb243ca1010284e7c0b7d3e9b"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/repository/ReportRepository.java",
+      "sha256LF": "90035816d809d2d382e6b176dd375dd4c707f67a65737935d254957f1bf3fac0"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/service/ReportService.java",
+      "sha256LF": "7d0e8248398d9deef0944cb5fbe9cf41f6ea16b4c8b8d94e1adfdaab2df9f5e0"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseKReportConcurrencyTest.java",
+      "sha256LF": "f29e5235ae5ff1c72f0ff1fb34e1c5d9c4d8061f3cf9fbb78ffb9beab0bafa3f"
+    },
+    {
+      "path": "frontend/live-e2e/phase-k-integration.spec.mjs",
+      "sha256LF": "0f1276b6cd280fa941beccace5ecf9081ef8c40ecd230f094a2763c2e23c7ca9"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256LF": "9a77b9f525da2866533b7e8f19a382bc03325283dbb14f5ad96ae3f8ffb83a03"
+    },
+    {
+      "path": "frontend/tests/phase-k-dependency.test.mjs",
+      "sha256LF": "3d012de785330a6fe592c2b1d0a0f8c070a5afe11af9924d9eff85394e6b3327"
+    },
+    {
+      "path": "scripts/phase_k_dependency_scan.py",
+      "sha256LF": "cbb7e8d5af019b47951b70e85b16d23fd8a7f8639c84f6db269d7ed359d9991d"
+    },
+    {
+      "path": "scripts/phase_k_restore_verify.sql",
+      "sha256LF": "ba1e1a45bfc3be6b5d9725300fae4a591ee413850096aedc270f6f8cf8b61d00"
+    },
+    {
+      "path": "scripts/phase_k_source_checks.py",
+      "sha256LF": "785c54cf2e94e62f2d6aa740499facbf0dd9093e1db93b3c63ea50cf01acdc77"
+    }
+  ],
+  "localEvidence": "Existing68 helpers and source/ancestry/migration comparisons executed in Windows. Final69 helpers/full backend/browser/scans/build are CI results. Final report commit changes docs only."
+}
