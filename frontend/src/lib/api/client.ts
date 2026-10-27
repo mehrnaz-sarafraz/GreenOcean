@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { browserSessionLock } from './browser-session';
+import { browserSessionLock,nativeSessionLock } from './browser-session';
 import { fetchWithTimeout, singleFlight } from './request';
 import { tokenStorage } from '@/lib/storage/token-storage';
 
@@ -22,6 +22,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const { authenticated = true, retryAfterRefresh = true, ...requestInit } = options;
   const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
+  if(authenticated&&requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
   const headers = new Headers(requestInit.headers);
   if (Platform.OS === 'web') headers.set('X-GreenOcean-CSRF', '1');
   headers.set('Accept', 'application/json');
@@ -31,6 +32,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const send=()=>fetchWithTimeout(`${API_URL}${path}`,{...requestInit,headers,credentials:Platform.OS==='web'?'include':'omit'});
   let response=await(Platform.OS==='web'&&['/api/v1/auth/web/login','/api/v1/auth/web/reauthenticate','/api/v1/auth/web/mfa/authentication/verify'].includes(path)?browserSessionLock(async()=>{if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Sign-in cancelled.');return send();}):send());
   if (response.status === 401 && authenticated && retryAfterRefresh && tokens?.refreshToken) {
+    if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
     const refreshed = await refreshTokens(tokens.refreshToken);
     if (refreshed && requestEpoch===tokenStorage.generation()) {
       headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
@@ -55,10 +57,12 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
   assertApiTransport();
   const requestEpoch = tokenStorage.generation();
   const tokens = await tokenStorage.get();
+  if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');
   const headers = new Headers({ Accept: 'text/csv' });
   if (tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
   let response = await fetchWithTimeout(`${API_URL}${path}`, { headers, credentials: Platform.OS === 'web' ? 'include' : 'omit' });
   if (response.status === 401 && tokens?.refreshToken) {
+    if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');
     const refreshed = await refreshTokens(tokens.refreshToken);
     if (refreshed && requestEpoch===tokenStorage.generation()) {
       headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
@@ -78,7 +82,14 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
 
 const refreshTokens=singleFlight(async(refreshToken:string)=>{
   if(Platform.OS==='web')return browserSessionLock(()=>performRefresh(refreshToken));
-  return performRefresh(refreshToken);
+  const epoch=tokenStorage.generation();
+  return nativeSessionLock(async()=>{
+    if(epoch!==tokenStorage.generation())return null;
+    const current=await tokenStorage.get();
+    if(!current||epoch!==tokenStorage.generation())return null;
+    // A late 401 may carry a retired snapshot; use only the currently stored verifier.
+    return performRefresh(current.refreshToken);
+  });
 });
 async function performRefresh(refreshToken: string) {
   assertApiTransport();
@@ -97,5 +108,6 @@ async function performRefresh(refreshToken: string) {
   const tokens = await response.json() as { accessToken: string; refreshToken: string };
   if (epoch !== tokenStorage.generation()) return null;
   await tokenStorage.set(tokens);
+  if(epoch!==tokenStorage.generation())return null;
   return tokens;
 }

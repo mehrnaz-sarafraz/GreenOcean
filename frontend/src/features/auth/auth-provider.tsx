@@ -55,7 +55,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } catch (error) { if (epoch === tokenStorage.generation()) setStatus('unauthenticated'); throw error; }
     if (epoch !== tokenStorage.generation()) throw new Error('Sign-in was cancelled. Please try again.');
     try {
-      await tokenStorage.set(tokens);tokenStorage.announceLogin();
+      await tokenStorage.set(tokens);
+      if(epoch!==tokenStorage.generation())throw new Error('Sign-in was cancelled. Please try again.');
+      tokenStorage.announceLogin();
       const currentUser = await apiRequest<CurrentUser>('/api/v1/auth/me');
       if (epoch !== tokenStorage.generation()) return;
       setUser(currentUser);

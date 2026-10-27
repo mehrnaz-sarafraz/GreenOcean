@@ -1,5 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { createSerialQueue } from './serial-queue';
+const credentialIO=createSerialQueue();
 const ACCESS_TOKEN_KEY='greenocean.accessToken',REFRESH_TOKEN_KEY='greenocean.refreshToken';
 const LOGOUT_PENDING='greenocean.logoutPending',NATIVE_PENDING='greenocean.pendingLogout';
 const secureOptions={keychainAccessible:SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY};
@@ -19,11 +21,12 @@ export const tokenStorage={
  subscribeToClear(listener:(reason?:string)=>void){clearListeners.add(listener);return()=>{clearListeners.delete(listener);};},
  async get():Promise<StoredTokens|null>{
   if(Platform.OS==='web'){purgeLegacyWebStorage();return webBlocked()?null:browserTokens??(persistentGuardAvailable()?{accessToken:'',refreshToken:'cookie'}:null);}
-  const [accessToken,refreshToken]=await Promise.all([SecureStore.getItemAsync(ACCESS_TOKEN_KEY,secureOptions),SecureStore.getItemAsync(REFRESH_TOKEN_KEY,secureOptions)]);return accessToken&&refreshToken?{accessToken,refreshToken}:null;
+  return credentialIO(async()=>{const [accessToken,refreshToken]=await Promise.all([SecureStore.getItemAsync(ACCESS_TOKEN_KEY,secureOptions),SecureStore.getItemAsync(REFRESH_TOKEN_KEY,secureOptions)]);return accessToken&&refreshToken?{accessToken,refreshToken}:null;});
  },
  async set(tokens:StoredTokens){
   if(Platform.OS==='web'){purgeLegacyWebStorage();if(webBlocked())throw new Error('Complete pending sign-out before signing in');browserTokens={accessToken:tokens.accessToken,refreshToken:'cookie'};return;}
-  try{await SecureStore.setItemAsync(REFRESH_TOKEN_KEY,tokens.refreshToken,secureOptions);await SecureStore.setItemAsync(ACCESS_TOKEN_KEY,tokens.accessToken,secureOptions);}catch{await this.clear();throw new Error('Secure credential storage is unavailable. Sign in again.');}
+  const expected=epoch;
+  try{await credentialIO(async()=>{if(expected!==epoch)return;await SecureStore.setItemAsync(REFRESH_TOKEN_KEY,tokens.refreshToken,secureOptions);await SecureStore.setItemAsync(ACCESS_TOKEN_KEY,tokens.accessToken,secureOptions);});}catch{if(expected===epoch)await this.clear();throw new Error('Secure credential storage is unavailable. Sign in again.');}
  },
  async blockRestore(refreshToken?:string){
   if(Platform.OS==='web'){blocked=true;channel?.postMessage('logout');try{globalThis.document.cookie='greenocean_logout_pending=1; Path=/; SameSite=Strict'+(globalThis.location.protocol==='https:'?'; Secure':'');globalThis.localStorage?.setItem(LOGOUT_PENDING,'1');}catch{/* This browser cannot persist a cross-reload logout guard; UI explains reconciliation. */}}
@@ -31,5 +34,5 @@ export const tokenStorage={
  },
  async pendingLogout():Promise<string|null>{return Platform.OS==='web'?(webBlocked()||(!browserTokens&&!persistentGuardAvailable())?'cookie':null):SecureStore.getItemAsync(NATIVE_PENDING,secureOptions);},
  async allowRestore(){if(Platform.OS==='web'){blocked=false;try{globalThis.document.cookie='greenocean_logout_pending=; Path=/; Max-Age=0; SameSite=Strict'+(globalThis.location.protocol==='https:'?'; Secure':'');globalThis.localStorage?.removeItem(LOGOUT_PENDING);}catch{/* local process flag remains clear */}}else await SecureStore.deleteItemAsync(NATIVE_PENDING,secureOptions);},
- async clear(reason?:string){clearMemory(reason);if(Platform.OS==='web'){purgeLegacyWebStorage();return;}await Promise.all([SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY,secureOptions),SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY,secureOptions)]);},
+ async clear(reason?:string){clearMemory(reason);if(Platform.OS==='web'){purgeLegacyWebStorage();return;}await credentialIO(()=>Promise.all([SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY,secureOptions),SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY,secureOptions)]));},
 };
