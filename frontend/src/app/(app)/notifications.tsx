@@ -1,5 +1,6 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useEffect } from 'react';
+import {useForegroundPoll} from '@/features/live-support/foreground';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
@@ -12,10 +13,10 @@ import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 export default function Notifications() {
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl,language } = useLanguage();
   const { notifications, setNotifications } = usePlatformData();
-  const message = (type: string) => type === 'PROFESSIONAL_REPLY' ? t('notificationProfessional') : type === 'LIKE' ? t('notificationLike') : type === 'FOLLOW' ? t('notificationFollow') : type === 'FOLLOW_REQUEST' ? 'requested to follow you' : type === 'COMMENT' ? 'commented on your story' : type === 'SYSTEM_NOTICE' ? '' : 'replied to your conversation';
-  useEffect(() => { const interval = setInterval(() => { void apiRequest<PageResponse<NotificationItem>>('/api/v1/notifications?size=50').then(result => setNotifications(result.items)).catch(() => undefined); }, 10000); return () => clearInterval(interval); }, [setNotifications]);
+  const message = (type: string) => type === 'PROFESSIONAL_REPLY' ? t('notificationProfessional') : type === 'LIKE' ? t('notificationLike') : type === 'FOLLOW' ? t('notificationFollow') : type === 'FOLLOW_REQUEST' ? (language==='fa'?'درخواست دنبال‌کردن داده است':'requested to follow you') : type==='FOLLOW_ACCEPTED'?(language==='fa'?'درخواست دنبال‌کردن را پذیرفت':'accepted your follow request'):type==='MESSAGE_REQUEST'?(language==='fa'?'درخواست پیام فرستاد':'requested a private conversation') : type === 'COMMENT' ? 'commented on your story' : type === 'SYSTEM_NOTICE' ? '' : 'replied to your conversation';
+  useForegroundPoll(async isCurrent=>{try{const r=await apiRequest<PageResponse<NotificationItem>>('/api/v1/notifications?size=50');if(isCurrent())setNotifications(r.items);}catch{if(isCurrent())setNotifications([]);}},10000,()=>setNotifications([]));
 
   async function read(id: string) {
     await apiRequest(`/api/v1/notifications/${id}/read`, { method: 'PUT' });
@@ -28,7 +29,7 @@ export default function Notifications() {
 
   return <SafeAreaView style={styles.safe}><FlatList data={notifications} keyExtractor={item => item.id} contentContainerStyle={styles.list}
     ListHeaderComponent={<View style={[styles.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}><Text style={styles.title}>{t('notifications')}</Text><Pressable onPress={() => void readAll()}><Text style={styles.read}>{t('markAllRead')}</Text></Pressable></View>}
-    renderItem={({ item }) => <Pressable onPress={() => void read(item.id)} style={[styles.item, !item.read && styles.unread, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>{item.type === 'SYSTEM_NOTICE' ? <View style={styles.noticeIcon}><AppIcon name="campaign" color={colors.ocean700} /></View> : <Avatar name={item.actor?.displayName ?? t('anonymous')} uri={item.actor?.avatarUrl} size={46} verified={item.type === 'PROFESSIONAL_REPLY'} />}<View style={{ flex: 1 }}>{item.type === 'SYSTEM_NOTICE' ? <><Text style={[styles.actor, { textAlign: isRtl ? 'right' : 'left' }]}>{item.title}</Text><Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}>{item.body}</Text></> : <Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}><Text style={styles.actor}>{item.actor?.displayName ?? 'Someone'} </Text>{message(item.type)}</Text>}<Text style={[styles.time, { textAlign: isRtl ? 'right' : 'left' }]}>{new Date(item.createdAt).toLocaleString(isRtl ? 'fa-IR' : 'en-US')}</Text></View>{!item.read && <View style={styles.dot} />}<AppIcon name="chevron_right" color={colors.borderStrong} /></Pressable>}
+    renderItem={({ item }) => <Pressable onPress={() => {void read(item.id);if(item.type==='MESSAGE_REQUEST')router.push('/message-requests' as never);else if(item.type==='FOLLOW_REQUEST')router.push('/tools/followers' as never);else if(item.postId)router.push({pathname:'/post/[id]',params:{id:item.postId}});}} style={[styles.item, !item.read && styles.unread, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>{item.type === 'SYSTEM_NOTICE' ? <View style={styles.noticeIcon}><AppIcon name="campaign" color={colors.ocean700} /></View> : <Avatar name={item.actor?.displayName ?? t('anonymous')} uri={item.actor?.avatarUrl} size={46} verified={item.type === 'PROFESSIONAL_REPLY'} />}<View style={{ flex: 1 }}>{item.type === 'SYSTEM_NOTICE' ? <><Text style={[styles.actor, { textAlign: isRtl ? 'right' : 'left' }]}>{item.title}</Text><Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}>{item.body}</Text></> : <Text style={[styles.message, { textAlign: isRtl ? 'right' : 'left' }]}><Text style={styles.actor}>{item.actor?.displayName ?? 'Someone'} </Text>{message(item.type)}</Text>}<Text style={[styles.time, { textAlign: isRtl ? 'right' : 'left' }]}>{new Date(item.createdAt).toLocaleString(isRtl ? 'fa-IR' : 'en-US')}</Text></View>{!item.read && <View style={styles.dot} />}<AppIcon name="chevron_right" color={colors.borderStrong} /></Pressable>}
     ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
     ListEmptyComponent={<Text style={styles.empty}>You have no notifications yet.</Text>} />
   </SafeAreaView>;

@@ -84,7 +84,7 @@ public class ProfileService {
         Profile profile = profileRepository.findByUsernameIgnoreCase(username.trim())
                 .orElseThrow(() -> new NotFoundException("Profile was not found"));
         UUID targetId = profile.getUserId();
-        if(users.findById(targetId).map(u -> u.getStatus()==com.greenocean.backend.auth.entity.UserStatus.DELETED).orElse(true)) throw new NotFoundException("Profile was not found");
+        if(users.findById(targetId).map(u -> u.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE).orElse(true)) throw new NotFoundException("Profile was not found");
         if (interactions.hasBlockBetween(viewerId, targetId)) {
             throw new NotFoundException("Profile was not found");
         }
@@ -116,7 +116,7 @@ public class ProfileService {
     public PageResponse<PostResponse> getPublicPosts(UUID viewerId, String username, int page, int size) {
         Profile profile = profileRepository.findByUsernameIgnoreCase(username.trim())
                 .orElseThrow(() -> new NotFoundException("Profile was not found"));
-        if(users.findById(profile.getUserId()).map(u -> u.getStatus()==com.greenocean.backend.auth.entity.UserStatus.DELETED).orElse(true)) throw new NotFoundException("Profile was not found");
+        if(users.findById(profile.getUserId()).map(u -> u.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE).orElse(true)) throw new NotFoundException("Profile was not found");
         if (interactions.hasBlockBetween(viewerId, profile.getUserId())) {
             throw new NotFoundException("Profile was not found");
         }

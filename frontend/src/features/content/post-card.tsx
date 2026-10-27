@@ -17,9 +17,14 @@ function relativeTime(value: string) {
   const hours = Math.floor(minutes / 60); return `${hours}h`;
 }
 export function PostCard({ post: initialPost, elevated = true }: { post: PostItem; elevated?: boolean }) {
-  const { t } = useLanguage(); const [post, setPost] = useState(initialPost);
+  const { t } = useLanguage();
+  const [override,setOverride]=useState<{source:PostItem;value:PostItem}|null>(null);
+  const post=override?.source===initialPost?override.value:initialPost;
+  const setPost=(update:(value:PostItem)=>PostItem)=>setOverride(current=>({source:initialPost,value:update(current?.source===initialPost?current.value:initialPost)}));
   const {preferences}=usePlatformData();
-  const [revealed,setSensitiveRevealed]=useState<boolean|null>(null);
+  const [reveal,setReveal]=useState<{source:PostItem;shown:boolean}|null>(null);
+  const revealed=reveal?.source===initialPost?reveal.shown:null;
+  const setSensitiveRevealed=(shown:boolean)=>setReveal({source:initialPost,shown});
   const sensitiveRevealed=!post.contentWarning||(revealed??preferences?.blurSensitiveContent===false);
   const category = post.category;
   const postType = post.postType ?? 'EXPERIENCE';

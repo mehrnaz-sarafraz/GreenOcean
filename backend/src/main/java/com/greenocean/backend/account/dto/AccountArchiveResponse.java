@@ -23,6 +23,7 @@ public record AccountArchiveResponse(
         AccountActivityResponse activity,
         java.util.Map<String,Object> governance,
         java.util.List<java.util.Map<String,Object>> socialDrafts,
-        java.util.List<java.util.Map<String,Object>> socialModeration
+        java.util.List<java.util.Map<String,Object>> socialModeration,
+        java.util.List<java.util.Map<String,Object>> messageRequests
 ) {
 }

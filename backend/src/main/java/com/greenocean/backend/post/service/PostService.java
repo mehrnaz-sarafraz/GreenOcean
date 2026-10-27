@@ -82,6 +82,16 @@ public class PostService {
         return page(results, page, size);
     }
 
+    @Transactional(readOnly=true)
+    public com.greenocean.backend.post.dto.SocialFeedResponse discovery(UUID user,int size,String mode,UUID category,String cursor) {
+        if(!java.util.Set.of("FOLLOWING","DISCOVER","SAVED").contains(mode))throw new IllegalArgumentException("Unsupported feed mode");
+        java.time.Instant before=null;UUID beforeId=null;
+        if(cursor!=null){try{String[] parts=cursor.split("\\|",-1);if(parts.length!=2)throw new IllegalArgumentException();before=java.time.Instant.parse(parts[0]);beforeId=UUID.fromString(parts[1]);}catch(RuntimeException bad){throw new IllegalArgumentException("Invalid feed cursor");}}
+        var results=postReadRepository.findDiscovery(user,size,mode,category,before,beforeId);boolean more=results.size()>size;
+        var items=List.copyOf(results.subList(0,Math.min(size,results.size())));
+        String next=more?items.getLast().createdAt()+"|"+items.getLast().id():null;
+        return new com.greenocean.backend.post.dto.SocialFeedResponse(items,more,next);
+    }
     @Transactional(readOnly = true)
     public PostResponse get(UUID postId, UUID userId) {
         return postReadRepository.findAccessiblePost(postId, userId)
@@ -144,8 +154,8 @@ public class PostService {
 
     @Transactional
     public void setBookmark(UUID postId, UUID userId, boolean bookmarked) {
-        get(postId, userId);
-        if (bookmarked) interactions.bookmark(userId, postId); else interactions.removeBookmark(userId, postId);
+        if (!bookmarked) {interactions.removeBookmark(userId, postId);return;}
+        get(postId, userId);interactions.bookmark(userId,postId);
     }
 
     @Transactional
