@@ -10,7 +10,7 @@ export const API_URL = Platform.OS==='web'&&process.env.EXPO_PUBLIC_WEB_API_ORIG
 export function assertApiTransport(){if(!__DEV__&&!API_URL.startsWith('https://'))throw new Error('A secure HTTPS API connection is required.');}
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public fieldErrors: { field: string; message: string }[] = [], public retryAfter: number | null = null) {
+  constructor(public status: number, message: string, public fieldErrors: { field: string; message: string }[] = [], public retryAfter: number | null = null, public code: string = '') {
     super(message);
   }
 }
@@ -43,9 +43,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if(authenticated&&requestEpoch!==tokenStorage.generation())throw new ApiError(409,'This request belongs to a previous sign-in. Please retry.');
   if (!response.ok) {
     if (response.status === 401 && authenticated && requestEpoch === tokenStorage.generation()) await tokenStorage.clear(tokens?.accessToken?'sessionExpired':undefined);
-    const body = await response.json().catch(() => null) as { message?: string; fieldErrors?: { field: string; message: string }[] } | null;
+    const body = await response.json().catch(() => null) as { code?: string; message?: string; fieldErrors?: { field: string; message: string }[] } | null;
     const retry = Number(response.headers.get('Retry-After'));
-    throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`, Array.isArray(body?.fieldErrors) ? body.fieldErrors : [], retry > 0 ? retry : null);
+    throw new ApiError(response.status, body?.message ?? `Request failed with status ${response.status}`, Array.isArray(body?.fieldErrors) ? body.fieldErrors : [], retry > 0 ? retry : null, body?.code??'');
   }
   if (response.status === 204) return undefined as T;
   const value=await response.json() as T;

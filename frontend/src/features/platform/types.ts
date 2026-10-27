@@ -28,6 +28,8 @@ export type MediaPick = {
 export type Conversation = {
   id: string; name: string; subtitle: string | null; lastMessage: string | null; lastMessageAt: string | null;
   unread: number; verified: boolean; kind: 'DIRECT' | 'PROFESSIONAL' | 'GROUP'; online: boolean;
+  serviceKind?: string;
+  supportRequestId?: string | null;
 };
 
 export type ChatMessage = {
