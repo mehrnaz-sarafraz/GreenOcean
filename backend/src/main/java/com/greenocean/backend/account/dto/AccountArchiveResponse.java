@@ -20,6 +20,7 @@ public record AccountArchiveResponse(
         List<SocialConnectionResponse> followers,
         List<SocialConnectionResponse> blockedAccounts,
         List<SearchHistoryResponse> searchHistory,
-        AccountActivityResponse activity
+        AccountActivityResponse activity,
+        java.util.Map<String,Object> governance
 ) {
 }

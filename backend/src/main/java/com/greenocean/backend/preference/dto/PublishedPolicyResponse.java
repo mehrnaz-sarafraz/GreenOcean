@@ -8,6 +8,11 @@ public record PublishedPolicyResponse(
         String title,
         String summary,
         String content,
-        Instant publishedAt
+        Instant publishedAt,
+        String locale,
+        Instant effectiveAt,
+        String reviewStatus,
+        String status,
+        java.util.UUID id
 ) {
 }

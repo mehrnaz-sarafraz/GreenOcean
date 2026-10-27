@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Service
 public class AccountService {
     private final ProfileService profiles;
+    private final com.greenocean.backend.preference.service.PrivacyGovernanceService governance;
     private final UserPreferencesService preferences;
     private final WellbeingService wellbeing;
     private final ReportService reports;
@@ -33,11 +34,11 @@ public class AccountService {
     private final SearchService search;
     private final org.springframework.jdbc.core.JdbcTemplate db;
 
-    public AccountService(ProfileService profiles, UserPreferencesService preferences, WellbeingService wellbeing,
+    public AccountService(com.greenocean.backend.preference.service.PrivacyGovernanceService governance,ProfileService profiles, UserPreferencesService preferences, WellbeingService wellbeing,
                           ReportService reports, SocialService social, AccountRepository repository,
                           UserRepository users, PasswordEncoder passwordEncoder,
                           ProfessionalDocumentStorage documentStorage, SearchService search, org.springframework.jdbc.core.JdbcTemplate db) {
-        this.db=db;
+        this.db=db;this.governance=governance;
         this.profiles = profiles;
         this.preferences = preferences;
         this.wellbeing = wellbeing;
@@ -54,7 +55,7 @@ public class AccountService {
     public AccountArchiveResponse archive(UUID userId) {
         return new AccountArchiveResponse(Instant.now(), profiles.getOwnProfile(userId), preferences.get(userId),
                 wellbeing.snapshot(userId), reports.mine(userId), social.following(userId), social.followers(userId),
-                social.blocked(userId), search.history(userId), repository.activity(userId));
+                social.blocked(userId), search.history(userId), repository.activity(userId),governance.snapshot(userId));
     }
 
     @Transactional

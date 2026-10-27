@@ -15,9 +15,11 @@ public class PolicyController {
     public PolicyController(PolicyService service) {
         this.service = service;
     }
+    @GetMapping("/{key}/versions")
+    public java.util.List<PublishedPolicyResponse> history(@PathVariable String key,@org.springframework.web.bind.annotation.RequestParam(defaultValue="en") String locale) {return service.history(key,locale);}
 
     @GetMapping("/{key}")
-    public PublishedPolicyResponse published(@PathVariable String key) {
-        return service.published(key);
+    public PublishedPolicyResponse published(@PathVariable String key,@org.springframework.web.bind.annotation.RequestParam(defaultValue="en") String locale) {
+        return service.published(key,locale);
     }
 }

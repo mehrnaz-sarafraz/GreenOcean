@@ -17,6 +17,7 @@ public class UserPreferencesRepository {
     private final JdbcTemplate jdbcTemplate;
     @org.springframework.beans.factory.annotation.Value("${app.privacy.support-topics-enabled:false}")
     private boolean topicCollectionEnabled;
+    @org.springframework.beans.factory.annotation.Value("${app.governance.optional-processing-approved:false}") private boolean optionalApproved;
 
     public UserPreferencesRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
@@ -33,7 +34,7 @@ public class UserPreferencesRepository {
                 rs.getBoolean("notify_groups"), rs.getBoolean("notify_articles"),
                 rs.getBoolean("quiet_hours_enabled"), rs.getBoolean("onboarding_complete"),
                 rs.getString("intended_role"), rs.getString("onboarding_status"), rs.getInt("onboarding_step"),
-                strings(rs.getArray("legacy_support_topics")), topicCollectionEnabled), userId).stream().findFirst();
+                strings(rs.getArray("legacy_support_topics")), canCollectTopics(userId)), userId).stream().findFirst();
     }
 
     public void update(UUID userId, UpdateUserPreferencesRequest request) {
@@ -44,7 +45,7 @@ public class UserPreferencesRepository {
             return find(userId).orElseThrow();
         });
         if (request.supportTopics() != null && !request.supportTopics().isEmpty()) {
-            if (!topicCollectionEnabled) throw new com.greenocean.backend.common.exception.PreferenceValidationException("Topic collection is currently unavailable; you can continue without selecting topics");
+            if (!current.topicCollectionEnabled()) throw new com.greenocean.backend.common.exception.PreferenceValidationException("Topic collection is currently unavailable; you can continue without selecting topics");
             for (String topic : request.supportTopics()) {
                 if (topic == null || !Boolean.TRUE.equals(jdbcTemplate.queryForObject(
                     "SELECT EXISTS(SELECT 1 FROM support_categories WHERE slug=? AND is_active)", Boolean.class, topic)))
@@ -99,6 +100,18 @@ public class UserPreferencesRepository {
                 intendedRole == null ? "MEMBER" : intendedRole.trim().toUpperCase(), userId);
     }
 
+    private boolean canCollectTopics(UUID userId) {
+        if(!topicCollectionEnabled||!optionalApproved)return false;
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
+          SELECT EXISTS(SELECT 1 FROM processing_authorizations a JOIN policy_documents p ON p.id=a.notice_id
+           JOIN users u ON u.id=a.user_id JOIN account_eligibility e ON e.user_id=u.id
+           WHERE a.user_id=? AND a.purpose='SUPPORT_TOPICS' AND a.decision='GRANTED'
+           AND u.status='ACTIVE' AND u.email_verified AND e.age_result='ADULT'
+           AND a.event_order=(SELECT MAX(event_order) FROM processing_authorizations WHERE user_id=? AND purpose='SUPPORT_TOPICS')
+           AND p.status='PUBLISHED' AND p.review_status='APPROVED' AND p.policy_key='support-topics-processing'
+           AND p.locale='en' AND p.published_at<=CURRENT_TIMESTAMP AND p.effective_at<=CURRENT_TIMESTAMP)
+          """,Boolean.class,userId,userId));
+    }
     private boolean value(Boolean requested, boolean current) { return requested == null ? current : requested; }
     private String normalize(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private String[] clean(List<String> values) {

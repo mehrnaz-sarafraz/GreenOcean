@@ -91,6 +91,7 @@ public class AdminService {
 
     @Transactional
     public UUID createPolicy(UUID actorId, CreatePolicyRequest request) {
+        if(Boolean.TRUE.equals(request.publish()))throw new IllegalArgumentException("Create an unpublished draft; independent review and explicit approved publication are required");
         return repository.createPolicy(uuidGenerator.nextUuid(), actorId, request);
     }
 
