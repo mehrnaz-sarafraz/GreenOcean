@@ -23,19 +23,19 @@ import java.util.UUID;
 
 @Service
 public class TokenService {
-    private final JwtEncoder jwtEncoder;
+    private final JwtEncoder jwtEncoder;private final org.springframework.jdbc.core.JdbcTemplate db;
     private final SecureRandom secureRandom = new SecureRandom();
     private final String issuer;
     private final Duration accessTokenTtl;
     private final Duration refreshTokenTtl;
 
     public TokenService(
-            JwtEncoder jwtEncoder,
+            JwtEncoder jwtEncoder,org.springframework.jdbc.core.JdbcTemplate db,
             @Value("${greenocean.auth.jwt-issuer}") String issuer,
             @Value("${greenocean.auth.access-token-ttl}") Duration accessTokenTtl,
             @Value("${greenocean.auth.refresh-token-ttl}") Duration refreshTokenTtl
     ) {
-        this.jwtEncoder = jwtEncoder;
+        this.jwtEncoder = jwtEncoder;this.db=db;
         this.issuer = issuer;
         this.accessTokenTtl = accessTokenTtl;
         this.refreshTokenTtl = refreshTokenTtl;
@@ -53,6 +53,7 @@ public class TokenService {
                 .claim("email", user.getEmail())
                 .claim("roles", roles)
                 .claim("sid", sessionId.toString())
+                .claim("sv",db.queryForObject("SELECT token_version FROM user_sessions WHERE id=?",Integer.class,sessionId))
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

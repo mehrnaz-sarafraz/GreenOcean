@@ -10,21 +10,31 @@ import java.util.UUID;
 @Component
 public class PhaseAInterceptor implements HandlerInterceptor {
     private final AccessPolicy access;
-    private final boolean adminEnabled;
-    public PhaseAInterceptor(AccessPolicy access,@Value("${greenocean.security.admin-enabled:false}") boolean adminEnabled) {
-        this.access=access; this.adminEnabled=adminEnabled;
+    private final org.springframework.jdbc.core.JdbcTemplate db;
+    private final boolean adminEnabled;private final com.greenocean.backend.auth.service.RecentAuthentication recent;private final com.greenocean.backend.auth.service.SecurityEvents events;
+    public PhaseAInterceptor(AccessPolicy access,@Value("${greenocean.security.admin-enabled:false}") boolean adminEnabled,com.greenocean.backend.auth.service.RecentAuthentication recent,com.greenocean.backend.auth.service.SecurityEvents events,org.springframework.jdbc.core.JdbcTemplate db) {
+        this.access=access; this.adminEnabled=adminEnabled;this.recent=recent;this.events=events;this.db=db;
     }
     @Override public boolean preHandle(HttpServletRequest req,HttpServletResponse res,Object handler) {
         String path=req.getRequestURI();
         res.setHeader("Cache-Control","no-store");
         var auth=SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof JwtAuthenticationToken jwt)) return true;
-        if(path.startsWith("/api/v1/admin") && !adminEnabled)
-            throw new com.greenocean.backend.common.exception.ForbiddenException("Administrative access is disabled until strong authentication is configured");
+        if(path.startsWith("/api/v1/admin")){
+            var user=UUID.fromString(jwt.getToken().getSubject());var session=UUID.fromString(jwt.getToken().getClaimAsString("sid"));
+            try {
+                if(!adminEnabled)throw new com.greenocean.backend.common.exception.ForbiddenException("Administrative access is disabled until strong authentication is configured");
+                recent.require(user,session,true);
+            } catch(com.greenocean.backend.common.exception.ForbiddenException denied) {
+                events.record(user,session,com.greenocean.backend.auth.service.SecurityEvents.Event.PRIVILEGED_DENIED);
+                throw denied;
+            }
+        }
         if (!path.startsWith("/api/v1/") || path.startsWith("/api/v1/auth/") || path.startsWith("/api/v1/identity") ||
             path.startsWith("/api/v1/profiles/me") || path.startsWith("/api/v1/preferences/me") || path.startsWith("/api/v1/account") ||
             path.startsWith("/api/v1/public/") || path.startsWith("/api/v1/policies/") || path.equals("/api/v1/crisis-resources") ||
             path.startsWith("/api/v1/geography/")) return true;
+        if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_sessions WHERE id=? AND session_scope='PENDING')",Boolean.class,UUID.fromString(jwt.getToken().getClaimAsString("sid")))))throw new com.greenocean.backend.common.exception.ForbiddenException("Sign in again after activation to use social services");
         String service=path.contains("consultation") || path.contains("/conversations/professionals/") ? "PROFESSIONAL_CARE" :
             path.contains("listener") ? "LISTENER" : path.startsWith("/api/v1/professionals") ? "PROFESSIONAL_DIRECTORY" : "COMMUNITY";
         access.require(UUID.fromString(jwt.getToken().getSubject()),service);

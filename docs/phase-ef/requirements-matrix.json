@@ -1,0 +1,775 @@
+{
+  "date": "2026-10-27",
+  "continuationBaseline": "c491588a87e4622d0b0f4a503ca72a9ddd774a31",
+  "phaseDBaseline": "d1353287352121c11eb2eae41b2143e1fa8784ae",
+  "items": [
+    {
+      "id": "E-01",
+      "title": "Email/password sign-in",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Login and compatible password service",
+      "initialGap": "Live tests raced the post-login onboarding gate; native QA absent",
+      "changeMade": "Preserve normalization, masked/autofill fields, duplicate guard and recovery; synchronize genuine browser navigation",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "login.tsx",
+        "app-field.tsx"
+      ],
+      "standard": "NIST 3.1.1.2; ASVS5 6.2.7,6.3.8",
+      "testIds": [
+        "EF-S08",
+        "EF-L01",
+        "EF-B02"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "E-02",
+      "title": "Password hash verification",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "CompatiblePasswordEncoder and opportunistic upgrade",
+      "initialGap": "No replacement needed; malformed stored hashes must fail generically",
+      "changeMade": "Retain PBKDF2 salts/work and legacy BCrypt; execute existing upgrade/Unicode regressions",
+      "changedOrReusedFiles": [
+        "CompatiblePasswordEncoder.java",
+        "PhaseASecurityUnitTest.java",
+        "PhaseEFSecurityUnitTest.java"
+      ],
+      "standard": "NIST 3.1.1.2; ASVS5 6.2.8",
+      "testIds": [
+        "EF-U05",
+        "EF-U06",
+        "PhaseASecurityUnitTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-03",
+      "title": "Only appropriate accounts may authenticate",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "A/D lifecycle, live roles and limited PENDING scope",
+      "initialGap": "No activation or privilege escalation allowed through rotation",
+      "changeMade": "Retain account/age/region checks and explicit fresh login after activation",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "PhaseAInterceptor.java",
+        "IdentityController.java"
+      ],
+      "standard": "ASVS5 8.3.1,8.3.2",
+      "testIds": [
+        "EF-S07",
+        "EF-S13",
+        "EF-L03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-04",
+      "title": "Safe authentication errors",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Generic credentials and bounded hash work",
+      "initialGap": "No timing-equivalence or account-existence assurance can be inferred from copy alone",
+      "changeMade": "Reuse dummy verification, sanitized exceptions and generic owner recovery; document timing limits",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "CompatiblePasswordEncoder.java"
+      ],
+      "standard": "ASVS5 6.3.8,16.5.1",
+      "testIds": [
+        "EF-S08",
+        "EF-U05"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-05",
+      "title": "Login abuse prevention",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Durable account/source budgets and hashing semaphore",
+      "initialGap": "Production traffic tuning is external; never permanent victim lockout",
+      "changeMade": "Preserve per-account and endpoint/source budgets, Retry-After, request limits and non-nested transaction allocation",
+      "changedOrReusedFiles": [
+        "AuthAbuseFilter.java",
+        "AuthRateLimit.java",
+        "AuthenticationService.java"
+      ],
+      "standard": "NIST 3.2.2; ASVS5 6.1.1,6.3.1",
+      "testIds": [
+        "EF-C06",
+        "PhaseAIntegrationTest",
+        "PhaseCConcurrencyTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-06",
+      "title": "Forgot password",
+      "initialStatus": "BLOCKED_EXTERNAL_DEPENDENCY",
+      "previousImplementation": "D mail outbox and recovery token service",
+      "initialGap": "Real sender/provider/DNS/authorized inbox not supplied; live UI tests failed prematurely",
+      "changeMade": "Complete actual controlled-mail browser recovery, fragment link and session invalidation; preserve real-delivery gate",
+      "changedOrReusedFiles": [
+        "AssistanceService.java",
+        "WebhookMailTransport.java",
+        "MailDeploymentValidator.java",
+        "assistance-form.tsx"
+      ],
+      "standard": "NIST 4.2,4.6; ASVS5 6.4.3",
+      "testIds": [
+        "EF-L02",
+        "EF-S11",
+        "PhaseDMailGatewayTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "BLOCKED_EXTERNAL_DEPENDENCY"
+    },
+    {
+      "id": "E-07",
+      "title": "Secure expiring recovery token",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "High-entropy hashed expiring account-bound tokens",
+      "initialGap": "URL/history/referrer and replay exposure need targeted verification",
+      "changeMade": "Fragment recovery URL, current-entry scrubbing, no-referrer/no-store and strict token shape; protected verifier only",
+      "changedOrReusedFiles": [
+        "AssistanceService.java",
+        "assistance-form.tsx",
+        "+html.tsx",
+        "+native-intent.tsx"
+      ],
+      "standard": "ASVS5 6.4.3,14.3.1; MASVS2.1 PLATFORM-1",
+      "testIds": [
+        "EF-S11",
+        "EF-S15",
+        "EF-H02",
+        "EF-L02"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-08",
+      "title": "Single-use token",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "Atomic existing recovery consume and user/session locking",
+      "initialGap": "Concurrent consumption and ownership need persisted proof",
+      "changeMade": "Retain serialized one-winner reset, replacement invalidation, expiry and all-session revocation",
+      "changedOrReusedFiles": [
+        "AssistanceService.java",
+        "PhaseEFConcurrencyTest.java"
+      ],
+      "standard": "ASVS5 15.4.2,15.4.3",
+      "testIds": [
+        "EF-C03",
+        "EF-C04",
+        "EF-S11",
+        "EF-S15"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "E-09",
+      "title": "Session invalidation after password changes",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Backend all-session password-change/reset revocation",
+      "initialGap": "Native cleanup execution unavailable",
+      "changeMade": "Clear credentials/notice/private provider epoch, reject late responses, truthful sign-in success after password changes",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "auth-provider.tsx",
+        "token-storage.ts",
+        "client.ts",
+        "data-provider.tsx"
+      ],
+      "standard": "ASVS5 7.4.1,7.4.3; MASVS2.1 STORAGE-2",
+      "testIds": [
+        "EF-S06",
+        "EF-L01",
+        "EF-L02",
+        "EF-B02"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "E-10",
+      "title": "Authenticated password change",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Existing Account & Security panel already corrected 12 to 15",
+      "initialGap": "Must verify consistency and all-device result; device QA absent",
+      "changeMade": "Retain 15–128 code-point bounds, current/new/confirmation, visibility and session-revoking success; prove real UI/API path",
+      "changedOrReusedFiles": [
+        "account-security.tsx",
+        "security-contracts.ts",
+        "PasswordPolicy.java"
+      ],
+      "standard": "ASVS5 6.2.2,6.2.3,6.2.6",
+      "testIds": [
+        "EF-S06",
+        "EF-U06",
+        "EF-H01",
+        "EF-B02",
+        "EF-L01"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "E-11",
+      "title": "Password visibility and accessibility",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Shared AppField visibility/autofill/blur behavior",
+      "initialGap": "Registration retained a duplicate legacy visibility controller and failed focus remasking; native QA absent",
+      "changeMade": "Remove the legacy controller, use shared masked controls for all credential flows, remask when input/control loses focus; preserve existing EN/FA accessible labels",
+      "changedOrReusedFiles": [
+        "app-field.tsx",
+        "register.tsx",
+        "account-security.tsx",
+        "login.tsx",
+        "assistance-form.tsx"
+      ],
+      "standard": "NIST 3.1.1.2; ASVS5 6.2.6,6.2.7; MASVS2.1 STORAGE-2",
+      "testIds": [
+        "EF-B02",
+        "EF-B07",
+        "EF-B10",
+        "EF-L01",
+        "EF-L02"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "E-12",
+      "title": "Passkeys for ordinary accounts",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "No consumer-wide passkey login",
+      "initialGap": "Explicit P2 non-goal",
+      "changeMade": "Keep ordinary passkeys deferred; reuse independent credential repository/ceremony architecture only in a separately approved rollout",
+      "changedOrReusedFiles": [
+        "authentication-session-policy.md",
+        "WebAuthnCredentials.java"
+      ],
+      "standard": "Approved E-12 scope",
+      "testIds": [
+        "Scope inspection",
+        "no consumer setup UI"
+      ],
+      "testResults": "Approved deferred scope; no implemented consumer factor claimed",
+      "finalStatus": "DEFERRED_APPROVED_SCOPE"
+    },
+    {
+      "id": "E-13",
+      "title": "Optional MFA for ordinary members",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "No decorative consumer MFA enrollment",
+      "initialGap": "Explicit P1 future rollout",
+      "changeMade": "Keep optional consumer MFA deferred; staff-only functional security-key UI and clean future contract",
+      "changedOrReusedFiles": [
+        "authentication-session-policy.md",
+        "account-security.tsx"
+      ],
+      "standard": "Approved E-13 scope",
+      "testIds": [
+        "EF-M01",
+        "scope inspection"
+      ],
+      "testResults": "Approved deferred scope; no implemented consumer factor claimed",
+      "finalStatus": "DEFERRED_APPROVED_SCOPE"
+    },
+    {
+      "id": "E-14",
+      "title": "Mandatory MFA for privileged access",
+      "initialStatus": "BLOCKED_EXTERNAL_DEPENDENCY",
+      "previousImplementation": "Yubico WebAuthn, independent enrollment permit, disabled production staff gate",
+      "initialGap": "Real RP/origin/hardware/approved staff recovery unavailable; genuine browser ceremony initially unverified",
+      "changeMade": "Execute genuine virtual-authenticator signatures, exact RP/origin/UV, replay/parallel verification and pre-proof denial; production remains disabled",
+      "changedOrReusedFiles": [
+        "PrivilegedWebAuthn.java",
+        "WebAuthnCredentials.java",
+        "PhaseAInterceptor.java",
+        "webauthn.ts"
+      ],
+      "standard": "NIST 2.2,3.2.5,4.1.2; ASVS5 6.3.3,7.5.1",
+      "testIds": [
+        "EF-M01..06",
+        "EF-L03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "BLOCKED_EXTERNAL_DEPENDENCY"
+    },
+    {
+      "id": "E-15",
+      "title": "Security event logging and monitoring",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "Fixed SECURITY event category and safe owner inventory",
+      "initialGap": "Configured staff routes did not record missing/stale strong proof; external collector absent",
+      "changeMade": "Record strong-proof denials, retain fixed bounded/redacted events and security notifications; provide review thresholds",
+      "changedOrReusedFiles": [
+        "PhaseAInterceptor.java",
+        "SecurityEvents.java",
+        "operations.md"
+      ],
+      "standard": "ASVS5 16.2.5,16.3.1,16.4.1",
+      "testIds": [
+        "EF-M06",
+        "EF-S09",
+        "EF-S16"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-01",
+      "title": "JWT access tokens",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "Existing JWT issuer/HS256/session/live-role validation",
+      "initialGap": "New step-up must reject pre-proof bearer",
+      "changeMade": "Preserve signature/issuer/expiry checks and use token_version for password as well as MFA proof",
+      "changedOrReusedFiles": [
+        "TokenService.java",
+        "ActiveSessionJwtValidator.java",
+        "RecentAuthentication.java"
+      ],
+      "standard": "ASVS5 9.1.1,9.1.2,9.1.3,9.2.1",
+      "testIds": [
+        "EF-S14",
+        "EF-S17",
+        "EF-L03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-02",
+      "title": "Strong refresh token generation",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "CSPRNG refresh secrets",
+      "initialGap": "No second token mechanism needed",
+      "changeMade": "Retain 384-bit random URL-safe secrets; web exposes cookie marker only",
+      "changedOrReusedFiles": [
+        "TokenService.java",
+        "WebSessionController.java"
+      ],
+      "standard": "ASVS5 7.2.2,7.2.3",
+      "testIds": [
+        "EF-S01",
+        "EF-S17",
+        "EF-S18",
+        "PhaseAIntegrationTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-03",
+      "title": "Protected refresh token storage",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "Current/retired SHA-256 refresh verification material",
+      "initialGap": "Must preserve verifiers and owner binding during rollout",
+      "changeMade": "Keep verifier-only session records and retired family mapping; never store bearer plaintext",
+      "changedOrReusedFiles": [
+        "UserSession.java",
+        "AuthenticationService.java",
+        "V37..V39"
+      ],
+      "standard": "ASVS5 7.2.1,7.2.3",
+      "testIds": [
+        "EF-S17",
+        "EF-D01",
+        "PhaseAIntegrationTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-04",
+      "title": "Refresh token rotation",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Atomic rotating refresh and retired-token replay revocation",
+      "initialGap": "Password proof did not previously retire refresh or invalidate old bearer",
+      "changeMade": "Reuse one rotation/family architecture for password/MFA; preserve strict replay revocation and absolute boundaries",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "RecentAuthentication.java",
+        "browser-session.ts"
+      ],
+      "standard": "ASVS5 7.2.4,15.4.2",
+      "testIds": [
+        "EF-C01..04",
+        "EF-C07",
+        "EF-S17",
+        "EF-L04"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-05",
+      "title": "Server-side session revocation",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "Live database revocation validator",
+      "initialGap": "Must prove persisted revocation across races",
+      "changeMade": "Retain immediate next-authorization denial for revoked sessions and all-token password invalidation",
+      "changedOrReusedFiles": [
+        "ActiveSessionJwtValidator.java",
+        "UserSessionRepository.java",
+        "AuthenticationService.java"
+      ],
+      "standard": "ASVS5 7.4.1,7.4.2",
+      "testIds": [
+        "EF-S05",
+        "EF-S06",
+        "EF-C01..03",
+        "EF-L01"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-06",
+      "title": "Logout",
+      "initialStatus": "DEFECTIVE_REQUIRES_FIX",
+      "previousImplementation": "Offline pending marker and server reconciliation",
+      "initialGap": "Online event falsely said signed out; completed cross-tab block could revoke new login",
+      "changeMade": "Only announce actual reconciled sign-out; reset completed local block on login while durable pending guard persists; native fallback explicit",
+      "changedOrReusedFiles": [
+        "auth-provider.tsx",
+        "token-storage.ts",
+        "browser-session.ts"
+      ],
+      "standard": "ASVS5 7.4.1,14.3.1; MASVS2.1 STORAGE-2",
+      "testIds": [
+        "EF-B01",
+        "EF-B06",
+        "EF-L05"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-07",
+      "title": "Logout from all devices",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Existing confirmed logout-all control and endpoint",
+      "initialGap": "Password confirmation retained pre-proof token",
+      "changeMade": "Replace proof tokens atomically before session revocation; preserve explicit all/current-device confirmation and recoverable errors",
+      "changedOrReusedFiles": [
+        "account-security.tsx",
+        "reauthenticate.ts",
+        "AuthController.java"
+      ],
+      "standard": "ASVS5 7.5.2,7.4.4",
+      "testIds": [
+        "EF-S04",
+        "EF-B04",
+        "EF-L01"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-08",
+      "title": "Session inventory",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Existing session inventory and sanitized device labels",
+      "initialGap": "Live fixture navigated before onboarding finished; labels must remain unverified",
+      "changeMade": "Prove current/other device labels and timestamp visibility; use owner-scoped inventory without precise location",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "account-security.tsx"
+      ],
+      "standard": "ASVS5 7.1.2,7.5.2",
+      "testIds": [
+        "EF-S09",
+        "EF-B03",
+        "EF-L01",
+        "EF-L04"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-09",
+      "title": "Revoke individual session",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Existing owned session revocation and confirmation",
+      "initialGap": "Step-up token handoff needed coordinated client update",
+      "changeMade": "Bind real password proof to current session, update credentials first, revoke selected session, clear current session when selected",
+      "changedOrReusedFiles": [
+        "AuthenticationService.java",
+        "AuthController.java",
+        "account-security.tsx",
+        "reauthenticate.ts"
+      ],
+      "standard": "ASVS5 7.4.1,7.5.2",
+      "testIds": [
+        "EF-S05",
+        "EF-B03",
+        "EF-B05",
+        "EF-L01"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-10",
+      "title": "Secure native credential storage",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "SecureStore device-only/unlocked options and pending revocation secret",
+      "initialGap": "OS backup/uninstall validation unavailable; overlapping credential pair I/O needed coordination",
+      "changeMade": "Retain OS-backed storage; serialize pair reads/writes/deletion, discard old-generation writes, recover queue after failed writes; document device checks",
+      "changedOrReusedFiles": [
+        "token-storage.ts",
+        "serial-queue.ts",
+        "app.json",
+        "native-validation.md"
+      ],
+      "standard": "MASVS2.1 STORAGE-1,STORAGE-2,AUTH-2",
+      "testIds": [
+        "EF-H06",
+        "code/export checks",
+        "native-validation.md NOT RUN"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-11",
+      "title": "Browser token security",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Memory access/HttpOnly host-only Strict refresh cookie",
+      "initialGap": "New password proof must not expose raw browser refresh token",
+      "changeMade": "Add cookie-backed proof endpoint and common cookie-mutation lock; preserve secure clearing and no-store/referrer headers",
+      "changedOrReusedFiles": [
+        "WebSessionController.java",
+        "token-storage.ts",
+        "client.ts",
+        "browser-session.ts"
+      ],
+      "standard": "ASVS5 3.3.2,3.3.4,14.3.1",
+      "testIds": [
+        "EF-S10",
+        "EF-S18",
+        "EF-L03",
+        "EF-L04"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-12",
+      "title": "CSRF protection",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "Exact Origin/custom-header cookie-write checks",
+      "initialGap": "New proof endpoint must enforce all existing CSRF defenses",
+      "changeMade": "Require valid bearer and current cookie plus exact Origin/header on web password proof; bearer APIs never use cookies as identity",
+      "changedOrReusedFiles": [
+        "WebSessionController.java",
+        "SecurityConfig.java"
+      ],
+      "standard": "ASVS5 3.4.2",
+      "testIds": [
+        "EF-S10",
+        "EF-S18",
+        "PhaseAIntegrationTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-13",
+      "title": "Concurrent refresh",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "Native single-flight, origin-scoped Web Locks and transaction locking",
+      "initialGap": "Two-tab test only reloaded sequentially; password proof races and stale native refresh snapshots needed coordination",
+      "changeMade": "Execute simultaneous real tabs and password proof races; serialize native proof/refresh mutations and read current verifier inside the queue, retaining strict backend replay protection",
+      "changedOrReusedFiles": [
+        "browser-session.ts",
+        "client.ts",
+        "reauthenticate.ts",
+        "serial-queue.ts",
+        "PhaseEFConcurrencyTest.java",
+        "phase-ef-security.spec.mjs"
+      ],
+      "standard": "ASVS5 15.4.2,15.4.3",
+      "testIds": [
+        "EF-C01..07",
+        "EF-H05",
+        "EF-H06",
+        "EF-L03",
+        "EF-L04",
+        "EF-L05"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-14",
+      "title": "Cross-account data isolation",
+      "initialStatus": "DEFECTIVE_REQUIRES_FIX",
+      "previousImplementation": "User-keyed private provider and response-generation checks",
+      "initialGap": "Delayed A-response browser test stopped at ambiguous Welcome action",
+      "changeMade": "Complete actual A-to-B browser isolation scenario; retain epoch checks and private subtree remounts",
+      "changedOrReusedFiles": [
+        "data-provider.tsx",
+        "client.ts",
+        "auth-provider.tsx",
+        "phase-ef.spec.mjs"
+      ],
+      "standard": "ASVS5 8.3.1,14.3.1; MASVS2.1 STORAGE-2",
+      "testIds": [
+        "EF-B09",
+        "PhaseAIntegrationTest",
+        "native checklist"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-15",
+      "title": "Session expiry UX",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Session-expiry notice vs connection error and private clear",
+      "initialGap": "Reconnect notice was misleading; native behavior unexecuted",
+      "changeMade": "Do not declare logout for an active reconnect; use real 401/403 invalidity, discard previous sign-in responses, preserve public routes",
+      "changedOrReusedFiles": [
+        "auth-provider.tsx",
+        "client.ts",
+        "_layout.tsx"
+      ],
+      "standard": "ASVS5 7.3.1,7.3.2,7.4.1",
+      "testIds": [
+        "EF-S02",
+        "EF-B01",
+        "phase-b.spec.mjs expiry tests"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-16",
+      "title": "Role and session authorization",
+      "initialStatus": "VERIFIED_AND_REUSED",
+      "previousImplementation": "Live roles, eligibility/status/session-scope and staff gate",
+      "initialGap": "No role grant from password proof or account recovery allowed",
+      "changeMade": "Preserve live claims comparison, suspension/deletion denial, pending restrictions and server-only staff assurance",
+      "changedOrReusedFiles": [
+        "ActiveSessionJwtValidator.java",
+        "PhaseAInterceptor.java",
+        "AccessPolicy.java"
+      ],
+      "standard": "ASVS5 8.2.1,8.3.1,7.4.2",
+      "testIds": [
+        "EF-S07",
+        "EF-S13",
+        "EF-S14",
+        "EF-M02",
+        "EF-L03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-17",
+      "title": "Overall and inactivity limits",
+      "initialStatus": "REUSED_WITH_TARGETED_TESTS",
+      "previousImplementation": "Existing configurable absolute/idle policy and additive backfill",
+      "initialGap": "Need exact boundaries, polling and immutable overall evidence",
+      "changeMade": "Preserve approved web/mobile/staff values and server timestamps; password confirmation does not renew session lifetime",
+      "changedOrReusedFiles": [
+        "SessionPolicy.java",
+        "UserSession.java",
+        "RecentAuthentication.java",
+        "V37"
+      ],
+      "standard": "NIST 5.1,5.2; ASVS5 7.1.1,7.3.1,7.3.2",
+      "testIds": [
+        "EF-U01..04",
+        "EF-S01",
+        "EF-S02",
+        "EF-S13",
+        "EF-S17",
+        "EF-D01",
+        "EF-S03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-18",
+      "title": "Step-up authentication",
+      "initialStatus": "DEFECTIVE_REQUIRES_FIX",
+      "previousImplementation": "Server password freshness plus genuine staff WebAuthn",
+      "initialGap": "Password-only proof left old bearer valid, unlike MFA token version rotation",
+      "changeMade": "Atomically bind proof to user/session/current refresh, retire refresh and increment version; platform clients store returned credentials; staff still needs strong proof",
+      "changedOrReusedFiles": [
+        "RecentAuthentication.java",
+        "SessionSecurityController.java",
+        "WebSessionController.java",
+        "reauthenticate.ts"
+      ],
+      "standard": "ASVS5 7.2.4,7.5.1,7.5.2,7.5.3",
+      "testIds": [
+        "EF-S04",
+        "EF-S17",
+        "EF-S18",
+        "EF-C07",
+        "EF-L03"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "COMPLETE_AND_TESTED"
+    },
+    {
+      "id": "F-19",
+      "title": "Suspicious access detection and notification",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "Fixed security events, coalesced D outbox notifications",
+      "initialGap": "Missing strong-proof denial event; production alert/provider dependencies absent",
+      "changeMade": "Record denial even on enabled staff routes; retain bounded private-data-free events, coalesced notifications, explicit alert thresholds",
+      "changedOrReusedFiles": [
+        "SecurityEvents.java",
+        "PhaseAInterceptor.java",
+        "operations.md"
+      ],
+      "standard": "NIST 4.6; ASVS5 6.3.5,6.3.7,16.2.5",
+      "testIds": [
+        "EF-M06",
+        "EF-S09",
+        "EF-S16",
+        "PhaseDMailEventTest"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    },
+    {
+      "id": "F-20",
+      "title": "Sensitive cache and local data cleanup",
+      "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
+      "previousImplementation": "Epoch guards, per-user provider, native privacy shell",
+      "initialGap": "Native temporary moderation CSV outlived share success/failure; device cleanup not demonstrated",
+      "changeMade": "Delete temporary CSV in finally, retain explicit user-owned exported copies boundary; private drafts remain memory-only and discard on logout/long background",
+      "changedOrReusedFiles": [
+        "admin-tools/[section].tsx",
+        "auth-provider.tsx",
+        "client.ts",
+        "data-provider.tsx",
+        "token-storage.ts"
+      ],
+      "standard": "ASVS5 14.3.1; MASVS2.1 STORAGE-1,STORAGE-2,PLATFORM-3",
+      "testIds": [
+        "EF-B09",
+        "EF-H03",
+        "EF-H06",
+        "native-validation.md NOT RUN"
+      ],
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
+    }
+  ]
+}

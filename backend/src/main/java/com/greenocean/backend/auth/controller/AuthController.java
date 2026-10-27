@@ -31,10 +31,11 @@ import java.util.List;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final RegistrationService registrationService;
+    private final com.greenocean.backend.auth.service.RecentAuthentication recent;
     private final AuthenticationService authenticationService;
 
-    public AuthController(RegistrationService registrationService, AuthenticationService authenticationService) {
-        this.registrationService = registrationService;
+    public AuthController(RegistrationService registrationService, AuthenticationService authenticationService,com.greenocean.backend.auth.service.RecentAuthentication recent) {
+        this.registrationService = registrationService;this.recent=recent;
         this.authenticationService = authenticationService;
     }
 
@@ -69,6 +70,7 @@ public class AuthController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
+        if(recent.privileged(UUID.fromString(jwt.getSubject())))recent.require(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),true);
         authenticationService.changePassword(
                 UUID.fromString(jwt.getSubject()),
                 request.currentPassword(),
@@ -79,6 +81,7 @@ public class AuthController {
 
     @PostMapping("/logout-all")
     public ResponseEntity<Void> logoutAll(@AuthenticationPrincipal Jwt jwt) {
+        recent.require(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),recent.privileged(UUID.fromString(jwt.getSubject())));
         authenticationService.logoutAll(UUID.fromString(jwt.getSubject()));
         return ResponseEntity.noContent().build();
     }
@@ -90,6 +93,7 @@ public class AuthController {
 
     @DeleteMapping("/sessions/{sessionId}")
     public ResponseEntity<Void> revokeSession(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID sessionId) {
+        recent.require(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),recent.privileged(UUID.fromString(jwt.getSubject())));
         authenticationService.revokeSession(UUID.fromString(jwt.getSubject()), sessionId);
         return ResponseEntity.noContent().build();
     }

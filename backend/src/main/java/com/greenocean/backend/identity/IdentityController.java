@@ -21,9 +21,11 @@ public class IdentityController {
         var result=new HashMap<String,Object>(db.queryForMap("SELECT status,email_verified,phase_a_enrolled FROM users WHERE id=?",id));
         var eligibility=db.queryForList("SELECT * FROM account_eligibility WHERE user_id=?",id);
         result.put("eligibility",eligibility.isEmpty()?Map.of():eligibility.getFirst());
+        boolean pendingSession=Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_sessions WHERE id=? AND session_scope='PENDING')",Boolean.class,UUID.fromString(jwt.getClaimAsString("sid"))));
+        result.put("sessionRequiresSignIn",pendingSession&&"ACTIVE".equals(result.get("status")));
         var services=new HashMap<String,Boolean>();
         for(String service:List.of("COMMUNITY","LISTENER","PROFESSIONAL_DIRECTORY","PROFESSIONAL_CARE")) {
-            try { access.require(id,service); services.put(service,true); } catch(com.greenocean.backend.common.exception.ForbiddenException e) { services.put(service,false); }
+            try { access.require(id,service); services.put(service,!pendingSession); } catch(com.greenocean.backend.common.exception.ForbiddenException e) { services.put(service,false); }
         }
         result.put("services",services);
         result.put("terms",policies.latestPublished("terms").orElseThrow());

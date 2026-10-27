@@ -10,6 +10,7 @@ import tools.jackson.databind.ObjectMapper;
 /** Trusted mail gateway; it must deliver idempotently by deliveryId. No client-supplied destinations. */
 @Component
 public class WebhookMailTransport implements MailTransport {
+    @Value("${greenocean.auth.recovery-base-url:}") private String recoveryBase="";
     private final URI gateway;private final String authorization;private final ObjectMapper json;
     private final HttpClient client;
     private final String sender,mode;
@@ -36,12 +37,14 @@ public class WebhookMailTransport implements MailTransport {
     @Override public Receipt submit(UUID deliveryId,String sender,String recipient,String template,String secret,String language,java.time.Instant expiresAt) {
         if(gateway==null) throw new MailDeliveryFailure(MailDeliveryFailure.Kind.RETRYABLE);
         if(!expiresAt.isAfter(java.time.Instant.now()))throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);
-        if(!Set.of("email-verification","password-reset").contains(template) ||
+        if(!Set.of("email-verification","password-reset","security-notification").contains(template) ||
            !sender.matches(com.greenocean.backend.auth.service.EmailIdentity.PATTERN) ||
            ("staging".equals(mode)&&!authorizedRecipients.contains(recipient.toLowerCase(Locale.ROOT))))
             throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);
         try {
-            var body=json.writeValueAsString(Map.of("deliveryId",deliveryId.toString(),"sender",sender,"recipient",recipient,"template",template,"templateVersion",1,"language",Set.of("en","fa").contains(language)?language:"en","expiresAt",expiresAt.toString(),"secret",secret));
+            var envelope=new java.util.HashMap<String,Object>(Map.of("deliveryId",deliveryId.toString(),"sender",sender,"recipient",recipient,"template",template,"templateVersion",1,"language",Set.of("en","fa").contains(language)?language:"en","expiresAt",expiresAt.toString(),"secret",secret));
+            if(template.equals("password-reset")&&!recoveryBase.isBlank()){var base=URI.create(recoveryBase);if(!"https".equals(base.getScheme())||base.getHost()==null||base.getUserInfo()!=null||base.getQuery()!=null||base.getFragment()!=null)throw new MailDeliveryFailure(MailDeliveryFailure.Kind.PERMANENT);envelope.put("recoveryUrl",recoveryBase+"#token="+secret);}
+            var body=json.writeValueAsString(envelope);
             var request=HttpRequest.newBuilder(gateway).timeout(Duration.ofSeconds(10)).header("Authorization","Bearer "+authorization)
               .header("Content-Type","application/json").header("Idempotency-Key",deliveryId.toString()).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             var response=client.send(request,HttpResponse.BodyHandlers.discarding());

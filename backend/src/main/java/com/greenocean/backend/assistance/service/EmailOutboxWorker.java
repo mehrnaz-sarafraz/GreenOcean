@@ -58,7 +58,7 @@ public class EmailOutboxWorker {
                     """,Boolean.class,id,lease));
                 if(!current){finish(id,lease,"CANCELLED","SUPERSEDED",null);continue;}
                 String template=(String)row.get("template_key");
-                if(!java.util.Set.of("email-verification","password-reset").contains(template)){
+                if(!java.util.Set.of("email-verification","password-reset","security-notification").contains(template)){
                     finish(id,lease,"DEAD","INVALID_TEMPLATE",null);continue;
                 }
                 String plaintext;

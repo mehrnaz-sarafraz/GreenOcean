@@ -30,24 +30,26 @@ public class AssistanceService {
     private final OutboxCipher cipher;
     private final com.greenocean.backend.auth.service.AuthRateLimit limits;
     private final SecureRandom random = new SecureRandom();
-    private final VerificationPolicy policy;
+    private final VerificationPolicy policy;private final com.greenocean.backend.auth.service.SecurityEvents events;
     private final org.springframework.jdbc.core.JdbcTemplate db;
     private final org.springframework.transaction.support.TransactionTemplate transaction;
 
     public AssistanceService(AssistanceRepository repository, UserRepository users, UserSessionRepository sessions,
                              TokenService tokens, PasswordEncoder passwordEncoder, DatabaseUuidGenerator uuidGenerator, OutboxCipher cipher, com.greenocean.backend.auth.service.AuthRateLimit limits,
-                             VerificationPolicy policy,org.springframework.jdbc.core.JdbcTemplate db,org.springframework.transaction.PlatformTransactionManager manager) {
+                             VerificationPolicy policy,org.springframework.jdbc.core.JdbcTemplate db,org.springframework.transaction.PlatformTransactionManager manager,com.greenocean.backend.auth.service.SecurityEvents events) {
         this.repository = repository; this.users = users; this.sessions = sessions; this.tokens = tokens;
         this.cipher=cipher; this.limits=limits;
         this.passwordEncoder = passwordEncoder; this.uuidGenerator = uuidGenerator;
-        this.policy=policy;this.db=db;this.transaction=new org.springframework.transaction.support.TransactionTemplate(manager);
+        this.policy=policy;this.db=db;this.events=events;this.transaction=new org.springframework.transaction.support.TransactionTemplate(manager);
     }
 
     @Transactional
     public AssistanceResponse requestPasswordReset(EmailRequest request) {
         UUID requestId = uuidGenerator.nextUuid();
-        if (!limits.allow("delivery:"+normalize(request.email()),5,java.time.Duration.ofMinutes(15))) return new AssistanceResponse(requestId, GENERIC_RESET_MESSAGE);
+        if (!limits.allowInCurrentTransaction("delivery:"+normalize(request.email()),5,java.time.Duration.ofMinutes(15))) return new AssistanceResponse(requestId, GENERIC_RESET_MESSAGE);
         users.lockByEmail(normalize(request.email())).ifPresent(user -> {
+            if(user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE && user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.PENDING)return;
+            events.record(user.getId(),null,com.greenocean.backend.auth.service.SecurityEvents.Event.RESET_REQUESTED);
             if(user.getStatus()==com.greenocean.backend.auth.entity.UserStatus.PENDING)db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP WHERE id=?",user.getId());
             repository.invalidatePasswordResets(user.getId());
             String token = tokens.createRefreshToken();
@@ -64,10 +66,12 @@ public class AssistanceService {
         UUID userId = repository.passwordResetOwner(hash)
                 .orElseThrow(() -> new IllegalArgumentException("Recovery token is invalid or expired"));
         User user = users.lockById(userId).orElseThrow(() -> new NotFoundException("User was not found"));
+        if(user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.ACTIVE && user.getStatus()!=com.greenocean.backend.auth.entity.UserStatus.PENDING)throw new IllegalArgumentException("Recovery token is invalid or expired");
         if(repository.consumePasswordReset(hash).isEmpty())throw new IllegalArgumentException("Recovery token is invalid or expired");
         if(user.getStatus()==com.greenocean.backend.auth.entity.UserStatus.PENDING)db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP WHERE id=?",userId);
         user.changePassword(passwordEncoder.encode(request.newPassword()));
         sessions.revokeAllActiveByUserId(userId, Instant.now());
+        events.record(userId,null,com.greenocean.backend.auth.service.SecurityEvents.Event.RESET_COMPLETED);
         return new AssistanceResponse(userId, "Password updated. Existing sessions were revoked.");
     }
 

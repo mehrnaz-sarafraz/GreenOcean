@@ -40,6 +40,15 @@ public class UserSession {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    @Column(name="client_type",updatable=false,nullable=false) private String clientType="MOBILE";
+    @Column(name="session_scope",updatable=false,nullable=false) private String sessionScope="MEMBER";
+    @Column(name="overall_expires_at",updatable=false,nullable=false) private Instant overallExpiresAt;
+    @Column(name="last_activity_at",updatable=false,nullable=false) private Instant lastActivityAt;
+    @Column(name="idle_expires_at",updatable=false,nullable=false) private Instant idleExpiresAt;
+    @Column(name="reauthenticated_at",updatable=false) private Instant reauthenticatedAt;
+    @Column(name="mfa_authenticated_at",updatable=false) private Instant mfaAuthenticatedAt;
+
+    @Column(name="token_version",updatable=false,nullable=false) private int tokenVersion;
     protected UserSession() {
     }
 
@@ -50,16 +59,17 @@ public class UserSession {
         this.deviceName = deviceName;
         this.createdAt = Instant.now();
         this.expiresAt = expiresAt;
+        this.overallExpiresAt=expiresAt;this.lastActivityAt=createdAt;this.idleExpiresAt=com.greenocean.backend.auth.service.SessionPolicy.earlier(expiresAt,createdAt.plus(java.time.Duration.ofDays(1)));
     }
 
     public boolean isUsableAt(Instant now) {
-        return revokedAt == null && expiresAt.isAfter(now);
+        return revokedAt == null && expiresAt.isAfter(now) && overallExpiresAt.isAfter(now) && idleExpiresAt.isAfter(now);
     }
 
     public void rotate(String newRefreshTokenHash, Instant newExpiresAt) {
         this.refreshTokenHash = newRefreshTokenHash;
-        this.expiresAt = newExpiresAt;
-        this.lastUsedAt = Instant.now();
+        this.expiresAt = com.greenocean.backend.auth.service.SessionPolicy.earlier(newExpiresAt,overallExpiresAt);
+        // Refresh is automatic traffic, not evidence of meaningful user activity.
     }
 
     public void revoke() {
@@ -68,6 +78,15 @@ public class UserSession {
         }
     }
 
+    public void initialize(String client,String scope,Instant now,com.greenocean.backend.auth.service.SessionPolicy policy){
+      clientType=client;sessionScope=scope;createdAt=now;lastActivityAt=now;lastUsedAt=now;
+      overallExpiresAt=now.plus(policy.overall(client,scope));expiresAt=com.greenocean.backend.auth.service.SessionPolicy.earlier(expiresAt,overallExpiresAt);
+      idleExpiresAt=com.greenocean.backend.auth.service.SessionPolicy.earlier(now.plus(policy.idle(client,scope)),overallExpiresAt);reauthenticatedAt=now;
+    }
+    public String getClientType(){return clientType;} public String getSessionScope(){return sessionScope;}
+    public Instant getOverallExpiresAt(){return overallExpiresAt;} public Instant getIdleExpiresAt(){return idleExpiresAt;}
+    public Instant getLastActivityAt(){return lastActivityAt;} public Instant getReauthenticatedAt(){return reauthenticatedAt;}
+    public Instant getMfaAuthenticatedAt(){return mfaAuthenticatedAt;}
     public User getUser() {
         return user;
     }

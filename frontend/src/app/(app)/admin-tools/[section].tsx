@@ -83,8 +83,12 @@ function Exports({ items, onChanged }: { items: AdminOperations['exports']; onCh
       } else {
         const file = new File(Paths.cache, result.filename);
         if (file.exists) file.delete();
-        file.create(); file.write(result.text);
-        await Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Save GreenOcean export' });
+        try {
+          file.create(); file.write(result.text);
+          await Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Save GreenOcean export' });
+        } finally {
+          if (file.exists) file.delete();
+        }
       }
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not download export.'); }
   };

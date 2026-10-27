@@ -36,6 +36,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
              where session.user.id = :userId
                and session.revokedAt is null
                and session.expiresAt > :now
+               and session.overallExpiresAt > :now and session.idleExpiresAt > :now
              order by coalesce(session.lastUsedAt, session.createdAt) desc
             """)
     List<UserSession> findActiveByUserId(@Param("userId") UUID userId, @Param("now") Instant now);
@@ -44,6 +45,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
             select session from UserSession session
              where session.id = :sessionId and session.user.id = :userId
             """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<UserSession> findOwned(@Param("sessionId") UUID sessionId, @Param("userId") UUID userId);
 
     @Query("""
@@ -52,6 +54,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
                and session.user.id = :userId
                and session.revokedAt is null
                and session.expiresAt > :now
+               and session.overallExpiresAt > :now and session.idleExpiresAt > :now
                and (session.user.status = :userStatus or session.user.status = com.greenocean.backend.auth.entity.UserStatus.PENDING)
             """)
     boolean isActive(@Param("sessionId") UUID sessionId,

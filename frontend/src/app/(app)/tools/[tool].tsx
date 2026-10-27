@@ -1,3 +1,4 @@
+import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -131,13 +132,7 @@ function NotificationSettings() {
   return <ProductCard>{preferences ? fields.map(([key,label,detail]) => <Toggle key={key} label={label} detail={detail} value={preferences[key]} onChange={value => void set(key, value)} />) : <EmptyState icon="notifications" title="Preferences unavailable" body="Notification settings could not be loaded." />}</ProductCard>;
 }
 
-function AccountSecurity() {
-  const [current, setCurrent] = useState(''); const [next, setNext] = useState(''); const [confirm, setConfirm] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
-  const [deletePassword, setDeletePassword] = useState(''); const [deletePhrase, setDeletePhrase] = useState(''); const [deleteError, setDeleteError] = useState(''); const [deleting, setDeleting] = useState(false); const { signOut } = useAuth();
-  const save = async () => { if (next.length < 12) return setMessage('Use at least 12 characters.'); if (next !== confirm) return setMessage('New passwords do not match.'); setBusy(true); setMessage(''); try { await apiRequest('/api/v1/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: current, newPassword: next }) }); setCurrent(''); setNext(''); setConfirm(''); setMessage('Password updated. Other active sessions were signed out.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not update password'); } finally { setBusy(false); } };
-  const removeAccount = async () => { setDeleting(true); setDeleteError(''); try { await apiRequest('/api/v1/account', { method: 'DELETE', body: JSON.stringify({ password: deletePassword }) }); await signOut(); router.replace('/(auth)/welcome'); } catch (caught) { setDeleteError(caught instanceof Error ? caught.message : 'Could not delete the account.'); } finally { setDeleting(false); } };
-  return <><Notice icon="shield" title="Security baseline" body="Use a unique password of at least 12 characters. Changing it revokes every refresh session for this account." /><ProductCard><Field label="Current password" value={current} onChangeText={setCurrent} secure /><Field label="New password" value={next} onChangeText={setNext} secure /><Field label="Confirm new password" value={confirm} onChangeText={setConfirm} secure /><AppButton label="Update password" loading={busy} onPress={() => void save()} />{!!message && (message.startsWith('Password') ? <Success text={message} /> : <ErrorText text={message} />)}</ProductCard><ActionRow icon="devices" title="Active sessions" subtitle="Review devices and sign out remotely" onPress={() => nav('session-management')} /><ActionRow icon="download" title="Download my data" subtitle="Generate a portable account archive" onPress={() => nav('data-export')} /><ProductSection title="Delete account"><Notice tone="warning" icon="warning" title="Permanent account erasure" body="This revokes sessions, removes private wellbeing data and saved items, deletes your stories and messages, and anonymizes the remaining account identity. Download your archive first if you need a copy." /><ProductCard><Field label="Current password" value={deletePassword} onChangeText={setDeletePassword} secure /><Field label="Type DELETE to confirm" value={deletePhrase} onChangeText={setDeletePhrase} />{!!deleteError && <ErrorText text={deleteError} />}<AppButton label="Permanently delete my account" variant="secondary" loading={deleting} disabled={deletePhrase !== 'DELETE' || !deletePassword} onPress={() => void removeAccount()} /></ProductCard></ProductSection></>;
-}
+function AccountSecurity(){return <AccountSecurityPanel/>;}
 
 function PrivacyData() {
   const { profile, refresh } = usePlatformData(); const [blocked, setBlocked] = useState<SocialConnection[]>([]);
@@ -367,16 +362,7 @@ function SearchHistory() {
   return <>{history.length ? <><ProductCard>{history.map(item => <View key={item.id} style={styles.history}><AppIcon name="history" color={colors.muted} /><View style={styles.flex}><Text style={styles.body}>{item.term}</Text><Text style={styles.meta}>{new Date(item.searchedAt).toLocaleString()}</Text></View></View>)}</ProductCard><AppButton label="Clear search history" variant="secondary" onPress={() => void clear()} /></> : <EmptyState icon="manage_search" title="No recent searches" body="Submitted searches will appear here and stay synced with your account." />}{!!error && <ErrorText text={error} />}</>;
 }
 
-function Sessions() {
-  const [sessions, setSessions] = useState<SessionItem[]>([]); const [error, setError] = useState('');
-  const load = async () => { try { setSessions(await apiRequest<SessionItem[]>('/api/v1/auth/sessions')); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load sessions'); } };
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, []);
-  const revoke = async (sessionId: string) => { await apiRequest(`/api/v1/auth/sessions/${sessionId}`, { method: 'DELETE' }); await load(); };
-  return <>{sessions.map(session => <ProductCard key={session.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{session.deviceName || 'Unknown device'}</Text><Text style={styles.body}>{session.lastUsedAt ? `Last used ${new Date(session.lastUsedAt).toLocaleString()}` : `Signed in ${new Date(session.createdAt).toLocaleString()}`}</Text><Text style={styles.meta}>Expires {new Date(session.expiresAt).toLocaleDateString()}</Text></View><Pill label={session.current ? 'Current' : 'Sign out'} active={session.current} onPress={() => !session.current && void revoke(session.id)} /></View></ProductCard>)}{!sessions.length && !error && <EmptyState icon="devices" title="No active sessions" body="Sign in sessions associated with your account will appear here." />}{!!error && <ErrorText text={error} />}<Notice title="Session privacy" body="GreenOcean stores the device label supplied at sign-in. It does not fabricate a precise device location." /></>;
-}
+function Sessions(){return <SessionsPanel/>;}
 
 function DataExport() {
   const [archive, setArchive] = useState<AccountArchive | null>(null); const [busy, setBusy] = useState(false); const [error, setError] = useState('');

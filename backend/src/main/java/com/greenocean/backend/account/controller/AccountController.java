@@ -18,10 +18,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/account")
 public class AccountController {
-    private final AccountService service;
+    private final AccountService service;private final com.greenocean.backend.auth.service.RecentAuthentication recent;
 
-    public AccountController(AccountService service) {
-        this.service = service;
+    public AccountController(AccountService service,com.greenocean.backend.auth.service.RecentAuthentication recent) {
+        this.service = service;this.recent=recent;
     }
 
     @GetMapping("/archive")
@@ -32,6 +32,8 @@ public class AccountController {
     @DeleteMapping
     public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt jwt,
                                        @Valid @RequestBody DeleteAccountRequest request) {
+        if(recent.privileged(UUID.fromString(jwt.getSubject())))recent.require(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),true);
+        recent.password(UUID.fromString(jwt.getSubject()),UUID.fromString(jwt.getClaimAsString("sid")),request.password());
         service.delete(UUID.fromString(jwt.getSubject()), request.password());
         return ResponseEntity.noContent().build();
     }

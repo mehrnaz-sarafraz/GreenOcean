@@ -1,13 +1,13 @@
 export type RegistrationValues = { email: string; password: string; countryCode: string; adultSelfAttested: boolean; termsVersion: number; accepted: boolean };
 // Mirrors EmailIdentity.PATTERN. ASCII mailboxes and DNS/punycode domains; no dot/plus rewriting.
 const emailPattern = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
-const commonPasswords = new Set(['passwordpassword', '123456789012345', '1234567890123456', 'qwertyuiopasdfgh', 'letmeinletmeinletmein']);
+const commonPasswords = new Set(['xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'greenoceangreenocean', 'greenoceanpassword', 'passwordpassword', '123456789012345', '1234567890123456', 'qwertyuiopasdfgh', 'letmeinletmeinletmein']);
 export function validAccountEmail(email: string): boolean { return emailPattern.test(email.trim()); }
 export function validateRegistration(input: RegistrationValues): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!validAccountEmail(input.email)) errors.email = 'Enter a valid email address.';
   if ([...input.password].length < 15 || [...input.password].length > 128) errors.password = 'Use 15–128 characters. Spaces and Unicode are welcome.';
-  else if (commonPasswords.has(input.password.toLowerCase()) || new Set([...input.password]).size < 4) errors.password = 'Choose a less common password.';
+  else if (commonPasswords.has(input.password.toLowerCase())) errors.password = 'Choose a less common password.';
   if (!/^[A-Z]{2}$/.test(input.countryCode)) errors.countryCode = 'Select a country of residence.';
   if (!input.adultSelfAttested) errors.adultSelfAttested = 'Social accounts are for adults 18+. Public resources are open to everyone.';
   if (!input.accepted || input.termsVersion < 1) errors.termsVersion = 'Review and accept the current Terms.';

@@ -2,7 +2,7 @@ name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation]
+    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security]
 concurrency:
   group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
@@ -123,6 +123,9 @@ jobs:
           done
           tail -100 target/live-server.log
           exit 1
+      - name: Prepare test-only HTTPS WebAuthn origin
+        run: |
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout backend/target/qa-tls.key -out backend/target/qa-tls.crt -days 1 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1
       - name: Real browser registration against PostgreSQL and test mail delivery
         working-directory: frontend
         run: npx playwright test --config playwright.live.config.mjs
