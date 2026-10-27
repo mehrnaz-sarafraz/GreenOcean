@@ -21,6 +21,10 @@ public class PolicyPublicationService {
   db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))","policy:"+key.getFirst());
   var row=db.queryForMap("SELECT * FROM policy_documents WHERE id=? FOR UPDATE",id);
   if(!"DRAFT".equals(row.get("status"))||!"APPROVED".equals(row.get("review_status"))||row.get("reviewed_by")==null)throw new ConflictException("Only independently approved drafts can be published");
+  // Review is evidence from an independent, currently authorized reviewer.
+  staff((UUID)row.get("reviewed_by"));
+  if(Objects.equals(row.get("reviewed_by"),row.get("updated_by")))throw new ForbiddenException("Independent policy review is required");
+  if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM policy_documents WHERE policy_key=? AND locale=? AND status IN ('PUBLISHED','RETIRED') AND published_at IS NOT NULL AND version>=?)",Boolean.class,key.getFirst(),row.get("locale"),row.get("version"))))throw new ConflictException("Publish a newer policy version; historical versions cannot replace the current notice");
   if(!"en".equals(row.get("locale"))&&Set.of("terms","listener-code").contains(key.getFirst()))throw new ForbiddenException("Translated binding agreements require reviewed locale-aware acceptance support");
   if(Boolean.TRUE.equals(db.queryForObject("SELECT effective_at>CURRENT_TIMESTAMP FROM policy_documents WHERE id=?",Boolean.class,id)))throw new ConflictException("Policy effective date has not arrived");
   db.update("UPDATE policy_documents SET status='RETIRED' WHERE policy_key=? AND locale=? AND status='PUBLISHED'",key.getFirst(),row.get("locale"));

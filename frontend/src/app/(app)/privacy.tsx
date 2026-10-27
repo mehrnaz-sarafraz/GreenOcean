@@ -7,7 +7,7 @@ import { useLanguage } from '@/localization/language-provider';
 import { newClientId } from '@/features/live-support/policy';
 import { apiRequest } from '@/lib/api/client';
 import { colors,spacing } from '@/theme/tokens';
-type Choice={purpose:string;decision:string;grantAvailable:boolean;noticeId:string|null};
+type Choice={purpose:string;decision:string;grantAvailable:boolean;currentNoticeGranted?:boolean;noticeId:string|null};
 type Rights={id:string;kind:string;status:string;resolution_reference:string|null};
 type State={choices:Choice[];manualIntakeAvailable:boolean;responseTargetHours:number|null;rightsRequests:Rights[];noticeReceipts:unknown[]};
 export default function PrivacyGovernance(){
@@ -33,6 +33,7 @@ export default function PrivacyGovernance(){
   {!saved?<AppButton label={tr('Retry loading','دریافت دوباره')} onPress={()=>void load()}/>:<>
    {saved.choices.map(choice=><View key={choice.purpose} style={{gap:spacing.sm,padding:spacing.md,borderWidth:1,borderColor:colors.border,borderRadius:12}}>
     <Text accessibilityRole="header" style={{fontSize:18,fontWeight:'700'}}>{names[choice.purpose]}</Text><Text accessibilityLabel={language==='fa'?'وضعیت '+names[choice.purpose]:names[choice.purpose]+' status'}>{decisions[choice.decision]??choice.decision}</Text>
+    {choice.decision==='GRANTED'&&choice.currentNoticeGranted===false&&<Text>{tr('The recorded permission does not cover currently available optional processing. Review the current purpose notice if available; no permission is renewed automatically.','اجازهٔ قبلی پردازش اختیاریِ فعلی را پوشش نمی‌دهد. اگر اطلاعیهٔ فعلی در دسترس است، آن را بخوانید؛ هیچ اجازه‌ای خودکار تمدید نمی‌شود.')}</Text>}
     {!choice.grantAvailable&&<Text>{tr('New authorization is unavailable pending approved purpose, notice and operational readiness.','اجازهٔ تازه تا تأیید هدف، اطلاعیه و آمادگی اجرایی در دسترس نیست.')}</Text>}
     {choice.grantAvailable&&<AppButton label={tr('Read purpose notice: ','خواندن اطلاعیهٔ هدف: ')+names[choice.purpose]} variant="secondary" disabled={busy} onPress={()=>void readPurpose(choice)}/>}
     {!!choice.noticeId&&!!notices[choice.noticeId]&&<View style={{gap:spacing.sm}}><Text>{notices[choice.noticeId].title+' · v'+notices[choice.noticeId].version+' · '+notices[choice.noticeId].locale}</Text><Text selectable>{notices[choice.noticeId].content.replaceAll('\\n','\n')}</Text><Text>{tr('This specific notice describes the optional purpose. Granting is your separate affirmative choice; you can decline or withdraw here.','این اطلاعیه هدف اختیاری را شرح می‌دهد. اجازه‌دادن انتخاب صریح و جداگانهٔ شماست؛ همین‌جا می‌توانید رد کنید یا پس بگیرید.')}</Text></View>}

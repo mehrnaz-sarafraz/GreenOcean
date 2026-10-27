@@ -37,7 +37,8 @@ public class PrivacyGovernanceService {
   var choices=new ArrayList<Map<String,Object>>();
   for(String purpose:List.of("SUPPORT_TOPICS","OPTIONAL_ANALYTICS","OPTIONAL_COMMUNICATIONS")){
    var event=db.queryForList("SELECT decision,notice_id,created_at FROM processing_authorizations WHERE user_id=? AND purpose=? ORDER BY event_order DESC LIMIT 1",user,purpose);
-   var choice=new LinkedHashMap<String,Object>();choice.put("purpose",purpose);choice.put("decision",event.isEmpty()?"UNKNOWN":event.getFirst().get("decision"));choice.put("grantAvailable",approvedNotice(purpose).isPresent());choice.put("noticeId",approvedNotice(purpose).orElse(null));choice.put("updatedAt",event.isEmpty()?null:event.getFirst().get("created_at"));choices.add(choice);
+   var currentNotice=approvedNotice(purpose);
+   var choice=new LinkedHashMap<String,Object>();choice.put("currentNoticeGranted",!event.isEmpty()&&"GRANTED".equals(event.getFirst().get("decision"))&&currentNotice.filter(id->id.equals(event.getFirst().get("notice_id"))).isPresent());choice.put("purpose",purpose);choice.put("decision",event.isEmpty()?"UNKNOWN":event.getFirst().get("decision"));choice.put("grantAvailable",currentNotice.isPresent());choice.put("noticeId",currentNotice.orElse(null));choice.put("updatedAt",event.isEmpty()?null:event.getFirst().get("created_at"));choices.add(choice);
   }
   var result=new LinkedHashMap<String,Object>();result.put("choices",choices);result.put("manualIntakeAvailable",intakeEnabled);result.put("responseTargetHours",intakeEnabled?responseHours:null);
   result.put("noticeReceipts",db.queryForList("SELECT r.notice_id,r.received_at,p.policy_key,p.version,p.locale FROM privacy_notice_receipts r JOIN policy_documents p ON p.id=r.notice_id WHERE r.user_id=? ORDER BY r.received_at DESC",user));
