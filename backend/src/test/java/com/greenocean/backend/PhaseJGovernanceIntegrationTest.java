@@ -5,7 +5,7 @@ import org.springframework.test.context.ActiveProfiles;import org.springframewor
 import org.springframework.test.web.servlet.MockMvc;import org.springframework.jdbc.core.JdbcTemplate;
 import com.greenocean.backend.preference.service.*;import com.greenocean.backend.preference.dto.*;
 import com.greenocean.backend.moderation.service.AdminService;import com.greenocean.backend.moderation.dto.CreatePolicyRequest;
-import tools.jackson.databind.*;import java.util.*;import java.time.Instant;
+import tools.jackson.databind.*;import java.util.*;
 import static org.assertj.core.api.Assertions.*;import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties={"app.privacy.support-topics-enabled=true","app.governance.optional-processing-approved=true","app.governance.policy-publication-enabled=true","app.governance.rights-intake-enabled=true","app.governance.rights-owner=Synthetic-QA-owner","app.governance.rights-response-hours=48"})
@@ -18,7 +18,7 @@ class PhaseJGovernanceIntegrationTest {
  record Member(UUID id,String token){}
  Member member()throws Exception{String email="j-"+UUID.randomUUID()+"@example.test";mvc.perform(post("/api/v1/auth/register").contentType("application/json").content(json.writeValueAsString(Map.of("email",email,"password","Synthetic J governance passphrase","countryCode","IR","adultSelfAttested",true,"termsVersion",1)))).andExpect(status().isCreated());PhaseAFixtures.activate(db,email);entities.clear();var login=mvc.perform(post("/api/v1/auth/login").contentType("application/json").content(json.writeValueAsString(Map.of("email",email,"password","Synthetic J governance passphrase")))).andExpect(status().isOk()).andReturn();return new Member(db.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,email),json.readTree(login.getResponse().getContentAsString()).get("accessToken").asText());}
  Member staff()throws Exception{var m=member();db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='ADMIN'",m.id);return m;}
- UUID draft(Member author,String key){return admin.createPolicy(author.id,new CreatePolicyRequest(key,"Synthetic draft","QA only","<script>synthetic text, never HTML execution</script>",false,"en",Instant.now().minusSeconds(1)));}
+ UUID draft(Member author,String key){return admin.createPolicy(author.id,new CreatePolicyRequest(key,"Synthetic draft","QA only","<script>synthetic text, never HTML execution</script>",false,"en",db.queryForObject("SELECT CURRENT_TIMESTAMP",java.time.OffsetDateTime.class).toInstant().minusSeconds(1)));}
  UUID approvedNotice()throws Exception{var a=staff();var b=staff();UUID id=draft(a,"support-topics-processing");publication.review(id,b.id,"synthetic-review-42");publication.publish(id,b.id);return id;}
  JsonNode getPrivacy(Member m)throws Exception{return json.readTree(mvc.perform(get("/api/v1/account/privacy").header("Authorization","Bearer "+m.token)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());}
  @Test @Tag("happy") void privacyReceiptDoesNotCreateTermsAcceptanceOrOptionalConsent()throws Exception{var m=member();var current=policies.published("privacy");privacy.receiveNotice(m.id,current.id());privacy.receiveNotice(m.id,current.id());var snapshot=getPrivacy(m);assertThat(snapshot.get("noticeReceipts").size()).isEqualTo(1);assertThat(snapshot.get("termsAcceptances").size()).isEqualTo(1);assertThat(snapshot.get("authorizationHistory").isEmpty()).isTrue();}
