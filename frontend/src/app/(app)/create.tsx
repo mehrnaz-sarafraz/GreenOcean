@@ -14,13 +14,18 @@ import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 export default function Create() {
-  const { t } = useLanguage();
-  const { categories, profile, refresh, options } = usePlatformData();
+  const { t,language } = useLanguage();
+  const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const { categories, profile, refresh, options, communities } = usePlatformData();
   const moods = optionsIn(options, 'POST_MOOD');
   const postTypes = optionsIn(options, 'POST_TYPE');
   const groupOptions = optionsIn(options, 'CATEGORY_GROUP');
   const [reviewed,setReviewed]=useState<boolean|null>(null);
   useEffect(()=>{void apiRequest<{eligibility:{display_reviewed_at?:string}}>('/api/v1/identity').then(identity=>setReviewed(Boolean(identity.eligibility.display_reviewed_at))).catch(()=>setReviewed(false));},[]);
+  const [audience,setAudience]=useState<'FOLLOWERS'|'COMMUNITY'|'PUBLIC'>('FOLLOWERS');
+  const [communityId,setCommunityId]=useState('');
+  const [broaderConfirmed,setBroaderConfirmed]=useState(false);
+  const [contentWarning,setContentWarning]=useState('');
   const [body, setBody] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [mood, setMood] = useState('');
@@ -38,6 +43,8 @@ export default function Create() {
   }
 
   async function publish() {
+    if (audience==='PUBLIC'&&!broaderConfirmed){setError('Confirm that eligible members beyond your followers may read this post.');return;}
+    if(audience==='COMMUNITY'&&!communityId){setError('Choose a community you have joined.');return;}
     if (!body.trim() || !group || !categoryId) {
       setError(!group ? 'Choose whether your story is about an emotion, condition, or life experience.' : !categoryId ? 'Choose the topic that fits your story best.' : t('requiredFields'));
       return;
@@ -45,8 +52,8 @@ export default function Create() {
     setPublishing(true); setError('');
     try {
       await apiRequest('/api/v1/posts', { method: 'POST', body: JSON.stringify({
-        body: body.trim(), anonymous, visibility: 'PUBLIC', communityId: null,
-        contentWarning: null, categoryId, postType: type, mood: mood || null,
+        body: body.trim(), anonymous, visibility: audience, communityId: audience==='COMMUNITY'?communityId:null, broaderAudienceConfirmed:broaderConfirmed,
+        contentWarning: contentWarning.trim() || null, categoryId, postType: type, mood: mood || null,
       }) });
       await refresh();
       router.replace('/(app)');
@@ -67,9 +74,14 @@ export default function Create() {
 
     <View style={styles.author}>
       <Avatar name={anonymous ? t('anonymous') : (profile?.displayName ?? 'GreenOcean member')} uri={anonymous ? null : profile?.avatarUrl} size={44} />
-      <View><Text style={styles.authorName}>{anonymous ? t('anonymous') : (profile?.displayName ?? 'GreenOcean member')}</Text><View style={styles.visibility}><AppIcon name="public" size={14} color={colors.ocean600} /><Text style={styles.visibilityText}>{t('public')}</Text></View></View>
+      <View><Text style={styles.authorName}>{anonymous ? t('anonymous') : (profile?.displayName ?? 'GreenOcean member')}</Text><View style={styles.visibility}><AppIcon name="public" size={14} color={colors.ocean600} /><Text style={styles.visibilityText}>{audience==='PUBLIC'?tr('Eligible members','اعضای مجاز'):audience==='COMMUNITY'?tr('Community members','اعضای گروه'):tr('Approved followers','دنبال‌کنندگان تأییدشده')}</Text></View></View>
     </View>
 
+    <View style={styles.types}>{(['FOLLOWERS','COMMUNITY','PUBLIC'] as const).map(value=><Pressable key={value} accessibilityRole="radio" accessibilityState={{checked:audience===value}} aria-checked={audience===value} accessibilityLabel={value==='PUBLIC'?tr('Eligible members','اعضای مجاز'):value==='COMMUNITY'?tr('Community members','اعضای گروه'):tr('Approved followers','دنبال‌کنندگان تأییدشده')} onPress={()=>{setAudience(value);setBroaderConfirmed(false);}} style={[styles.type,audience===value&&styles.typeActive]}><Text style={[styles.typeText,audience===value&&styles.typeTextActive]}>{value==='PUBLIC'?tr('Eligible members','اعضای مجاز'):value==='COMMUNITY'?tr('Community members','اعضای گروه'):tr('Approved followers','دنبال‌کنندگان تأییدشده')}</Text></Pressable>)}</View>
+    <Text style={styles.helper}>{tr('Profile privacy does not change a post’s audience. Historical posts keep their original restriction. Anonymous posts hide your identity from members; the platform can still attribute them for safety.','تنظیم پروفایل، مخاطب پست را تغییر نمی‌دهد. محدودیت پست‌های قبلی حفظ می‌شود. پست ناشناس هویت را از اعضا پنهان می‌کند؛ پلتفرم برای ایمنی همچنان می‌تواند نویسنده را شناسایی کند.')}</Text>
+    {audience==='COMMUNITY'&&<View style={styles.types}>{communities.filter(c=>c.member).map(c=><Pressable key={c.id} accessibilityRole="radio" accessibilityState={{checked:communityId===c.id}} aria-checked={communityId===c.id} onPress={()=>setCommunityId(c.id)} style={[styles.type,communityId===c.id&&styles.typeActive]}><Text style={styles.typeText}>{c.name}</Text></Pressable>)}</View>}
+    {audience==='PUBLIC'&&<View style={styles.tool}><Text style={styles.toolText}>{tr('I understand eligible members beyond my approved followers may read this post, even with a private profile.','می‌دانم حتی با پروفایل خصوصی، اعضای مجاز خارج از دنبال‌کنندگان تأییدشده می‌توانند این پست را بخوانند.')}</Text><Switch accessibilityLabel={tr('Confirm broader audience','تأیید مخاطب گسترده‌تر')} value={broaderConfirmed} onValueChange={setBroaderConfirmed}/></View>}
+    <TextInput accessibilityLabel={tr('Content warning','هشدار محتوا')} value={contentWarning} onChangeText={setContentWarning} maxLength={120} placeholder={tr('Optional content warning','هشدار اختیاری محتوا')} style={styles.editor}/>
     <TextInput autoFocus multiline value={body} onChangeText={setBody} placeholder={t('sharePrompt')} placeholderTextColor={colors.muted} style={styles.editor} />
 
     <View><Text style={styles.step}>STEP 1</Text><Text style={styles.label}>What is this story mainly about? <Text style={styles.required}>*</Text></Text><Text style={styles.helper}>This helps people find experiences that feel relevant to them.</Text></View>

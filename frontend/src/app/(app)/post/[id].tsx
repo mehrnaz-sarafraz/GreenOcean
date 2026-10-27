@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
@@ -8,7 +8,6 @@ import { Avatar } from '@/components/avatar';
 import { Screen } from '@/components/screen';
 import { PostCard } from '@/features/content/post-card';
 import { CommentItem, PageResponse, PostItem } from '@/features/content/types';
-import { usePlatformData } from '@/features/platform/data-provider';
 import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
@@ -16,15 +15,15 @@ import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
-  const { posts } = usePlatformData();
-  const [post, setPost] = useState<PostItem | null>(posts.find(item => item.id === id) ?? null);
+  
+  const [post, setPost] = useState<PostItem | null>(null);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let active = true;
     async function load() {
       if (!id) return;
@@ -36,14 +35,14 @@ export default function PostDetail() {
         ]);
         if (active) { setPost(loadedPost); setComments(loadedComments.items); }
       } catch (caught) {
-        if (active) setError(caught instanceof Error ? caught.message : 'Could not load this story');
+        if (active) {setPost(null);setComments([]);setError(caught instanceof Error ? caught.message : 'Could not load this story');}
       } finally {
         if (active) setLoading(false);
       }
     }
     void load();
     return () => { active = false; };
-  }, [id]);
+  }, [id]));
 
   async function send() {
     const text = body.trim();

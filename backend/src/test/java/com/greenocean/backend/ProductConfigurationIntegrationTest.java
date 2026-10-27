@@ -50,12 +50,12 @@ class ProductConfigurationIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, auth(token))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
-                                "supportTopics", List.of("anxiety", "sleep"),
+                                "supportTopics", List.of(),
                                 "supportStyle", "LISTENER",
                                 "onboardingComplete", true
                         ))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.supportTopics.length()").value(2))
+                .andExpect(jsonPath("$.supportTopics.length()").value(0))
                 .andExpect(jsonPath("$.supportStyle").value("LISTENER"))
                 .andExpect(jsonPath("$.onboardingComplete").value(true));
 

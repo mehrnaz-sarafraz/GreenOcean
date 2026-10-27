@@ -46,6 +46,7 @@ public class AccountRepository {
         saved.addAll(jdbcTemplate.query("""
                 SELECT p.id, LEFT(p.body, 160) AS title, b.created_at FROM bookmarks b
                   JOIN posts p ON p.id = b.post_id WHERE b.user_id = ? AND p.deleted_at IS NULL
+                   AND can_read_social_post(p.id, b.user_id)
                  ORDER BY b.created_at DESC
                 """, (rs, row) -> new AccountActivityResponse.SavedItem("POST", rs.getObject("id", UUID.class),
                 rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));

@@ -6,6 +6,7 @@ import { Avatar } from '@/components/avatar';
 import { apiRequest } from '@/lib/api/client';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, shadow, spacing } from '@/theme/tokens';
+import { usePlatformData } from '@/features/platform/data-provider';
 import { PostItem } from './types';
 
 const categoryGroupNames = { EMOTION: 'EMOTION', CONDITION: 'CONDITION', LIFE_EXPERIENCE: 'LIFE EXPERIENCE' } as const;
@@ -17,7 +18,9 @@ function relativeTime(value: string) {
 }
 export function PostCard({ post: initialPost, elevated = true }: { post: PostItem; elevated?: boolean }) {
   const { t } = useLanguage(); const [post, setPost] = useState(initialPost);
-  const [sensitiveRevealed, setSensitiveRevealed] = useState(!initialPost.contentWarning);
+  const {preferences}=usePlatformData();
+  const [revealed,setSensitiveRevealed]=useState<boolean|null>(null);
+  const sensitiveRevealed=!post.contentWarning||(revealed??preferences?.blurSensitiveContent===false);
   const category = post.category;
   const postType = post.postType ?? 'EXPERIENCE';
   async function toggleLike() { const next = !post.liked; setPost(c => ({ ...c, liked: next, likeCount: c.likeCount + (next ? 1 : -1) })); try { await apiRequest(`/api/v1/posts/${post.id}/like`, { method: next ? 'PUT' : 'DELETE' }); } catch { setPost(c => ({ ...c, liked: !next, likeCount: c.likeCount + (next ? -1 : 1) })); } }
@@ -31,7 +34,7 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
     <Pressable accessibilityRole="button" accessibilityLabel={`Open ${authorName}'s profile`} onPress={openAuthor} style={styles.authorRow}>
       <Avatar name={authorName} uri={post.author?.avatarUrl} />
       <View style={styles.authorText}><View style={styles.nameLine}><Text style={styles.name}>{authorName}</Text>{post.anonymous && <View style={styles.anonymousBadge}><AppIcon name="visibility_off" size={13} color={colors.muted} /><Text style={styles.badgeText}>{t('anonymous')}</Text></View>}</View>
-        <Text style={styles.meta}>{post.author ? `@${post.author.username} · ` : ''}{relativeTime(post.createdAt)}</Text></View>
+        <Text style={styles.meta}>{post.author ? `@${post.author.username} · ` : ''}{relativeTime(post.createdAt)} · {post.visibility==='PUBLIC'?'Eligible members':post.visibility==='COMMUNITY'?'Community members':'Approved followers'}</Text></View>
       <AppIcon name="more_horiz" color={colors.muted} />
     </Pressable>
     <View style={styles.chips}>{category && <><View style={styles.groupChip}><Text style={styles.groupText}>{categoryGroupNames[category.group]}</Text></View><View style={[styles.categoryChip, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={15} color={category.color} /><Text style={[styles.categoryText, { color: category.color }]}>{category.name}</Text></View></>}<View style={styles.typeChip}><Text style={styles.typeText}>{postType === 'QUESTION' ? t('question') : postType === 'REFLECTION' ? t('reflection') : t('experience')}</Text></View>{post.mood && <View style={[styles.chip, styles.moodChip]}><Text style={styles.moodText}>● {post.mood}</Text></View>}</View>

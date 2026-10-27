@@ -11,12 +11,29 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import java.util.*;
 import java.util.concurrent.*;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest @ActiveProfiles("test")
-class PhaseDPendingCleanupTest {
+class PhaseDPendingCleanupTest extends MigrationTestSupport {
+ // Cleanup deliberately selects all eligible pending accounts. Give its fixtures
+ // their own schema so committed historical accounts from other suites cannot
+ // change candidate counts or be erased by this test's account lifecycle calls.
+ static final String SCHEMA="qa_pending_"+UUID.randomUUID().toString().replace("-","");
+ @DynamicPropertySource static void isolatedSchema(DynamicPropertyRegistry properties) {
+   String url=System.getenv("GREENOCEAN_TEST_DB_URL");
+   if(url==null||url.isBlank())throw new IllegalStateException("An explicitly isolated QA database is mandatory");
+   properties.add("spring.datasource.url",()->url+(url.contains("?")?"&":"?")+"currentSchema="+SCHEMA+",public");
+   properties.add("spring.flyway.schemas",()->SCHEMA);
+   properties.add("spring.flyway.default-schema",()->SCHEMA);
+   properties.add("spring.jpa.properties.hibernate.default_schema",()->SCHEMA);
+ }
+ @AfterAll static void removeIsolatedSchema(@Autowired JdbcTemplate database) {
+   database.execute("DROP SCHEMA "+SCHEMA+" CASCADE");
+ }
  @Autowired JdbcTemplate db;@Autowired AccountRepository accounts;@Autowired PlatformTransactionManager manager;@Autowired RegistrationService registration;@Autowired AssistanceService assistance;@Autowired com.greenocean.backend.assistance.service.OutboxCipher cipher;
  List<UUID> ids=new ArrayList<>();Map<UUID,String> issuedCodes=new HashMap<>();
  UUID account(boolean old){String email="cleanup-"+UUID.randomUUID()+"@example.test";registration.register(new RegisterRequest(email,"a synthetic cleanup account passphrase",null,null,null,"IR",null,null,true,1));UUID id=db.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,email);ids.add(id);issuedCodes.put(id,cipher.decrypt(db.queryForObject("SELECT payload->>'encrypted' FROM email_outbox WHERE owner_user_id=?",String.class,id)));if(old){db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '8 days',last_login_at=NULL WHERE id=?",id);db.update("UPDATE email_outbox SET status='SENT',delivery_state='ACCEPTED',payload='{}',created_at=CURRENT_TIMESTAMP-INTERVAL '8 days',sent_at=CURRENT_TIMESTAMP-INTERVAL '8 days' WHERE owner_user_id=?",id);}return id;}
@@ -65,10 +82,15 @@ class PhaseDPendingCleanupTest {
  @Test @Tag("creative") void sevenDayBoundaryUsesServerTimeAndConfigurableThreshold(){
    UUID id=account(true);var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
    tx.executeWithoutResult(status->{
-     db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-INTERVAL '7 days',verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '7 days' WHERE id=?",id);
+     // Duration.ofDays(7) is exactly 604800 seconds. Calendar INTERVAL '7 days'
+     // can span 169 hours across Europe's autumn DST change, so it is not the
+     // boundary used by PendingAccountCleanup's duration-based cutoff.
+     db.update("UPDATE users SET created_at=CURRENT_TIMESTAMP-(604800 * INTERVAL '1 second'),verification_activity_at=CURRENT_TIMESTAMP-(604800 * INTERVAL '1 second') WHERE id=?",id);
+     assertThat(db.queryForObject("SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-verification_activity_at))::BIGINT FROM users WHERE id=?",Long.class,id)).isEqualTo(604800L);
      assertThat(new PendingAccountCleanup(db,accounts,manager,true,true,false,java.time.Duration.ofDays(8),10).run().candidates()).isZero();
      assertThat(cleanup(true,false,10).run().candidates()).isEqualTo(1);
-     db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP-INTERVAL '7 days'+INTERVAL '1 second' WHERE id=?",id);
+     db.update("UPDATE users SET verification_activity_at=CURRENT_TIMESTAMP-(604799 * INTERVAL '1 second') WHERE id=?",id);
+     assertThat(db.queryForObject("SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-verification_activity_at))::BIGINT FROM users WHERE id=?",Long.class,id)).isEqualTo(604799L);
      assertThat(cleanup(true,false,10).run().candidates()).isZero();
    });
  }

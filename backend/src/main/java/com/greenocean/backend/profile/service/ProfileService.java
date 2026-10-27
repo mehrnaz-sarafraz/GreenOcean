@@ -44,9 +44,12 @@ public class ProfileService {
 
     @Transactional
     public OwnProfileResponse updateOwnProfile(UUID userId, UpdateProfileRequest request) {
-        Profile profile = findByUserId(userId);
+        Profile profile = profileRepository.findForUpdate(userId).orElseThrow(() -> new NotFoundException("Profile was not found"));
         if(request.countryCode()!=null && !request.countryCode().isBlank()) access.country(request.countryCode().toUpperCase(java.util.Locale.ROOT));
         String username = normalizeUsername(request.username());
+        if (username != null && username.matches("(admin|administrator|support|greenocean|moderator|system|official|staff)([._].*)?"))
+            throw new IllegalArgumentException("This username is reserved");
+        validateAvatar(request.avatarUrl());
         if (username != null
                 && !username.equalsIgnoreCase(profile.getUsername())
                 && profileRepository.existsByUsernameIgnoreCase(username)) {
@@ -92,19 +95,19 @@ public class ProfileService {
                 targetId,
                 profile.getUsername(),
                 profile.getDisplayName(),
-                profile.getBio(),
+                canSeeActivity ? profile.getBio() : null,
                 profile.getAvatarUrl(),
-                profile.isShowLocation() ? profile.getCountryCode() : null,
-                profile.isShowLocation() ? profile.getCity() : null,
+                profile.isShowLocation() && canSeeActivity ? profile.getCountryCode() : null,
+                profile.isShowLocation() && canSeeActivity ? profile.getCity() : null,
                 profile.isShowBirthYear() && canSeeActivity ? profile.getBirthYear() : null,
                 profile.isProfilePrivate(),
                 following && !ownProfile,
                 !following && interactions.hasPendingFollowRequest(viewerId, targetId),
                 canSeeActivity,
-                interactions.followerCount(targetId),
-                interactions.followingCount(targetId),
+                canSeeActivity ? interactions.followerCount(targetId) : 0,
+                canSeeActivity ? interactions.followingCount(targetId) : 0,
                 interactions.visiblePostCount(targetId, viewerId),
-                canSeeActivity ? interactions.helpfulReactionCount(targetId) : 0,
+                0, // Historical reaction totals can identify anonymous/private activity.
                 profile.getCreatedAt()
         );
     }
@@ -151,8 +154,24 @@ public class ProfileService {
 
     private String normalizeRequiredText(String value, String fieldName) {
         if (value == null) return null;
-        String trimmed = value.trim();
+        String trimmed = java.text.Normalizer.normalize(value.trim(), java.text.Normalizer.Form.NFC);
         if (trimmed.isEmpty()) throw new IllegalArgumentException(fieldName + " cannot be blank");
+        if (trimmed.codePoints().anyMatch(c -> Character.isISOControl(c) || (c >= 0x202a && c <= 0x202e) || (c >= 0x2066 && c <= 0x2069)))
+            throw new IllegalArgumentException(fieldName + " contains unsupported control characters");
         return trimmed;
+    }
+
+    private void validateAvatar(String value) {
+        if (value == null || value.isBlank()) return;
+        try {
+            var uri = java.net.URI.create(value.trim());
+            String host = uri.getHost();
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || host == null || uri.getUserInfo() != null ||
+                !host.contains(".") || host.matches("[0-9.]+") || host.contains(":") ||
+                host.endsWith(".localhost") || host.endsWith(".local") || uri.getFragment() != null)
+                throw new IllegalArgumentException();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Avatar must be a public HTTPS image URL without credentials, or empty to remove");
+        }
     }
 }

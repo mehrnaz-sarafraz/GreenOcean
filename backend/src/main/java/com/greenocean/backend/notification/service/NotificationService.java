@@ -32,7 +32,7 @@ public class NotificationService {
 
     public void commentLiked(UUID actorId, UUID commentId) {
         repository.commentAuthor(commentId).ifPresent(recipient ->
-                create(recipient, actorId, actorId, "LIKE", repository.commentPost(commentId).orElse(null), commentId));
+                create(recipient, actorId, null, "LIKE", repository.commentPost(commentId).orElse(null), commentId));
     }
 
     public void commentCreated(UUID actorId, boolean anonymous, UUID postId, UUID commentId, UUID parentCommentId) {

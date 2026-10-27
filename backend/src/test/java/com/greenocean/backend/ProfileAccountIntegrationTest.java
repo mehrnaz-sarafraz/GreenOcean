@@ -65,7 +65,7 @@ class ProfileAccountIntegrationTest {
         mockMvc.perform(get("/api/v1/profiles/{username}", updatedUsername)
                         .header("Authorization", auth(secondUser.accessToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bio").value("A safe profile bio"))
+                .andExpect(jsonPath("$.bio").doesNotExist())
                 .andExpect(jsonPath("$.countryCode").doesNotExist())
                 .andExpect(jsonPath("$.city").doesNotExist())
                 .andExpect(jsonPath("$.birthYear").doesNotExist());

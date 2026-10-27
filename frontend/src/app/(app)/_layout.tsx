@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/auth-provider';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { useLanguage } from '@/localization/language-provider';
 import { colors, radius, shadow } from '@/theme/tokens';
+import { needsOnboarding } from '@/features/platform/onboarding-policy';
 
 const icon = (name: string, focused: boolean) => <AppIcon name={name} filled={focused} size={25} color={focused ? colors.ocean700 : colors.muted} />;
 export default function AppLayout() {
@@ -32,7 +33,7 @@ export default function AppLayout() {
   if (status === 'authenticated' && allowed === false) return <Redirect href="/(auth)/activate" />;
   if (status === 'authenticated' && allowed === null) return <View style={{padding:24}}><Text>{error || 'Checking account access…'}</Text>{!!error && <AppButton label="Retry" onPress={()=>void checkAccess()} />}</View>;
   if (status === 'unauthenticated') return <Redirect href="/(auth)/welcome" />;
-  if (status === 'authenticated' && preferences && !preferences.onboardingComplete) return <Redirect href="/(auth)/onboarding" />;
+  if (status === 'authenticated' && preferences && needsOnboarding(preferences)) return <Redirect href="/(auth)/onboarding" />;
   return <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.ocean700, tabBarInactiveTintColor: colors.muted, tabBarLabelStyle: styles.label, tabBarStyle: styles.bar, tabBarItemStyle: styles.item }}>
     <Tabs.Screen name="index" options={{ title: t('feed'), tabBarIcon: ({ focused }) => icon('home', focused) }} />
     <Tabs.Screen name="search" options={{ title: t('search'), tabBarIcon: ({ focused }) => icon('explore', focused) }} />

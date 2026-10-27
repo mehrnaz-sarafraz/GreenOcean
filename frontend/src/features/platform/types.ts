@@ -47,6 +47,8 @@ export type UserPreferences = {
   professionalsOnlyMessages: boolean; mutedTerms: string[]; notifyMessages: boolean; notifyReplies: boolean;
   notifyFollows: boolean; notifyGroups: boolean; notifyArticles: boolean; quietHoursEnabled: boolean;
   onboardingComplete: boolean; intendedRole: 'MEMBER' | 'PROFESSIONAL';
+  onboardingStatus?: import('./onboarding-policy').OnboardingStatus; onboardingStep?: number;
+  legacySupportTopics?: string[]; topicCollectionEnabled?: boolean;
 };
 
 export type CatalogOption = {

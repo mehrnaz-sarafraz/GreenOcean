@@ -76,7 +76,11 @@ public class MessagingRepository {
                        WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
                        ORDER BY m.created_at DESC LIMIT 1
                   ) last_message ON TRUE
-                 WHERE cm.user_id = ?
+                 WHERE cm.user_id = ? AND NOT EXISTS (
+                    SELECT 1 FROM conversation_members peer JOIN blocks b
+                    ON (b.blocker_id=cm.user_id AND b.blocked_id=peer.user_id)
+                    OR (b.blocker_id=peer.user_id AND b.blocked_id=cm.user_id)
+                    WHERE peer.conversation_id=c.id)
                  ORDER BY COALESCE(last_message.created_at, c.updated_at) DESC
                 """, (rs, row) -> new ConversationResponse(
                 rs.getObject("id", UUID.class), rs.getString("title"), rs.getString("subtitle"),

@@ -6,7 +6,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
-class PhaseAMigrationTest {
+class PhaseAMigrationTest extends MigrationTestSupport {
     @Test @Tag("creative") void upgradesLegacyDatabaseWithoutInventingVerificationOrDeletingUsers() {
         String url=System.getenv("GREENOCEAN_TEST_DB_URL");
         assertThat(url).as("An explicitly isolated QA database is mandatory").isNotBlank();

@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
@@ -21,24 +21,30 @@ export default function PublicProfileScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isCurrent: () => boolean = () => true) => {
     setError('');
     try {
       const next = await apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(username)}`);
+      if (!isCurrent()) return;
       setProfile(next);
       if (next.canSeeActivity) {
         const page = await apiRequest<PageResponse<PostItem>>(`/api/v1/profiles/${encodeURIComponent(username)}/posts?size=50`);
+        if (!isCurrent()) return;
         setPosts(page.items);
       } else setPosts([]);
     } catch (caught) {
+      if (!isCurrent()) return;
+      setProfile(null); setPosts([]);
       setError(caught instanceof Error ? caught.message : 'Could not load this profile.');
     }
   }, [username]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, [load]);
+  useFocusEffect(useCallback(() => {
+    let active=true;
+    setProfile(null);setPosts([]);
+    void load(()=>active);
+    return () => {active=false;};
+  }, [load]));
 
   async function toggleFollow() {
     if (!profile) return;
@@ -60,7 +66,7 @@ export default function PublicProfileScreen() {
       <View style={styles.identity}><Avatar name={profile.displayName} uri={profile.avatarUrl} size={86} /><View style={styles.follow}><AppButton loading={busy} label={profile.following ? 'Following' : profile.followRequested ? 'Request sent' : 'Follow'} variant={profile.following || profile.followRequested ? 'secondary' : 'primary'} onPress={() => void toggleFollow()} /></View></View>
       <Text style={styles.name}>{profile.displayName}</Text><Text style={styles.handle}>@{profile.username}</Text>
       <Text style={styles.bio}>{profile.bio || 'This member has not added a bio yet.'}</Text>
-      <View style={styles.counts}><Count value={profile.followerCount} label="Followers" /><Count value={profile.followingCount} label="Following" /><Count value={profile.postCount} label="Stories" /><Count value={profile.helpfulReactionCount} label="Helpful" /></View>
+      <View style={styles.counts}><Count value={profile.followerCount} label="Followers" /><Count value={profile.followingCount} label="Following" /><Count value={profile.postCount} label="Stories" /></View>
       {(profile.city || profile.countryCode) && <View style={styles.meta}><AppIcon name="location_on" size={18} color={colors.muted} /><Text style={styles.metaText}>{[profile.city, profile.countryCode].filter(Boolean).join(', ')}</Text></View>}
       <View style={styles.meta}><AppIcon name="calendar_month" size={18} color={colors.muted} /><Text style={styles.metaText}>Member since {new Date(profile.memberSince).getFullYear()}</Text></View>
       {!!error && <Text style={styles.error}>{error}</Text>}

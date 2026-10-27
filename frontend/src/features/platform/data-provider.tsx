@@ -58,13 +58,13 @@ export function DataProvider({ children }: PropsWithChildren) {
       if(epoch!==tokenStorage.generation())return;
       setData(current => ({
         categories: results[0].status === 'fulfilled' ? results[0].value : current.categories,
-        posts: results[1].status === 'fulfilled' ? results[1].value : current.posts,
+        posts: results[1].status === 'fulfilled' ? results[1].value : [],
         communities: results[2].status === 'fulfilled' ? results[2].value : current.communities,
-        notifications: results[3].status === 'fulfilled' ? results[3].value : current.notifications,
+        notifications: results[3].status === 'fulfilled' ? results[3].value : [],
         professionals: results[4].status === 'fulfilled' ? results[4].value : current.professionals,
         articles: results[5].status === 'fulfilled' ? results[5].value : current.articles,
         media: results[6].status === 'fulfilled' ? results[6].value : current.media,
-        conversations: results[7].status === 'fulfilled' ? results[7].value : current.conversations,
+        conversations: results[7].status === 'fulfilled' ? results[7].value : [],
         channels: results[8].status === 'fulfilled' ? results[8].value : current.channels,
         profile: results[9].status === 'fulfilled' ? results[9].value : current.profile,
         preferences: results[10].status === 'fulfilled' ? results[10].value : current.preferences,

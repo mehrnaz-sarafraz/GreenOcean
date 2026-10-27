@@ -19,6 +19,10 @@ public record UserPreferencesResponse(
         boolean notifyArticles,
         boolean quietHoursEnabled,
         boolean onboardingComplete,
-        String intendedRole
+        String intendedRole,
+        String onboardingStatus,
+        int onboardingStep,
+        List<String> legacySupportTopics,
+        boolean topicCollectionEnabled
 ) {
 }
