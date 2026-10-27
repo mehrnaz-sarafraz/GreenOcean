@@ -25,3 +25,26 @@ test('Confused I UI: save failure stays recoverable and acceptance alone does no
 for(const width of [360,1280])test(`Creative I UI: Persian RTL and empty availability at width ${width}`,async({page})=>{
  await setup(page,{empty:true});await page.addInitScript(()=>localStorage.setItem('greenocean.language','fa'));await page.setViewportSize({width,height:900});await page.goto('/listener/match');await expect(page.locator('html')).toHaveAttribute('dir','rtl');await expect(page.getByText('اکنون شنوندهٔ زنده‌ای در دسترس نیست',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'یافتن کمک فوری',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2)).toBe(true);
 });
+
+test('I-04 UI: a late availability response cannot renew a previous foreground visit',async({page})=>{
+ const state=await installApi(page,{completeActivation:true});state.signedIn=true;state.emailVerified=true;state.onboardingComplete=true;
+ let reads=0,incoming=0,heartbeats=0,release;
+ const delayed=new Promise(resolve=>{release=resolve;});
+ const availability={enabled:true,state:'AVAILABLE_FOR_REQUESTS',leaseId:'00000000-0000-4000-8000-000000000003',heartbeatSeconds:15,serverTime:new Date().toISOString()};
+ await page.route('**/api/v1/listeners/me/availability',async route=>{
+  if(route.request().method()==='GET'&&++reads===1)await delayed;
+  return route.fulfill({json:availability});
+ });
+ await page.route('**/api/v1/listener-support/incoming',async route=>{incoming++;return route.fulfill({json:[]});});
+ await page.route('**/api/v1/listeners/me/heartbeat',async route=>{heartbeats++;return route.fulfill({json:availability});});
+ await page.goto('/listener/workspace');await expect.poll(()=>reads).toBe(1);
+ await page.evaluate(()=>{
+  Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));
+  Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));
+ });
+ release();
+ // The fresh cycle must fetch again. Reusing the first response would send a
+ // heartbeat with reads===1 and fail this assertion.
+ await expect.poll(()=>heartbeats).toBe(1);
+ expect(reads).toBeGreaterThanOrEqual(2);expect(incoming).toBe(1);
+});
