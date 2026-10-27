@@ -43,6 +43,8 @@ Suggested operator review thresholds, to be tuned in staging rather than treated
 
 The external collector, alert rules, incident recipients and SLA are not deployed or tested here. Do not claim operational monitoring PASS until a controlled alert and authorized notification exercise is recorded. Security emails are coalesced to at most one per owner/hour; not every individual event produces another email. Successful native/web sign-out is local immediately, but network failure leaves an explicit pending-server-revocation state; reconciliation must succeed before silent cookie restore/new sign-in.
 
+The native client serializes refresh/proof mutations and SecureStore pair I/O, reads the latest verifier at execution time, and checks account generation before transport and after token storage. Validate these paths with actual delayed refresh, concurrent proof, partial SecureStore failure and offline logout on devices; pure queue tests do not establish OS/runtime results. Registration reuses the shared remasking control rather than maintaining a second visibility state.
+
 ## Reviewer/release checklist
 
 - [ ] Verify stacked PR base is D and includes A/B/C; no main merge or force push.
