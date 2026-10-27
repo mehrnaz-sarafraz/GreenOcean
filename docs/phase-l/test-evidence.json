@@ -1,0 +1,36 @@
+{
+  "executableSource": "21ccfcda93a9da7fd22d19a786b4f6b12fffc9c0",
+  "sourceTree": "a6c60c7c0adad19d8b59b7fa963d73d5ba00889d",
+  "backend": {
+    "tests": 324,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontendLogic": {
+    "tests": 69,
+    "failures": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "tests": 99,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "fullStack": {
+    "tests": 27,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "typecheck": "PASSED",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "webAndroidIosJsAssetExports": "PASSED",
+  "nativeDevicesAndScreenReaders": "NOT_EXECUTED_DEVICE_REQUIRED",
+  "l3GithubCI": "NOT_EXECUTED_UPLOAD_BLOCKED_BY_AUTOMATIC_APPROVAL_REVIEW",
+  "productionActivation": "DISABLED"
+}
