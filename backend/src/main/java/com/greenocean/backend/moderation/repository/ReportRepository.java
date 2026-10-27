@@ -13,6 +13,12 @@ public class ReportRepository {
     private final JdbcTemplate jdbcTemplate;
     public ReportRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
+    public void limitSubmissions(UUID user) {
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))","safety-submissions:"+user);
+        Long count=jdbcTemplate.queryForObject("SELECT (SELECT count(*) FROM reports WHERE reporter_id=? AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour')+(SELECT count(*) FROM moderation_appeals WHERE appellant_user_id=? AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour')",Long.class,user,user);
+        if(count!=null && count>=20)throw new com.greenocean.backend.common.exception.ConflictException("Please pause before submitting more requests");
+    }
+
     public void lockOpenReport(UUID reporterId, String type, UUID targetId) {
         // Same reporter/target across devices and backend instances; released at transaction end.
         jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))",

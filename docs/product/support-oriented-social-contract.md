@@ -1,7 +1,9 @@
-# Support-oriented social contract
+# Support-oriented social community
 
-Reading alone is valid participation. No posting streaks, popularity leaderboard, disclosure incentives, inactivity pressure, diagnosis-based ranking or hidden personalization. Likes and private bookmarks remain optional. Chronological authorized discovery respects muted terms and warnings. Topic and mood are optional; private onboarding topics never populate the composer.
+GreenOcean is voluntary, non-clinical peer support. Reading without posting is valid participation. No diagnosis inference, sensitive ranking, streaks, leaderboards or third-party narrative analysis is introduced. Chronological discovery and consenting relationships reuse the existing platform.
 
-Follow consent is independent of message consent. A follow relationship does not authorize unsolicited messages. Listener sessions keep Phase I's acceptance and service authorization; ordinary social messages cannot create a listener session or clinical relationship. Existing G/H audience/privacy contracts and J processing choices remain authoritative.
+Each post begins with a conscious anonymous/social identity choice, followed by writing and final review. Topics are optional and never inherited from onboarding. PUBLIC means eligible authenticated members, not the unrestricted internet. The existing audience and block contracts remain authoritative.
 
-English/Persian text and RTL are supported in new social controls. Native JavaScript export and browser keyboard checks do not establish physical TalkBack/VoiceOver behavior; native release remains blocked pending devices.
+Distress, anger and descriptions of victimization are legitimate expression. Local safety screening is bounded and limited, not clinical assessment or a comprehensive classifier. Suspected prohibited conduct stays private pending an authorized decision. No staffed response deadline or perfect anonymity is promised.
+
+See publication-identity-contract.md, ../phase-l/content-moderation-policy-contract.md and Phase K release-blockers.md. Production publication remains disabled pending actual policy, legal, security and operations approval.
