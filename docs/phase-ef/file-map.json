@@ -1,0 +1,485 @@
+{
+  "base": "d135328",
+  "files": [
+    {
+      "status": "M",
+      "file": ".github/workflows/phase-a.yml",
+      "area": "CI",
+      "reason": "Retain regression gates and add actual full-stack/HTTPS MFA verification"
+    },
+    {
+      "status": "M",
+      "file": "backend/pom.xml",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/account/controller/AccountController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/account/repository/AccountRepository.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/assistance/service/AssistanceService.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/assistance/service/EmailOutboxWorker.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/assistance/service/MailDeploymentValidator.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/assistance/service/WebhookMailTransport.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/config/ActiveSessionJwtValidator.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/config/AuthAbuseFilter.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/config/AuthClockConfig.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/config/CompatiblePasswordEncoder.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/config/SecurityConfig.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/controller/AuthController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/controller/PrivilegedMfaController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/controller/SessionSecurityController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/controller/WebSessionController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/entity/UserSession.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/repository/UserSessionRepository.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/AuthenticationService.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/PasswordPolicy.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/PrivilegedWebAuthn.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/RecentAuthentication.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/SecurityEvents.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/SessionPolicy.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/TokenService.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/java/com/greenocean/backend/auth/service/WebAuthnCredentials.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/identity/IdentityController.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/java/com/greenocean/backend/identity/PhaseAInterceptor.java",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/main/resources/application.properties",
+      "area": "backend",
+      "reason": "Extend existing authentication, session, event or mail boundary; no duplicate identity service"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/resources/db/migration/V37__bounded_sessions_and_privileged_authenticators.sql",
+      "area": "database migration",
+      "reason": "Additive bounded sessions, credentials/permits and assurance version; preserve historical schema"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/resources/db/migration/V38__privileged_enrollment_permits.sql",
+      "area": "database migration",
+      "reason": "Additive bounded sessions, credentials/permits and assurance version; preserve historical schema"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/main/resources/db/migration/V39__session_assurance_token_version.sql",
+      "area": "database migration",
+      "reason": "Additive bounded sessions, credentials/permits and assurance version; preserve historical schema"
+    },
+    {
+      "status": "M",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseCLiveServer.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMigrationTest.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "area": "backend test",
+      "reason": "Real security/migration/race regression coverage"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/approved-specification.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/delivery-report.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/file-map.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/gap-matrix.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/native-validation.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/operations.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/requirements-matrix.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/requirements-matrix.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/test-catalog.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/test-evidence.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/security/authentication-session-policy.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/security/control-coverage.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/security/phase-ef-threat-model.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/live-e2e/https-proxy.mjs",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/package-lock.json",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/package.json",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/playwright.live.config.mjs",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(app)/admin-tools/[section].tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(app)/tools/[tool].tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(auth)/activate.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(auth)/login.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(auth)/register.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/app/+html.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/app/+native-intent.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/_layout.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/components/app-field.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/features/auth/account-security.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/features/auth/auth-provider.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/features/auth/reauthenticate.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/features/auth/registration-validation.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/features/auth/security-contracts.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/features/auth/webauthn.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/features/platform/data-provider.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/features/public/assistance-form.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/lib/api/browser-session.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/lib/api/client.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/src/lib/storage/serial-queue.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/lib/storage/token-storage.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "A",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    }
+  ]
+}

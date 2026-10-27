@@ -1,3 +1,4 @@
+import { LiveChat } from '@/features/live-support/chat';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -11,7 +12,13 @@ import { ChatMessage } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { colors, layout, radius, spacing } from '@/theme/tokens';
 
-export default function Chat() {
+export default function ChatRouter() {
+ const {id,liveRequestId}=useLocalSearchParams<{id:string;liveRequestId?:string}>();
+ const {conversations}=usePlatformData();const conversation=conversations.find(item=>item.id===id);
+ if(liveRequestId||conversation?.serviceKind==='LISTENER')return <LiveChat key={id} id={id}/>;
+ return <Chat key={id}/>;
+}
+function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { conversations, setConversations } = usePlatformData();
   const conversation = conversations.find(item => item.id === id);
@@ -29,6 +36,7 @@ export default function Chat() {
         setMessages(items);
         setConversations(current => current.map(item => item.id === id ? { ...item, unread: 0 } : item));
       })
+        .catch(()=>{setMessages([]);})
         .finally(() => { if (showLoading) setLoading(false); });
     };
     const timer = setTimeout(() => void loadMessages(true), 0);

@@ -1,0 +1,428 @@
+{
+  "date": "2026-10-26",
+  "timezone": "Asia/Tehran",
+  "environment": "Disposable PostgreSQL 18.6, Java 21, Node 24",
+  "backend": {
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0,
+    "groups": {
+      "happy": 11,
+      "creative": 9,
+      "confused": 7,
+      "malicious": 15,
+      "regression": 14
+    },
+    "suites": [
+      {
+        "name": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.BackendApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.CommunityNotificationIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ContentSocialIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAIntegrationTest",
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfessionalAvailabilityIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.SchemaConstraintsIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "cases": [
+      {
+        "className": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "name": "shouldRegisterLoginRefreshAccessMeAndLogout",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "name": "shouldRejectProtectedEndpointWithoutAccessToken",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.BackendApplicationTests",
+        "name": "contextLoads",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.CommunityNotificationIntegrationTest",
+        "name": "shouldSupportCommunityMembershipPostsAndNotifications",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ContentSocialIntegrationTest",
+        "name": "shouldEnforceFeedVisibilityAndSupportInteractions",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "name": "simultaneousRefreshHasOneWinnerAndNoTwoUsableTokens",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "name": "retiredRefreshReplayRevokesTheWholeSessionFamily",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "guessingCodeIsBoundedAndFailureCounterSurvivesRollback",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "malformedEmailAndWeakPasswordHaveFieldErrors",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verifyActivateLoginLogoutFlow",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "suspendedAccountCannotRefreshOrUseExistingAccess",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "longUnicodePasswordAndNoDisplayDataAreSupported",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "cookieLoginRejectsMissingCsrfAndUntrustedOrigin",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "statusAndAgeMethodClaimsNeverGrantAuthority",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "lowercaseCountryNormalizesAndNoTopicsAreRequired",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "missingOrStaleTermsAreRejected",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "independentIneligibleDecisionCannotBecomeIndependentlyAdultThroughSelfClaim",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "ownerDeletionRevokesSessionAndHidesProfile",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "sameCodeForDifferentEmailsHasDifferentProtectedHash",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "publicResourcesAreSeparateAndAnonymous",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verifiedProfessionalStillNeedsExplicitUnexpiredCareScope",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verificationIsSingleUseAndPayloadIsEncrypted",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "minimalRegistrationHasPendingUserAndPrivateDefaults",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "inventedCountryAndProfessionalRoleAreRejected",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "fakeMailTransportDeliversAndPurgesEncryptedPayload",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "invalidCityCountryRelationshipCannotActivate",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "pendingAccountCannotAccessSocialRoutes",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "wrongPasswordCannotEraseAnyDataAndBodyUserIdCannotChangeOwner",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "professionalApplicantDoesNotReceiveProfessionalAuthority",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "removedRoleInvalidatesExistingJwt",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "countryCatalogSearchSupportsLocalNamesAndNoImplicitServices",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "passwordRecoveryInvalidatesEveryOldSession",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "expiredVerificationCanBeResent",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "minorCannotRegisterByDirectApi",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "failedMailTransportIsRetryableWithoutExposingSecret",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "browserSessionUsesHttpOnlyCookieAndCanRotate",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "legacyAccountHasGraceButIsNeverAutoVerified",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "unconfiguredCountryGivesAlternativeWithoutGrantingService",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAMigrationTest",
+        "name": "upgradesLegacyDatabaseWithoutInventingVerificationOrDeletingUsers",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "modernPasswordHashRoundTrip",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "legacyBcryptRemainsCompatibleAndCanUpgrade",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "passphraseHasNoCompositionRequirement",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "longUnicodePasswordDoesNotTruncateAt72Bytes",
+        "persona": "creative"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "oversizedPasswordIsBounded",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "weakOrShortPasswordIsRejected",
+        "persona": "confused"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "outboxRejectsTamperingAndWrongKey",
+        "persona": "malicious"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "outboxEncryptionRoundTripAndRandomNonce",
+        "persona": "happy"
+      },
+      {
+        "className": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "name": "shouldExposeDatabaseBackedCatalogTrainingAndVerifiedCrisisResourcesWithoutDemoAccounts",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "name": "shouldPersistRegistrationIntentOnboardingAndSearchHistoryInTheAccount",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalAvailabilityIntegrationTest",
+        "name": "shouldBookOnePublishedSlotOnlyOnceAndReleaseItAfterCancellation",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "name": "shouldAcceptARealPdfHeader",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "name": "shouldRejectMimeTypeSpoofing",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldUpdateProfileRespectPrivacyAndProtectUsernameUniqueness",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldDeleteAccountAndImmediatelyInvalidateItsAccessToken",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldChangePasswordAndRevokeAllRefreshTokens",
+        "persona": "regression"
+      },
+      {
+        "className": "com.greenocean.backend.SchemaConstraintsIntegrationTest",
+        "name": "shouldEnforceCoreSchemaInvariants",
+        "persona": "regression"
+      }
+    ]
+  },
+  "frontend": {
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "groups": {
+      "happy": 2,
+      "creative": 4,
+      "confused": 7,
+      "malicious": 4
+    },
+    "command": "node --experimental-strip-types --test frontend/tests/*.test.mjs"
+  },
+  "browserE2E": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "environment": "Chromium on GitHub Actions, actual Expo UI with controlled API transport",
+    "groups": {
+      "happy": 3,
+      "creative": 3,
+      "confused": 3,
+      "malicious": 3
+    }
+  },
+  "android": "not run",
+  "ios": "not run",
+  "productionDelivery": "not run",
+  "ci": {
+    "sourceCommit": "21ce213eb87c3b088743cbfa67e2bc4f8b6cef1b",
+    "runUrl": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40311371746",
+    "backend": "success",
+    "frontendTypecheck": "success",
+    "frontendLint": "success",
+    "frontendExport": "success",
+    "browserUi": "success"
+  }
+}

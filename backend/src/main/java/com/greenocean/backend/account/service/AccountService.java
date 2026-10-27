@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Service
 public class AccountService {
     private final ProfileService profiles;
+    private final com.greenocean.backend.preference.service.PrivacyGovernanceService governance;
     private final UserPreferencesService preferences;
     private final WellbeingService wellbeing;
     private final ReportService reports;
@@ -31,11 +32,13 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final ProfessionalDocumentStorage documentStorage;
     private final SearchService search;
+    private final org.springframework.jdbc.core.JdbcTemplate db;
 
-    public AccountService(ProfileService profiles, UserPreferencesService preferences, WellbeingService wellbeing,
+    public AccountService(com.greenocean.backend.preference.service.PrivacyGovernanceService governance,ProfileService profiles, UserPreferencesService preferences, WellbeingService wellbeing,
                           ReportService reports, SocialService social, AccountRepository repository,
                           UserRepository users, PasswordEncoder passwordEncoder,
-                          ProfessionalDocumentStorage documentStorage, SearchService search) {
+                          ProfessionalDocumentStorage documentStorage, SearchService search, org.springframework.jdbc.core.JdbcTemplate db) {
+        this.db=db;this.governance=governance;
         this.profiles = profiles;
         this.preferences = preferences;
         this.wellbeing = wellbeing;
@@ -52,7 +55,7 @@ public class AccountService {
     public AccountArchiveResponse archive(UUID userId) {
         return new AccountArchiveResponse(Instant.now(), profiles.getOwnProfile(userId), preferences.get(userId),
                 wellbeing.snapshot(userId), reports.mine(userId), social.following(userId), social.followers(userId),
-                social.blocked(userId), search.history(userId), repository.activity(userId));
+                social.blocked(userId), search.history(userId), repository.activity(userId),governance.archive(userId));
     }
 
     @Transactional
@@ -61,6 +64,7 @@ public class AccountService {
         if (!passwordEncoder.matches(password, user.getPasswordHash())) throw new ForbiddenException("Password is incorrect");
         var keys = repository.professionalDocumentKeys(userId);
         repository.erase(userId);
-        keys.forEach(documentStorage::delete);
+        for(String key:keys) db.update("INSERT INTO account_file_erasures(user_id,storage_key) VALUES (?,?) ON CONFLICT DO NOTHING",userId,key);
+        if(!keys.isEmpty()) db.update("UPDATE account_deletions SET status='PROCESSING',completed_at=NULL WHERE user_id=?",userId);
     }
 }

@@ -1,0 +1,578 @@
+{
+  "environment": "GitHub runner, Java21/PostgreSQL18, loopback real HTTP; four workers max, synthetic accounts only; not production capacity or SLO evidence",
+  "samples": [
+    {
+      "scenario": "registration",
+      "ms": 107.85,
+      "status": 201
+    },
+    {
+      "scenario": "registration",
+      "ms": 149.91,
+      "status": 201
+    },
+    {
+      "scenario": "registration",
+      "ms": 151.6,
+      "status": 201
+    },
+    {
+      "scenario": "registration",
+      "ms": 201.12,
+      "status": 201
+    },
+    {
+      "scenario": "verification",
+      "ms": 51.56,
+      "status": 200
+    },
+    {
+      "scenario": "verification",
+      "ms": 51.34,
+      "status": 200
+    },
+    {
+      "scenario": "verification",
+      "ms": 51.11,
+      "status": 200
+    },
+    {
+      "scenario": "verification",
+      "ms": 51.1,
+      "status": 200
+    },
+    {
+      "scenario": "login",
+      "ms": 129.46,
+      "status": 200
+    },
+    {
+      "scenario": "login",
+      "ms": 155.72,
+      "status": 200
+    },
+    {
+      "scenario": "login",
+      "ms": 160.43,
+      "status": 200
+    },
+    {
+      "scenario": "login",
+      "ms": 239.66,
+      "status": 200
+    },
+    {
+      "scenario": "refresh",
+      "ms": 19.28,
+      "status": 200
+    },
+    {
+      "scenario": "refresh",
+      "ms": 22.29,
+      "status": 200
+    },
+    {
+      "scenario": "refresh",
+      "ms": 23.36,
+      "status": 200
+    },
+    {
+      "scenario": "refresh",
+      "ms": 26.18,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 12.08,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 12.84,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 16.97,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 16.61,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 10.12,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 9.17,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 7.44,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 6.24,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 8.04,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 8.67,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 11.31,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 10.86,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 9.17,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 6.98,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 5.71,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 10.21,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 7.44,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 7.84,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 12.01,
+      "status": 200
+    },
+    {
+      "scenario": "privacy-feed-page10",
+      "ms": 11.65,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 11.38,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 7.99,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 6.52,
+      "status": 200
+    },
+    {
+      "scenario": "profile",
+      "ms": 5.27,
+      "status": 200
+    },
+    {
+      "scenario": "listener-ready",
+      "ms": 9.66,
+      "status": 200
+    },
+    {
+      "scenario": "presence-heartbeat",
+      "ms": 15.99,
+      "status": 200
+    },
+    {
+      "scenario": "presence-heartbeat",
+      "ms": 23.11,
+      "status": 200
+    },
+    {
+      "scenario": "presence-heartbeat",
+      "ms": 29.58,
+      "status": 200
+    },
+    {
+      "scenario": "presence-heartbeat",
+      "ms": 35.28,
+      "status": 200
+    },
+    {
+      "scenario": "last-slot-contention",
+      "ms": 12.38,
+      "status": 200
+    },
+    {
+      "scenario": "last-slot-contention",
+      "ms": 15.89,
+      "status": 409
+    },
+    {
+      "scenario": "last-slot-contention",
+      "ms": 21.37,
+      "status": 409
+    },
+    {
+      "scenario": "acceptance-contention",
+      "ms": 9.15,
+      "status": 200
+    },
+    {
+      "scenario": "acceptance-contention",
+      "ms": 11.01,
+      "status": 200
+    },
+    {
+      "scenario": "activation",
+      "ms": 8,
+      "status": 200
+    },
+    {
+      "scenario": "message-send",
+      "ms": 18.42,
+      "status": 201
+    },
+    {
+      "scenario": "message-send",
+      "ms": 26.35,
+      "status": 201
+    },
+    {
+      "scenario": "message-send",
+      "ms": 34.83,
+      "status": 201
+    },
+    {
+      "scenario": "message-send",
+      "ms": 42.09,
+      "status": 201
+    },
+    {
+      "scenario": "message-poll",
+      "ms": 9.98,
+      "status": 200
+    },
+    {
+      "scenario": "message-poll",
+      "ms": 14.07,
+      "status": 200
+    },
+    {
+      "scenario": "message-poll",
+      "ms": 15.96,
+      "status": 200
+    },
+    {
+      "scenario": "message-poll",
+      "ms": 18.14,
+      "status": 200
+    },
+    {
+      "scenario": "session-end",
+      "ms": 6.56,
+      "status": 200
+    },
+    {
+      "scenario": "report-contention",
+      "ms": 10.71,
+      "status": 201
+    },
+    {
+      "scenario": "report-contention",
+      "ms": 11.05,
+      "status": 409
+    },
+    {
+      "scenario": "report-contention",
+      "ms": 10.83,
+      "status": 409
+    },
+    {
+      "scenario": "report-contention",
+      "ms": 12.47,
+      "status": 409
+    },
+    {
+      "scenario": "owner-export",
+      "ms": 16.96,
+      "status": 200
+    },
+    {
+      "scenario": "owner-export",
+      "ms": 18.65,
+      "status": 200
+    },
+    {
+      "scenario": "owner-export",
+      "ms": 22.26,
+      "status": 200
+    },
+    {
+      "scenario": "owner-export",
+      "ms": 27.93,
+      "status": 200
+    },
+    {
+      "scenario": "account-erasure",
+      "ms": 252.79,
+      "status": 204
+    },
+    {
+      "scenario": "account-erasure",
+      "ms": 272.66,
+      "status": 204
+    },
+    {
+      "scenario": "account-erasure",
+      "ms": 313.31,
+      "status": 204
+    },
+    {
+      "scenario": "account-erasure",
+      "ms": 357.39,
+      "status": 204
+    }
+  ],
+  "summary": {
+    "registration": {
+      "n": 4,
+      "p50ms": 149.91,
+      "p95ms": 201.12,
+      "maxMs": 201.12,
+      "statuses": [
+        201,
+        201,
+        201,
+        201
+      ]
+    },
+    "verification": {
+      "n": 4,
+      "p50ms": 51.11,
+      "p95ms": 51.56,
+      "maxMs": 51.56,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "login": {
+      "n": 4,
+      "p50ms": 155.72,
+      "p95ms": 239.66,
+      "maxMs": 239.66,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "refresh": {
+      "n": 4,
+      "p50ms": 22.29,
+      "p95ms": 26.18,
+      "maxMs": 26.18,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "privacy-feed-page10": {
+      "n": 12,
+      "p50ms": 11.31,
+      "p95ms": 16.97,
+      "maxMs": 16.97,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "profile": {
+      "n": 12,
+      "p50ms": 7.44,
+      "p95ms": 11.38,
+      "maxMs": 11.38,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "listener-ready": {
+      "n": 1,
+      "p50ms": 9.66,
+      "p95ms": 9.66,
+      "maxMs": 9.66,
+      "statuses": [
+        200
+      ]
+    },
+    "presence-heartbeat": {
+      "n": 4,
+      "p50ms": 23.11,
+      "p95ms": 35.28,
+      "maxMs": 35.28,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "last-slot-contention": {
+      "n": 3,
+      "p50ms": 15.89,
+      "p95ms": 21.37,
+      "maxMs": 21.37,
+      "statuses": [
+        200,
+        409,
+        409
+      ]
+    },
+    "acceptance-contention": {
+      "n": 2,
+      "p50ms": 9.15,
+      "p95ms": 11.01,
+      "maxMs": 11.01,
+      "statuses": [
+        200,
+        200
+      ]
+    },
+    "activation": {
+      "n": 1,
+      "p50ms": 8,
+      "p95ms": 8,
+      "maxMs": 8,
+      "statuses": [
+        200
+      ]
+    },
+    "message-send": {
+      "n": 4,
+      "p50ms": 26.35,
+      "p95ms": 42.09,
+      "maxMs": 42.09,
+      "statuses": [
+        201,
+        201,
+        201,
+        201
+      ]
+    },
+    "message-poll": {
+      "n": 4,
+      "p50ms": 14.07,
+      "p95ms": 18.14,
+      "maxMs": 18.14,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "session-end": {
+      "n": 1,
+      "p50ms": 6.56,
+      "p95ms": 6.56,
+      "maxMs": 6.56,
+      "statuses": [
+        200
+      ]
+    },
+    "report-contention": {
+      "n": 4,
+      "p50ms": 10.83,
+      "p95ms": 12.47,
+      "maxMs": 12.47,
+      "statuses": [
+        201,
+        409,
+        409,
+        409
+      ]
+    },
+    "owner-export": {
+      "n": 4,
+      "p50ms": 18.65,
+      "p95ms": 27.93,
+      "maxMs": 27.93,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    "account-erasure": {
+      "n": 4,
+      "p50ms": 272.66,
+      "p95ms": 357.39,
+      "maxMs": 357.39,
+      "statuses": [
+        204,
+        204,
+        204,
+        204
+      ]
+    }
+  },
+  "sourceCommit": "4075561ccfd6585b00f7dd9b8b95b96e5000a2c4",
+  "ciRun": 40541904020,
+  "artifactId": 12752350087
+}

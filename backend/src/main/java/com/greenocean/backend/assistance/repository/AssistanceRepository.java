@@ -30,6 +30,9 @@ public class AssistanceRepository {
                 """, (rs, row) -> rs.getObject("user_id", UUID.class), hash);
         return result.stream().findFirst();
     }
+    public Optional<UUID> passwordResetOwner(String hash) {
+        return jdbcTemplate.query("SELECT user_id FROM password_reset_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>CURRENT_TIMESTAMP",(rs,row)->rs.getObject("user_id",UUID.class),hash).stream().findFirst();
+    }
 
     public void invalidateVerificationCodes(UUID userId) {
         jdbcTemplate.update("UPDATE email_verification_codes SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL", userId);
@@ -40,30 +43,48 @@ public class AssistanceRepository {
     }
 
     public boolean consumeVerificationCode(UUID userId, String hash) {
+        return consumeVerificationCode(userId,List.of(hash));
+    }
+    public boolean consumeVerificationCode(UUID userId, List<String> hashes) {
+        String placeholders=String.join(",",java.util.Collections.nCopies(hashes.size(),"?"));
+        var args=new java.util.ArrayList<Object>();args.add(userId);args.addAll(hashes);
         return jdbcTemplate.update("""
                 UPDATE email_verification_codes SET used_at = CURRENT_TIMESTAMP
                  WHERE id = (SELECT id FROM email_verification_codes
-                              WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
-                                AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1)
-                """, userId, hash) == 1;
+                              WHERE user_id = ? AND code_hash IN (%s) AND used_at IS NULL
+                                AND expires_at > CURRENT_TIMESTAMP ORDER BY created_at DESC LIMIT 1) AND used_at IS NULL
+                """.formatted(placeholders), args.toArray()) == 1;
     }
 
     public void enqueuePasswordReset(UUID id, String email, String token) {
+        jdbcTemplate.update("DELETE FROM email_outbox WHERE recipient=? AND template_key='password-reset'",email);
         jdbcTemplate.update("""
-                INSERT INTO email_outbox (id, recipient, template_key, payload)
-                VALUES (?, ?, 'password-reset', jsonb_build_object('token', CAST(? AS TEXT)))
-                """, id, email, token);
+                INSERT INTO email_outbox (id,owner_user_id,recipient, template_key, payload)
+                VALUES (?,(SELECT id FROM users WHERE email=?),?, 'password-reset', jsonb_build_object('encrypted', CAST(? AS TEXT)))
+                """, id,email,email,token);
     }
 
-    public void enqueueVerification(UUID id, String email, String code) {
+    public void cancelVerificationDeliveries(UUID userId) {
+        jdbcTemplate.update("UPDATE email_outbox SET status='CANCELLED',payload='{}',outcome_code='SUPERSEDED',lease_token=NULL,lease_until=NULL WHERE owner_user_id=? AND template_key='email-verification' AND status IN ('PENDING','FAILED','SENDING')",userId);
+    }
+    public void enqueueVerification(UUID id, UUID userId, UUID challengeId, String email, String code) {
+        cancelVerificationDeliveries(userId);
         jdbcTemplate.update("""
-                INSERT INTO email_outbox (id, recipient, template_key, payload)
-                VALUES (?, ?, 'email-verification', jsonb_build_object('code', CAST(? AS TEXT)))
-                """, id, email, code);
+                INSERT INTO email_outbox (id,owner_user_id,verification_challenge_id,recipient, template_key, payload,expires_at)
+                VALUES (?,?,?,?,'email-verification', jsonb_build_object('encrypted', CAST(? AS TEXT)),CURRENT_TIMESTAMP+INTERVAL '15 minutes')
+                """, id,userId,challengeId,email,code);
     }
 
     public void verifyUser(UUID userId) {
-        jdbcTemplate.update("UPDATE users SET email_verified = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?", userId);
+        jdbcTemplate.update("""
+            UPDATE users SET email_verified = TRUE, status=CASE WHEN status='PENDING'
+              AND EXISTS(SELECT 1 FROM account_eligibility e JOIN geography_countries c ON c.code=e.residence_country
+                         WHERE e.user_id=users.id AND e.age_result='ADULT')
+              AND EXISTS(SELECT 1 FROM policy_acceptances a WHERE a.user_id=users.id AND a.policy_key='terms'
+                         AND a.version=(SELECT MAX(version) FROM policy_documents WHERE policy_key='terms' AND status='PUBLISHED' AND content IS NOT NULL AND published_at<=CURRENT_TIMESTAMP))
+              THEN 'ACTIVE' ELSE status END, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND status IN ('ACTIVE','PENDING')
+            """, userId);
     }
 
     public void createSupportRequest(UUID id, UUID userId, String email, String message) {

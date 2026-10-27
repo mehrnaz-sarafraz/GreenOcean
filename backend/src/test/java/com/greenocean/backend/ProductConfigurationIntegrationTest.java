@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @ActiveProfiles("test")
 class ProductConfigurationIntegrationTest {
+    @Autowired private jakarta.persistence.EntityManager fixtureEntities;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -38,23 +39,23 @@ class ProductConfigurationIntegrationTest {
 
     @Test
     void shouldPersistRegistrationIntentOnboardingAndSearchHistoryInTheAccount() throws Exception {
-        String token = registerAndLogin("PROFESSIONAL");
+        String token = registerAndLogin("MEMBER");
 
         mockMvc.perform(get("/api/v1/preferences/me").header(HttpHeaders.AUTHORIZATION, auth(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.intendedRole").value("PROFESSIONAL"))
+                .andExpect(jsonPath("$.intendedRole").value("MEMBER"))
                 .andExpect(jsonPath("$.onboardingComplete").value(false));
 
         mockMvc.perform(patch("/api/v1/preferences/me")
                         .header(HttpHeaders.AUTHORIZATION, auth(token))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
-                                "supportTopics", List.of("anxiety", "sleep"),
+                                "supportTopics", List.of(),
                                 "supportStyle", "LISTENER",
                                 "onboardingComplete", true
                         ))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.supportTopics.length()").value(2))
+                .andExpect(jsonPath("$.supportTopics.length()").value(0))
                 .andExpect(jsonPath("$.supportStyle").value("LISTENER"))
                 .andExpect(jsonPath("$.onboardingComplete").value(true));
 
@@ -134,10 +135,12 @@ class ProductConfigurationIntegrationTest {
                                 "displayName", "Configuration Test User",
                                 "birthYear", 2000,
                                 "countryCode", "IR",
-                                "city", "Tehran",
+                                "city", "Tehran", "adultSelfAttested", true, "termsVersion", 1,
                                 "intendedRole", intendedRole
                         ))))
                 .andExpect(status().isCreated());
+        PhaseAFixtures.activate(jdbcTemplate, email);
+        fixtureEntities.clear();
 
         MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

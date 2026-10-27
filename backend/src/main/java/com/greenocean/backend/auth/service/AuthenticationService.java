@@ -27,6 +27,11 @@ public class AuthenticationService {
     private static final String INVALID_CREDENTIALS = "Invalid email or password";
     private static final String INVALID_REFRESH_TOKEN = "Refresh token is invalid or expired";
 
+    private final org.springframework.jdbc.core.JdbcTemplate db;
+    private final AuthRateLimit limits;
+    private final SessionPolicy policy;private final java.time.Clock clock;private final SecurityEvents events;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entities;
+    private final String dummyHash;private final java.util.concurrent.Semaphore passwordWork=new java.util.concurrent.Semaphore(4,true);
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,8 +43,10 @@ public class AuthenticationService {
             UserSessionRepository sessionRepository,
             PasswordEncoder passwordEncoder,
             TokenService tokenService,
-            DatabaseUuidGenerator databaseUuidGenerator
+            DatabaseUuidGenerator databaseUuidGenerator,
+            org.springframework.jdbc.core.JdbcTemplate db, AuthRateLimit limits, SessionPolicy policy,java.time.Clock clock,SecurityEvents events
     ) {
+        this.db=db;this.limits=limits;this.policy=policy;this.clock=clock;this.events=events;this.dummyHash=passwordEncoder.encode("dummy login timing password");
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
@@ -47,17 +54,25 @@ public class AuthenticationService {
         this.databaseUuidGenerator = databaseUuidGenerator;
     }
 
-    @Transactional
-    public TokenResponse login(LoginRequest request) {
+    @Transactional(noRollbackFor={UnauthorizedException.class,com.greenocean.backend.common.exception.TooManyRequestsException.class})
+    public TokenResponse login(LoginRequest request) {return login(request,"MOBILE");}
+    @Transactional(noRollbackFor={UnauthorizedException.class,com.greenocean.backend.common.exception.TooManyRequestsException.class})
+    public TokenResponse login(LoginRequest request,String client) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UnauthorizedException(INVALID_CREDENTIALS));
+        boolean allowed=limits.allowInCurrentTransaction("login:"+email,10,java.time.Duration.ofMinutes(15));
+        if(!allowed){events.record(null,null,SecurityEvents.Event.AUTH_RATE_LIMITED);throw new com.greenocean.backend.common.exception.TooManyRequestsException(INVALID_CREDENTIALS+". Wait before trying again.",900);}
+        User user = userRepository.lockByEmail(email)
+                .orElse(null);
+        if(!passwordWork.tryAcquire())throw new com.greenocean.backend.common.exception.TooManyRequestsException("Sign-in is busy. Please retry.",2);
+        String stored=user==null?null:user.getPasswordHash();boolean validStored=stored!=null&&(stored.matches("\\{pbkdf2\\}[a-fA-F0-9]{96}")||stored.startsWith("$2"));
+        boolean matches;try{matches=passwordEncoder.matches(request.password(),validStored?stored:dummyHash);matches=validStored&&matches;}finally{passwordWork.release();}
+        if(user==null){events.record(null,null,SecurityEvents.Event.LOGIN_FAILURE);throw new UnauthorizedException(INVALID_CREDENTIALS);}
 
-        if (user.getStatus() != UserStatus.ACTIVE
-                || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new UnauthorizedException(INVALID_CREDENTIALS);
+        if ((user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING) || !matches) {
+            events.record(user.getId(),null,SecurityEvents.Event.LOGIN_FAILURE);throw new UnauthorizedException(INVALID_CREDENTIALS);
         }
 
+        if(passwordEncoder.upgradeEncoding(user.getPasswordHash())) user.changePassword(passwordEncoder.encode(request.password()));
         user.recordLogin();
         String refreshToken = tokenService.createRefreshToken();
         UserSession session = new UserSession(
@@ -65,77 +80,96 @@ public class AuthenticationService {
                 user,
                 tokenService.hashRefreshToken(refreshToken),
                 normalizeDeviceName(request.deviceName()),
-                Instant.now().plus(tokenService.refreshTokenTtl())
+                clock.instant().plus(tokenService.refreshTokenTtl())
         );
-        sessionRepository.save(session);
+        String scope=user.getStatus()==UserStatus.PENDING?"PENDING":SessionPolicy.privileged(user.getRoles().stream().map(com.greenocean.backend.auth.entity.Role::getName).toList())?"PRIVILEGED":"MEMBER";
+        session.initialize(client,scope,clock.instant(),policy);
+        sessionRepository.saveAndFlush(session);events.record(user.getId(),session.getId(),SecurityEvents.Event.LOGIN_SUCCESS);
         return tokensFor(user, refreshToken, session.getId());
     }
 
-    @Transactional
+    @Transactional(noRollbackFor=UnauthorizedException.class)
     public TokenResponse refresh(String refreshToken) {
-        UserSession session = sessionRepository.findByRefreshTokenHash(tokenService.hashRefreshToken(refreshToken))
-                .orElseThrow(() -> new UnauthorizedException(INVALID_REFRESH_TOKEN));
-        Instant now = Instant.now();
+        String hash=tokenService.hashRefreshToken(refreshToken);
+        // One lock order for refresh, revocation, password changes and recovery: user, then session.
+        var owner=db.queryForList("SELECT user_id FROM user_sessions WHERE refresh_token_hash=? UNION SELECT s.user_id FROM user_sessions s JOIN retired_refresh_tokens r ON r.session_id=s.id WHERE r.token_hash=?",UUID.class,hash,hash);
+        if(!owner.isEmpty())userRepository.lockById(owner.getFirst());
+        UserSession session = sessionRepository.findByRefreshTokenHash(hash).orElse(null);
+        if(session==null) {
+            int affected=db.update("UPDATE user_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND id IN (SELECT session_id FROM retired_refresh_tokens WHERE token_hash=?)",hash);
+            if(affected>0)events.record(owner.isEmpty()?null:owner.getFirst(),null,SecurityEvents.Event.REFRESH_REPLAY);
+            throw new UnauthorizedException(INVALID_REFRESH_TOKEN);
+        }
+        Instant now = clock.instant();
         User user = session.getUser();
-        if (!session.isUsableAt(now) || user.getStatus() != UserStatus.ACTIVE) {
+        if (!session.isUsableAt(now) || (user.getStatus() != UserStatus.ACTIVE && user.getStatus() != UserStatus.PENDING)) {
             throw new UnauthorizedException(INVALID_REFRESH_TOKEN);
         }
 
+        db.update("INSERT INTO retired_refresh_tokens(token_hash,session_id,expires_at) VALUES (?,?,?) ON CONFLICT DO NOTHING",hash,session.getId(),java.sql.Timestamp.from(session.getExpiresAt()));
         String rotatedRefreshToken = tokenService.createRefreshToken();
         session.rotate(
                 tokenService.hashRefreshToken(rotatedRefreshToken),
-                now.plus(tokenService.refreshTokenTtl())
+                SessionPolicy.earlier(now.plus(tokenService.refreshTokenTtl()),session.getOverallExpiresAt())
         );
+        sessionRepository.saveAndFlush(session);
         return tokensFor(user, rotatedRefreshToken, session.getId());
     }
 
     @Transactional
     public void logout(String refreshToken) {
-        sessionRepository.findByRefreshTokenHash(tokenService.hashRefreshToken(refreshToken))
-                .ifPresent(UserSession::revoke);
+        sessionRepository.flush();
+        String hash=tokenService.hashRefreshToken(refreshToken);
+        var owners=db.queryForList("SELECT user_id FROM user_sessions WHERE refresh_token_hash=? UNION SELECT s.user_id FROM user_sessions s JOIN retired_refresh_tokens r ON r.session_id=s.id WHERE r.token_hash=?",UUID.class,hash,hash);
+        if(owners.isEmpty())return;userRepository.lockById(owners.getFirst());
+        db.update("UPDATE user_sessions SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND (refresh_token_hash=? OR id IN (SELECT session_id FROM retired_refresh_tokens WHERE token_hash=?))",hash,hash);
+        entities.clear();events.record(owners.getFirst(),null,SecurityEvents.Event.LOGOUT);
     }
-
     @Transactional
     public void logoutAll(UUID userId) {
-        sessionRepository.revokeAllActiveByUserId(userId, Instant.now());
+        userRepository.lockById(userId);sessionRepository.revokeAllActiveByUserId(userId,clock.instant());events.record(userId,null,SecurityEvents.Event.LOGOUT_ALL);
     }
 
     @Transactional(readOnly = true)
     public List<SessionResponse> sessions(UUID userId, UUID currentSessionId) {
-        return sessionRepository.findActiveByUserId(userId, Instant.now()).stream()
+        return sessionRepository.findActiveByUserId(userId, clock.instant()).stream()
                 .map(session -> new SessionResponse(
-                        session.getId(), session.getDeviceName(), session.getCreatedAt(), session.getLastUsedAt(),
+                        session.getId(), session.getDeviceName(), session.getCreatedAt(), session.getLastActivityAt(),
                         session.getExpiresAt(), session.getId().equals(currentSessionId)))
                 .toList();
     }
 
     @Transactional
     public void revokeSession(UUID userId, UUID sessionId) {
+        userRepository.lockById(userId);
         UserSession session = sessionRepository.findOwned(sessionId, userId)
                 .orElseThrow(() -> new NotFoundException("Session was not found"));
-        session.revoke();
+        session.revoke();sessionRepository.saveAndFlush(session);events.record(userId,sessionId,SecurityEvents.Event.SESSION_REVOKED);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor=com.greenocean.backend.common.exception.ForbiddenException.class)
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
-        User user = userRepository.findById(userId)
+        PasswordPolicy.validate(newPassword);
+        if(!limits.allowInCurrentTransaction("password-change:"+userId,5,java.time.Duration.ofMinutes(15)))throw new com.greenocean.backend.common.exception.ForbiddenException("Wait before changing your password again");
+        User user = userRepository.lockById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User account is not available"));
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new UnauthorizedException("Current password is incorrect");
+            throw new com.greenocean.backend.common.exception.ForbiddenException("Current password is incorrect");
         }
         if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("New password must be different from the current password");
         }
 
         user.changePassword(passwordEncoder.encode(newPassword));
-        sessionRepository.revokeAllActiveByUserId(userId, Instant.now());
+        sessionRepository.revokeAllActiveByUserId(userId, clock.instant());events.record(userId,null,SecurityEvents.Event.PASSWORD_CHANGED);
     }
 
     public CurrentUserResponse currentUser(Jwt jwt) {
-        List<String> roles = jwt.getClaimAsStringList("roles");
+        UUID userId=UUID.fromString(jwt.getSubject());
+        List<String> roles = db.queryForList("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=? ORDER BY r.name",String.class,userId);
         return new CurrentUserResponse(
                 UUID.fromString(jwt.getSubject()),
-                jwt.getClaimAsString("email"),
+                db.queryForObject("SELECT email FROM users WHERE id=?",String.class,userId),
                 roles == null ? List.of() : roles
         );
     }
@@ -153,6 +187,7 @@ public class AuthenticationService {
         if (deviceName == null || deviceName.isBlank()) {
             return null;
         }
-        return deviceName.trim();
+        String safe=deviceName.replaceAll("[\\p{Cc}\\p{Cf}]", "").trim();
+        return safe.isEmpty()?null:safe;
     }
 }

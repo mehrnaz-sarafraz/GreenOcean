@@ -1,0 +1,80 @@
+{
+  "phase": "C",
+  "testedCodeCommit": "82b39198d57e712cf5c17978cbdb5f30a4f43e99",
+  "baselinePhaseB": "b370ea00b72abb04bd9e6d85b2b2e126413d8214",
+  "baselinePhaseA": "745c24d5a59968ba7c685507578120bdb8ca8c13",
+  "branch": "feature/phase-c-registration-completion",
+  "pullRequest": "https://github.com/mehrnaz-sarafraz/GreenOcean/pull/3",
+  "pullRequestBase": "feature/phase-b-welcome-trust-experience",
+  "ci": {
+    "runId": 40362730975,
+    "url": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40362730975",
+    "conclusion": "success",
+    "jobs": [
+      {"name":"backend","id":121712357134,"conclusion":"success"},
+      {"name":"frontend","id":121712356391,"conclusion":"success"},
+      {"name":"registration-live","id":121712356840,"conclusion":"success"}
+    ]
+  },
+  "counts": {
+    "backendUnit": {"passed":15,"failed":0,"skipped":0},
+    "backendIntegration": {"passed":74,"failed":0,"skipped":0},
+    "frontendHelpers": {"passed":42,"failed":0,"skipped":0},
+    "browserTransportAndComponentE2E": {"passed":53,"failed":0,"skipped":0},
+    "liveFullStackBrowserE2E": {"passed":4,"failed":0,"skipped":0},
+    "total": {"passed":188,"failed":0,"skipped":0},
+    "retainedBaseline":142,
+    "newPhaseC":46
+  },
+  "checks": {
+    "typeScript":"passed",
+    "eslint":"passed",
+    "webAndroidIosJavaScriptExports":"passed",
+    "gitDiffCheck":"passed",
+    "freshDatabaseFlyway":"passed",
+    "populatedLegacySchemaUpgrade":"passed",
+    "appliedMigrationFilesChanged":0,
+    "nativeBinaryDeviceAndAssistiveTechnology":"NOT_EXECUTED"
+  },
+  "commands": {
+    "localHelpers":"node --experimental-strip-types --test frontend/tests/*.test.mjs",
+    "backendCI":"./mvnw -B clean verify",
+    "frontendCI":["npm ci --no-audit --no-fund","npx expo customize tsconfig.json","npm run typecheck","npm run lint","npm test","npx expo export --platform all","PLAYWRIGHT_CHANNEL=chrome npm run test:e2e"],
+    "liveCI":["./mvnw -B test-compile dependency:build-classpath -Dmdep.outputFile=target/live-classpath","java -cp target/test-classes:target/classes:<resolved-test-classpath> com.greenocean.backend.PhaseCLiveServer","PLAYWRIGHT_CHANNEL=chrome npx playwright test --config playwright.live.config.mjs"]
+  },
+  "artifacts": [
+    {"name":"backend-junit","id":12669795560,"sha256":"00426ab13512e2dcdf401fb65bf7792420aed82c9ffe8714591a83732855141a"},
+    {"name":"browser-e2e-report","id":12668733528,"sha256":"73e27d7584343ad858973737989530b0923090993ea42d85b2023ef699a0f560"},
+    {"name":"frontend-platform-bundles","id":12668947893,"sha256":"792e9e57f67f14d316c8f7161db60a1062ee1c4a075b1c994f5da0e106d57da4"},
+    {"name":"registration-live-evidence","id":12669870890,"sha256":"4d51bc56e65107f58776ae643cd0c6927a3a7818881aa524f8d688751c74e041"}
+  ],
+  "newPersonaCounts": {
+    "happy":{"backend":3,"helper":1,"browser":1,"live":1,"total":6},
+    "creative":{"backend":6,"helper":2,"browser":4,"live":1,"total":13},
+    "confused":{"backend":3,"helper":5,"browser":7,"live":1,"total":16},
+    "malicious":{"backend":7,"helper":2,"browser":1,"live":1,"total":11}
+  },
+  "isolation": {
+    "database":"Disposable PostgreSQL 18 CI service, synthetic test users only",
+    "mail":"Test-classpath-only MailTransport adapter, real outbox worker delivers to memory; random-key-protected loopback mailbox; only @example.test recipients",
+    "productionRoutesAddedForTestDelivery":false,
+    "productionDataUsed":false,
+    "mergedOrDeployed":false
+  },
+  "visualReview": {
+    "capturedCommit":"9e86aa8182e28fbf0f8e5c607722b44d758c04af",
+    "reviewedAtCodeCommit":"82b39198d57e712cf5c17978cbdb5f30a4f43e99",
+    "note":"These illustrated layouts are unchanged by the final code commit; screenshots are scroll positions, not stitched pages. Final CI separately reran responsive/RTL tests.",
+    "files":["screenshots/phase-c-320.png","screenshots/phase-c-1440.png","screenshots/phase-c-persian.png"]
+  },
+  "remainingLimitations":[
+    "Native devices, TalkBack/VoiceOver, native password managers/autofill and multiple-device runtime validation NOT EXECUTED; explicit checklist provided",
+    "Approved unverified-account retention period and cleanup operations remain an external product/legal/operations dependency; no arbitrary account deletion introduced",
+    "Production email gateway/deliverability, approved regional service policy and any required independent age assurance remain deployment prerequisites",
+    "Generic signup body reduces enumeration; absolute constant-time equality and absolute security are not claimed"
+  ],
+  "localEnvironmentFailures":[
+    "npm ci encountered repeated ECONNRESET and was stopped; incomplete local dependencies were not treated as passed typecheck/browser tests",
+    "Maven wrapper downloads timed out on primary and alternate official Central hosts; backend verification was executed successfully in CI"
+  ]
+}

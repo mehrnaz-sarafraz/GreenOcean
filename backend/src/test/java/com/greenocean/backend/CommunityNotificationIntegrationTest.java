@@ -31,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @ActiveProfiles("test")
 class CommunityNotificationIntegrationTest {
+    @Autowired private jakarta.persistence.EntityManager fixtureEntities;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate fixtureDb;
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
@@ -128,9 +130,12 @@ class CommunityNotificationIntegrationTest {
         MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("email", email, "password", password, "username", username,
-                                "displayName", prefix, "birthYear", 2000, "countryCode", "IR", "city", "Tehran"))))
+                                "displayName", prefix, "birthYear", 2000, "countryCode", "IR", "city", "Tehran", "adultSelfAttested", true, "termsVersion", 1))))
                 .andExpect(status().isCreated()).andReturn();
-        String userId = objectMapper.readTree(registerResult.getResponse().getContentAsString()).get("userId").asText();
+        PhaseAFixtures.activate(fixtureDb, email);
+        fixtureEntities.clear();
+        fixtureDb.update("UPDATE profiles SET username=?,is_profile_private=FALSE WHERE user_id=(SELECT id FROM users WHERE email=?)",username,email);
+        String userId = fixtureDb.queryForObject("SELECT id::text FROM users WHERE email=?",String.class,email);
         MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("email", email, "password", password))))

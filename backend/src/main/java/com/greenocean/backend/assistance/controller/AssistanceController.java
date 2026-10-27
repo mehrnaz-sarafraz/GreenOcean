@@ -30,6 +30,11 @@ public class AssistanceController {
     @PostMapping("/email-verification/confirm")
     public AssistanceResponse verifyEmail(@Valid @RequestBody VerifyEmailRequest request) { return service.verifyEmail(request); }
 
+    @PostMapping("/pending-email") @ResponseStatus(HttpStatus.ACCEPTED)
+    public AssistanceResponse correctPendingEmail(@AuthenticationPrincipal Jwt jwt,@Valid @RequestBody PendingEmailRequest request) {
+        return service.correctPendingEmail(UUID.fromString(jwt.getSubject()),request);
+    }
+
     @PostMapping("/support")
     @ResponseStatus(HttpStatus.CREATED)
     public AssistanceResponse support(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody SupportRequest request) {

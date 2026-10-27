@@ -46,6 +46,7 @@ public class AccountRepository {
         saved.addAll(jdbcTemplate.query("""
                 SELECT p.id, LEFT(p.body, 160) AS title, b.created_at FROM bookmarks b
                   JOIN posts p ON p.id = b.post_id WHERE b.user_id = ? AND p.deleted_at IS NULL
+                   AND can_read_social_post(p.id, b.user_id)
                  ORDER BY b.created_at DESC
                 """, (rs, row) -> new AccountActivityResponse.SavedItem("POST", rs.getObject("id", UUID.class),
                 rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
@@ -62,7 +63,9 @@ public class AccountRepository {
                 """, (rs, row) -> new AccountActivityResponse.SavedItem("ARTICLE", rs.getObject("id", UUID.class),
                 rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
 
-        return new AccountActivityResponse(posts, comments, communities, List.copyOf(saved));
+        var sessions=jdbcTemplate.query("SELECT id,status,reason_code,CASE WHEN member_id=? THEN 'MEMBER' ELSE 'LISTENER' END AS participant_role,created_at,ended_at FROM live_support_requests WHERE member_id=? OR listener_id=? ORDER BY created_at DESC",(rs,n)->new AccountActivityResponse.ListenerSession(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),rs.getString("participant_role"),rs.getObject("created_at",OffsetDateTime.class).toInstant(),rs.getObject("ended_at",OffsetDateTime.class)==null?null:rs.getObject("ended_at",OffsetDateTime.class).toInstant()),userId,userId,userId);
+        var ownMessages=jdbcTemplate.query("SELECT m.id,m.conversation_id,m.body,m.created_at FROM messages m JOIN conversations c ON c.id=m.conversation_id WHERE m.sender_id=? AND c.service_kind='LISTENER' AND m.deleted_at IS NULL ORDER BY m.created_at",(rs,n)->new AccountActivityResponse.ListenerMessage(rs.getObject("id",UUID.class),rs.getObject("conversation_id",UUID.class),rs.getString("body"),rs.getObject("created_at",OffsetDateTime.class).toInstant()),userId);
+        return new AccountActivityResponse(posts, comments, communities, List.copyOf(saved),sessions,ownMessages);
     }
 
     public java.util.List<String> professionalDocumentKeys(UUID userId) {
@@ -74,6 +77,27 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM processing_authorizations WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+        jdbcTemplate.update("DELETE FROM listener_presence WHERE listener_id=?",userId);
+        jdbcTemplate.update("DELETE FROM listener_live_authorizations WHERE listener_id=?",userId);
+        jdbcTemplate.update("DELETE FROM live_support_requests WHERE member_id=? OR listener_id=?",userId,userId);
+        jdbcTemplate.update("DELETE FROM webauthn_ceremonies WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM webauthn_credentials WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM webauthn_enrollment_permits WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM audit_logs WHERE actor_user_id=? AND entity_type='SECURITY'",userId);
+        jdbcTemplate.update("INSERT INTO account_deletions(user_id,status) VALUES (?,'PROCESSING') ON CONFLICT(user_id) DO UPDATE SET status='PROCESSING'",userId);
+        jdbcTemplate.update("DELETE FROM email_outbox WHERE owner_user_id=? OR recipient=(SELECT email FROM users WHERE id=?)",userId,userId);
+        jdbcTemplate.update("DELETE FROM email_verification_codes WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM password_reset_tokens WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM account_eligibility WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM policy_acceptances WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE support_requests SET email='deleted@greenocean.invalid',message='[Deleted]',user_id=NULL WHERE user_id=? OR email=(SELECT email FROM users WHERE id=?)",userId,userId);
+        jdbcTemplate.update("DELETE FROM user_search_history WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE conversations SET title='Deleted member',subtitle=NULL,is_active=FALSE WHERE id IN (SELECT conversation_id FROM conversation_members WHERE user_id=?) AND conversation_kind <> 'GROUP'",userId);
+        jdbcTemplate.update("UPDATE account_deletions SET status='COMPLETED',completed_at=CURRENT_TIMESTAMP WHERE user_id=?",userId);
         jdbcTemplate.update("UPDATE communities SET status = 'ARCHIVED' WHERE created_by = ?", userId);
         jdbcTemplate.update("DELETE FROM promotion_campaigns WHERE professional_user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM consultation_requests WHERE requester_user_id = ? OR professional_user_id = ?", userId, userId);

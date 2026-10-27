@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateProfileRequest(
-        @Pattern(regexp = "^[A-Za-z0-9_]{3,30}$") String username,
+        @Pattern(regexp = "^[A-Za-z0-9_][A-Za-z0-9_.]{1,28}[A-Za-z0-9_]$") String username,
         @Size(min = 1, max = 80) String displayName,
         @Size(max = 500) String bio,
         @Size(max = 2048) String avatarUrl,

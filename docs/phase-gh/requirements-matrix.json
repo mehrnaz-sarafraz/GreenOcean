@@ -1,0 +1,917 @@
+[
+  {
+    "id": "G-01",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "auth/service/RegistrationService.java; profile/entity/Profile.java",
+    "changes": "Preserved transactional minimal private-profile initialization; added retry, concurrency and rollback coverage.",
+    "filesModified": [
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "failedRegistrationTransactionLeavesNoPartialProfileEligibilityOrEmail"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "simultaneousDistinctRegistrationsKeepUniqueUsernamesAndAllowDuplicateDisplayNames"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No schema change to registration.",
+    "privacySecurityImpact": "No real name or health disclosure.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Registration-level rollback is exercised with a synthetic transaction failure; production fault injection was not performed."
+  },
+  {
+    "id": "G-02",
+    "initialStatus": "IMPLEMENTED_NEEDS_TESTS",
+    "existingImplementationReused": "auth/service/RegistrationService.java",
+    "changes": "Preserved random non-email usernames and duplicate display names; verified concurrent identities.",
+    "filesModified": [
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "simultaneousDistinctRegistrationsKeepUniqueUsernamesAndAllowDuplicateDisplayNames"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing unique username index retained.",
+    "privacySecurityImpact": "Email and sequential IDs are not public identity generators.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Random collision handling reuses registration retry/unique constraints; exhaustive collision injection is not covered by G/H tests."
+  },
+  {
+    "id": "G-03",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "profile/service/ProfileService.java",
+    "changes": "Added reserved-name and unsafe-input validation, safe Unicode presentation and owner update locking; retained account UUID relationships.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "backend/src/main/java/com/greenocean/backend/profile/repository/ProfileRepository.java",
+      "backend/src/main/java/com/greenocean/backend/profile/dto/UpdateProfileRequest.java",
+      "frontend/src/app/(app)/tools/[tool].tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "persianNamesDuplicateDisplayAndAvatarClearPreserveAccountIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "rejectsReservedTakenUnsafeIdentityAndAvatarWithoutPersisting"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Creative GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing unique index, no new schema.",
+    "privacySecurityImpact": "Forged owner fields cannot edit a different user.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native keyboard, scaling and screen-reader validation remains unexecuted."
+  },
+  {
+    "id": "G-04",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "profile/entity/Profile.java; tools/[tool].tsx",
+    "changes": "Added optional HTTPS avatar reference editing and explicit removal; reject local paths, unsafe protocols and credential-bearing URLs.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "frontend/src/app/(app)/tools/[tool].tsx",
+      "backend/src/main/java/com/greenocean/backend/profile/dto/UpdateProfileRequest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "persianNamesDuplicateDisplayAndAvatarClearPreserveAccountIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "rejectsReservedTakenUnsafeIdentityAndAvatarWithoutPersisting"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Creative GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Null existing avatar_url on explicit empty-string clear.",
+    "privacySecurityImpact": "Avatar is a discoverable identity field, not private media.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "External image hosts and previously received copies cannot be erased or stripped of metadata by this reference-only architecture; native validation pending."
+  },
+  {
+    "id": "G-05",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "profile/entity/Profile.java; tools/[tool].tsx",
+    "changes": "Preserved private DB/entity defaults and intentional historical profile choices; removed unsafe public/loading fallbacks.",
+    "filesModified": [
+      "frontend/src/app/(app)/tools/[tool].tsx",
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+        "methodOrTitle": "populatedEfDatabasePreservesChoicesAndConservativelyFreezesHistoricalAudiences"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Creative GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 leaves existing profile choices intact.",
+    "privacySecurityImpact": "A loading preference is not treated as permission to disclose.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native loading behavior remains a device release gate."
+  },
+  {
+    "id": "G-06",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "profile/service/ProfileService.java",
+    "changes": "Applied profile-detail visibility to optional public location; service eligibility country stays independent.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "backend/src/main/java/com/greenocean/backend/search/service/SearchService.java",
+      "frontend/src/app/(app)/tools/[tool].tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "privateFieldsAreRedactedInProfileAndSearchButVisibleToApprovedFollower"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "persianNamesDuplicateDisplayAndAvatarClearPreserveAccountIdentity"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No eligibility or location data rewrite.",
+    "privacySecurityImpact": "Private-profile nonfollowers do not receive location; edits do not change residence eligibility.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "A deliberately enabled social location can be disclosed to the documented allowed audience."
+  },
+  {
+    "id": "G-07",
+    "initialStatus": "IMPLEMENTED_NEEDS_TESTS",
+    "existingImplementationReused": "profile/service/ProfileService.java",
+    "changes": "Kept age assurance out of social DTOs and new-user prompts; tested explicit legacy-year visibility and redaction.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "frontend/src/app/(app)/tools/[tool].tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "privateFieldsAreRedactedInProfileAndSearchButVisibleToApprovedFollower"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Legacy birth-year values preserved.",
+    "privacySecurityImpact": "No public age is inferred from account eligibility.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Legacy explicit year display remains supported under the documented audience contract."
+  },
+  {
+    "id": "G-08",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "messaging/repository/MessagingRepository.java; safety-settings.tsx",
+    "changes": "Corrected safe UI fallback and visible save rollback; enforced blocks for established conversations and verified-professional request rules.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/messaging/service/MessagingService.java",
+      "backend/src/main/java/com/greenocean/backend/messaging/repository/MessagingRepository.java",
+      "frontend/src/app/(app)/safety-settings.tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+      "frontend/e2e/phase-gh.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "messageRequestsFollowApprovalAndEstablishedBlockAreEnforced"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "enabledRequestsPermitContactAndDeletionErasesPreferencesProgressAndAvatar"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "professionalOnlyRequestsRequireVerifiedSenderAndRemainSeparateFromCare"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "concurrentIndependentPreferencePatchesPreserveBothConfirmedChanges"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: privacy saving failure"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing preferences/conversations reused.",
+    "privacySecurityImpact": "Unsolicited requests and established consent are separate; blocks override both.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Physical-device optimistic rollback and assistive technology remain unexecuted."
+  },
+  {
+    "id": "G-09",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "features/content/post-card.tsx; post/repository/PostReadRepository.java",
+    "changes": "Separated blur from discovery reduction, connected muted terms and medication filtering, and retained mandatory moderation independently.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/post/repository/PostReadRepository.java",
+      "frontend/src/features/content/post-card.tsx",
+      "frontend/src/app/(app)/safety-settings.tsx",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/app/(app)/post/[id].tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/e2e/phase-gh.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "contentControlsFilterDiscoveryIndependentlyOfAuthorizedDirectLinks"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: privacy saving failure"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No moderation policy/schema weakened.",
+    "privacySecurityImpact": "Blur is presentation; accessible direct links still disclose permitted body to the client.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Medication reduction is a literal keyword/category filter, not semantic or clinical detection; native rendering pending."
+  },
+  {
+    "id": "G-10",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "profile/service/ProfileService.java; search/service/SearchService.java",
+    "changes": "Redacted private biography/location/year/counts across profile/search; removed anonymous-author listing/count and notification attribution.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/profile/service/ProfileService.java",
+      "backend/src/main/java/com/greenocean/backend/search/service/SearchService.java",
+      "backend/src/main/java/com/greenocean/backend/post/repository/PostReadRepository.java",
+      "backend/src/main/java/com/greenocean/backend/notification/repository/NotificationRepository.java",
+      "backend/src/main/java/com/greenocean/backend/notification/service/NotificationService.java",
+      "backend/src/main/java/com/greenocean/backend/catalog/repository/CatalogRepository.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "privateFieldsAreRedactedInProfileAndSearchButVisibleToApprovedFollower"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "anonymousPostsDoNotAppearInOtherMembersAuthorListingsOrCounts"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "revokedAudienceNotificationsAndAnonymousRepliesDoNotDiscloseProtectedInformation"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Malicious GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 shared read predicate; existing profile fields preserved.",
+    "privacySecurityImpact": "Minimal discoverability is retained; private preferences never enter social DTOs.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Avatar/username/display name remain discoverable to eligible members; authorized platform processes retain internal attribution."
+  },
+  {
+    "id": "G-11",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "post/repository/PostReadRepository.java; social/service/SocialInteractionRepository.java; create.tsx",
+    "changes": "Implemented durable server-enforced per-post audience, restrictive composer default and explicit broad confirmation; froze legacy PUBLIC conservatively.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/post/repository/PostReadRepository.java",
+      "backend/src/main/java/com/greenocean/backend/post/service/PostService.java",
+      "backend/src/main/java/com/greenocean/backend/post/dto/CreatePostRequest.java",
+      "backend/src/main/java/com/greenocean/backend/social/service/SocialInteractionRepository.java",
+      "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+      "frontend/src/app/(app)/create.tsx",
+      "backend/src/main/java/com/greenocean/backend/account/repository/AccountRepository.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "audienceMatrixSurvivesPrivacyTransitionsAndAlternateApiRequests"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "broaderAudienceRequiresExplicitPerPostConfirmation"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "paginatedDiscoveryNeverReturnsFollowersOnlyPostsToStrangers"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsRespectBlocksInBothDirectionsWithoutErasingBookmarks"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsDisappearAfterCommunityMembershipIsRevoked"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsRespectModerationAndInactiveAuthors"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+        "methodOrTitle": "populatedEfDatabasePreservesChoicesAndConservativelyFreezesHistoricalAudiences"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Malicious GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40: historical PUBLIC → FOLLOWERS, shared authorization function.",
+    "privacySecurityImpact": "No privacy toggle broadens historical content; follow cannot grant community rights.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native audience controls and production-scale migration locking remain untested; copies already downloaded cannot be recalled."
+  },
+  {
+    "id": "G-12",
+    "initialStatus": "IMPLEMENTED_NEEDS_TESTS",
+    "existingImplementationReused": "account/service/AccountService.java; account/repository/AccountRepository.java",
+    "changes": "Reused owner archive and password-confirmed deletion; exported new progress/preferences, erased their row and avatar reference, and reauthorized bookmark previews at export time. Isolated lifecycle regression fixtures and corrected duration-boundary test arithmetic across DST; production erasure/retention remains unchanged.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/account/repository/AccountRepository.java",
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "backend/src/main/java/com/greenocean/backend/preference/dto/UserPreferencesResponse.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/MigrationTestSupport.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseDPendingCleanupTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "enabledRequestsPermitContactAndDeletionErasesPreferencesProgressAndAvatar"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "audienceMatrixSurvivesPrivacyTransitionsAndAlternateApiRequests"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsRespectBlocksInBothDirectionsWithoutErasingBookmarks"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsDisappearAfterCommunityMembershipIsRevoked"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "savedExportPreviewsRespectModerationAndInactiveAuthors"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 fields are in existing owner preferences row and existing erasure scope.",
+    "privacySecurityImpact": "Bookmarks never grant permanent access to another member’s content.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Own authored posts/comments remain owner data-rights records; external avatar hosts, backups and received copies follow documented retention limits."
+  },
+  {
+    "id": "H-01",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "preference/repository/UserPreferencesRepository.java; onboarding.tsx",
+    "changes": "Validated stable active catalog slugs and exact legacy mapping; optional topic collection is off by default, with clear/export/delete supported.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "backend/src/main/java/com/greenocean/backend/preference/dto/UpdateUserPreferencesRequest.java",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHTopicGateTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+      "frontend/e2e/phase-gh.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHTopicGateTest.java",
+        "methodOrTitle": "reviewedTopicGateUsesStableActiveSlugsAndAllowsExplicitClear"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHMigrationTest.java",
+        "methodOrTitle": "populatedEfDatabasePreservesChoicesAndConservativelyFreezesHistoricalAudiences"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: topic checkbox"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 retains unmapped historical values owner-only in legacy_support_topics.",
+    "privacySecurityImpact": "No diagnosis or recommendation inference; no new sensitive collection without external approval.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Enabling sensitive collection is BLOCKED_EXTERNAL_DEPENDENCY pending legal/product basis, notice and retention decisions; synthetic gate-on tests do not authorize rollout."
+  },
+  {
+    "id": "H-02",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "preference/dto/UpdateUserPreferencesRequest.java",
+    "changes": "Validated current support-style allowlist/catalog, explicit empty clear and safe destination mapping; topics remain optional.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/preference/dto/UpdateUserPreferencesRequest.java",
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads"
+      },
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Happy GH: all support styles"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing support_style reused.",
+    "privacySecurityImpact": "No clinical inference or implicit conversation/group creation.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native selection and text scaling remain unexecuted."
+  },
+  {
+    "id": "H-03",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "onboarding.tsx",
+    "changes": "Explained conservative defaults and exposed independent saved safety controls with honest failure feedback.",
+    "filesModified": [
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/app/(app)/safety-settings.tsx",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "concurrentIndependentPreferencePatchesPreserveBothConfirmedChanges"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: privacy saving failure"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing independent preferences retained.",
+    "privacySecurityImpact": "Disabling personal blur cannot turn off moderation/authorization.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native toggles, focus and screen readers remain unexecuted."
+  },
+  {
+    "id": "H-04",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "preference/repository/UserPreferencesRepository.java",
+    "changes": "Serialized partial preference updates under an owner row lock; validated payloads and distinguished omission/null from explicit clear.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "backend/src/main/java/com/greenocean/backend/preference/dto/UpdateUserPreferencesRequest.java",
+      "backend/src/main/java/com/greenocean/backend/preference/dto/UserPreferencesResponse.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHTopicGateTest.java"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHConcurrencyTest.java",
+        "methodOrTitle": "concurrentIndependentPreferencePatchesPreserveBothConfirmedChanges"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "legacyBooleanDismissalDoesNotFabricateCompletionAndNullDoesNotClear"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHTopicGateTest.java",
+        "methodOrTitle": "reviewedTopicGateUsesStableActiveSlugsAndAllowsExplicitClear"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 progress/legacy fields; existing owner primary key.",
+    "privacySecurityImpact": "No cross-user preference update or disclosure; unrelated concurrent patches survive.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Simultaneous edits to the same field use last committed write; no cross-device conflict-resolution UI."
+  },
+  {
+    "id": "H-05",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "onboarding.tsx; (app)/_layout.tsx",
+    "changes": "Persisted explicit SKIPPED versus COMPLETED versus legacy dismissal and used explicit state for navigation.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "frontend/src/app/(app)/_layout.tsx",
+      "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "legacyBooleanDismissalDoesNotFabricateCompletionAndNullDoesNotClear"
+      },
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Confused GH: skip and legacy unknown"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: Skip"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Confused GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 maps old true to LEGACY_UNKNOWN; boolean retained as dismissal compatibility.",
+    "privacySecurityImpact": "Skip is not fabricated completion; ordinary access is not disclosure-dependent.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Legacy boolean remains true for any dismissed flow; clients must use onboardingStatus to distinguish outcomes; native pending."
+  },
+  {
+    "id": "H-06",
+    "initialStatus": "MISSING",
+    "existingImplementationReused": "onboarding.tsx",
+    "changes": "Persisted the last confirmed step, restored progress and retained recoverable save failures.",
+    "filesModified": [
+      "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      },
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Creative GH: durable confirmed progress"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: confirmed step resumes"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: failed save"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Confused GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "V40 onboarding_step 0–3 with constraint.",
+    "privacySecurityImpact": "Only confirmed owner-scoped progress is restored.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Physical force-stop and real multi-device sessions remain unexecuted."
+  },
+  {
+    "id": "H-07",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "profile.tsx; safety-settings.tsx",
+    "changes": "Added optional-preference reentry from profile/settings with explicit clear controls and no forced re-enrollment.",
+    "filesModified": [
+      "frontend/src/app/(app)/profile.tsx",
+      "frontend/src/app/(app)/safety-settings.tsx",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java"
+    ],
+    "tests": [
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: topic checkbox"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Confused GH live"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing preference row remains editable.",
+    "privacySecurityImpact": "A user can revoke choices without account deletion.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native reentry and real multi-device conflict UX remain unexecuted."
+  },
+  {
+    "id": "H-08",
+    "initialStatus": "IMPLEMENTED_NEEDS_TESTS",
+    "existingImplementationReused": "auth/service/RegistrationService.java; onboarding.tsx",
+    "changes": "Preserved minimal registration and zero-topic/zero-health-input onboarding and skip routes.",
+    "filesModified": [
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Happy GH UI: optional zero-input"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Confused GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No new clinical/account identity fields.",
+    "privacySecurityImpact": "No health disclosure, diagnosis or disease label required.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Native zero-input journey remains unexecuted."
+  },
+  {
+    "id": "H-09",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "onboarding.tsx",
+    "changes": "Allowed no selections and mapped missing/invalid styles to a neutral real Support destination.",
+    "filesModified": [
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Malicious GH: unknown styles"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Happy GH UI: optional zero-input"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Confused GH UI: Skip"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Empty arrays persist without inferred defaults.",
+    "privacySecurityImpact": "No interest is inferred from absence or redirect manipulation.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Fallback is discovery, not a promise of available listeners; native pending."
+  },
+  {
+    "id": "H-10",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "support.tsx; onboarding.tsx",
+    "changes": "Clarified listener versus professional versus emergency boundaries and actual service availability; never starts interactions automatically.",
+    "filesModified": [
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/app/(app)/support.tsx",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Happy GH: all support styles"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Confused GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No new care, booking or messaging schema.",
+    "privacySecurityImpact": "First-support navigation remains subject to existing service/eligibility rules.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Service capacity and clinical/legal operations are external; native and comprehensive copy comprehension study not performed."
+  },
+  {
+    "id": "H-11",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "onboarding.tsx",
+    "changes": "Replaced unsupported personalization claims with actual purpose, storage/audience and editing/deletion explanations.",
+    "filesModified": [
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/app/(app)/index.tsx",
+      "frontend/src/app/(app)/support.tsx",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: Persian RTL"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: topic checkbox"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No analytics or ranking database added.",
+    "privacySecurityImpact": "Preferences do not form a clinical profile or rank the existing feed.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Code/copy review and browser journeys are not a formal user comprehension or privacy certification study."
+  },
+  {
+    "id": "H-12",
+    "initialStatus": "DEFECTIVE",
+    "existingImplementationReused": "onboarding.tsx",
+    "changes": "Replaced obsolete role routing with fixed actual support destinations and eligibility fallback.",
+    "filesModified": [
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/app/(app)/support.tsx",
+      "frontend/tests/phase-gh.test.mjs",
+      "frontend/e2e/phase-gh.spec.mjs",
+      "frontend/live-e2e/phase-gh-journey.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Happy GH: all support styles"
+      },
+      {
+        "file": "frontend/tests/phase-gh.test.mjs",
+        "methodOrTitle": "Malicious GH: unknown styles"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Creative GH UI: confirmed step resumes"
+      },
+      {
+        "file": "frontend/live-e2e/phase-gh-journey.spec.mjs",
+        "methodOrTitle": "Happy GH live"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "No conversations or memberships created by onboarding.",
+    "privacySecurityImpact": "No open redirects or authorization grants from preferences.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Matching/booking remains Phase I; native destinations remain unexecuted."
+  },
+  {
+    "id": "H-13",
+    "initialStatus": "PARTIALLY_IMPLEMENTED",
+    "existingImplementationReused": "profile.tsx; onboarding.tsx",
+    "changes": "Separated professional application from ordinary onboarding; inert intendedRole compatibility cannot elevate roles or steer completion into verification.",
+    "filesModified": [
+      "frontend/src/app/(app)/profile.tsx",
+      "frontend/src/app/(auth)/onboarding.tsx",
+      "frontend/src/features/platform/onboarding-policy.ts",
+      "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+      "frontend/e2e/phase-gh.spec.mjs"
+    ],
+    "tests": [
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads"
+      },
+      {
+        "file": "backend/src/test/java/com/greenocean/backend/PhaseGHPrivacyIntegrationTest.java",
+        "methodOrTitle": "professionalOnlyRequestsRequireVerifiedSenderAndRemainSeparateFromCare"
+      },
+      {
+        "file": "frontend/e2e/phase-gh.spec.mjs",
+        "methodOrTitle": "Malicious GH UI: legacy professional preference"
+      }
+    ],
+    "actualExecutedResults": "Final local suite: 200 backend tests passed (including 25 G/H API/concurrency/migration/topic tests), 59 frontend helper tests passed, 9 G/H fixture-browser tests passed, 4 real-server G/H journeys passed; see test-evidence.json for exact class/case results. No native device checks executed.",
+    "databaseImpact": "Existing role/application/verification data preserved.",
+    "privacySecurityImpact": "Professional verification and care authorization remain server-enforced.",
+    "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED",
+    "remainingLimitations": "Full native professional application journey is outside this G/H workstream."
+  },
+  {
+    "id": "H-14",
+    "initialStatus": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "existingImplementationReused": "preference/repository/UserPreferencesRepository.java",
+    "changes": "Kept onboarding analytics disabled; documented lawful purpose, aggregation, retention and consent prerequisites.",
+    "filesModified": [
+      "docs/phase-gh/operations.md",
+      "docs/product/progressive-onboarding-contract.md",
+      "docs/security/phase-gh-threat-model.md"
+    ],
+    "tests": [],
+    "actualExecutedResults": "No analytics runtime instrumented or executed; source/policy review only. H-14 remains externally blocked.",
+    "databaseImpact": "No telemetry schema, trackers or events introduced.",
+    "privacySecurityImpact": "No topic payloads or clinical inference in general analytics; owner resume progress is not anonymous analytics.",
+    "finalStatus": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "remainingLimitations": "BLOCKED_EXTERNAL_DEPENDENCY: approved analytics architecture and lawful processing/retention decisions are absent."
+  }
+]

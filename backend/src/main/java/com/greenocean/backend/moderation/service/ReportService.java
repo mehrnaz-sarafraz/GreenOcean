@@ -23,6 +23,7 @@ public class ReportService {
     public ReportResponse create(UUID userId, CreateReportRequest request) {
         if (!repository.targetExists(request.targetType(), request.targetId(), userId))
             throw new NotFoundException("Report target was not found or is not available");
+        repository.lockOpenReport(userId, request.targetType(), request.targetId());
         if (repository.duplicateOpenReport(userId, request.targetType(), request.targetId()))
             throw new ConflictException("You already have an open report for this item");
         String severity = switch (request.reason()) {

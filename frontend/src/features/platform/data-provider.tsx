@@ -6,6 +6,7 @@ import { NotificationItem } from '@/features/notification/types';
 import { PageResponse, PostItem, SupportCategory } from '@/features/content/types';
 import { OwnProfile } from '@/features/profile/types';
 import { apiRequest } from '@/lib/api/client';
+import { tokenStorage } from '@/lib/storage/token-storage';
 
 import { CatalogOption, Conversation, MediaPick, PlatformData, Professional, ProfessionalArticle, SupportChannel, UserPreferences } from './types';
 
@@ -30,13 +31,14 @@ type DataContextValue = PlatformData & {
 const DataContext = createContext<DataContextValue | null>(null);
 
 export function DataProvider({ children }: PropsWithChildren) {
-  const { status } = useAuth();
+  const { status,privacyHidden } = useAuth();
   const [data, setData] = useState<PlatformData>(emptyData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (status !== 'authenticated') return;
+    if (status !== 'authenticated'||privacyHidden) return;
+    const epoch=tokenStorage.generation();
     setLoading(true); setError(null);
     try {
       const results = await Promise.allSettled([
@@ -53,15 +55,16 @@ export function DataProvider({ children }: PropsWithChildren) {
         apiRequest<UserPreferences>('/api/v1/preferences/me'),
         apiRequest<CatalogOption[]>('/api/v1/catalog/options'),
       ] as const);
+      if(epoch!==tokenStorage.generation())return;
       setData(current => ({
         categories: results[0].status === 'fulfilled' ? results[0].value : current.categories,
-        posts: results[1].status === 'fulfilled' ? results[1].value : current.posts,
+        posts: results[1].status === 'fulfilled' ? results[1].value : [],
         communities: results[2].status === 'fulfilled' ? results[2].value : current.communities,
-        notifications: results[3].status === 'fulfilled' ? results[3].value : current.notifications,
+        notifications: results[3].status === 'fulfilled' ? results[3].value : [],
         professionals: results[4].status === 'fulfilled' ? results[4].value : current.professionals,
         articles: results[5].status === 'fulfilled' ? results[5].value : current.articles,
         media: results[6].status === 'fulfilled' ? results[6].value : current.media,
-        conversations: results[7].status === 'fulfilled' ? results[7].value : current.conversations,
+        conversations: results[7].status === 'fulfilled' ? results[7].value : [],
         channels: results[8].status === 'fulfilled' ? results[8].value : current.channels,
         profile: results[9].status === 'fulfilled' ? results[9].value : current.profile,
         preferences: results[10].status === 'fulfilled' ? results[10].value : current.preferences,
@@ -70,11 +73,12 @@ export function DataProvider({ children }: PropsWithChildren) {
       const failed = results.find(result => result.status === 'rejected');
       if (failed?.status === 'rejected') setError(failed.reason instanceof Error ? failed.reason.message : 'Some GreenOcean data could not be refreshed');
     } catch (caught) {
+      if(epoch!==tokenStorage.generation())return;
       setError(caught instanceof Error ? caught.message : 'Could not load GreenOcean data');
     } finally {
-      setLoading(false);
+      if(epoch===tokenStorage.generation())setLoading(false);
     }
-  }, [status]);
+  }, [status,privacyHidden]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,19 +89,20 @@ export function DataProvider({ children }: PropsWithChildren) {
   }, [refresh, status]);
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status !== 'authenticated'||privacyHidden) return;
+    const epoch=tokenStorage.generation();
     const interval = setInterval(() => {
       void Promise.allSettled([
         apiRequest<PageResponse<NotificationItem>>('/api/v1/notifications?size=50').then(result => result.items),
         apiRequest<Conversation[]>('/api/v1/conversations'),
-      ]).then(([notificationResult, conversationResult]) => setData(current => ({
+      ]).then(([notificationResult, conversationResult]) => {if(epoch!==tokenStorage.generation())return;setData(current => ({
         ...current,
         notifications: notificationResult.status === 'fulfilled' ? notificationResult.value : current.notifications,
         conversations: conversationResult.status === 'fulfilled' ? conversationResult.value : current.conversations,
-      })));
+      }));});
     }, 15000);
     return () => clearInterval(interval);
-  }, [status]);
+  }, [status,privacyHidden]);
 
   const value = useMemo<DataContextValue>(() => ({
     ...data, loading, error, refresh,

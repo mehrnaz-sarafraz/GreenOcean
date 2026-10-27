@@ -13,16 +13,22 @@ public class ReportRepository {
     private final JdbcTemplate jdbcTemplate;
     public ReportRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
+    public void lockOpenReport(UUID reporterId, String type, UUID targetId) {
+        // Same reporter/target across devices and backend instances; released at transaction end.
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))",
+                "open-report:" + reporterId + ":" + type + ":" + targetId);
+    }
+
     public boolean targetExists(String type, UUID id, UUID userId) {
         String sql = switch (type) {
             case "USER" -> "SELECT EXISTS(SELECT 1 FROM users WHERE id = ? AND deleted_at IS NULL)";
-            case "POST" -> "SELECT EXISTS(SELECT 1 FROM posts WHERE id = ? AND deleted_at IS NULL)";
-            case "COMMENT" -> "SELECT EXISTS(SELECT 1 FROM comments WHERE id = ? AND deleted_at IS NULL)";
+            case "POST" -> "SELECT EXISTS(SELECT 1 FROM posts WHERE id = ? AND deleted_at IS NULL AND can_read_social_post(id,?))";
+            case "COMMENT" -> "SELECT EXISTS(SELECT 1 FROM comments WHERE id = ? AND deleted_at IS NULL AND can_read_social_post(post_id,?))";
             case "CONVERSATION" -> "SELECT EXISTS(SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ?)";
             case "COMMUNITY" -> "SELECT EXISTS(SELECT 1 FROM communities WHERE id = ? AND status = 'ACTIVE')";
             default -> throw new IllegalArgumentException("Unsupported report target");
         };
-        Boolean exists = "CONVERSATION".equals(type)
+        Boolean exists = java.util.Set.of("CONVERSATION","POST","COMMENT").contains(type)
                 ? jdbcTemplate.queryForObject(sql, Boolean.class, id, userId)
                 : jdbcTemplate.queryForObject(sql, Boolean.class, id);
         return Boolean.TRUE.equals(exists);

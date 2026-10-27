@@ -14,38 +14,27 @@ import java.util.UUID;
 
 @Service
 public class ListenerService {
+    private final com.greenocean.backend.listener.live.LiveSupportSettings liveSettings;
+    private final com.greenocean.backend.identity.AccessPolicy access;
     private final ListenerRepository repository;
     private final MessagingRepository messagingRepository;
     private final DatabaseUuidGenerator uuidGenerator;
     public ListenerService(ListenerRepository repository, MessagingRepository messagingRepository,
-                           DatabaseUuidGenerator uuidGenerator) {
+                           DatabaseUuidGenerator uuidGenerator,com.greenocean.backend.identity.AccessPolicy access,com.greenocean.backend.listener.live.LiveSupportSettings liveSettings) {
+        this.liveSettings=liveSettings;
+        this.access=access;
         this.repository = repository; this.messagingRepository = messagingRepository; this.uuidGenerator = uuidGenerator;
     }
 
     @Transactional(readOnly = true)
     public List<ListenerResponse> listeners(UUID userId, boolean onlineOnly, String topic) {
-        return repository.listeners(userId, onlineOnly, topic);
+        return liveSettings.enabled()?repository.listeners(userId, onlineOnly, null):List.of();
     }
 
     @Transactional
     public ListenerMatchResponse match(UUID userId, UUID requestedListenerId, String topic) {
-        ListenerResponse listener;
-        if (requestedListenerId != null) {
-            listener = repository.listener(requestedListenerId, userId)
-                    .orElseThrow(() -> new NotFoundException("Listener was not found"));
-        } else {
-            List<ListenerResponse> available = repository.listeners(userId, true, topic);
-            if (available.isEmpty()) available = repository.listeners(userId, false, topic);
-            if (available.isEmpty()) throw new NotFoundException("No listener is currently available");
-            listener = available.getFirst();
-        }
-        UUID listenerId = listener.id();
-        UUID conversationId = messagingRepository.directConversation(userId, listenerId).orElseGet(() -> {
-            UUID id = uuidGenerator.nextUuid();
-            messagingRepository.createListenerConversation(id, uuidGenerator.nextUuid(), userId, listenerId);
-            return id;
-        });
-        return new ListenerMatchResponse(conversationId, listener);
+        throw new com.greenocean.backend.listener.live.LiveSupportException(410,"CLIENT_UPGRADE_REQUIRED",
+                "Direct listener matching is retired. Create a live request and wait for listener acceptance.");
     }
 
     @Transactional

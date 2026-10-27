@@ -1,0 +1,822 @@
+{
+  "date": "2026-10-26",
+  "baseline": "745c24d",
+  "testedRevision": "048387e53605b0a8c2ad5d7a1c00e422b9ced8e2",
+  "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40319624695",
+  "ciStatus": "success",
+  "totalPassed": 142,
+  "totalFailed": 0,
+  "totalSkipped": 0,
+  "backend": {
+    "passed": 70,
+    "failed": 0,
+    "skipped": 0,
+    "unit": 10,
+    "integration": 60,
+    "phaseARetained": 56,
+    "phaseBAdded": 14,
+    "environment": "Disposable PostgreSQL 18, Java 21",
+    "commands": [
+      "scripts/run-phase-a-qa.ps1 -Offline",
+      "./mvnw -B clean verify"
+    ],
+    "suites": [
+      {
+        "name": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.BackendApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.CommunityNotificationIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ContentSocialIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAIntegrationTest",
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseAMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfessionalAvailabilityIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.greenocean.backend.SchemaConstraintsIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "cases": [
+      {
+        "className": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "name": "shouldRegisterLoginRefreshAccessMeAndLogout",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "name": "shouldRejectProtectedEndpointWithoutAccessToken",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.BackendApplicationTests",
+        "name": "contextLoads",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.CommunityNotificationIntegrationTest",
+        "name": "shouldSupportCommunityMembershipPostsAndNotifications",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ContentSocialIntegrationTest",
+        "name": "shouldEnforceFeedVisibilityAndSupportInteractions",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "name": "simultaneousRefreshHasOneWinnerAndNoTwoUsableTokens",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "name": "retiredRefreshReplayRevokesTheWholeSessionFamily",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "guessingCodeIsBoundedAndFailureCounterSurvivesRollback",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "malformedEmailAndWeakPasswordHaveFieldErrors",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verifyActivateLoginLogoutFlow",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "suspendedAccountCannotRefreshOrUseExistingAccess",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "longUnicodePasswordAndNoDisplayDataAreSupported",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "cookieLoginRejectsMissingCsrfAndUntrustedOrigin",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "statusAndAgeMethodClaimsNeverGrantAuthority",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "lowercaseCountryNormalizesAndNoTopicsAreRequired",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "missingOrStaleTermsAreRejected",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "independentIneligibleDecisionCannotBecomeIndependentlyAdultThroughSelfClaim",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "ownerDeletionRevokesSessionAndHidesProfile",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "sameCodeForDifferentEmailsHasDifferentProtectedHash",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "publicResourcesAreSeparateAndAnonymous",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verifiedProfessionalStillNeedsExplicitUnexpiredCareScope",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "verificationIsSingleUseAndPayloadIsEncrypted",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "minimalRegistrationHasPendingUserAndPrivateDefaults",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "inventedCountryAndProfessionalRoleAreRejected",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "fakeMailTransportDeliversAndPurgesEncryptedPayload",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "invalidCityCountryRelationshipCannotActivate",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "pendingAccountCannotAccessSocialRoutes",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "wrongPasswordCannotEraseAnyDataAndBodyUserIdCannotChangeOwner",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "professionalApplicantDoesNotReceiveProfessionalAuthority",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "removedRoleInvalidatesExistingJwt",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "countryCatalogSearchSupportsLocalNamesAndNoImplicitServices",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "passwordRecoveryInvalidatesEveryOldSession",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "expiredVerificationCanBeResent",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "minorCannotRegisterByDirectApi",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "failedMailTransportIsRetryableWithoutExposingSecret",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "browserSessionUsesHttpOnlyCookieAndCanRotate",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "legacyAccountHasGraceButIsNeverAutoVerified",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAIntegrationTest",
+        "name": "unconfiguredCountryGivesAlternativeWithoutGrantingService",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseAMigrationTest",
+        "name": "upgradesLegacyDatabaseWithoutInventingVerificationOrDeletingUsers",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "modernPasswordHashRoundTrip",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "legacyBcryptRemainsCompatibleAndCanUpgrade",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "passphraseHasNoCompositionRequirement",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "longUnicodePasswordDoesNotTruncateAt72Bytes",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "oversizedPasswordIsBounded",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "weakOrShortPasswordIsRejected",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "outboxRejectsTamperingAndWrongKey",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "name": "outboxEncryptionRoundTripAndRandomNonce",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "resourceIdentifiersAndExtraParametersCannotRetrieveMemberData",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "draftsAndFuturePublicationAreNeverLeaked",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "publishedPoliciesArePublicAndVersioned",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "caseInsensitivePolicyKeyStillUsesThePublishedContract",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "unsafePolicyKeysAreNotNormalizedIntoValidDocuments",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "latestPublishedVersionWinsOverANewerDraft",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "excessPublicTrafficUsesOneBudgetAcrossRoutesAndQueryVariants",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "malformedOrOversizedQueriesAreRejected",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "privateEndpointsRemainUnavailableEvenWithLocaleAndCountryParameters",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "localLanguageQueryDoesNotRequireAnAccount",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "inactiveAndFutureReviewedCrisisEntriesAreNotPresentedAsCurrent",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "urgentResourcesAndCuratedEducationNeedNoToken",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "countryAndServiceCatalogsExposeOnlyPublicConfiguration",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "name": "unknownOrRemovedPublicDocumentsFailClearly",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "name": "shouldExposeDatabaseBackedCatalogTrainingAndVerifiedCrisisResourcesWithoutDemoAccounts",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "name": "shouldPersistRegistrationIntentOnboardingAndSearchHistoryInTheAccount",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalAvailabilityIntegrationTest",
+        "name": "shouldBookOnePublishedSlotOnlyOnceAndReleaseItAfterCancellation",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "name": "shouldAcceptARealPdfHeader",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "name": "shouldRejectMimeTypeSpoofing",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldUpdateProfileRespectPrivacyAndProtectUsernameUniqueness",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldDeleteAccountAndImmediatelyInvalidateItsAccessToken",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "name": "shouldChangePasswordAndRevokeAllRefreshTokens",
+        "result": "passed"
+      },
+      {
+        "className": "com.greenocean.backend.SchemaConstraintsIntegrationTest",
+        "name": "shouldEnforceCoreSchemaInvariants",
+        "result": "passed"
+      }
+    ]
+  },
+  "frontendHelpers": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "phaseARetained": 17,
+    "phaseBAdded": 15,
+    "command": "node --experimental-strip-types --test frontend/tests/*.test.mjs",
+    "cases": [
+      "Happy: adult can submit minimal registration",
+      "Happy: optional display name, city, birth year and topics are unnecessary",
+      "Creative: long Unicode and spaces are allowed",
+      "Creative: password composition is not prescribed",
+      "Creative: Unicode length counts code points",
+      "Confused: malformed email has field error",
+      "Confused: empty country has field error",
+      "Confused: terms must be loaded before submission",
+      "Confused: short password has field error",
+      "Malicious: adult attestation cannot be omitted",
+      "Malicious: valid Terms acceptance is mandatory",
+      "Malicious: oversized password is bounded",
+      "Malicious: malformed country is rejected",
+      "Creative: concurrent refresh callers share one operation",
+      "Confused: failed refresh can be retried",
+      "Confused: network failure is recoverable and readable",
+      "Confused: timeout does not claim registration succeeded",
+      "Happy B-01/B-02 en: distinct truthful paths and account boundaries",
+      "Happy B-07/B-10 en: public information and policy destinations are allowlisted",
+      "Creative B-09 en: all localized public strings are populated",
+      "Happy B-01/B-02 fa: distinct truthful paths and account boundaries",
+      "Happy B-07/B-10 fa: public information and policy destinations are allowlisted",
+      "Creative B-09 fa: all localized public strings are populated",
+      "Creative B-09: Persian public copy mirrors English structure",
+      "Confused B-03/B-04: loading is not treated as signed out",
+      "Confused B-05: missing region and network errors have explicit copy",
+      "Confused B-07: policy failure gives a clear unavailable state and recovery",
+      "Malicious B-07/B-10: unknown, array and redirect-like route parameters fail closed",
+      "Malicious B-05: untrusted protocols, credentials, controls and USSD are rejected",
+      "Happy B-05: approved HTTPS URLs survive validation without redirects",
+      "Malicious B-06/B-08: no fabricated counts or instantaneous-capacity promises",
+      "Creative B-09: public body, CTA, error and focus text meet AA contrast"
+    ]
+  },
+  "browser": {
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "phaseARetained": 12,
+    "phaseBAdded": 28,
+    "environment": "Real Expo web application in Chrome/Playwright, synthetic intercepted API contracts",
+    "command": "PLAYWRIGHT_CHANNEL=chrome npm run test:e2e",
+    "cases": [
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Happy: anonymous visitors can use public resources",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Happy: minimal registration leads to email verification",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Happy: current Terms can be opened before acceptance",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Creative: long Unicode password needs no optional identity or medical fields",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Creative: password visibility can be toggled accessibly",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Creative: country choice can be changed before submission",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Confused: invalid email and short password give recoverable field errors",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Confused: interrupted registration keeps form values and can be retried",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Confused: expired code can be corrected without restarting signup",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Malicious: omitting adult attestation cannot submit the form",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Malicious: current Terms cannot be skipped",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-a.spec.mjs",
+        "name": "Malicious: web login never persists tokens in browser storage",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Happy B-01/B-02/B-06/B-08: mission, distinct support and honest capacity",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Happy B-03/B-04: registration and login use existing Phase A routes",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Happy B-05: urgent help is public, manual and has an honest no-local state",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Happy B-07: deep-linked current published policies show version and text",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Happy B-10: pathway explanations and FAQ need no account",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: Persian RTL, persistence and English return",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 320px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 375px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 390px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 768px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 1024px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: responsive Welcome at 1440px",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: keyboard focus is visible and order is usable",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-09: enlarged text, landscape and reduced motion remain functional",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Creative B-07/B-10: back and forward preserve public navigation",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-03: repeated CTA taps do not duplicate navigation",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-07: policy failures show an honest error and retry",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-04: loading authentication does not offer signup or private content",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-05: failed urgent directory keeps emergency guidance available",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-04: an authenticated visitor returns to permitted activation",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-04: an expired session returns to a usable guest welcome",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-04: interrupted session confirmation keeps sign-in recoverable",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Malicious B-10: guest Welcome does not request private member endpoints",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Malicious B-07: malformed information routes do not redirect externally",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Malicious B-07: untrusted published text is rendered literally",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Malicious B-05: unsafe resource URL cannot execute script",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Malicious B-07: absent age policy is not replaced by a fabricated document",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-b.spec.mjs",
+        "name": "Confused B-07: a late policy response cannot replace a newer document",
+        "result": "passed"
+      }
+    ]
+  },
+  "phaseBPersonas": {
+    "happy": {
+      "backend": 3,
+      "helpers": 5,
+      "browser": 5
+    },
+    "creative": {
+      "backend": 3,
+      "helpers": 4,
+      "browser": 10
+    },
+    "confused": {
+      "backend": 3,
+      "helpers": 3,
+      "browser": 8
+    },
+    "malicious": {
+      "backend": 5,
+      "helpers": 3,
+      "browser": 5
+    }
+  },
+  "otherChecks": {
+    "typecheck": "passed",
+    "eslint": "passed",
+    "webAndroidIosJavaScriptAssetExport": "passed",
+    "diffWhitespace": "passed",
+    "nativeBinaryBuild": "not run",
+    "androidDevice": "not run",
+    "iosDevice": "not run",
+    "talkBackVoiceOver": "not run",
+    "productionDeployment": "not run"
+  },
+  "accessibility": {
+    "browserWidths": [
+      320,
+      375,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "checks": [
+      "EN/FA structure and populated strings",
+      "RTL persistence and return to English",
+      "375px Persian reflow",
+      "keyboard focus and tab order",
+      "public text/action/error/focus token contrast >=4.5",
+      "enlarged public text, landscape, reduced motion",
+      "public headings and hidden decorative icons"
+    ],
+    "scope": "Targeted browser checks, not full WCAG conformance certification"
+  },
+  "visualInspection": {
+    "sourceRevision": "048387e53605b0a8c2ad5d7a1c00e422b9ced8e2",
+    "artifactId": 12647833648,
+    "sha256": "db35f81e9cffa9eb5fcdbe886ddffe0ab9a39ce20cc8e23890357c9e019768a2",
+    "inspected": [
+      "six responsive footer/CTA views",
+      "English desktop header/hero/pathways at 1440",
+      "English mobile header/hero and pathway at 320",
+      "Persian desktop and 375px mobile",
+      "enlarged-text mobile header",
+      "published-policy unavailable state"
+    ],
+    "result": "Reviewed images have readable hierarchy, wrapped controls and no horizontal clipping. At enlarged text, long headings reflow and require vertical scrolling.",
+    "retainedPreviews": [
+      "screenshots/welcome-desktop-1440.png",
+      "screenshots/welcome-mobile-320.png",
+      "screenshots/welcome-pathways-320.png",
+      "screenshots/welcome-persian-375.png",
+      "screenshots/policy-unavailable.png"
+    ],
+    "captureScope": "Viewport screenshots at top/pathway/footer scroll positions; fullPage does not expand the native ScrollView into a single stitched page."
+  },
+  "priorRun": {
+    "revision": "bc1a661",
+    "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40318178939",
+    "browserPassed": 37,
+    "browserFailed": 2,
+    "reason": "Ambiguous duplicate-button locator and hidden previous-route text included in a DOM count. Corrected selectors assert active visible page; no tests skipped."
+  },
+  "nativeChecklist": "mobile-smoke-checklist.md",
+  "report": "delivery-report.md",
+  "pullRequest": "https://github.com/mehrnaz-sarafraz/GreenOcean/pull/2",
+  "pullRequestBase": "feature/phase-a-identity-privacy-access",
+  "releaseReadiness": "Native validation, approved policy publication and Phase A operational prerequisites remain outstanding.",
+  "ciArtifacts": {
+    "backendJunit": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40319624695/artifacts/12648267319",
+    "browserReport": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40319624695/artifacts/12647833648",
+    "platformBundles": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40319624695/artifacts/12648068213",
+    "retention": "Actions artifacts expire; selected PNGs and every test name remain in this repository."
+  }
+}

@@ -1,0 +1,920 @@
+{
+  "recordedDate": "2026-10-27",
+  "localBaseline": "785f45a",
+  "publishedBaseline": "38c114add7ce1d0c8ffcce8c68239b43ca004eaa",
+  "backend": {
+    "totals": {
+      "tests": 234,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "suites": [
+      {
+        "class": "com.greenocean.backend.AuthFlowIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "8c9b86cfbb3d3d98a666529c6d4a516463861465c06b57b16e09e14273e859bc",
+        "cases": [
+          "shouldRegisterLoginRefreshAccessMeAndLogout",
+          "shouldRejectProtectedEndpointWithoutAccessToken"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.BackendApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "28bf540c7680ec3fbcc0bb88237c2fc935552e46b29fc1a2aefacb9089a05197",
+        "cases": [
+          "contextLoads"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.CommunityNotificationIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "404910d41a8735c387f17fd00b2fa3b2e4d532a003b13ba31389e92ea8ba1114",
+        "cases": [
+          "shouldSupportCommunityMembershipPostsAndNotifications"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.ContentSocialIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "4715e4f7442887b3a5e4b1e754834ce1f55dece4fc1eb0e00e401a878178e3a8",
+        "cases": [
+          "shouldEnforceFeedVisibilityAndSupportInteractions"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseAConcurrencyTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "2fa4c50a9b9819c77e084b8b073e765539b858cbd78d5b38ce7ea00856a9a795",
+        "cases": [
+          "simultaneousRefreshHasOneWinnerAndNoTwoUsableTokens",
+          "retiredRefreshReplayRevokesTheWholeSessionFamily"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseAIntegrationTest",
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "741bab47f23c7d3dea7254bbc7912d549fa520fa4971122a45bcc60f3ae6b04f",
+        "cases": [
+          "guessingCodeIsBoundedAndFailureCounterSurvivesRollback",
+          "malformedEmailAndWeakPasswordHaveFieldErrors",
+          "verifyActivateLoginLogoutFlow",
+          "suspendedAccountCannotRefreshOrUseExistingAccess",
+          "longUnicodePasswordAndNoDisplayDataAreSupported",
+          "cookieLoginRejectsMissingCsrfAndUntrustedOrigin",
+          "statusAndAgeMethodClaimsNeverGrantAuthority",
+          "lowercaseCountryNormalizesAndNoTopicsAreRequired",
+          "missingOrStaleTermsAreRejected",
+          "independentIneligibleDecisionCannotBecomeIndependentlyAdultThroughSelfClaim",
+          "ownerDeletionRevokesSessionAndHidesProfile",
+          "sameCodeForDifferentEmailsHasDifferentProtectedHash",
+          "publicResourcesAreSeparateAndAnonymous",
+          "verifiedProfessionalStillNeedsExplicitUnexpiredCareScope",
+          "verificationIsSingleUseAndPayloadIsEncrypted",
+          "minimalRegistrationHasPendingUserAndPrivateDefaults",
+          "inventedCountryAndProfessionalRoleAreRejected",
+          "fakeMailTransportDeliversAndPurgesEncryptedPayload",
+          "invalidCityCountryRelationshipCannotActivate",
+          "pendingAccountCannotAccessSocialRoutes",
+          "wrongPasswordCannotEraseAnyDataAndBodyUserIdCannotChangeOwner",
+          "professionalApplicantDoesNotReceiveProfessionalAuthority",
+          "removedRoleInvalidatesExistingJwt",
+          "countryCatalogSearchSupportsLocalNamesAndNoImplicitServices",
+          "passwordRecoveryInvalidatesEveryOldSession",
+          "expiredVerificationCanBeResent",
+          "minorCannotRegisterByDirectApi",
+          "failedMailTransportIsRetryableWithoutExposingSecret",
+          "browserSessionUsesHttpOnlyCookieAndCanRotate",
+          "legacyAccountHasGraceButIsNeverAutoVerified",
+          "unconfiguredCountryGivesAlternativeWithoutGrantingService"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseAMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "0049d05159938718d9a1fddaba6964b7dc50c211b063dc2a542a053839032a55",
+        "cases": [
+          "upgradesLegacyDatabaseWithoutInventingVerificationOrDeletingUsers"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseASecurityUnitTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "1d0ce7a9e553cc821eacae4178453534d4cf5c3c2346cc3c9e23d27b72cfb7c8",
+        "cases": [
+          "modernPasswordHashRoundTrip",
+          "legacyBcryptRemainsCompatibleAndCanUpgrade",
+          "passphraseHasNoCompositionRequirement",
+          "longUnicodePasswordDoesNotTruncateAt72Bytes",
+          "oversizedPasswordIsBounded",
+          "weakOrShortPasswordIsRejected",
+          "outboxRejectsTamperingAndWrongKey",
+          "outboxEncryptionRoundTripAndRandomNonce"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseBPublicAccessIntegrationTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "e4e4641085830fa588972f04c743b4af14acaba733637a7618a6e3e175a54978",
+        "cases": [
+          "resourceIdentifiersAndExtraParametersCannotRetrieveMemberData",
+          "draftsAndFuturePublicationAreNeverLeaked",
+          "publishedPoliciesArePublicAndVersioned",
+          "caseInsensitivePolicyKeyStillUsesThePublishedContract",
+          "unsafePolicyKeysAreNotNormalizedIntoValidDocuments",
+          "latestPublishedVersionWinsOverANewerDraft",
+          "excessPublicTrafficUsesOneBudgetAcrossRoutesAndQueryVariants",
+          "malformedOrOversizedQueriesAreRejected",
+          "privateEndpointsRemainUnavailableEvenWithLocaleAndCountryParameters",
+          "localLanguageQueryDoesNotRequireAnAccount",
+          "inactiveAndFutureReviewedCrisisEntriesAreNotPresentedAsCurrent",
+          "urgentResourcesAndCuratedEducationNeedNoToken",
+          "countryAndServiceCatalogsExposeOnlyPublicConfiguration",
+          "unknownOrRemovedPublicDocumentsFailClearly"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseCConcurrencyTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "95d7a2342e22bcd5893babaf752db07390e2694b320e484ad6e697244c9b66da",
+        "cases": [
+          "simultaneousCaseVariantsHaveOneAccountAndIdenticalPublicResponses"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseCRegistrationIntegrationTest",
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "5ef4f9517aa5c9238ae552c12194242acb4b127131fb3602ba2e6a3803a6354f",
+        "cases": [
+          "generatedUsernameCollisionRetriesWithoutChangingExistingProfile",
+          "updatedTermsRequireAcceptanceBeforePendingActivation",
+          "rejectedEligibilityAndRoleRequestsCreateNoAccounts",
+          "duplicateAndNewResponsesMatchWithoutChangingCredentialsOrSendingMail",
+          "registrationHasDurableRateLimitWithRetryAndNoMutation",
+          "trimCasePlusAndDotsFollowTheIdentityContract",
+          "activationStillRequiresRegionalPermission",
+          "minimalRegistrationCreatesOnePrivatePendingAccountWithEvidence",
+          "maximumCodePointPasswordWorksThroughDtoAndLogin",
+          "malformedAndOversizedBodiesAreSafeAndDoNotMutate",
+          "weakPasswordAndStaleTermsHaveSpecificSafeFieldsAndNoMutation",
+          "extraAuthorityClaimsDoNotGrantPrivilegesOrExposeOptionalData",
+          "anotherAccountsCodeCannotVerifyTheVictim"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseCValidationTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "444f952c03bc8ad2d435a732464a569d9fecc5fcf595897fe96ccce48a7be08f",
+        "cases": [
+          "passwordBoundariesCountCodePointsAndAllowSpaces",
+          "invalidAndUnsupportedMailboxesFailTheBoundedPolicy",
+          "supportedEmailPolicyIncludesPunycodeAndPlusAddressing",
+          "normalizationPreservesPlusDotsAndOnlyFoldsCaseAndEdges",
+          "dtoNormalizesBeforeBeanValidation"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDConcurrencyTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "a5210099e9c21d200dcc06e5586545564a91b8b6ca63c277731766b16cbcbaf1",
+        "cases": [
+          "concurrentResendsKeepOneCurrentChallengeAndOneUsefulOutboxEntry",
+          "concurrentEmailChangesRemainPendingAndNeverShareAccountIdentity",
+          "tenConcurrentConfirmationsHaveExactlyOneWinnerAndOneConsumption",
+          "activationDatabaseFailureRollsBackConsumedCodeAndAllowsRetry"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDMailEventTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "4c127c107972dcd5f5d36ec2a5a1382228190b02bfd9aab1de918e8930b403ef",
+        "cases": [
+          "authenticatedIdempotentEventsDoNotGrantEmailOwnershipOrOverwriteNewerOutcomes"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDMailGatewayTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b0741c4b6ad5584ad275582a9080c56267083a9f608d0f91bb12b742af4a6a50",
+        "cases": [
+          "authenticatedHttpsCaptureContainsOnlyReviewedTemplateEnvelopeAndStableIdentifier",
+          "temporaryAndPermanentProviderErrorsAreSafeAndDistinct",
+          "sameDeliveryIdentifierSupportsProviderIdempotencyAndPasswordResetTemplate",
+          "stagingRefusesUnauthorizedAddressesAndInsecureGateway",
+          "transportTimeoutIsUncertainAndNeverLeaksProviderDetails"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "faad2723aa09460468980afba61a56029088a7d7a090ebc6249df406d948c999",
+        "cases": [
+          "populatedV35UpgradesWithoutChangingAccountsOrLosingQueuedCiphertext"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDOutboxIntegrationTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "5bae60dd46d20f7350dea8201a6e7e049b753d8084b390f7ed60fd7471521279",
+        "cases": [
+          "successfulAcceptancePurgesPayloadAndNetworkHasNoOpenTransaction(CapturedOutput)",
+          "permanentFailureAndRetryExhaustionPurgeSensitivePayload",
+          "workerWithOldLeaseCannotOverwriteNewWorkerState",
+          "missingRotationKeyFailsReadinessExplicitlyBeforeDispatch",
+          "crashedSendingLeaseIsRecoveredAfterRestartWithStableId",
+          "uncertainAcceptanceIsReconciledUsingTheSameIdempotencyKey",
+          "exhaustedCrashDoesNotDispatchAgainAndPurgesPayload",
+          "transientFailureBacksOffThenRetriesTheSameDelivery",
+          "expiredAndSupersededMessagesDoNotSend",
+          "twoInstancesCannotClaimTheSameLiveLease",
+          "retiredChallengeCannotBeDelivered"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDPendingCleanupTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "a3126a05d2e9683536f10e8cc16ce7bd4a0f5ddf2589f0f594f83359c4e2d11f",
+        "cases": [
+          "bouncedDeliveryAndLiveRecoveryCredentialProtectOldAccounts",
+          "erasureTransactionFailureRollsBackAndCanBeRetried",
+          "sevenDayBoundaryUsesServerTimeAndConfigurableThreshold",
+          "oldAbandonedAccountIsAnonymizedUsingExistingLifecycleAndCleanupIsIdempotent",
+          "recentResendAndUndeliveredMailProtectAccountsFromRetention",
+          "authorizedOperationHoldingAccountLockIsSkipped",
+          "dryRunPauseAndBoundedRestartAreSafe",
+          "activeLegacySuspendedNewAndHistoricalAccountsAreNotSelected"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDProtectionTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "1bf10321e11d11ff1e8c295df83100e7e10e82374ce0347705e2a55d1d3281cb",
+        "cases": [
+          "unknownKeysCorruptionAndInvalidKeyRingsFailWithoutLeakingValues",
+          "v1CiphertextAndHmacRemainCompatibleWithoutRewritingQueuedEntries",
+          "pendingPayloadAndCodeRemainUsableDuringKeyRotation",
+          "encryptionAndHmacUseVersionedSeparatedKeys",
+          "verificationLimitConfigurationRejectsUnsafeValues"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDResendPolicyTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "96c221390266b2659282c42ff13ee810146b587db3ae7a0076ce714b60b71cd9",
+        "cases": [
+          "cooldownLimitsSendingWithoutRevealingAccountExistenceAndAllowsRecovery"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseDVerificationIntegrationTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "0366fe15fae95dc64477e25692b0e4f7faef5e94ea49ed57f127c9964f01a2b7",
+        "cases": [
+          "expirationUsesServerTimeAtBeforeAndAfterBoundary",
+          "correctionRequiresOwnValidPendingSessionAndPassword",
+          "pendingActionsAreDeniedAcrossEverySocialCategoryWithoutWrites",
+          "resendInvalidatesPriorCodeAndRetainsOneUsefulChallenge",
+          "pendingOwnerCorrectsEmailWithReauthenticationAndSessionRevocation",
+          "verifiedAccountCannotUsePendingCorrectionOrRequestAnotherChallenge",
+          "blankIncompleteAndMalformedCodesDoNotConsumeAChallenge",
+          "leadingZeroCodeIsStoredProtectedAndAcceptedAsSixCharacters",
+          "unavailableCorrectionAddressDoesNotDiscloseItsOwnerOrMutateEitherAccount",
+          "suspendedAndDeletedAccountsNeverConsumeOrReportVerificationSuccess",
+          "verificationKeepsTheExistingEligibilityAndServiceBoundaries",
+          "resendCannotResetAccountGuessingBudgetAcrossClients"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseEFConcurrencyTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "607d9a66737fbf0000af0916c9cd7578a6e335aac687e1b6ee5f51cb92662e4f",
+        "cases": [
+          "logoutRacingRefreshLeavesNoUsableSession",
+          "parallelPasswordConfirmationHasOneRotationAndNoOldProofReuse",
+          "passwordResetRacingRefreshCannotResurrectSession",
+          "parallelLoginDoesNotExhaustPoolWithNestedRateTransactions",
+          "remoteRevokeRacingRefreshLeavesNoUsableSession",
+          "expiredSessionCannotIssueNewTokens",
+          "twoResetConsumersHaveOneWinnerAndOneConsumption"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseEFMfaBoundaryTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "24a1f2c9e70bff20433386f651a0934cbb78fd3c1858a12dde085b9c04174ac7",
+        "cases": [
+          "malformedRegistrationConsumesChallengeWithoutInventingAnAuthenticator",
+          "ordinaryUsersCannotEnrollEvenWithARealPasswordSession",
+          "privilegedPasswordAloneDoesNotAuthorizeFirstEnrollmentOrStaffAccess",
+          "expiredAndSubstitutedCeremoniesCannotBeUsed",
+          "missingStrongProofIsAuditedEvenWhenStaffRoutesAreConfigured",
+          "independentPermitCreatesBoundRpUserVerifiedChallengeWithoutGrantingMfa"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseEFMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "2879580e4fb763d52b864a4fff85578f53960f9e951750b44a3a893e9760a422",
+        "cases": [
+          "populatedDSessionHistoryReceivesBoundedOriginalLifetimes"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseEFSecurityUnitTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "d1af92858b1331cbac2938d8861e63128f0505abaabf6ead8f4a6ca3d4aa68f0",
+        "cases": [
+          "exactIdleAndOverallBoundariesFailClosed",
+          "unicodePasswordBoundsAndNoArbitraryCompositionRule",
+          "invalidPolicyCannotStart",
+          "malformedModernAndLegacyHashesAreGenericFailures",
+          "refreshDoesNotMoveOverallOrMeaningfulActivity",
+          "approvedPlatformAndScopeBoundsAreDistinct"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseEFSessionIntegrationTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "3ba3b3185c14bd3d975abd90b7cd7a6500f73e0255b811d3d05d2fd8eab8ed03",
+        "cases": [
+          "recoveryIsSingleUseBoundToOwnerAndRevokesOldSessions",
+          "recoveryExpiresAtExactServerBoundaryAndNeverReturnsPlaintextMaterial",
+          "securityInventoryHasSafeLabelsNoTokensAndOwnerOnlyEvents",
+          "replacedOrSuspendedRecoveryFailsWithoutChangingPassword",
+          "onlyExplicitActivityExtendsIdleAndNeverOverall",
+          "passwordChangeRevokesAllSessionsAndAllowsOnlyNewPassword",
+          "sessionOwnershipAndRevocationHavePersistedEffects",
+          "pendingSessionNeedsFreshLoginAfterRealActivation",
+          "nativeAndWebSessionsHaveApprovedImmutableOverallBounds",
+          "webPasswordStepUpRequiresOriginAndHeaderAndRotatesOnlyHttpOnlyCookie",
+          "staleLoginNeedsRealPasswordProofForLogoutAll",
+          "browserCookieWritesRejectMissingHeaderAndHostileOrigins",
+          "expiredIdleAndOverallDenyOtherwiseValidAccessAndRefresh",
+          "malformedHashAndUnknownUserHaveSameGenericError",
+          "securityEventsAreOwnerScopedAndRetentionDoesNotDeleteOtherAuditEvidence",
+          "suspensionAndRoleChangesInvalidateExistingTokens",
+          "passwordStepUpBindsRefreshAndInvalidatesOldBearerWithoutExtendingLifetime",
+          "jwtSignatureIssuerExpiryRolesSessionAndVersionAreValidated"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseGHConcurrencyTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "1fa935faf2369e59acd4d6b576b3e02f24258d8a9a0c80f09f4dbb79dd4e48ee",
+        "cases": [
+          "concurrentIndependentPreferencePatchesPreserveBothConfirmedChanges",
+          "failedRegistrationTransactionLeavesNoPartialProfileEligibilityOrEmail",
+          "simultaneousDistinctRegistrationsKeepUniqueUsernamesAndAllowDuplicateDisplayNames"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseGHMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "12c2dc040c71af15b2afe5b24a3675385599d4c8e644b25481a499b3cee2c2b6",
+        "cases": [
+          "populatedEfDatabasePreservesChoicesAndConservativelyFreezesHistoricalAudiences"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseGHPrivacyIntegrationTest",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b810ee812e8b50c6995ed617ba335b0d94d5060029b815bf47ce658e09de72fd",
+        "cases": [
+          "anonymousPostsDoNotAppearInOtherMembersAuthorListingsOrCounts",
+          "communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess",
+          "rejectsReservedTakenUnsafeIdentityAndAvatarWithoutPersisting",
+          "minimalRegistrationHasOnePrivateProfileAndNonEmailIdentity",
+          "savedExportPreviewsRespectBlocksInBothDirectionsWithoutErasingBookmarks",
+          "messageRequestsFollowApprovalAndEstablishedBlockAreEnforced",
+          "savedExportPreviewsRespectModerationAndInactiveAuthors",
+          "revokedAudienceNotificationsAndAnonymousRepliesDoNotDiscloseProtectedInformation",
+          "privateFieldsAreRedactedInProfileAndSearchButVisibleToApprovedFollower",
+          "onboardingProgressSkipCompleteAndEmptyClearArePersistedSeparately",
+          "audienceMatrixSurvivesPrivacyTransitionsAndAlternateApiRequests",
+          "ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads",
+          "professionalOnlyRequestsRequireVerifiedSenderAndRemainSeparateFromCare",
+          "enabledRequestsPermitContactAndDeletionErasesPreferencesProgressAndAvatar",
+          "legacyBooleanDismissalDoesNotFabricateCompletionAndNullDoesNotClear",
+          "savedExportPreviewsDisappearAfterCommunityMembershipIsRevoked",
+          "persianNamesDuplicateDisplayAndAvatarClearPreserveAccountIdentity",
+          "contentControlsFilterDiscoveryIndependentlyOfAuthorizedDirectLinks",
+          "paginatedDiscoveryNeverReturnsFollowersOnlyPostsToStrangers",
+          "broaderAudienceRequiresExplicitPerPostConfirmation"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseGHTopicGateTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "9f55c001faabe82faea036d1d983bc45f13ee838ba1d0e36430024226d86eff6",
+        "cases": [
+          "reviewedTopicGateUsesStableActiveSlugsAndAllowsExplicitClear"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseIConcurrencyTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "3270957ae7236a7373d9ab39f691bc4af913d7a4b80d6cc783110f482c635e04",
+        "cases": [
+          "blockingVersusAcceptanceAndSuspensionVersusActivationCannotLeaveLiveAccess",
+          "requesterErasureDuringActiveSessionReleasesSlotAndDoesNotPreservePrivateRequest",
+          "exactExpirationWinsAgainstConcurrentAcceptanceAndRestartedWorker",
+          "logoutVersusHeartbeatAndAuthorizationRevocationVersusActiveSessionFailClosed",
+          "databaseFailureRollsBackConversationAndAcceptanceReservationRemainsRecoverable",
+          "twoServiceInstancesCompetingForOneListenerHaveOneCapacityWinner",
+          "failedRequestCreationTransactionDoesNotLeakCapacity",
+          "acceptanceVersusCancellationAlwaysEndsCancelledWithoutConversation",
+          "memberDuplicateDevicesAndListenerDuplicateAcceptanceConvergeToOneRequest",
+          "distinctDuplicateRequestsAndRequesterDeletionVersusActivationHaveOneSafeOutcome",
+          "restartedServiceRestoresAcceptedStateAndDuplicateActivationAndEndAreIdempotent",
+          "committedAcceptanceRetryAndRestartedPendingReadNeverDuplicateOffers"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseIDisabledServiceTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "ff9b820290946d3f85b70d0eb51f8fdf92ef3f758543ab03ec1e789bbe35adf4",
+        "cases": [
+          "productionDefaultDoesNotEnableLiveHumansOrBlockPublicResources"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseILiveSupportIntegrationTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "b11c28e8b2babdaaf176d518c7510355958dc66efdeb7ccee08e08df382c1b09",
+        "cases": [
+          "exportOwnMetadataAndMessagesDoesNotCopyPeersTranscriptAndErasureReleasesCapacity",
+          "callerCannotForgeAcceptanceOrInspectAnotherRequest",
+          "rotatingReadinessLeaseRejectsOldDeviceAndRevokedAuthentication",
+          "exactExpiredDeadlineCannotBeAcceptedWithoutScheduler",
+          "cancelDeclineAndListenerUnavailabilityAreTerminalWithoutChats",
+          "blockImmediatelyClosesLiveSessionAndStopsPollingAndSending",
+          "suspensionAndListenerRevocationInvalidateActiveCapacity",
+          "ordinaryDirectConversationCannotMasqueradeAsAcceptedListenerSession",
+          "rawMessageAndParticipantConstraintsRejectForgedThirdParty",
+          "rateLimitBoundsRepeatedExplicitRetriesWithoutQueue",
+          "requestsAndMessagesAreBoundedAndDoNotCollectTopics",
+          "selfCompletedPracticeIsNotIndependentLiveAuthorization",
+          "duplicateRequestIdentifierReturnsSameOfferAndOnlyOneOpenRequestIsAllowed",
+          "acceptedOfferHasBoundedActivationAndDoesNotLeaveCapacityOccupied",
+          "realAcceptanceActivationMessagingEndAndHistoryAreSeparateAndRetrySafe",
+          "pendingIneligibleOrUnsupportedAccountsCannotRequestSupport",
+          "noOfflineFallbackOrLegacyInstantMatchExists",
+          "interruptionResumesOnlyWithRecentParticipantsAndEndsAfterBoundedTimeout"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseILiveSupportSettingsTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "5d4b0964b57cf07c302f21ce023841e2ae298a82086bd789d6906df93991a300",
+        "cases": [
+          "timingBoundsRejectUnsafeOperationalConfiguration",
+          "approvedDefaultsAreExplicitAndDoNotEnableService"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.PhaseIMigrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "10aa60a37e65eddaeaca94c61cbb6e13c7036c875d3f008c874f2974b15aa534",
+        "cases": [
+          "populatedGhHistoryIsPreservedAndFailedForwardMigrationRecoversTransactionally"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.ProductConfigurationIntegrationTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "48bcf9e7c942f9aa23fb33377f557295b246c76a3a0b152482df50fe251df4e4",
+        "cases": [
+          "shouldExposeDatabaseBackedCatalogTrainingAndVerifiedCrisisResourcesWithoutDemoAccounts",
+          "shouldPersistRegistrationIntentOnboardingAndSearchHistoryInTheAccount"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.ProfessionalAvailabilityIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "52764a98d4d517a17b5f43935b1b1d920f960eeb77ad81e76206ed26f085d37d",
+        "cases": [
+          "shouldBookOnePublishedSlotOnlyOnceAndReleaseItAfterCancellation"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.ProfessionalDocumentStorageTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "c22072f55625b81bb44ad4116fc529050ca72ab979429f4fff2655e7b098d0ea",
+        "cases": [
+          "shouldAcceptARealPdfHeader",
+          "shouldRejectMimeTypeSpoofing"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.ProfileAccountIntegrationTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "959ee81ffff65b08fd3aa253ad196fccf2a1875b07bcd96dd3ee559082ef200e",
+        "cases": [
+          "shouldUpdateProfileRespectPrivacyAndProtectUsernameUniqueness",
+          "shouldDeleteAccountAndImmediatelyInvalidateItsAccessToken",
+          "shouldChangePasswordAndRevokeAllRefreshTokens"
+        ]
+      },
+      {
+        "class": "com.greenocean.backend.SchemaConstraintsIntegrationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "edda66c9b3f35e2fd99347e31dcba287ba6f95f2e32c67da7c7a602dec4e9a62",
+        "cases": [
+          "shouldEnforceCoreSchemaInvariants"
+        ]
+      }
+    ]
+  },
+  "helpers": {
+    "passed": 64,
+    "failed": 0,
+    "skipped": 0
+  },
+  "realServerBrowser": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0
+  },
+  "typecheck": "PASS",
+  "lint": {
+    "errors": 0,
+    "warnings": 11
+  },
+  "export": {
+    "platforms": [
+      "web",
+      "android",
+      "ios"
+    ],
+    "exitCode": 0,
+    "nativeRuntimeTest": false
+  },
+  "notExecuted": [
+    "physical Android/iOS",
+    "TalkBack/VoiceOver",
+    "physical multi-host failover",
+    "production load",
+    "actual staffing/approval/retention/legal review"
+  ],
+  "sourceSha256": {
+    ".github/workflows/phase-a.yml": "5c3e8baf3c7d6cbd30a1623702482fd1fdc957fbae1dcefc4e69643e76f15b3b",
+    "backend/src/main/java/com/greenocean/backend/account/dto/AccountActivityResponse.java": "c8dbf5bcd7e429c19b0232d1ac78b0c81add9c9ee6b8b0d40acfe0d6f9e532d2",
+    "backend/src/main/java/com/greenocean/backend/account/repository/AccountRepository.java": "a06b7075f7022c212ce8e0b14ab5a753def6658d12ab5c13adc6f35470cbe87f",
+    "backend/src/main/java/com/greenocean/backend/common/exception/GlobalExceptionHandler.java": "9e1c07f9593cc7f54dba9b54bdc6476d9b113281e72337bad588e9b62b258f50",
+    "backend/src/main/java/com/greenocean/backend/listener/live/ListenerAvailability.java": "759a9fe9ce747ad59db4ff169bbc42a3dd6eaba5b95c9965af3c58231768c32c",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveAuthorizationController.java": "9ddc4236ba61e2b7a32704a36b85af0c730740ff38e2d14c476818eb42d046ef",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveSupportController.java": "02e1ea643271fbe1c8214594b0d52d933590b059875620b39a98c9c17ff19409",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveSupportException.java": "bb19ed269cb49730ce9b416b896037dc87df4b199490cc46f030e57e7f8e63dd",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveSupportService.java": "2820bbaff7dc58e91b3e50596ad96c6a4fe65b0ae6c6dd46b9e41ba32eda2eac",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveSupportSettings.java": "234d37fef6e697beaa40805e929eb59dd1db4644e9381ccadc1db29985cfb6e4",
+    "backend/src/main/java/com/greenocean/backend/listener/live/LiveSupportView.java": "8024197c2457abb034daf5f765921b3d2233f4f77b21df29cc18bb90f5eaafac",
+    "backend/src/main/java/com/greenocean/backend/listener/repository/ListenerRepository.java": "1203debdeee8589f6b7ff120da11a1b48509e97f71381eabdf74776ac43e4e93",
+    "backend/src/main/java/com/greenocean/backend/listener/service/ListenerService.java": "8113908f822a264e81d47526bb2456717dad45a287b5ab369a79e546e676dc4a",
+    "backend/src/main/java/com/greenocean/backend/messaging/controller/MessagingController.java": "3ebfcff6c30446236955f06cfe997bc850c29a1c316c6c89b2d10ff292a9971c",
+    "backend/src/main/java/com/greenocean/backend/messaging/dto/ConversationResponse.java": "bf2593c7048738a532e7bf31df1ff3cba51fc1e857d7fa211c1d1e1d2a5ce5bf",
+    "backend/src/main/java/com/greenocean/backend/messaging/dto/SendMessageRequest.java": "cfd28a8bbc12798a5b8d4b1a2176007c8a035fed76337a835f067b9d2da1fe57",
+    "backend/src/main/java/com/greenocean/backend/messaging/repository/MessagingRepository.java": "741d447378bdb4a2c2b73303ac3801368c86e07760e69a03f8994561794d4743",
+    "backend/src/main/java/com/greenocean/backend/messaging/service/MessagingService.java": "f8cb1e14d2b4c2c09dcec3484bf610450f139484e68906d363f2ad32bdeba941",
+    "backend/src/main/resources/application.properties": "58ac7802b53dc342cd4b2116594c3d2a263c229d4df02ed960536ba08b981241",
+    "backend/src/main/resources/db/migration/V41__live_listener_acceptance_and_sessions.sql": "50c52ae9b85a737ddf44b7b7928455654a1331015085dca9777fdecd8c89e40c",
+    "backend/src/test/java/com/greenocean/backend/PhaseCLiveServer.java": "4265b64035166bb71b8247cd7b77d502d07baddd9683271438e4b3c15257f3ec",
+    "backend/src/test/java/com/greenocean/backend/PhaseIConcurrencyTest.java": "f013f563c4317d5575aa078d82960b6ef27515faa7f0cc0bf90519ab3c6e01d2",
+    "backend/src/test/java/com/greenocean/backend/PhaseIDisabledServiceTest.java": "413eef9570c1cfe269ca76f10ea52d24e30e975fdecfddd78d802b7dec0bcb84",
+    "backend/src/test/java/com/greenocean/backend/PhaseIFixtures.java": "f6fd9d4cb3372235832330bcfc899d080639b3cd10b1214fc320c596beb5998a",
+    "backend/src/test/java/com/greenocean/backend/PhaseILiveSupportIntegrationTest.java": "a4e75f0c2fcef319d8123586c831ecd437454e43d24f699d075135b85b927538",
+    "backend/src/test/java/com/greenocean/backend/PhaseILiveSupportSettingsTest.java": "7c75b4a09d68284561202e59ad43c2c3ba14eb7b3f4f7377d7e3841f3f93de43",
+    "backend/src/test/java/com/greenocean/backend/PhaseIMigrationTest.java": "fb160f9f5404e3ad7398b3dd42eacf02b74c23d2c679d35a2fbe8057accbb1d1",
+    "frontend/e2e/phase-b.spec.mjs": "cd4914314ae9fafa1c998fa9dcadbf1dc9d81b53a546930eea0b119aa80eeee4",
+    "frontend/e2e/phase-ef.spec.mjs": "e5056f66013cbbb73bcf86ad7d7c638f47af122051f095cf237f0472bb1c56c1",
+    "frontend/e2e/phase-i.spec.mjs": "c8b988d21f0666a525d6b9a5cd6e5a03438c3cbfa098f309470717902570986b",
+    "frontend/live-e2e/phase-i-journey.spec.mjs": "10b19fa49628b4ec296a8ba84f97e18ff7d1c091aa4ffdc28a2fa9ba1d8fa13f",
+    "frontend/playwright.config.mjs": "3515f46f12ccb1606c43fed4c49c1d529c7d373f717aeeb31b9eb4a723820510",
+    "frontend/playwright.live.config.mjs": "69a8e4dbabb27292a4bfaca4742c948c051f9be006e302f367604b7787507747",
+    "frontend/src/app/(app)/chat/[id].tsx": "68c9d9349d8ad3e68916f2d7a3c416efd5186cb3221248feb8d11d3f9e0abccc",
+    "frontend/src/app/(app)/listener/[action].tsx": "eb8642c0bf8ab03fd83e2329527e11b78047e320318f9604570d569eeacc5531",
+    "frontend/src/app/(app)/support.tsx": "280cbb93e620790e3b4606414095dcdaf4bc5f34e32cacbb184ec5313868ed12",
+    "frontend/src/components/product-ui.tsx": "6abdc298c63b5c28a849f964dd6d95601045d024affe0fcbf873d6faa5eca845",
+    "frontend/src/features/live-support/chat.tsx": "52001db322074d04d8eb4fc1acbfde25c6e5292d684cddd34f0148bc6dc5292d",
+    "frontend/src/features/live-support/foreground.ts": "78d2cf80a03f979e99092ab8687abdb2a9286b3e774b2a8cb4c4a8e14613d6df",
+    "frontend/src/features/live-support/member.tsx": "c9300a6315a95f7b34cb43085f8981089d6363cf28da995c67c6d58dde842b65",
+    "frontend/src/features/live-support/policy.ts": "b0cabac164955fc5964ea9e6b0292e7f5aa5be317e1e138ce6edcdeb6abc8b86",
+    "frontend/src/features/live-support/ui.tsx": "e5d87a98662fe8d242895d7708bc1c6b8dd9165578a7b14adae6c1f05aa1c015",
+    "frontend/src/features/live-support/workspace.tsx": "09fde35012364df208d440864ba3a5a33ede87cf3b9c95b0f903dc7f85efe1f5",
+    "frontend/src/features/platform/types.ts": "aec4d6cfad7790e5e5e7cd879435cc025414835c2747e691a026806de55bc07a",
+    "frontend/src/lib/api/client.ts": "97ee57a0b69885053d68e5ce30dbe9cf40941527febb1ad441a1f2f0039692b1",
+    "frontend/tests/phase-i.test.mjs": "65005b61fbb77528c0037a6be6442e4dbdecc1cf9a4beb7d274d22892a11802c"
+  },
+  "fixtureBrowser": {
+    "passed": 83,
+    "failed": 0,
+    "skipped": 0
+  },
+  "reports": {
+    "fixtureBrowser": {
+      "sha256": "9026f1c7a3c0abf856d23f171c81e15c97010b24bd719ed340247cdfb2152f26",
+      "tests": "83",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "cases": [
+        "Happy: anonymous visitors can use public resources",
+        "Happy: minimal registration leads to email verification",
+        "Happy: current Terms can be opened before acceptance",
+        "Creative: long Unicode password needs no optional identity or medical fields",
+        "Creative: password visibility can be toggled accessibly",
+        "Creative: country choice can be changed before submission",
+        "Confused: invalid email and short password give recoverable field errors",
+        "Confused: interrupted registration keeps form values and can be retried",
+        "Confused: expired code can be corrected without restarting signup",
+        "Malicious: omitting adult attestation cannot submit the form",
+        "Malicious: current Terms cannot be skipped",
+        "Malicious: web login never persists tokens in browser storage",
+        "Happy B-01/B-02/B-06/B-08: mission, distinct support and honest capacity",
+        "Happy B-03/B-04: registration and login use existing Phase A routes",
+        "Happy B-05: urgent help is public, manual and has an honest no-local state",
+        "Happy B-07: deep-linked current published policies show version and text",
+        "Happy B-10: pathway explanations and FAQ need no account",
+        "Creative B-09: Persian RTL, persistence and English return",
+        "Creative B-09: responsive Welcome at 320px",
+        "Creative B-09: responsive Welcome at 375px",
+        "Creative B-09: responsive Welcome at 390px",
+        "Creative B-09: responsive Welcome at 768px",
+        "Creative B-09: responsive Welcome at 1024px",
+        "Creative B-09: responsive Welcome at 1440px",
+        "Creative B-09: keyboard focus is visible and order is usable",
+        "Creative B-09: enlarged text, landscape and reduced motion remain functional",
+        "Creative B-07/B-10: back and forward preserve public navigation",
+        "Confused B-03: repeated CTA taps do not duplicate navigation",
+        "Confused B-07: policy failures show an honest error and retry",
+        "Confused B-04: loading authentication does not offer signup or private content",
+        "Confused B-05: failed urgent directory keeps emergency guidance available",
+        "Confused B-04: an authenticated visitor returns to permitted activation",
+        "Confused B-04: an expired session returns to a usable guest welcome",
+        "Confused B-04: interrupted session confirmation keeps sign-in recoverable",
+        "Malicious B-10: guest Welcome does not request private member endpoints",
+        "Malicious B-07: malformed information routes do not redirect externally",
+        "Malicious B-07: untrusted published text is rendered literally",
+        "Malicious B-05: unsafe resource URL cannot execute script",
+        "Malicious B-07: absent age policy is not replaced by a fabricated document",
+        "Confused B-07: a late policy response cannot replace a newer document",
+        "Happy C: Welcome to activation, optional onboarding skip, sign out and sign back in",
+        "Confused C: errors focus the input and clear when corrected",
+        "Confused C: changed Terms refresh version and require a new explicit acceptance",
+        "Confused C: pending registration prevents duplicate clicks",
+        "Confused C: unknown outcome can continue verification without resubmitting",
+        "Creative C: restart verification with email re-entry and no credentials in storage or URL",
+        "Confused C: safe 429 response has recovery and keeps non-sensitive form data",
+        "Confused C: safe 503 response has recovery and keeps non-sensitive form data",
+        "Malicious C: common passwords are rejected before sending",
+        "Confused C: server password validation appears beside the input",
+        "Creative C: registration fits 320px with readable password controls",
+        "Creative C: registration fits 1440px with readable password controls",
+        "Creative C: Persian registration keeps credentials LTR and errors localized",
+        "Happy D: pasted leading-zero code verifies and intended address is masked",
+        "Creative D: Persian digits paste and RTL feedback preserve numeric direction",
+        "Confused D: incomplete code has field feedback and failed verification restores focus",
+        "Confused D: resend cooldown is visible, bounded, and prevents repeated sending",
+        "Confused D: offline verification retains address/code and can be retried",
+        "Happy D: pending email correction requests password confirmation and returns to verification",
+        "Malicious D: anonymous correction does not expose an editable account action",
+        "Creative EF UI: registration has one visibility control and remasks after focus leaves",
+        "Confused EF UI: reconnecting an active session does not claim sign-out",
+        "Happy EF UI: password policy, shared visibility and truthful all-device sign-out",
+        "Confused EF UI: device revocation requires explicit confirmation and password proof",
+        "Happy EF UI: logout all includes current device and prevents duplicate taps",
+        "Confused EF UI: revocation failure stays recoverable without claiming success",
+        "Malicious EF UI: offline logout guard blocks cookie restoration until server reconciliation",
+        "Creative EF UI: Persian security controls keep password LTR and remain localized",
+        "Confused EF UI: leaked/malformed recovery link has no editable raw-token field",
+        "Malicious EF UI: delayed private response from account A cannot populate account B",
+        "Happy GH UI: optional zero-input completion persists three steps and opens Support",
+        "Confused GH UI: Skip preserves safety and distinct state without redirect loop",
+        "Creative GH UI: confirmed step resumes after reload and support style routes to articles",
+        "Confused GH UI: failed save does not advance or pretend to persist progress",
+        "Malicious GH UI: legacy professional preference never grants application navigation",
+        "Confused GH UI: privacy saving failure rolls back and reports unsaved change",
+        "Creative GH UI: Persian RTL optional onboarding at width 360",
+        "Creative GH UI: Persian RTL optional onboarding at width 1280",
+        "Creative GH UI: topic checkbox stores stable slug and explicit clear removes saved choices",
+        "Happy I UI: navigation and confirmation never imply acceptance; explicit request can be cancelled",
+        "Confused I UI: save failure stays recoverable and acceptance alone does not navigate to chat",
+        "Creative I UI: Persian RTL and empty availability at width 360",
+        "Creative I UI: Persian RTL and empty availability at width 1280"
+      ]
+    },
+    "realServerBrowser": {
+      "sha256": "64019dd66cf1fd943eb16f4c81a204ab8e39177c01573ec832cb518640eb0634",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "cases": [
+        "Happy live D: owner corrects typo, old credentials retire, new email activates same account",
+        "Creative live D: pasted Persian code verifies ownership without opening unsupported regional service",
+        "Confused live D: resend retires delayed old mail and newest delivered code recovers",
+        "Malicious live D: guessing across requests and resend cannot reset account budget",
+        "Happy EF live: revoke another device and change password signs out every session",
+        "Confused EF live: recovery fragment is scrubbed and one use revokes every old device",
+        "Malicious EF live: genuine WebAuthn proof required, replay and pre-MFA bearer denied",
+        "Creative EF live: two browser tabs restore and refresh the same cookie without replay logout",
+        "Creative EF live: a new cross-tab login clears the completed logout guard without revoking it again",
+        "Happy GH live: empty topics and professional knowledge complete to existing articles",
+        "Confused GH live: interrupted progress reloads, Skip stays distinct and settings can reopen",
+        "Creative GH live: Persian profile and optional avatar removal persist without account identity changes",
+        "Malicious GH live: browser publication cannot bypass per-post audience or leak private bio",
+        "Happy I live: real listener acceptance, explicit activation, two-party Unicode messages, reload and end",
+        "Confused I live: no available listener gives honest alternatives and does not create a queue",
+        "Malicious I live: self-completed training without independent approval cannot claim readiness",
+        "Happy live C: browser signup, delivered email, activation, optional onboarding, logout/login",
+        "Creative live C: maximal Unicode password, reload recovery, later Persian profile and username",
+        "Confused live C: wrong code, resend, duplicate signup and reopen remain recoverable",
+        "Malicious live C: direct bypass and concurrent duplicate requests preserve server boundaries"
+      ]
+    }
+  },
+  "foregroundContinuation": {
+    "date": "2026-10-27",
+    "baseline": "1b267c85c85e61ab37c21c5ec257ec7a21fdc43c",
+    "executableCommit": "4e3bfb4bfcd3b0f080831ffa991e7dab0940174b",
+    "requirements": [
+      "I-04",
+      "I-10",
+      "I-17"
+    ],
+    "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40534723099",
+    "ciConclusion": "success",
+    "totals": {
+      "backend": 234,
+      "frontendHelpers": 68,
+      "fixtureBrowser": 84,
+      "realServerBrowser": 20,
+      "passed": 406,
+      "failed": 0,
+      "skipped": 0
+    },
+    "typecheck": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 11
+    },
+    "exports": [
+      "web",
+      "android",
+      "ios"
+    ],
+    "localExecution": "68 helper tests passed; other results above were executed by final-source CI, not this Windows workspace",
+    "nativeDeviceValidation": "NOT_EXECUTED; see phase-j-k-handoff.md",
+    "sourceFiles": [
+      {
+        "path": "frontend/e2e/phase-i.spec.mjs",
+        "sha256": "1f730643887994b2749cafe5a2d030a74a173bd18e2b52644a53cac00e206c65"
+      },
+      {
+        "path": "frontend/src/features/live-support/chat.tsx",
+        "sha256": "4aaf1e0c1be354f7435f8c6c05c182c32928d3d5537c0ffef3b0c6aaea5b67a1"
+      },
+      {
+        "path": "frontend/src/features/live-support/foreground-cycle.ts",
+        "sha256": "fc6420b2a67bd8be9a08a06a92c23067134d02f932e3d42d089a50f23623ca01"
+      },
+      {
+        "path": "frontend/src/features/live-support/foreground.ts",
+        "sha256": "8f69f2fc66ac888bee2a8ce7e6d8c587b3d9d2070dee998e0d78b0d5ee9e062c"
+      },
+      {
+        "path": "frontend/src/features/live-support/member.tsx",
+        "sha256": "9b5fcf2471945d661deeaeafb7cb957ccfbe1e696ac588a0c087c22c719bd7e2"
+      },
+      {
+        "path": "frontend/src/features/live-support/workspace.tsx",
+        "sha256": "2ba231cd52774abbfd68c8f5e1c7318dd2ba81fa7bf5c6fdd6af4251cf12d883"
+      },
+      {
+        "path": "frontend/tests/phase-i-foreground.test.mjs",
+        "sha256": "f214937964663cac15310ae87f812a4723088237e2d8b20332f01b2d2833826d"
+      }
+    ],
+    "note": "The original evidence fields retain the original delivery snapshot. This continuation changes client foreground handling and tests only; no backend or migration change."
+  }
+}

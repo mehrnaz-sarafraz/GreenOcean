@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppIcon } from '@/components/app-icon';
@@ -35,9 +35,10 @@ export default function ExploreScreen() {
     catch (caught) { setSearchError(caught instanceof Error ? caught.message : 'Could not save this search.'); }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active=true;setPeople([]);setStoryResults([]);
     const timer = setTimeout(() => {
-      if (normalizedQuery.length < 2) {
+      if (query.trim().length < 2) {
         setPeople([]); setStoryResults([]); setSearchError(''); setSearching(false);
         return;
       }
@@ -46,12 +47,12 @@ export default function ExploreScreen() {
       Promise.all([
         apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12`),
         apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12`),
-      ]).then(([users, stories]) => { setPeople(users.items); setStoryResults(stories.items); })
-        .catch(caught => setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.'))
-        .finally(() => setSearching(false));
+      ]).then(([users, stories]) => { if(!active)return;setPeople(users.items); setStoryResults(stories.items); })
+        .catch(caught => {if(active){setPeople([]);setStoryResults([]);setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.');}})
+        .finally(() => {if(active)setSearching(false);});
     }, 300);
-    return () => clearTimeout(timer);
-  }, [normalizedQuery, query]);
+    return () => {active=false;clearTimeout(timer);};
+  }, [query]));
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <Text style={styles.title}>Explore</Text>
@@ -85,7 +86,7 @@ export default function ExploreScreen() {
       const groupCategories = visibleCategories.filter(category => category.group === group.id);
       return groupCategories.length > 0 && <View key={group.id} style={styles.groupBlock}>
         <Section title={group.title} subtitle={group.subtitle} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>{category.postCount.toLocaleString()} stories</Text></Pressable>)}</ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>Explore stories</Text></Pressable>)}</ScrollView>
       </View>;
     })}
 

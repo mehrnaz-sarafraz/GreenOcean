@@ -1,0 +1,13 @@
+import {router} from 'expo-router';
+import {useLanguage} from '@/localization/language-provider';
+import {AppButton} from '@/components/app-button';
+import {Notice,ProductSection} from '@/components/product-ui';
+import {ApiError} from '@/lib/api/client';
+export function Boundaries(){const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;return <Notice title={tr('Peer support boundaries','محدودهٔ حمایت همتا')} body={tr('Live text support starts only after a listener accepts and you choose to enter. Peer listeners do not provide therapy, diagnosis, medication advice or emergency intervention. Reports are not a promise of immediate monitoring.','حمایت متنی زنده فقط پس از پذیرش شنونده و ورود اختیاری شما آغاز می‌شود. شنونده درمان، تشخیص، توصیهٔ دارویی یا مداخلهٔ اضطراری ارائه نمی‌کند. ثبت گزارش به معنای نظارت فوری نیست.')} />;}
+export function Alternatives(){const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;return <ProductSection title={tr('Other support choices','راه‌های دیگر حمایت')}><AppButton variant="secondary" label={tr('Shared experiences','تجربه‌های مشترک')} onPress={()=>router.push('/(app)')}/><AppButton variant="secondary" label={tr('Browse communities','مشاهدهٔ انجمن‌ها')} onPress={()=>router.push('/communities')}/><AppButton variant="secondary" label={tr('Educational articles','مقاله‌های آموزشی')} onPress={()=>router.push('/articles')}/><AppButton variant="secondary" label={tr('Find urgent help','یافتن کمک فوری')} onPress={()=>router.push({pathname:'/tools/[tool]',params:{tool:'urgent-help'}})}/></ProductSection>;}
+export function supportError(error:unknown,fa:boolean){
+ if(!fa)return error instanceof Error?error.message:'Could not confirm the current support state. Retry.';
+ const code=error instanceof ApiError?error.code:'';
+ const copy:Record<string,string>={NO_AVAILABLE_LISTENER:'اکنون شنوندهٔ زندهٔ واجد شرایطی در دسترس نیست. دوباره بررسی کنید یا راه دیگری را انتخاب کنید.',LIVE_SERVICE_DISABLED:'سرویس زنده هنوز فعال نشده است. راه‌های دیگر حمایت در دسترس‌اند.',STALE_LEASE:'وضعیت آمادگی منقضی شده یا در دستگاه دیگری تغییر کرده است. دوباره آن را بررسی کنید.',LISTENER_NOT_AUTHORIZED:'تأیید مستقل تمرین و اصول رفتاری برای آمادگی زندهٔ شنونده لازم است.',REQUEST_ALREADY_OPEN:'یک درخواست یا جلسهٔ باز دارید؛ ابتدا وضعیت آن را بررسی کنید.',REQUEST_EXPIRED:'مهلت درخواست تمام شده است. برای تلاش دوباره درخواست جدیدی بسازید.',SESSION_NOT_ACTIVE:'ارسال پیام فقط در جلسهٔ فعال مجاز است.',RATE_LIMITED:'پیش از درخواست جدید کمی صبر کنید.'};
+ return copy[code]??'وضعیت فعلی تأیید نشد؛ دوباره بررسی کنید. تغییر ذخیره‌نشده موفق اعلام نمی‌شود.';
+}

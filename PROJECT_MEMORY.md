@@ -83,3 +83,7 @@ switching and Persian mock copy must not be reintroduced before that milestone.
 - Persian translation and RTL pass, intentionally deferred
 
 The exact route map, completed-gap matrix, and verification evidence live in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
+## Phase A contract — 2026-10-26
+
+The approved Phase A contract supersedes the earlier mandatory birth-year/city/display-name registration policy. Signup now requires email, password, adult self-attestation, residence country and current Terms version. Display identity is random and privately reviewable; no birth year or city is stored for new signup. USER is the only public signup role. Age assurance remains explicitly self-attested. See docs/product/phase-a-requirements.md, docs/testing/phase-a-results.md and docs/migrations/phase-a-rollout.md. This implementation is a draft pilot candidate with external release gates, not production approval.

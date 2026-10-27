@@ -28,6 +28,8 @@ export type MediaPick = {
 export type Conversation = {
   id: string; name: string; subtitle: string | null; lastMessage: string | null; lastMessageAt: string | null;
   unread: number; verified: boolean; kind: 'DIRECT' | 'PROFESSIONAL' | 'GROUP'; online: boolean;
+  serviceKind?: string;
+  supportRequestId?: string | null;
 };
 
 export type ChatMessage = {
@@ -47,6 +49,8 @@ export type UserPreferences = {
   professionalsOnlyMessages: boolean; mutedTerms: string[]; notifyMessages: boolean; notifyReplies: boolean;
   notifyFollows: boolean; notifyGroups: boolean; notifyArticles: boolean; quietHoursEnabled: boolean;
   onboardingComplete: boolean; intendedRole: 'MEMBER' | 'PROFESSIONAL';
+  onboardingStatus?: import('./onboarding-policy').OnboardingStatus; onboardingStep?: number;
+  legacySupportTopics?: string[]; topicCollectionEnabled?: boolean;
 };
 
 export type CatalogOption = {

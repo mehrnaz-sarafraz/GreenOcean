@@ -22,6 +22,22 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @ExceptionHandler(com.greenocean.backend.listener.live.LiveSupportException.class)
+    public ResponseEntity<java.util.Map<String,Object>> handleLiveSupport(com.greenocean.backend.listener.live.LiveSupportException error) {
+        var response=ResponseEntity.status(error.status());
+        if(error.status()==429)response.header("Retry-After","60");
+        return response.body(java.util.Map.of("code",error.code(),"message",error.getMessage()));
+    }
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ApiError> handleRateLimit(TooManyRequestsException exception,HttpServletRequest request) {
+        return ResponseEntity.status(429).header("Retry-After",String.valueOf(exception.retryAfter())).body(new ApiError(Instant.now(),429,"Too Many Requests",exception.getMessage(),request.getRequestURI(),List.of()));
+    }
+
+    @ExceptionHandler(RegistrationValidationException.class)
+    public ResponseEntity<ApiError> handleRegistrationValidation(RegistrationValidationException exception, HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(new ApiError(Instant.now(), 400, "Bad Request",
+                exception.getMessage(), request.getRequestURI(), List.of(new FieldViolation(exception.field(), exception.getMessage()))));
+    }
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException exception, HttpServletRequest request) {
@@ -64,8 +80,8 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException exception, HttpServletRequest request) {
+    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class})
+    public ResponseEntity<ApiError> handleIllegalArgumentException(RuntimeException exception, HttpServletRequest request) {
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 exception.getMessage(), request.getRequestURI(), List.of()
@@ -109,9 +125,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleMissingRoute(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(Instant.now(),404,"Not Found","Resource was not found",request.getRequestURI(),List.of()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpectedException(Exception exception, HttpServletRequest request) {
-        log.error("Unhandled API exception for {}", request.getRequestURI(), exception);
+        log.error("Unhandled API exception type {}", exception.getClass().getSimpleName());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiError(
                 Instant.now(),

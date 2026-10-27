@@ -9,12 +9,9 @@ export type LoginInput = { email: string; password: string; deviceName?: string 
 export type RegisterInput = {
   email: string;
   password: string;
-  username: string;
-  displayName: string;
-  birthYear: number;
   countryCode: string;
-  city: string;
-  intendedRole: 'MEMBER' | 'PROFESSIONAL';
+  adultSelfAttested: boolean;
+  termsVersion: number;
 };
 
 export type TokenResponse = {
