@@ -1,0 +1,397 @@
+{
+  "scope": "Source aliases; actual execution results are in test-evidence.json",
+  "tests": [
+    {
+      "id": "EF-U01",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "approvedPlatformAndScopeBoundsAreDistinct",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-U02",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "refreshDoesNotMoveOverallOrMeaningfulActivity",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-U03",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "exactIdleAndOverallBoundariesFailClosed",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-U04",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "invalidPolicyCannotStart",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-U05",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "malformedModernAndLegacyHashesAreGenericFailures",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-U06",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSecurityUnitTest.java",
+      "name": "unicodePasswordBoundsAndNoArbitraryCompositionRule",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S01",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "nativeAndWebSessionsHaveApprovedImmutableOverallBounds",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S02",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "expiredIdleAndOverallDenyOtherwiseValidAccessAndRefresh",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S03",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "onlyExplicitActivityExtendsIdleAndNeverOverall",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S04",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "staleLoginNeedsRealPasswordProofForLogoutAll",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S05",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "sessionOwnershipAndRevocationHavePersistedEffects",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S06",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "passwordChangeRevokesAllSessionsAndAllowsOnlyNewPassword",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S07",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "suspensionAndRoleChangesInvalidateExistingTokens",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S08",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "malformedHashAndUnknownUserHaveSameGenericError",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S09",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "securityInventoryHasSafeLabelsNoTokensAndOwnerOnlyEvents",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S10",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "browserCookieWritesRejectMissingHeaderAndHostileOrigins",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S11",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "recoveryIsSingleUseBoundToOwnerAndRevokesOldSessions",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S12",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "replacedOrSuspendedRecoveryFailsWithoutChangingPassword",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S13",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "pendingSessionNeedsFreshLoginAfterRealActivation",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S14",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "jwtSignatureIssuerExpiryRolesSessionAndVersionAreValidated",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S15",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "recoveryExpiresAtExactServerBoundaryAndNeverReturnsPlaintextMaterial",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S16",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "securityEventsAreOwnerScopedAndRetentionDoesNotDeleteOtherAuditEvidence",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S17",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "passwordStepUpBindsRefreshAndInvalidatesOldBearerWithoutExtendingLifetime",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-S18",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFSessionIntegrationTest.java",
+      "name": "webPasswordStepUpRequiresOriginAndHeaderAndRotatesOnlyHttpOnlyCookie",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M01",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "ordinaryUsersCannotEnrollEvenWithARealPasswordSession",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M02",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "privilegedPasswordAloneDoesNotAuthorizeFirstEnrollmentOrStaffAccess",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M03",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "independentPermitCreatesBoundRpUserVerifiedChallengeWithoutGrantingMfa",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M04",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "malformedRegistrationConsumesChallengeWithoutInventingAnAuthenticator",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M05",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "expiredAndSubstitutedCeremoniesCannotBeUsed",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-M06",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMfaBoundaryTest.java",
+      "name": "missingStrongProofIsAuditedEvenWhenStaffRoutesAreConfigured",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C01",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "logoutRacingRefreshLeavesNoUsableSession",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C02",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "remoteRevokeRacingRefreshLeavesNoUsableSession",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C03",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "passwordResetRacingRefreshCannotResurrectSession",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C04",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "twoResetConsumersHaveOneWinnerAndOneConsumption",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C05",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "expiredSessionCannotIssueNewTokens",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C06",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "parallelLoginDoesNotExhaustPoolWithNestedRateTransactions",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-C07",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFConcurrencyTest.java",
+      "name": "parallelPasswordConfirmationHasOneRotationAndNoOldProofReuse",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-D01",
+      "file": "backend/src/test/java/com/greenocean/backend/PhaseEFMigrationTest.java",
+      "name": "populatedDSessionHistoryReceivesBoundedOriginalLifetimes",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-H01",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Happy EF: approved password bounds use Unicode code points",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-H02",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Malicious EF: only bounded URL-safe recovery tokens are accepted",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-H03",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Creative EF: local background lock starts exactly at five minutes",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-H04",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Confused EF: event labels have safe localized fallbacks",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B01",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Confused EF UI: reconnecting an active session does not claim sign-out",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B02",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Happy EF UI: password policy, shared visibility and truthful all-device sign-out",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B03",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Confused EF UI: device revocation requires explicit confirmation and password proof",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B04",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Happy EF UI: logout all includes current device and prevents duplicate taps",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B05",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Confused EF UI: revocation failure stays recoverable without claiming success",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B06",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Malicious EF UI: offline logout guard blocks cookie restoration until server reconciliation",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B07",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Creative EF UI: Persian security controls keep password LTR and remain localized",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B08",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Confused EF UI: leaked/malformed recovery link has no editable raw-token field",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B09",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Malicious EF UI: delayed private response from account A cannot populate account B",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-L01",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "name": "Happy EF live: revoke another device and change password signs out every session",
+      "persona": "happy",
+      "result": "passed"
+    },
+    {
+      "id": "EF-L02",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "name": "Confused EF live: recovery fragment is scrubbed and one use revokes every old device",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
+      "id": "EF-L03",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "name": "Malicious EF live: genuine WebAuthn proof required, replay and pre-MFA bearer denied",
+      "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-L04",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "name": "Creative EF live: two browser tabs restore and refresh the same cookie without replay logout",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-L05",
+      "file": "frontend/live-e2e/phase-ef-security.spec.mjs",
+      "name": "Creative EF live: a new cross-tab login clears the completed logout guard without revoking it again",
+      "persona": "creative",
+      "result": "passed"
+    }
+  ]
+}
