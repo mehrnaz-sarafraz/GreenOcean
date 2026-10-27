@@ -8,10 +8,11 @@ import { EmptyState } from '@/components/product-ui';
 import { Listener } from '@/features/platform/types';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { apiRequest } from '@/lib/api/client';
+import { useLanguage } from '@/localization/language-provider';
 import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tokens';
 
 export default function SupportNow() {
-  const { channels } = usePlatformData();
+  const { channels } = usePlatformData();const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
   const [listeners, setListeners] = useState<Listener[]>([]);
   useEffect(() => {
     const timer = setTimeout(() => apiRequest<Listener[]>('/api/v1/listeners').then(setListeners).catch(() => undefined), 0);
@@ -37,7 +38,7 @@ export default function SupportNow() {
       <Pressable onPress={() => router.push('/professionals')} style={styles.smallPath}><View style={[styles.pathIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="psychology" color={colors.lavender} /></View><Text style={styles.smallTitle}>Find a verified professional</Text><Text style={styles.smallText}>Compare specialty, language, location, availability, and consultation style.</Text><Meta icon="verified" text="Credentials checked" /><View style={styles.inlineAction}><Text style={styles.inlineActionText}>Find a professional</Text><AppIcon name="arrow_forward" size={17} color={colors.ocean700} /></View></Pressable>
     </View>
 
-    {listeners.length ? <View style={styles.listenerPreview}><View style={styles.faces}>{listeners.slice(0, 3).map(listener => <Avatar key={listener.id} name={listener.displayName} uri={listener.avatarUrl || undefined} size={38} />)}</View><View style={{ flex: 1 }}><Text style={styles.previewTitle}>Matched around your preferences</Text><Text style={styles.previewText}>Topic, language, and current availability help shape a better first match.</Text></View></View> : <EmptyState icon="support_agent" title="No active listeners right now" body="Peer communities and verified professionals remain available while listener matching is offline." />}
+    {listeners.length ? <View style={styles.listenerPreview}><View style={styles.faces}>{listeners.slice(0, 3).map(listener => <Avatar key={listener.id} name={listener.displayName} uri={listener.avatarUrl || undefined} size={38} />)}</View><View style={{ flex: 1 }}><Text style={styles.previewTitle}>{tr('Explore listener profiles','کشف پروفایل شنوندگان')}</Text><Text style={styles.previewText}>{tr('Review profiles before requesting a match. Onboarding topics do not automatically match you.','پیش از درخواست تطبیق، پروفایل‌ها را بررسی کنید. موضوعات معرفی اولیه شما را خودکار به شنونده‌ای متصل نمی‌کنند.')}</Text></View></View> : <EmptyState icon="support_agent" title={tr('Listener availability is not confirmed','دسترسی به شنونده تأیید نشده است')} body={tr('Matching depends on your region and current capacity. Explore permitted resources or check again later.','تطبیق به منطقه و ظرفیت فعلی وابسته است. منابع مجاز را ببینید یا بعداً دوباره بررسی کنید.')} />}
 
     <View style={styles.crisis}><View style={styles.crisisIcon}><AppIcon name="emergency" color={colors.white} /></View><View style={{ flex: 1 }}><Text style={styles.crisisTitle}>Are you in immediate danger?</Text><Text style={styles.crisisText}>GreenOcean is not a crisis service. Contact your local emergency services or a crisis line in your country now.</Text></View><Pressable onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'urgent-help' } } as never)} style={styles.crisisButton}><Text style={styles.crisisButtonText}>Find urgent help</Text></Pressable></View>
     <Text style={styles.boundary}>Peer listeners and community members do not provide diagnosis, treatment, or emergency intervention.</Text>
