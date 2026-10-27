@@ -21,7 +21,7 @@
         "EF-L01",
         "EF-B02"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -42,7 +42,7 @@
         "EF-U06",
         "PhaseASecurityUnitTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -63,7 +63,7 @@
         "EF-S13",
         "EF-L03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -82,7 +82,7 @@
         "EF-S08",
         "EF-U05"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -103,7 +103,7 @@
         "PhaseAIntegrationTest",
         "PhaseCConcurrencyTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -125,7 +125,7 @@
         "EF-S11",
         "PhaseDMailGatewayTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "BLOCKED_EXTERNAL_DEPENDENCY"
     },
     {
@@ -148,7 +148,7 @@
         "EF-H02",
         "EF-L02"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -169,7 +169,7 @@
         "EF-S11",
         "EF-S15"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -193,7 +193,7 @@
         "EF-L02",
         "EF-B02"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -216,7 +216,7 @@
         "EF-B02",
         "EF-L01"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -224,10 +224,11 @@
       "title": "Password visibility and accessibility",
       "initialStatus": "REUSED_WITH_TARGETED_TESTS",
       "previousImplementation": "Shared AppField visibility/autofill/blur behavior",
-      "initialGap": "Native password managers and assistive technology not executed",
-      "changeMade": "Use existing shared masked controls across login/change/reset/step-up; preserve paste and LTR secrets in FA",
+      "initialGap": "Registration retained a duplicate legacy visibility controller and failed focus remasking; native QA absent",
+      "changeMade": "Remove the legacy controller, use shared masked controls for all credential flows, remask when input/control loses focus; preserve existing EN/FA accessible labels",
       "changedOrReusedFiles": [
         "app-field.tsx",
+        "register.tsx",
         "account-security.tsx",
         "login.tsx",
         "assistance-form.tsx"
@@ -236,10 +237,11 @@
       "testIds": [
         "EF-B02",
         "EF-B07",
+        "EF-B10",
         "EF-L01",
         "EF-L02"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -298,7 +300,7 @@
         "EF-M01..06",
         "EF-L03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "BLOCKED_EXTERNAL_DEPENDENCY"
     },
     {
@@ -319,7 +321,7 @@
         "EF-S09",
         "EF-S16"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -340,7 +342,7 @@
         "EF-S17",
         "EF-L03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -361,7 +363,7 @@
         "EF-S18",
         "PhaseAIntegrationTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -382,7 +384,7 @@
         "EF-D01",
         "PhaseAIntegrationTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -404,7 +406,7 @@
         "EF-S17",
         "EF-L04"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -426,7 +428,7 @@
         "EF-C01..03",
         "EF-L01"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -447,7 +449,7 @@
         "EF-B06",
         "EF-L05"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -468,7 +470,7 @@
         "EF-B04",
         "EF-L01"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -489,7 +491,7 @@
         "EF-L01",
         "EF-L04"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -512,7 +514,7 @@
         "EF-B05",
         "EF-L01"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -520,19 +522,21 @@
       "title": "Secure native credential storage",
       "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
       "previousImplementation": "SecureStore device-only/unlocked options and pending revocation secret",
-      "initialGap": "OS backup/uninstall/partial failure validation unavailable",
-      "changeMade": "Retain OS-backed storage and fail-closed reads/writes/deletes; document backup/reinstall/rooted-device checks",
+      "initialGap": "OS backup/uninstall validation unavailable; overlapping credential pair I/O needed coordination",
+      "changeMade": "Retain OS-backed storage; serialize pair reads/writes/deletion, discard old-generation writes, recover queue after failed writes; document device checks",
       "changedOrReusedFiles": [
         "token-storage.ts",
+        "serial-queue.ts",
         "app.json",
         "native-validation.md"
       ],
       "standard": "MASVS2.1 STORAGE-1,STORAGE-2,AUTH-2",
       "testIds": [
-        "Code/export checks",
+        "EF-H06",
+        "code/export checks",
         "native-validation.md NOT RUN"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -555,7 +559,7 @@
         "EF-L03",
         "EF-L04"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -575,7 +579,7 @@
         "EF-S18",
         "PhaseAIntegrationTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -583,22 +587,26 @@
       "title": "Concurrent refresh",
       "initialStatus": "INCOMPLETE_REQUIRES_EXTENSION",
       "previousImplementation": "Native single-flight, origin-scoped Web Locks and transaction locking",
-      "initialGap": "Two-tab test only reloaded sequentially; new password proof lacked concurrent consume evidence",
-      "changeMade": "Execute simultaneous real tab reloads, cross-tab logout/login, independent-transaction password proof race and existing refresh/logout/reset races",
+      "initialGap": "Two-tab test only reloaded sequentially; password proof races and stale native refresh snapshots needed coordination",
+      "changeMade": "Execute simultaneous real tabs and password proof races; serialize native proof/refresh mutations and read current verifier inside the queue, retaining strict backend replay protection",
       "changedOrReusedFiles": [
         "browser-session.ts",
         "client.ts",
+        "reauthenticate.ts",
+        "serial-queue.ts",
         "PhaseEFConcurrencyTest.java",
         "phase-ef-security.spec.mjs"
       ],
       "standard": "ASVS5 15.4.2,15.4.3",
       "testIds": [
         "EF-C01..07",
+        "EF-H05",
+        "EF-H06",
         "EF-L03",
         "EF-L04",
         "EF-L05"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -620,7 +628,7 @@
         "PhaseAIntegrationTest",
         "native checklist"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -641,7 +649,7 @@
         "EF-B01",
         "phase-b.spec.mjs expiry tests"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -664,7 +672,7 @@
         "EF-M02",
         "EF-L03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -690,7 +698,7 @@
         "EF-D01",
         "EF-S03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -714,7 +722,7 @@
         "EF-C07",
         "EF-L03"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "COMPLETE_AND_TESTED"
     },
     {
@@ -736,7 +744,7 @@
         "EF-S16",
         "PhaseDMailEventTest"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     },
     {
@@ -757,9 +765,10 @@
       "testIds": [
         "EF-B09",
         "EF-H03",
+        "EF-H06",
         "native-validation.md NOT RUN"
       ],
-      "testResults": "Referenced executable aliases PASS in CI40463362069; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
+      "testResults": "Referenced executable aliases PASS in CI40466348060; native/runtime, real mail or production MFA dependencies remain NOT RUN where the row identifies them.",
       "finalStatus": "IMPLEMENTED_NOT_FULLY_TESTED"
     }
   ]

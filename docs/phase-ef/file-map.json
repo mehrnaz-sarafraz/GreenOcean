@@ -243,6 +243,18 @@
     },
     {
       "status": "A",
+      "file": "docs/phase-ef/delivery-report.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/file-map.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
       "file": "docs/phase-ef/gap-matrix.md",
       "area": "documentation",
       "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
@@ -256,6 +268,30 @@
     {
       "status": "A",
       "file": "docs/phase-ef/operations.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/requirements-matrix.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/requirements-matrix.md",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/test-catalog.json",
+      "area": "documentation",
+      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
+    },
+    {
+      "status": "A",
+      "file": "docs/phase-ef/test-evidence.json",
       "area": "documentation",
       "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
     },
@@ -334,6 +370,12 @@
     {
       "status": "M",
       "file": "frontend/src/app/(auth)/login.tsx",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
+      "status": "M",
+      "file": "frontend/src/app/(auth)/register.tsx",
       "area": "frontend",
       "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
     },
@@ -422,6 +464,12 @@
       "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
     },
     {
+      "status": "A",
+      "file": "frontend/src/lib/storage/serial-queue.ts",
+      "area": "frontend",
+      "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
+    },
+    {
       "status": "M",
       "file": "frontend/src/lib/storage/token-storage.ts",
       "area": "frontend",
@@ -432,42 +480,6 @@
       "file": "frontend/tests/phase-ef.test.mjs",
       "area": "frontend",
       "reason": "Complete actual shared credential/account-security, privacy lifecycle, recovery or browser validation flow"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/requirements-matrix.json",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/requirements-matrix.md",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/test-catalog.json",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/test-evidence.json",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/delivery-report.md",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
-    },
-    {
-      "status": "A",
-      "file": "docs/phase-ef/file-map.json",
-      "area": "documentation",
-      "reason": "Approved contract, individually mapped requirements, verified standards, evidence and rollout limits"
     }
   ]
 }

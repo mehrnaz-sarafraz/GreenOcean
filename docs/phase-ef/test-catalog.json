@@ -296,6 +296,20 @@
       "result": "passed"
     },
     {
+      "id": "EF-H05",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Creative EF: overlapping rotations read the latest verifier after prior proof",
+      "persona": "creative",
+      "result": "passed"
+    },
+    {
+      "id": "EF-H06",
+      "file": "frontend/tests/phase-ef.test.mjs",
+      "name": "Confused EF: partial credential write failure still permits queued logout cleanup",
+      "persona": "confused",
+      "result": "passed"
+    },
+    {
       "id": "EF-B01",
       "file": "frontend/e2e/phase-ef.spec.mjs",
       "name": "Confused EF UI: reconnecting an active session does not claim sign-out",
@@ -356,6 +370,13 @@
       "file": "frontend/e2e/phase-ef.spec.mjs",
       "name": "Malicious EF UI: delayed private response from account A cannot populate account B",
       "persona": "malicious",
+      "result": "passed"
+    },
+    {
+      "id": "EF-B10",
+      "file": "frontend/e2e/phase-ef.spec.mjs",
+      "name": "Creative EF UI: registration has one visibility control and remasks after focus leaves",
+      "persona": "creative",
       "result": "passed"
     },
     {

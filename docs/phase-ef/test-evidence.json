@@ -1,17 +1,17 @@
 {
   "date": "2026-10-27",
   "timezone": "Asia/Tehran",
-  "testedRevision": "98e0f11bf02a7395ee531ed7c825c617f50130d5",
+  "testedRevision": "02c933f80c9468bb22fa6c9f7b42500a0e7fce81",
   "phaseDBaseline": "d1353287352121c11eb2eae41b2143e1fa8784ae",
   "continuationBaseline": "c491588a87e4622d0b0f4a503ca72a9ddd774a31",
-  "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40463362069",
+  "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40466348060",
   "ciStatus": "success",
   "total": {
-    "passed": 310,
+    "passed": 313,
     "failed": 0,
     "skipped": 0,
     "retainedAD": 254,
-    "ef": 56
+    "ef": 59
   },
   "backend": {
     "passed": 175,
@@ -1119,7 +1119,7 @@
     ]
   },
   "frontendHelpers": {
-    "passed": 53,
+    "passed": 55,
     "failed": 0,
     "skipped": 0,
     "command": "npm test",
@@ -1176,11 +1176,13 @@
       "Happy EF: approved password bounds use Unicode code points",
       "Malicious EF: only bounded URL-safe recovery tokens are accepted",
       "Creative EF: local background lock starts exactly at five minutes",
-      "Confused EF: event labels have safe localized fallbacks"
+      "Confused EF: event labels have safe localized fallbacks",
+      "Creative EF: overlapping rotations read the latest verifier after prior proof",
+      "Confused EF: partial credential write failure still permits queued logout cleanup"
     ]
   },
   "browserComponents": {
-    "passed": 69,
+    "passed": 70,
     "failed": 0,
     "skipped": 0,
     "command": "npm run test:e2e",
@@ -1488,6 +1490,11 @@
       },
       {
         "file": "e2e/phase-ef.spec.mjs",
+        "name": "Creative EF UI: registration has one visibility control and remasks after focus leaves",
+        "result": "passed"
+      },
+      {
+        "file": "e2e/phase-ef.spec.mjs",
         "name": "Confused EF UI: reconnecting an active session does not claim sign-out",
         "result": "passed"
       },
@@ -1624,7 +1631,7 @@
       ]
     },
     "creative": {
-      "passed": 12,
+      "passed": 14,
       "failed": 0,
       "skipped": 0,
       "testIds": [
@@ -1637,13 +1644,15 @@
         "EF-C06",
         "EF-D01",
         "EF-H03",
+        "EF-H05",
         "EF-B07",
+        "EF-B10",
         "EF-L04",
         "EF-L05"
       ]
     },
     "confused": {
-      "passed": 15,
+      "passed": 16,
       "failed": 0,
       "skipped": 0,
       "testIds": [
@@ -1657,6 +1666,7 @@
         "EF-C03",
         "EF-C05",
         "EF-H04",
+        "EF-H06",
         "EF-B01",
         "EF-B03",
         "EF-B05",
@@ -1707,11 +1717,13 @@
   },
   "artifactEvidence": {
     "backendJunit": {
-      "artifactId": 12715397264,
-      "sha256": "f10ebc1825a0e3f0c149ce322c98b541c14f7e2e84c47f59f9ba74acb9870267",
+      "artifactId": 12716524044,
+      "sha256": "ada5eaa7c7191e1811bbdc2b4d842aab734e4c8b4fa030e96ed91d8ef0f95ec2",
       "downloadVerified": true
     },
-    "liveArtifactId": 12715795273,
+    "liveArtifactId": 12716378521,
+    "browserArtifactId": 12716509315,
+    "platformArtifactId": 12717076011,
     "retention": "Actions artifacts expire; this repository retains all test names/results and E/F alias mapping."
   },
   "priorFailure": {
