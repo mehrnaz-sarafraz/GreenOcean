@@ -75,6 +75,9 @@ class PhaseGHPrivacyIntegrationTest {
    mvc.perform(patch("/api/v1/profiles/me").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload))).andExpect(status().isBadRequest());
   mvc.perform(patch("/api/v1/profiles/me").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("username",b.username)))).andExpect(status().isConflict());
   assertThat(read("/api/v1/profiles/me",a).get("username").asText()).isEqualTo(a.username);
+  var forged=change("/api/v1/profiles/me",a,Map.of("userId",b.id.toString(),"displayName","Forged target marker"));
+  assertThat(forged.get("userId").asText()).isEqualTo(a.id.toString());
+  assertThat(read("/api/v1/profiles/me",b).get("displayName").asText()).isNotEqualTo("Forged target marker");
  }
  @Test @Tag("malicious") void audienceMatrixSurvivesPrivacyTransitionsAndAlternateApiRequests() throws Exception {
   var a=member();var viewer=member();var stranger=member();follow(viewer,a);
