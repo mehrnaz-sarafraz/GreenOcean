@@ -22,7 +22,7 @@ class PhaseL2SocialTest extends PhaseLFixtures {
  @Test @Tag("creative") void cursorPaginationIsStableUnderANewerInsert()throws Exception{
   var a=member();for(int i=0;i<4;i++)publish(a,"Chronological L2 marker "+i,true);
   var first=read("/api/v1/posts/discovery?size=2",a);String cursor=first.path("nextCursor").asText();String inserted=publish(a,"New chronological L2 marker",true).path("id").asText();
-  var next=read("/api/v1/posts/discovery?size=2&cursor="+java.net.URLEncoder.encode(cursor,java.nio.charset.StandardCharsets.UTF_8),a);
+  var next=json.readTree(mvc.perform(get("/api/v1/posts/discovery").param("size","2").param("cursor",cursor).header("Authorization","Bearer "+a.token())).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
   assertThat(next.toString()).doesNotContain(inserted);for(var p:first.path("items"))assertThat(next.toString()).doesNotContain(p.path("id").asText());
   assertThat(next.path("items").size()).isEqualTo(2);
  }
@@ -48,12 +48,12 @@ class PhaseL2SocialTest extends PhaseLFixtures {
  @Test void replyParentMustBeVisibleAndSamePostAndOwnerCanDelete()throws Exception{
   var a=member();var b=member();String p=publish(a,"Thread story",true).path("id").asText(),other=publish(a,"Another thread story",true).path("id").asText();
   String c=submit("/api/v1/posts/"+p+"/comments",b,Map.of("body","Supportive response","anonymous",true),201).path("id").asText();
-  submit("/api/v1/posts/"+other+"/comments",a,Map.of("body","Forged parent","parentCommentId",c),400);
-  submit("/api/v1/posts/"+p+"/comments",a,Map.of("body","Thank you for your support","parentCommentId",c),201);
+  submit("/api/v1/posts/"+other+"/comments",a,Map.of("body","Forged parent","parentCommentId",c,"anonymous",false),400);
+  submit("/api/v1/posts/"+p+"/comments",a,Map.of("body","Thank you for your support","parentCommentId",c,"anonymous",false),201);
   assertThat(read("/api/v1/posts/"+p+"/comments",a).toString()).doesNotContain(b.id().toString());
   mvc.perform(delete("/api/v1/comments/"+c).header("Authorization","Bearer "+a.token())).andExpect(status().isNotFound());
   mvc.perform(delete("/api/v1/comments/"+c).header("Authorization","Bearer "+b.token())).andExpect(status().isNoContent());
-  submit("/api/v1/posts/"+p+"/comments",a,Map.of("body","Deleted parent retry","parentCommentId",c),400);
+  submit("/api/v1/posts/"+p+"/comments",a,Map.of("body","Deleted parent retry","parentCommentId",c,"anonymous",false),400);
  }
  @Test void anonymousReplyActorAndHiddenCommentNoticesAreMinimized()throws Exception{
   var a=member();var b=member();String p=publish(a,"Notification privacy marker",false).path("id").asText();
