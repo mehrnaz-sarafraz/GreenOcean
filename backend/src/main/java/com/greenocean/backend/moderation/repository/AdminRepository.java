@@ -302,17 +302,16 @@ public class AdminRepository {
 
     public UUID createPolicy(UUID id, UUID actorId, CreatePolicyRequest request) {
         String key = request.key().trim().toLowerCase().replaceAll("[^a-z0-9-]+", "-");
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))","policy:"+key);
         Integer nextVersion = jdbcTemplate.queryForObject(
                 "SELECT COALESCE(MAX(version), 0) + 1 FROM policy_documents WHERE policy_key = ?", Integer.class, key);
-        if (request.publish()) {
-            jdbcTemplate.update("UPDATE policy_documents SET status = 'RETIRED' WHERE policy_key = ? AND status = 'PUBLISHED'", key);
-        }
+        if (Boolean.TRUE.equals(request.publish())) throw new com.greenocean.backend.common.exception.ForbiddenException("Create an unpublished draft first");
         jdbcTemplate.update("""
                 INSERT INTO policy_documents
-                    (id, policy_key, version, title, summary, content, status, published_at, updated_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE NULL END, ?)
+                    (id, policy_key, version, title, summary, content, status, published_at, updated_by,locale,effective_at,review_status)
+                VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', NULL, ?, ?, ?, 'DRAFT')
                 """, id, key, nextVersion, request.title().trim(), request.summary().trim(), request.content().trim(),
-                request.publish() ? "PUBLISHED" : "DRAFT", request.publish(), actorId);
+                actorId, request.locale()==null?"en":request.locale(), request.effectiveAt()==null?null:java.sql.Timestamp.from(request.effectiveAt()));
         audit(actorId, "POLICY_CREATED", "POLICY_DOCUMENT", id);
         return id;
     }

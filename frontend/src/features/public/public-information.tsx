@@ -6,7 +6,7 @@ import { policyKey, isInformationId } from './contracts';
 import { useLanguage } from '@/localization/language-provider';
 import { publicCopy } from '@/localization/public-copy';
 import { apiRequest } from '@/lib/api/client';
-type Policy={key:string;version:number;title:string;summary:string;content:string;publishedAt:string};
+type Policy={key:string;version:number;title:string;summary:string;content:string;publishedAt:string;locale?:string;reviewStatus?:string;effectiveAt?:string};
 export function PublicInformation({page}:{page:unknown}) {
   const {language}=useLanguage();const copy=publicCopy[language];const navigate=usePublicNavigation();const key=policyKey(page);
   const [request,setRequest]=useState(0);const [result,setResult]=useState<{key:string;document:Policy|null;failed:boolean}|null>(null);
@@ -22,7 +22,7 @@ export function PublicInformation({page}:{page:unknown}) {
     const title=[...copy.policyLinks,...copy.infoLinks].find(link=>link.id===page)?.label??key;
     return <PublicPage><PublicHeading level={1}>{title}</PublicHeading>
       {!settled&&<Text role="status" style={publicStyles.body}>{copy.policyLoading}</Text>}
-      {settled?.document&&<PublicCard><PublicHeading>{settled.document.title}</PublicHeading><PublicText>{copy.policyLanguage}</PublicText>
+      {settled?.document&&<PublicCard><PublicHeading>{settled.document.title}</PublicHeading><PublicText>{copy.policyLanguage}</PublicText><PublicText>{language==='fa'?'نمایش این متن به‌معنای تأیید حقوقی یا معادل رسمی ترجمه نیست.':'Displaying this document does not certify legal approval or an approved equivalent translation.'}</PublicText><PublicText>{(settled.document.locale??'en')+' · '+(settled.document.reviewStatus??'LEGACY_UNREVIEWED')}</PublicText>
         <Text selectable style={[publicStyles.body,{writingDirection:'auto'}]}>{settled.document.content.replaceAll('\\n','\n')}</Text>
         <PublicText>{copy.policyVersion} {settled.document.version} · {copy.published} {new Date(settled.document.publishedAt).toLocaleDateString(language==='fa'?'fa-IR':'en-GB')}</PublicText>
       </PublicCard>}

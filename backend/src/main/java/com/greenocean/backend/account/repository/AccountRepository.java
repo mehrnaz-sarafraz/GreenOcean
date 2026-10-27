@@ -77,6 +77,9 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM processing_authorizations WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);
         jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(72491001)");
         jdbcTemplate.update("DELETE FROM listener_presence WHERE listener_id=?",userId);
         jdbcTemplate.update("DELETE FROM listener_live_authorizations WHERE listener_id=?",userId);

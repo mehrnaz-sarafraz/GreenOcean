@@ -1,0 +1,249 @@
+{
+  "recordedDate": "2026-10-27",
+  "phaseIBaseline": "beb5b78e2b7bc6a7b48ed9715b4152630b3c4411",
+  "executableCommit": "db2bfb1abf5f296a2cbac48827b7afb0471eec92",
+  "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40537181467",
+  "ciConclusion": "success",
+  "jobs": {
+    "backend": 122306364666,
+    "frontend": 122306365191,
+    "registrationLive": 122306364580
+  },
+  "totals": {
+    "backend": 259,
+    "helpers": 68,
+    "fixtureBrowser": 92,
+    "realServerBrowser": 22,
+    "passed": 441,
+    "failed": 0,
+    "skipped": 0
+  },
+  "newJTests": {
+    "backend": 25,
+    "fixtureBrowser": 8,
+    "realServerBrowser": 2,
+    "total": 35
+  },
+  "backendJClasses": [
+    {
+      "class": "PhaseJConcurrencyTest",
+      "count": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "withdrawalRacingTopicSaveAlwaysLeavesNoSensitiveSelections"
+      ]
+    },
+    {
+      "class": "PhaseJDisabledGovernanceTest",
+      "count": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "defaultConfigurationDoesNotEnableProcessingOrHumanIntake",
+        "defaultPublicationRemainsDisabledEvenForAdmin",
+        "intakeCannotStartWithoutAccountableOwnerAndOperationalTarget"
+      ]
+    },
+    {
+      "class": "PhaseJGovernanceIntegrationTest",
+      "count": 20,
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "privacyReceiptDoesNotCreateTermsAcceptanceOrOptionalConsent",
+        "missingPermissionAndLegacyPreferencesNeverBecomeConsent",
+        "explicitReviewedPurposeGrantPermitsTopicsAndWithdrawalClearsCurrentAndLegacyData",
+        "optionalDeclineIsIdempotentAndDoesNotDisableCoreProfileAccess",
+        "analyticsAndMarketingCannotBeGrantedAsDecorativePermissions",
+        "policyCreationCannotPublishAndReviewCannotBeSelfApproved",
+        "independentReviewPublicationAndPublicHistoryKeepExactVersionAndLocale",
+        "retiredPublishedTextCannotBeRewritten",
+        "acceptanceTimestampsCannotBeRetrofitted",
+        "forgedDraftNoticeReceiptAndCrossAccountPayloadAreRejectedOrOwnerBound",
+        "humanRightsIntakeIsOwnerScopedRetrySafeAndHasRealStatus",
+        "duplicateOpenRightsAndConflictingRetryKindsHaveRecoverableErrors",
+        "staffRoutesStillRequireExistingStrongAuthenticationAndRole",
+        "exportIncludesOwnGovernanceAndErasureRemovesItWithoutLeakingAnotherOwner",
+        "olderReviewedDraftCannotReplaceANewerPublishedPolicy",
+        "revokedReviewerCannotAuthorizeLaterPublication",
+        "editingReviewedDraftInvalidatesItsApproval",
+        "publishedReviewEvidenceCannotBeRewritten",
+        "aNewPurposeNoticeRequiresANewAffirmativeGrant",
+        "reportingCannotEnumeratePrivatePostsAndAppealsCannotUseAnotherOwnersReport"
+      ]
+    },
+    {
+      "class": "PhaseJMigrationTest",
+      "count": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "populatedPhaseIHistoryReceivesNoInventedConsentOrReceipt"
+      ]
+    }
+  ],
+  "browserCases": {
+    "frontend/e2e/phase-j.spec.mjs": [
+      "Happy J UI: no preselected permission, real decline and unchanged core navigation",
+      "Confused J UI: failed withdrawal never displays a false saved result and retry succeeds",
+      "Malicious J UI: unstaffed rights intake and optional grant cannot be invoked from the interface",
+      "Creative J UI: Persian RTL permissions remain usable on narrow screen",
+      "Malicious J UI: policy scripts remain text and legacy review status is explicit",
+      "Confused J UI: interrupted human-rights submission reuses its key and shows the saved request",
+      "Happy J UI: optional grant requires displaying its exact current specific-purpose notice",
+      "Confused J UI: a historical grant never implies renewed permission for a changed notice"
+    ],
+    "frontend/live-e2e/phase-j-privacy.spec.mjs": [
+      "Happy J live: privacy receipt and declined analytics are separate from Terms and preserve core access",
+      "Malicious J live: forged grants and owner IDs cannot authorize processing or another persons data"
+    ]
+  },
+  "typecheck": "passed",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "platformJSAssetExports": [
+    "web",
+    "android",
+    "ios"
+  ],
+  "localExecution": "68 helpers passed; final backend/browser results are actual CI execution, not local Windows execution",
+  "nativeDeviceAssistiveChecks": "NOT_EXECUTED; exact matrix in phase-k-handoff.md",
+  "legalOperationalApproval": "NOT_GRANTED_BY_CODE_OR_TESTS",
+  "sourceHashes": [
+    {
+      "path": ".github/workflows/phase-a.yml",
+      "sha256LFNormalized": "43c7529b5d4da6f6e30645671dbc6dd4a641c233d90a1711ed6c9dce176fa545"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/account/dto/AccountArchiveResponse.java",
+      "sha256LFNormalized": "459a426dcd06f441b387f25554969285f112d763634a300d50166518329fccc9"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/account/repository/AccountRepository.java",
+      "sha256LFNormalized": "129016d84cf136f6e31fe698b07041c79fd68627a45d32f42ac37c73e88516bc"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/account/service/AccountService.java",
+      "sha256LFNormalized": "ef5f0d1dfca255b9b9b5ea18606aa8fcc05903b35805b22d0b3c41f7684e9902"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/dto/CreatePolicyRequest.java",
+      "sha256LFNormalized": "8a516f5aad80005b013cf36890623157e58f0118c1c20645e612a502f1c9c547"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/repository/AdminRepository.java",
+      "sha256LFNormalized": "724a040d89d95689374e2c40bf9860e711f8ba4d25f51062b8ee3a505d3128a2"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/repository/ReportRepository.java",
+      "sha256LFNormalized": "160a700f3db87bd266bc2ab76faae9854d9853dfd24ce08c33bbec2afa8809d6"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/moderation/service/AdminService.java",
+      "sha256LFNormalized": "7257c03f171e11470ecffbe145004f55ef26e998c10b67282d26214d3d4171e9"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/controller/GovernanceAdminController.java",
+      "sha256LFNormalized": "da35de5639196dc9f9978ee5b5c71ca87fa5fbe6de459f26a087d2b0c433d08f"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/controller/PolicyController.java",
+      "sha256LFNormalized": "6dc46d08e218497ff4089375d4c5590ab20e55d5753774f8a2704d34f4e579ef"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/controller/PrivacyGovernanceController.java",
+      "sha256LFNormalized": "8bbc039a84528dcee1f6fdf95fb8b561019e3000926a78866a6f9e877c1cde1f"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/dto/PublishedPolicyResponse.java",
+      "sha256LFNormalized": "9d937b202dc5425c99afef8e3c3ae3f33b91cb3463b785c63b6ca0e28b1b36c5"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/repository/PolicyRepository.java",
+      "sha256LFNormalized": "5981f579dd90ec4af67bbcdfd383fb2a21f05968ba142db0cdf559548d4e6afc"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/repository/UserPreferencesRepository.java",
+      "sha256LFNormalized": "6c6184dec972604cee72e26367a1f01ad12e0377d3bad8f7305c05670978b2a3"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/service/PolicyPublicationService.java",
+      "sha256LFNormalized": "76de2981caab0b478e4bb3d5ef5a1710bd7b5f6a01a6bf4590ece48f41ccdc0d"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/service/PolicyService.java",
+      "sha256LFNormalized": "e5cba1d202232a0c733124c1871c6539c447af2f5c91a1b83dc327da95b28de8"
+    },
+    {
+      "path": "backend/src/main/java/com/greenocean/backend/preference/service/PrivacyGovernanceService.java",
+      "sha256LFNormalized": "6e1f1c7c458621781060d21fdc47890b65260c8bfed94a949d62496445ef992b"
+    },
+    {
+      "path": "backend/src/main/resources/db/migration/V42__policy_review_and_purpose_authorization.sql",
+      "sha256LFNormalized": "fb6062d743bee5f7ac8a8da28c8e05fb499693f53b8eeb4dc144467f6887b1a7"
+    },
+    {
+      "path": "backend/src/main/resources/db/migration/V43__preserve_policy_review_evidence.sql",
+      "sha256LFNormalized": "fa07809959d967673eeb827137b8fc92b43d6718fd38cb1da4c81239afb82884"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseGHTopicGateTest.java",
+      "sha256LFNormalized": "42cfa51f3170eaa8c328bceca239efbbac1d6236f2cdd68f5ecf0182b9b36e04"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseIMigrationTest.java",
+      "sha256LFNormalized": "5cd195f50930c9c1a212574a269fd081a94fbbd8876ef7feab355863028cc074"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseJConcurrencyTest.java",
+      "sha256LFNormalized": "11c71f9900295a966e7f661879a4f4f0717b5d9e4d8968cc7f4b88a524691c14"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseJDisabledGovernanceTest.java",
+      "sha256LFNormalized": "9e3c2d870c882a12ec8537df63598228b6b8162d29a35bd42d9e0119ac936665"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseJGovernanceIntegrationTest.java",
+      "sha256LFNormalized": "6b89e6fd138d08036c6c15cd38c30a9e6bd32c8b3180d05eb0ced0e4e0fbccf4"
+    },
+    {
+      "path": "backend/src/test/java/com/greenocean/backend/PhaseJMigrationTest.java",
+      "sha256LFNormalized": "ba60b58eafd9cd2aa9cad6bdb5c168a00ef67bb38deaab6d0991a8d594ca5f78"
+    },
+    {
+      "path": "frontend/e2e/phase-j.spec.mjs",
+      "sha256LFNormalized": "bb96780d8dea6dd73116b97dadd1baa913e82f998846f8c3dea26106c56d3765"
+    },
+    {
+      "path": "frontend/live-e2e/phase-j-privacy.spec.mjs",
+      "sha256LFNormalized": "c5ddcc4445dcb054fad408c932a6e9a07c2168e06f7e33d54e06fcf0fded49a0"
+    },
+    {
+      "path": "frontend/src/app/(app)/_layout.tsx",
+      "sha256LFNormalized": "2f02bc6a8ba11239d26405e31e3817badec3dd6164d8d3c903d792023ced9b7b"
+    },
+    {
+      "path": "frontend/src/app/(app)/admin-tools/[section].tsx",
+      "sha256LFNormalized": "a78f2a26e808ec266d97d62e31005fe54983d588790d59d577003617b4816b49"
+    },
+    {
+      "path": "frontend/src/app/(app)/privacy.tsx",
+      "sha256LFNormalized": "ce8f939c663c1093033212c88709717831f7b730460a4ce83f6945b26ccdfd1c"
+    },
+    {
+      "path": "frontend/src/app/(app)/profile.tsx",
+      "sha256LFNormalized": "e88c476324890421bc897d9cc1888725fdea35237f96c9f673006d1c3e15eedb"
+    },
+    {
+      "path": "frontend/src/features/public/public-information.tsx",
+      "sha256LFNormalized": "009d23310a178a2ce5cbb286471bf08ccc3bdb72fa86b3f057b0d360d5bec225"
+    }
+  ]
+}

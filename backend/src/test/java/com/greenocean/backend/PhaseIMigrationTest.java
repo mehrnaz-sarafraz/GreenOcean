@@ -23,11 +23,11 @@ class PhaseIMigrationTest extends MigrationTestSupport {
    assertThat(db.queryForObject("SELECT body FROM messages WHERE conversation_id=?",String.class,chat)).isEqualTo("Preserved historical message");
    assertThat(db.queryForObject("SELECT count(*) FROM live_support_requests",Integer.class)).isZero();assertThat(db.queryForObject("SELECT count(*) FROM listener_live_authorizations",Integer.class)).isZero();
    assertThat(db.queryForObject("SELECT listening_style FROM listener_profiles WHERE user_id=?",String.class,user)).isEqualTo("Preserved legacy profile");
-   Files.writeString(failure.resolve("V42__synthetic_recovery.sql"),"CREATE TABLE synthetic_partial(id INT); DO $$ BEGIN RAISE EXCEPTION 'synthetic failure'; END $$;");
+   Files.writeString(failure.resolve("V999999__synthetic_recovery.sql"),"CREATE TABLE synthetic_partial(id INT); DO $$ BEGIN RAISE EXCEPTION 'synthetic failure'; END $$;");
    var broken=Flyway.configure().dataSource(source).schemas(schema).defaultSchema(schema).locations("classpath:db/migration","filesystem:"+failure).load();assertThatThrownBy(broken::migrate).isInstanceOf(Exception.class);
    assertThat(db.queryForObject("SELECT to_regclass(?) IS NULL",Boolean.class,schema+".synthetic_partial")).isTrue();
-   Files.writeString(failure.resolve("V42__synthetic_recovery.sql"),"CREATE TABLE synthetic_recovered(id INT);");broken.migrate();broken.validate();
+   Files.writeString(failure.resolve("V999999__synthetic_recovery.sql"),"CREATE TABLE synthetic_recovered(id INT);");broken.migrate();broken.validate();
    assertThat(db.queryForObject("SELECT to_regclass(?) IS NOT NULL",Boolean.class,schema+".synthetic_recovered")).isTrue();
-  }finally{db.execute("DROP SCHEMA "+schema+" CASCADE");Files.deleteIfExists(failure.resolve("V42__synthetic_recovery.sql"));Files.deleteIfExists(failure);}
+  }finally{db.execute("DROP SCHEMA "+schema+" CASCADE");Files.deleteIfExists(failure.resolve("V999999__synthetic_recovery.sql"));Files.deleteIfExists(failure);}
  }
 }
