@@ -55,7 +55,7 @@ public class AccountService {
     public AccountArchiveResponse archive(UUID userId) {
         return new AccountArchiveResponse(Instant.now(), profiles.getOwnProfile(userId), preferences.get(userId),
                 wellbeing.snapshot(userId), reports.mine(userId), social.following(userId), social.followers(userId),
-                social.blocked(userId), search.history(userId), repository.activity(userId),governance.snapshot(userId));
+                social.blocked(userId), search.history(userId), repository.activity(userId),governance.archive(userId));
     }
 
     @Transactional

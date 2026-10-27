@@ -31,7 +31,9 @@ public class PrivacyGovernanceService {
   if(!"SUPPORT_TOPICS".equals(purpose))return Optional.empty();
   return db.query("SELECT id FROM policy_documents WHERE policy_key=? AND status='PUBLISHED' AND review_status='APPROVED' AND locale='en' AND published_at<=CURRENT_TIMESTAMP AND effective_at<=CURRENT_TIMESTAMP AND content IS NOT NULL ORDER BY version DESC LIMIT 1",(rs,n)->rs.getObject("id",UUID.class),NOTICES.get(purpose)).stream().findFirst();
  }
- @Transactional(readOnly=true) public Map<String,Object> snapshot(UUID user){
+ @Transactional(readOnly=true) public Map<String,Object> snapshot(UUID user){return snapshot(user,false);}
+ @Transactional(readOnly=true) public Map<String,Object> archive(UUID user){return snapshot(user,true);}
+ private Map<String,Object> snapshot(UUID user,boolean complete){
   var choices=new ArrayList<Map<String,Object>>();
   for(String purpose:List.of("SUPPORT_TOPICS","OPTIONAL_ANALYTICS","OPTIONAL_COMMUNICATIONS")){
    var event=db.queryForList("SELECT decision,notice_id,created_at FROM processing_authorizations WHERE user_id=? AND purpose=? ORDER BY event_order DESC LIMIT 1",user,purpose);
@@ -39,9 +41,9 @@ public class PrivacyGovernanceService {
   }
   var result=new LinkedHashMap<String,Object>();result.put("choices",choices);result.put("manualIntakeAvailable",intakeEnabled);result.put("responseTargetHours",intakeEnabled?responseHours:null);
   result.put("noticeReceipts",db.queryForList("SELECT r.notice_id,r.received_at,p.policy_key,p.version,p.locale FROM privacy_notice_receipts r JOIN policy_documents p ON p.id=r.notice_id WHERE r.user_id=? ORDER BY r.received_at DESC",user));
-  result.put("authorizationHistory",db.queryForList("SELECT id,purpose,decision,notice_id,created_at FROM processing_authorizations WHERE user_id=? ORDER BY event_order DESC LIMIT 100",user));
+  result.put("authorizationHistory",db.queryForList("SELECT id,purpose,decision,notice_id,created_at FROM processing_authorizations WHERE user_id=? ORDER BY event_order DESC"+(complete?"":" LIMIT 100"),user));
   result.put("termsAcceptances",db.queryForList("SELECT policy_key,version,accepted_at FROM policy_acceptances WHERE user_id=? ORDER BY accepted_at DESC",user));
-  result.put("rightsRequests",rights(user));return result;
+  result.put("rightsRequests",complete?db.queryForList("SELECT id,kind,status,resolution_reference,created_at,updated_at FROM data_rights_requests WHERE user_id=? ORDER BY created_at DESC",user):rights(user));return result;
  }
  @Transactional public Map<String,Object> decide(UUID user,String purpose,String decision,UUID noticeId){
   if(!NOTICES.containsKey(purpose)||!Set.of("GRANTED","DENIED","WITHDRAWN").contains(decision))throw new IllegalArgumentException("Invalid purpose decision");
@@ -70,8 +72,8 @@ public class PrivacyGovernanceService {
  @Transactional public Map<String,Object> requestRight(UUID user,String kind,UUID retryKey){
   if(!intakeEnabled)throw new ForbiddenException("Manual rights intake is not staffed yet; existing account export, correction and deletion remain available");
   if(!Set.of("ACCESS","RECTIFICATION","ERASURE","RESTRICTION","OBJECTION","PORTABILITY","HUMAN_REVIEW").contains(kind)||retryKey==null)throw new IllegalArgumentException("Invalid rights request");
-  lock(user);var existing=db.queryForList("SELECT id,kind FROM data_rights_requests WHERE user_id=? AND idempotency_key=?",user,retryKey);
-  if(!existing.isEmpty()){if(!kind.equals(existing.getFirst().get("kind")))throw new ConflictException("Retry key belongs to a different request");return rights(user).stream().filter(r->r.get("id").equals(existing.getFirst().get("id"))).findFirst().orElseThrow();}
+  lock(user);var existing=db.queryForList("SELECT id,kind,status,resolution_reference,created_at,updated_at FROM data_rights_requests WHERE user_id=? AND idempotency_key=?",user,retryKey);
+  if(!existing.isEmpty()){if(!kind.equals(existing.getFirst().get("kind")))throw new ConflictException("Retry key belongs to a different request");return existing.getFirst();}
   if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM data_rights_requests WHERE user_id=? AND kind=? AND status IN ('RECEIVED','IN_REVIEW','NEEDS_INFORMATION'))",Boolean.class,user,kind)))throw new ConflictException("An open request of this kind already exists");
   if(db.queryForObject("SELECT count(*) FROM data_rights_requests WHERE user_id=? AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 day'",Integer.class,user)>=5)throw new TooManyRequestsException("Too many rights requests",3600);
   UUID id=UUID.randomUUID();db.update("INSERT INTO data_rights_requests(id,user_id,kind,idempotency_key) VALUES (?,?,?,?)",id,user,kind,retryKey);
