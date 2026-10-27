@@ -25,12 +25,13 @@ public class NotificationRepository {
                  WHERE COALESCE((
                      SELECT CASE
                          WHEN ? IN ('COMMENT', 'REPLY', 'MENTION', 'LIKE', 'PROFESSIONAL_REPLY') THEN notify_replies
-                         WHEN ? IN ('FOLLOW', 'FOLLOW_REQUEST') THEN notify_follows
+                         WHEN ? IN ('FOLLOW', 'FOLLOW_REQUEST','FOLLOW_ACCEPTED') THEN notify_follows
+                         WHEN ? = 'MESSAGE_REQUEST' THEN notify_messages
                          ELSE TRUE
                      END
                      FROM user_preferences WHERE user_id = ?
                  ), TRUE)
-                """, userId, visibleActorId, type, postId, commentId, type, type, userId);
+                """, userId, visibleActorId, type, postId, commentId, type, type, type, userId);
     }
 
     public Optional<UUID> postAuthor(UUID postId) {
@@ -50,11 +51,14 @@ public class NotificationRepository {
 
     public List<NotificationResponse> findAll(UUID userId, int page, int size) {
         return jdbcTemplate.query("""
-                SELECT n.id, n.type, n.actor_user_id, n.post_id, n.comment_id, n.title, n.body, n.is_read, n.created_at,
+                SELECT n.id, n.type, CASE WHEN EXISTS(SELECT 1 FROM comments ac WHERE ac.id=n.comment_id AND ac.is_anonymous)
+                        OR EXISTS(SELECT 1 FROM posts ap WHERE ap.id=n.post_id AND ap.is_anonymous AND ap.author_id=n.actor_user_id)
+                        THEN NULL ELSE n.actor_user_id END AS actor_user_id,
+                       n.post_id, n.comment_id, n.title, CASE WHEN n.post_id IS NULL THEN n.body ELSE NULL END AS body, n.is_read, n.created_at,
                        p.username, p.display_name, p.avatar_url
                   FROM notifications n
                   LEFT JOIN profiles p ON p.user_id = n.actor_user_id
-                 WHERE n.user_id = ? AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id))
+                 WHERE n.user_id = ? AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR EXISTS(SELECT 1 FROM comments nc WHERE nc.id=n.comment_id AND nc.status='PUBLISHED' AND nc.deleted_at IS NULL))
                    AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id=n.user_id AND b.blocked_id=n.actor_user_id) OR (b.blocker_id=n.actor_user_id AND b.blocked_id=n.user_id))
                  ORDER BY n.created_at DESC, n.id DESC
                  LIMIT ? OFFSET ?
@@ -74,7 +78,7 @@ public class NotificationRepository {
         Long count = jdbcTemplate.queryForObject(
                 """
                 SELECT COUNT(*) FROM notifications n WHERE n.user_id = ? AND n.is_read = FALSE
-                  AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id))
+                  AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR EXISTS(SELECT 1 FROM comments nc WHERE nc.id=n.comment_id AND nc.status='PUBLISHED' AND nc.deleted_at IS NULL))
                   AND NOT EXISTS (SELECT 1 FROM blocks b WHERE
                     (b.blocker_id=n.user_id AND b.blocked_id=n.actor_user_id) OR
                     (b.blocker_id=n.actor_user_id AND b.blocked_id=n.user_id))

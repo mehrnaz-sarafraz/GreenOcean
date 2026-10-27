@@ -1,3 +1,4 @@
+import {ConnectionsPanel} from '@/features/content/connections-panel';
 import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -8,7 +9,7 @@ import { ActionRow, EmptyState, Notice, Pill, ProductCard, ProductHeader, Produc
 import { usePlatformData } from '@/features/platform/data-provider';
 import { optionsIn } from '@/features/platform/catalog';
 import { CommunityDetails } from '@/features/community/types';
-import { AccountArchive, Consultation, FollowRequest, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences, WellbeingSnapshot } from '@/features/platform/types';
+import { AccountArchive, Consultation, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences, WellbeingSnapshot } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { useAuth } from '@/features/auth/auth-provider';
 import { UrgentHelpContent } from '@/features/safety/urgent-help';
@@ -112,18 +113,7 @@ function Saved() {
   return <><Notice title="Your private collection" body="Saved items are private and synchronized with your GreenOcean account." /><ProductSection title="Posts" subtitle={`${savedPosts.length} saved`}>{savedPosts.length ? savedPosts.map(item => <ActionRow key={item.id} icon="bookmark" title={item.body.slice(0, 72)} subtitle="Saved community story" value="Remove" onPress={() => void remove(`/api/v1/posts/${item.id}/bookmark`)} />) : <EmptyState icon="bookmark_border" title="No saved posts yet" body="Bookmark a story from the feed to keep it here." />}</ProductSection><ProductSection title="Articles" subtitle={`${savedArticles.length} saved`}>{savedArticles.length ? savedArticles.map(item => <ActionRow key={item.id} icon="article" title={item.title} subtitle={item.summary} value="Remove" onPress={() => void remove(`/api/v1/articles/${item.id}/save`)} />) : <EmptyState icon="bookmark_border" title="No saved articles yet" body="Open Knowledge and save anything you want to revisit." />}</ProductSection><ProductSection title="Media" subtitle={`${savedMedia.length} saved`}>{savedMedia.map(item => <ActionRow key={item.id} icon="movie" title={item.title} subtitle={item.description} value="Remove" onPress={() => void remove(`/api/v1/media-recommendations/${item.id}/save`)} />)}{!savedMedia.length && <EmptyState icon="subscriptions" title="No saved media yet" body="Save a movie, series, or documentary from the Media guide." />}</ProductSection></>;
 }
 
-function Connections() {
-  const [following, setFollowing] = useState<SocialConnection[]>([]); const [followers, setFollowers] = useState<SocialConnection[]>([]); const [incoming, setIncoming] = useState<FollowRequest[]>([]); const [outgoing, setOutgoing] = useState<FollowRequest[]>([]);
-  const load = async () => { const [nextFollowing, nextFollowers, nextIncoming, nextOutgoing] = await Promise.all([apiRequest<SocialConnection[]>('/api/v1/social/following'), apiRequest<SocialConnection[]>('/api/v1/social/followers'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/incoming'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/outgoing')]); setFollowing(nextFollowing); setFollowers(nextFollowers); setIncoming(nextIncoming); setOutgoing(nextOutgoing); };
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, []);
-  const unfollow = async (userId: string) => { await apiRequest(`/api/v1/social/follows/${userId}`, { method: 'DELETE' }); await load(); };
-  const resolve = async (userId: string, accept: boolean) => { await apiRequest(`/api/v1/social/follow-requests/${userId}${accept ? '/accept' : ''}`, { method: accept ? 'POST' : 'DELETE' }); await load(); };
-  const cancel = async (userId: string) => { await apiRequest(`/api/v1/social/follow-requests/outgoing/${userId}`, { method: 'DELETE' }); await load(); };
-  return <><ProductSection title="Follow requests" subtitle={`${incoming.length} waiting`}>{incoming.length ? incoming.map(person => <ProductCard key={person.userId}><ActionRow icon="person_add" title={person.displayName} subtitle={`@${person.username}`} /><View style={styles.two}><View style={styles.flex}><AppButton label="Accept" onPress={() => void resolve(person.userId, true)} /></View><View style={styles.flex}><AppButton label="Decline" variant="secondary" onPress={() => void resolve(person.userId, false)} /></View></View></ProductCard>) : <EmptyState icon="person_add" title="No pending requests" body="Requests for a private profile will appear here." />}</ProductSection><ProductSection title="Sent requests" subtitle={`${outgoing.length} waiting`}>{outgoing.map(person => <ActionRow key={person.userId} icon="schedule" title={person.displayName} subtitle={`@${person.username}`} value="Cancel" onPress={() => void cancel(person.userId)} />)}</ProductSection><ProductSection title="Following" subtitle={`${following.length} people`}>{following.length ? following.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} value="Unfollow" onPress={() => void unfollow(person.userId)} />) : <EmptyState icon="group" title="Not following anyone yet" body="Follow community members or professionals from their profiles." />}</ProductSection><ProductSection title="Followers" subtitle={`${followers.length} people`}>{followers.length ? followers.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} />) : <EmptyState icon="group" title="No followers yet" body="New followers will appear here." />}</ProductSection></>;
-}
+function Connections() {return <ConnectionsPanel/>;}
 
 function NotificationSettings() {
   const { preferences, setPreferences } = usePlatformData();
@@ -200,7 +190,8 @@ function NewMessage() {
     try {
       const result = kind === 'listener'
         ? await apiRequest<{ conversationId: string }>(`/api/v1/listeners/match?listenerId=${id}`, { method: 'POST' })
-        : await apiRequest<{ id: string }>(kind === 'professional' ? `/api/v1/conversations/professionals/${id}` : `/api/v1/conversations/users/${id}`, { method: 'POST' });
+        : await apiRequest<{ id: string; status?:string }>(kind === 'professional' ? `/api/v1/conversations/professionals/${id}` : `/api/v1/conversations/users/${id}`, { method: 'POST' });
+      if('status' in result&&result.status==='PENDING'){router.replace('/message-requests' as never);return;}
       router.replace({ pathname: '/chat/[id]', params: { id: 'conversationId' in result ? result.conversationId : result.id } });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not start conversation');

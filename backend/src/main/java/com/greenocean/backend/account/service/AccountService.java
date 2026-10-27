@@ -57,7 +57,8 @@ public class AccountService {
                 wellbeing.snapshot(userId), reports.mine(userId), social.following(userId), social.followers(userId),
                 social.blocked(userId), search.history(userId), repository.activity(userId),governance.archive(userId),
                 db.queryForList("SELECT id,payload::text,revision,updated_at,expires_at FROM social_drafts WHERE owner_id=? AND expires_at>CURRENT_TIMESTAMP ORDER BY updated_at",userId),
-                db.queryForList("SELECT a.id,a.post_id,a.comment_id,a.revision,a.policy_version,a.outcome,a.reason_code,a.assessed_at FROM social_assessments a LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id WHERE p.author_id=? OR c.author_id=? ORDER BY a.assessed_at",userId,userId));
+                db.queryForList("SELECT a.id,a.post_id,a.comment_id,a.revision,a.policy_version,a.outcome,a.reason_code,a.assessed_at FROM social_assessments a LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id WHERE p.author_id=? OR c.author_id=? ORDER BY a.assessed_at",userId,userId),
+                db.queryForList("SELECT id,request_status,requester_id,request_target_id,updated_at FROM conversations WHERE service_kind='COMMUNITY' AND (requester_id=? OR request_target_id=?) ORDER BY updated_at,id",userId,userId));
     }
 
     @Transactional

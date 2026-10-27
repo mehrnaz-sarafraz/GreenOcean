@@ -1,5 +1,7 @@
+import {AppButton} from '@/components/app-button';
+import {useLanguage} from '@/localization/language-provider';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppIcon } from '@/components/app-icon';
@@ -16,6 +18,9 @@ import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tok
 export default function ExploreScreen() {
   const { categories, communities, professionals, articles: professionalArticles, options } = usePlatformData();
   const groups = optionsIn(options, 'CATEGORY_GROUP').map(option => ({ id: option.key as SupportCategoryGroup, title: option.label, subtitle: option.description || '' }));
+  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const searchGeneration=useRef(0);
+  const [resultPage,setResultPage]=useState(0);const [morePeople,setMorePeople]=useState(false);const [moreStories,setMoreStories]=useState(false);
   const [query, setQuery] = useState('');
   const [people, setPeople] = useState<UserSearchItem[]>([]);
   const [storyResults, setStoryResults] = useState<PostItem[]>([]);
@@ -36,7 +41,7 @@ export default function ExploreScreen() {
   };
 
   useFocusEffect(useCallback(() => {
-    let active=true;setPeople([]);setStoryResults([]);
+    let active=true;searchGeneration.current++;setPeople([]);setStoryResults([]);setResultPage(0);setMorePeople(false);setMoreStories(false);
     const timer = setTimeout(() => {
       if (query.trim().length < 2) {
         setPeople([]); setStoryResults([]); setSearchError(''); setSearching(false);
@@ -47,13 +52,14 @@ export default function ExploreScreen() {
       Promise.all([
         apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12`),
         apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12`),
-      ]).then(([users, stories]) => { if(!active)return;setPeople(users.items); setStoryResults(stories.items); })
+      ]).then(([users, stories]) => { if(!active)return;setPeople(users.items); setStoryResults(stories.items);setMorePeople(users.hasNext);setMoreStories(stories.hasNext); })
         .catch(caught => {if(active){setPeople([]);setStoryResults([]);setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.');}})
         .finally(() => {if(active)setSearching(false);});
     }, 300);
-    return () => {active=false;clearTimeout(timer);};
+    return () => {active=false;searchGeneration.current++;clearTimeout(timer);setPeople([]);setStoryResults([]);};
   }, [query]));
 
+  async function more(){if(searching)return;setSearching(true);const generation=searchGeneration.current;try{const encoded=encodeURIComponent(query.trim());const [users,stories]=await Promise.all([apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12&page=${resultPage+1}`),apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12&page=${resultPage+1}`)]);if(generation!==searchGeneration.current)return;setPeople(current=>[...current,...users.items.filter(p=>!current.some(old=>old.userId===p.userId))]);setStoryResults(current=>[...current,...stories.items.filter(p=>!current.some(old=>old.id===p.id))]);setMorePeople(users.hasNext);setMoreStories(stories.hasNext);setResultPage(resultPage+1);}catch(e){setPeople([]);setStoryResults([]);setSearchError(e instanceof Error?e.message:'Unavailable');}finally{setSearching(false);}}
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <Text style={styles.title}>Explore</Text>
     <Text style={styles.subtitle}>Find stories, professional knowledge, support spaces, and thoughtful things to watch.</Text>
@@ -70,7 +76,8 @@ export default function ExploreScreen() {
       </Pressable>)}
       <Section title="Stories" subtitle={searching ? 'Searching stories…' : `${storyResults.length} matching stories`} />
       {storyResults.map(post => <PostCard key={post.id} post={post} />)}
-      {!!searchError && <Text style={styles.searchError}>{searchError}</Text>}
+      {(morePeople||moreStories)&&<AppButton label={tr('More search results','نتایج جست‌وجوی بیشتر')} disabled={searching} variant="secondary" onPress={()=>void more()}/>}
+      {!!searchError && <Text accessibilityRole="alert" style={styles.searchError}>{searchError}</Text>}
     </>}
 
     {(showKnowledge || showMedia) && <View style={styles.hubGrid}>

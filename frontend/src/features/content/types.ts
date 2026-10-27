@@ -10,13 +10,13 @@ export type ProfessionalReply = {
   body: string; helpfulCount: number; createdAt: string;
 };
 export type PostItem = {
-  revision?:number; status?:string; safetyOutcome?:string; safetyReason?:string; id: string; author: AuthorSummary | null; communityId: string | null; body: string; anonymous: boolean;
+  owned?:boolean; revision?:number; status?:string; safetyOutcome?:string; safetyReason?:string; id: string; author: AuthorSummary | null; communityId: string | null; body: string; anonymous: boolean;
   visibility: PostVisibility; contentWarning: string | null; likeCount: number; commentCount: number;
   liked: boolean; bookmarked: boolean; category: SupportCategory | null; postType: 'EXPERIENCE' | 'QUESTION' | 'REFLECTION';
   mood: string | null; professionalReply: ProfessionalReply | null; createdAt: string;
 };
 export type CommentItem = {
-  revision?:number; status?:string; safetyOutcome?:string; safetyReason?:string; id: string; postId: string; parentCommentId: string | null; author: AuthorSummary | null; body: string;
+  owned?:boolean; revision?:number; status?:string; safetyOutcome?:string; safetyReason?:string; id: string; postId: string; parentCommentId: string | null; author: AuthorSummary | null; body: string;
   anonymous: boolean; likeCount: number; liked: boolean; createdAt: string;
 };
 export type PageResponse<T> = { items: T[]; page: number; size: number; hasNext: boolean };

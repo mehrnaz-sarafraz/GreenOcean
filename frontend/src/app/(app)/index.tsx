@@ -4,6 +4,8 @@ import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { Avatar } from '@/components/avatar';
+import { AppButton } from '@/components/app-button';
+import {useSocialFeed} from '@/features/content/use-social-feed';
 import { PostCard } from '@/features/content/post-card';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { Professional } from '@/features/platform/types';
@@ -14,11 +16,12 @@ import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tok
 
 const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE: 'Life experience' } as const;
 export default function FeedScreen() {
-  const { t } = useLanguage();
-  const { categories, posts, professionals, articles, notifications, profile, options, loading, error, refresh } = usePlatformData();
+  const { t,language } = useLanguage();
+  const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const { categories, professionals, articles, notifications, profile, options, refresh } = usePlatformData();
   useFocusEffect(useCallback(()=>{void refresh();},[refresh]));
   const checkInOptions = optionsIn(options, 'POST_MOOD');
-  const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
+  const [tab, setTab] = useState<'discover' | 'following' | 'saved'>('discover');
   const [categoryId, setCategoryId] = useState('all');
   const [checkIn, setCheckIn] = useState('');
   const featuredCategories = useMemo(() => [
@@ -26,7 +29,9 @@ export default function FeedScreen() {
     ...categories.filter(category => category.group === 'CONDITION').slice(0, 3),
     ...categories.filter(category => category.group === 'LIFE_EXPERIENCE').slice(0, 3),
   ], [categories]);
-  const shown = useMemo(() => posts.filter(post => (tab !== 'professionalAnswers' || post.professionalReply) && (categoryId === 'all' || post.category?.id === categoryId)), [posts, tab, categoryId]);
+  const feed=useSocialFeed(tab==='following'?'FOLLOWING':tab==='saved'?'SAVED':'DISCOVER',categoryId);
+  const shown=feed.items;const posts=shown;const {loading,error}=feed;
+  const tabLabel=(value:string)=>value==='following'?tr('Following','دنبال‌شده‌ها'):value==='saved'?tr('Saved','ذخیره‌شده‌ها'):tr('Discover','کاوش');
   const pinnedArticle = articles.find(article => article.pinned) ?? articles[0];
   const articleAuthor = professionals.find(professional => professional.id === pinnedArticle?.authorId);
   const displayName = profile?.displayName ?? 'GreenOcean member';
@@ -48,7 +53,7 @@ export default function FeedScreen() {
 
     <Pressable accessibilityRole="button" accessibilityLabel="Create a new post" onPress={() => router.push('/create')} style={styles.composer}><Avatar name={displayName} uri={profile?.avatarUrl} size={38} /><Text style={styles.composerText}>{t('sharePrompt')}</Text><View style={styles.composeIcon}><AppIcon name="edit" size={18} color={colors.white} /></View></Pressable>
 
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>{(['forYou', 'following', 'professionalAnswers'] as const).map(item => <Pressable accessibilityRole="tab" accessibilityState={{ selected: tab === item }} key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item && styles.activeTab]}><Text style={[styles.tabText, tab === item && styles.activeTabText]}>{t(item)}</Text></Pressable>)}</ScrollView>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>{(['discover', 'following', 'saved'] as const).map(item => <Pressable accessibilityRole="tab" accessibilityState={{ selected: tab === item }} key={item} onPress={() => setTab(item)} style={[styles.tab, tab === item && styles.activeTab]}><Text style={[styles.tabText, tab === item && styles.activeTabText]}>{tabLabel(item)}</Text></Pressable>)}</ScrollView>
 
     <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>FIND YOUR SPACE</Text><Text style={styles.sectionTitle}>Browse stories by topic</Text></View><Pressable accessibilityRole="button" onPress={() => router.push('/search')}><Text style={styles.seeAll}>{t('seeAll')}</Text></Pressable></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
@@ -56,10 +61,14 @@ export default function FeedScreen() {
       {featuredCategories.map(category => <Pressable accessibilityRole="radio" accessibilityState={{ checked: categoryId === category.id }} key={category.id} onPress={() => setCategoryId(category.id)} style={[styles.categoryCard, categoryId === category.id && styles.categoryCardActive]}><View style={[styles.categoryIcon, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} color={category.color} /></View><Text style={styles.categoryGroup}>{groupNames[category.group]}</Text><Text style={[styles.categoryName, categoryId === category.id && styles.categoryNameActive]}>{category.name}</Text><Text style={styles.categoryCount}>Explore stories</Text></Pressable>)}
     </ScrollView>
 
-    <View style={styles.feedHeading}><Text style={styles.feedTitle}>{categoryId === 'all' ? (tab === 'forYou' ? t('forYou') : t(tab)) : categories.find(category => category.id === categoryId)?.name}</Text>{categoryId !== 'all' && <Pressable accessibilityRole="button" onPress={() => setCategoryId('all')}><Text style={styles.clear}>Clear filter</Text></Pressable>}</View>
+    <View style={styles.feedHeading}><Text style={styles.feedTitle}>{categoryId === 'all' ? tabLabel(tab) : categories.find(category => category.id === categoryId)?.name}</Text>{categoryId !== 'all' && <Pressable accessibilityRole="button" onPress={() => setCategoryId('all')}><Text style={styles.clear}>Clear filter</Text></Pressable>}</View>
   </View>;
 
   const footer = <View style={styles.footerContent}>
+    {!!error&&<Text accessibilityRole="alert">{error}</Text>}
+    {feed.hasNext&&<AppButton label={tr('Load more stories','نمایش پست‌های بیشتر')} disabled={loading} onPress={()=>void feed.loadMore()}/>}
+    <AppButton label={tr('My posts and decisions','پست‌های من و تصمیم‌ها')} variant="secondary" onPress={()=>router.push('/my-posts' as never)}/>
+    {tab==='following'&&<Text>{tr('Only permitted named posts from approved follows appear here. Anonymous posts stay in neutral discovery.','فقط پست‌های با هویت اجتماعیِ دنبال‌شده‌های تأییدشده اینجا نمایش داده می‌شود. پست ناشناس در کاوش بی‌طرف می‌ماند.')}</Text>}
     <View style={styles.sectionHead}><View><Text style={styles.eyebrow}>CONTINUE EXPLORING</Text><Text style={styles.sectionTitle}>Knowledge, culture & professional support</Text></View></View>
     <View style={styles.discoveryGrid}>
       <Pressable accessibilityRole="button" onPress={() => router.push('/articles')} style={[styles.discoveryCard, styles.knowledgeCard]}><View style={styles.discoveryIcon}><AppIcon name="science" color={colors.ocean700} /></View><View style={{ flex: 1 }}><Text style={styles.discoveryLabel}>KNOWLEDGE HUB</Text><Text style={styles.discoveryTitle}>{articles.length} published professional articles</Text></View><AppIcon name="arrow_forward" color={colors.ocean700} /></Pressable>
@@ -71,7 +80,7 @@ export default function FeedScreen() {
     <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/article/[id]', params: { id: pinnedArticle.id } })} style={styles.articleFeature}><View style={styles.pin}><AppIcon name="push_pin" filled size={16} color={colors.white} /><Text style={styles.pinText}>PINNED BY {articleAuthor.displayName.toUpperCase()}</Text></View><View style={styles.articleBody}><Text style={styles.articleTopic}>{pinnedArticle.topic} · {pinnedArticle.readTime}</Text><Text style={styles.articleTitle}>{pinnedArticle.title}</Text><Text style={styles.articleSummary}>{pinnedArticle.summary}</Text><View style={styles.articleFooter}><Avatar name={articleAuthor.displayName} uri={articleAuthor.avatarUrl} size={34} verified /><Text style={styles.articleAuthor}>{articleAuthor.displayName}<Text style={styles.articleRole}> · {articleAuthor.title}</Text></Text><AppIcon name="arrow_forward" color={colors.ocean700} /></View></View></Pressable></>}
   </View>;
 
-  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading} onRefresh={() => void refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : 'No stories in this category yet'}</Text><Text style={styles.emptyText}>{error ?? 'Be the first person to share an experience here.'}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
+  return <SafeAreaView style={styles.safe}><FlatList refreshing={loading} onRefresh={() => void feed.refresh()} data={shown} keyExtractor={item => item.id} renderItem={({ item }) => <PostCard post={item} />} ListHeaderComponent={header} ListFooterComponent={footer} contentContainerStyle={styles.list} ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />} ListEmptyComponent={<View style={styles.empty}><AppIcon name={error ? 'cloud_off' : 'forum'} size={36} color={colors.ocean500} /><Text style={styles.emptyTitle}>{error ? 'Could not load the feed' : tab==='saved'?tr('No permitted saved posts','پست ذخیره‌شدهٔ قابل‌نمایشی نیست'):tab==='following'?tr('No permitted followed stories','پستی از دنبال‌شده‌ها برای نمایش نیست'):tr('No stories in this category yet','هنوز پستی در این موضوع نیست')}</Text><Text style={styles.emptyText}>{error ?? tr('You can read without posting. Follow members voluntarily or explore other topics.','می‌توانید بدون نوشتن فقط بخوانید. دنبال‌کردن اعضا و انتخاب موضوع اختیاری است.')}</Text></View>} showsVerticalScrollIndicator={false} /></SafeAreaView>;
 }
 
 function DoctorBanner({ professional }: { professional: Professional }) {
