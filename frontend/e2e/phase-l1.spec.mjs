@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {installApi} from './fixtures/public-api.mjs';
-async function setup(page){const state=await installApi(page,{completeActivation:true});state.signedIn=true;state.emailVerified=true;
- await page.route('**/api/v1/identity',r=>r.fulfill({json:{eligibility:{display_reviewed_at:'2026-01-01T00:00:00Z'}}}));
+async function setup(page){const state=await installApi(page,{completeActivation:true});state.signedIn=true;state.emailVerified=true;state.onboardingComplete=true;
+ await page.route('**/api/v1/identity',r=>r.fulfill({json:{status:'ACTIVE',email_verified:true,services:{COMMUNITY:true},eligibility:{display_reviewed_at:'2026-01-01T00:00:00Z'}}}));
  await page.route('**/api/v1/posts/drafts',r=>r.fulfill({json:[]}));return state;}
 test('Confused L1: identity is first; no text editor or assumed named identity',async({page})=>{
  await setup(page);await page.goto('/create');await expect(page.getByRole('heading',{name:'How would you like this post to appear to other members?'})).toBeVisible();
