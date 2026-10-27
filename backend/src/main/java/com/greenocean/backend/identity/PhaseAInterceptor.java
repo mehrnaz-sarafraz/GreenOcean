@@ -38,7 +38,7 @@ public class PhaseAInterceptor implements HandlerInterceptor {
         String service=path.contains("consultation") || path.contains("/conversations/professionals/") ? "PROFESSIONAL_CARE" :
             path.contains("listener") ? "LISTENER" : path.startsWith("/api/v1/professionals") ? "PROFESSIONAL_DIRECTORY" : "COMMUNITY";
         access.require(UUID.fromString(jwt.getToken().getSubject()),service);
-        if("POST".equals(req.getMethod()) && (path.equals("/api/v1/posts") || path.contains("/comments")))
+        if("POST".equals(req.getMethod()) && (path.startsWith("/api/v1/posts") || path.contains("/comments")))
             access.requireDisplayReview(UUID.fromString(jwt.getToken().getSubject()));
         return true;
     }

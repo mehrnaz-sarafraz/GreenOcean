@@ -17,6 +17,7 @@ public record CreatePostRequest(
         UUID categoryId,
         PostType postType,
         @Size(max = 30) String mood,
-        Boolean broaderAudienceConfirmed
+        Boolean broaderAudienceConfirmed,
+        @jakarta.validation.constraints.Pattern(regexp="ANONYMOUS|SOCIAL_IDENTITY") String publicationIdentity
 ) {
 }

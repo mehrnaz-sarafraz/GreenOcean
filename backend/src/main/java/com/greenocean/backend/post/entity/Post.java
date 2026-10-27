@@ -63,6 +63,15 @@ public class Post {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    @Column(nullable=false) private long revision = 1;
+    @Column(name="safety_outcome") private String safetyOutcome;
+    @Column(name="safety_reason") private String safetyReason;
+    public long getRevision() { return revision; }
+    public void assess(com.greenocean.backend.post.service.ContentSafety.Assessment assessment) {
+        safetyOutcome=assessment.outcome().name(); safetyReason=assessment.reason();
+        status=assessment.outcome()==com.greenocean.backend.post.service.ContentSafety.Outcome.ALLOW ? ContentStatus.PUBLISHED : ContentStatus.UNDER_REVIEW;
+    }
+    public void revise(String text) { body=text; revision++; updatedAt=Instant.now(); }
     protected Post() {
     }
 

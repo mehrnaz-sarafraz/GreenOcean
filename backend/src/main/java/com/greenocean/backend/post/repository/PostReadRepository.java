@@ -21,7 +21,7 @@ import java.util.UUID;
 public class PostReadRepository {
     private static final String POST_SELECT = """
             SELECT p.id, p.author_id, p.community_id, p.body, p.is_anonymous, p.visibility,
-                   p.content_warning, p.category_id, p.post_type, p.mood, p.created_at,
+                   p.content_warning, p.category_id, p.post_type, p.mood, p.created_at, p.revision,p.status,p.safety_outcome,p.safety_reason,
                    pr.username, pr.display_name, pr.avatar_url,
                    sc.slug AS category_slug, sc.category_group, sc.name AS category_name,
                    sc.description AS category_description, sc.icon AS category_icon,
@@ -65,6 +65,15 @@ public class PostReadRepository {
                 size + 1, (long) page * size);
     }
 
+    public Optional<PostResponse> findOwnedPost(UUID id,UUID owner) {
+        return jdbcTemplate.query(POST_SELECT+" WHERE p.id=? AND p.author_id=? AND p.deleted_at IS NULL",this::mapPost,owner,owner,id,owner).stream().findFirst();
+    }
+    public List<PostResponse> findOwned(UUID owner,int page,int size) {
+        return jdbcTemplate.query(POST_SELECT+" WHERE p.author_id=? AND p.deleted_at IS NULL ORDER BY p.created_at DESC,p.id DESC LIMIT ? OFFSET ?",this::mapPost,owner,owner,owner,size+1,(long)page*size);
+    }
+    public Optional<CommentResponse> findOwnedComment(UUID id,UUID owner) {
+        return jdbcTemplate.query(commentSelect()+" WHERE c.id=? AND c.author_id=? AND c.deleted_at IS NULL",this::mapComment,owner,id,owner).stream().findFirst();
+    }
     public Optional<PostResponse> findAccessiblePost(UUID postId, UUID viewerId) {
         String sql = POST_SELECT + " WHERE p.id = ? AND p.status = 'PUBLISHED' " + ACCESS_PREDICATE;
         List<PostResponse> posts = jdbcTemplate.query(sql, this::mapPost,
@@ -120,7 +129,7 @@ public class PostReadRepository {
 
     private String commentSelect() {
         return """
-                SELECT c.id, c.post_id, c.parent_comment_id, c.author_id, c.body, c.is_anonymous, c.created_at,
+                SELECT c.id, c.post_id, c.parent_comment_id, c.author_id, c.body, c.is_anonymous, c.created_at,c.revision,c.status,c.safety_outcome,c.safety_reason,
                        pr.username, pr.display_name, pr.avatar_url,
                        (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) AS like_count,
                        EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = ?) AS liked
@@ -172,7 +181,8 @@ public class PostReadRepository {
                 resultSet.getLong("like_count"), resultSet.getLong("comment_count"),
                 resultSet.getBoolean("liked"), resultSet.getBoolean("bookmarked"),
                 category, PostType.valueOf(resultSet.getString("post_type")), resultSet.getString("mood"), professionalReply,
-                resultSet.getObject("created_at", OffsetDateTime.class).toInstant()
+                resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+                resultSet.getLong("revision"),resultSet.getString("status"),resultSet.getString("safety_outcome"),resultSet.getString("safety_reason")
         );
     }
 
@@ -186,7 +196,8 @@ public class PostReadRepository {
                 resultSet.getObject("id", UUID.class), resultSet.getObject("post_id", UUID.class),
                 resultSet.getObject("parent_comment_id", UUID.class), author, resultSet.getString("body"), anonymous,
                 resultSet.getLong("like_count"), resultSet.getBoolean("liked"),
-                resultSet.getObject("created_at", OffsetDateTime.class).toInstant()
+                resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+                resultSet.getLong("revision"),resultSet.getString("status"),resultSet.getString("safety_outcome"),resultSet.getString("safety_reason")
         );
     }
 }

@@ -45,6 +45,14 @@ public class PostController {
         return postService.feed(userId(jwt), validPage(page), validSize(size));
     }
 
+    @GetMapping("/mine")
+    public PageResponse<PostResponse> owned(@AuthenticationPrincipal Jwt jwt,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size) {
+        return postService.owned(userId(jwt),validPage(page),validSize(size));
+    }
+    @PutMapping("/{postId}")
+    public PostResponse edit(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID postId,@Valid @RequestBody com.greenocean.backend.post.dto.EditPostRequest request) {
+        return postService.edit(postId,userId(jwt),request);
+    }
     @GetMapping("/{postId}")
     public PostResponse get(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID postId) {
         return postService.get(postId, userId(jwt));

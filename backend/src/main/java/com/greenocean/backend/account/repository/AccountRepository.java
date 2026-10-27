@@ -77,6 +77,8 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM social_drafts WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM social_assessments WHERE post_id IN(SELECT id FROM posts WHERE author_id=?) OR comment_id IN(SELECT id FROM comments WHERE author_id=?)",userId,userId);
         jdbcTemplate.update("DELETE FROM processing_authorizations WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);
@@ -127,8 +129,8 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM community_members WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM conversation_members WHERE user_id = ?", userId);
         jdbcTemplate.update("UPDATE messages SET body = '[Message removed]', deleted_at = CURRENT_TIMESTAMP WHERE sender_id = ?", userId);
-        jdbcTemplate.update("UPDATE comments SET body = '[Deleted]', is_anonymous = TRUE, status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
-        jdbcTemplate.update("UPDATE posts SET body = '[Deleted]', is_anonymous = TRUE, status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
+        jdbcTemplate.update("UPDATE comments SET body = '[Deleted]', status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
+        jdbcTemplate.update("UPDATE posts SET body = '[Deleted]', status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE author_id = ?", userId);
         jdbcTemplate.update("DELETE FROM user_sessions WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM user_preferences WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM user_roles WHERE user_id = ?", userId);
