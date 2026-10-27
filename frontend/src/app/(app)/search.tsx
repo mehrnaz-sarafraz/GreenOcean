@@ -38,7 +38,7 @@ export default function ExploreScreen() {
   useFocusEffect(useCallback(() => {
     let active=true;setPeople([]);setStoryResults([]);
     const timer = setTimeout(() => {
-      if (normalizedQuery.length < 2) {
+      if (query.trim().length < 2) {
         setPeople([]); setStoryResults([]); setSearchError(''); setSearching(false);
         return;
       }
@@ -52,7 +52,7 @@ export default function ExploreScreen() {
         .finally(() => {if(active)setSearching(false);});
     }, 300);
     return () => {active=false;clearTimeout(timer);};
-  }, [normalizedQuery, query]));
+  }, [query]));
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <Text style={styles.title}>Explore</Text>
