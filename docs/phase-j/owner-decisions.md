@@ -11,3 +11,11 @@
 | Native and operations | Browser/export is not physical-device validation; mail/storage/alerts/staffing remain external | No production deployment or native-pass claim | Operations/security owner and device QA |
 
 Alternatives for unresolved consequential processing: keep disabled (recommended until reviewed), or approve a specific bounded purpose with documented basis, recipients, retention and user controls. Broad Terms acceptance or an environment flag alone is not a legal decision. No missing consequential decision is silently selected. Independent implementation proceeds using disabled gates; questions are needed only before enabling affected operations.
+
+## Continuation proposals, not approvals
+
+The supplied specification matches the committed J specification. No new consequential policy is selected. The prior Iran planning-market record is not authorization to serve that market or a determination of local law. Qualified local counsel and actual operator facts remain required.
+
+Concrete retention discussion inputs are in [retention matrix](../privacy/retention-and-erasure-matrix.md): terminal support metadata30days, review/minimization of closed report evidence90days with applicable holds, and backup window30days plus tested deletion replay. These are unapproved alternatives, not statutory periods or implemented workers. Compare shorter minimization windows against support/evidence/recovery needs and local obligations with the relevant owner/counsel before choosing. Safe behavior until approval: restricted current data, no new optional collection/secondary use, no historical bulk purge, affected launch held. No missing decision authorizes indefinite retention.
+
+Publication, topic processing, analytics and manual intake remain disabled pending their specific approvals. Existing independent export/correction/erasure and essential security mail remain available. No additional user question is required to finish independent technical work; enabling a consequential affected operation requires the actual decision/evidence first.

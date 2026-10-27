@@ -22,3 +22,7 @@ Baseline: `1b267c8` on `feature/phase-i-first-real-support`, PR #7. J remote ini
 | J-16 | Tests | MISSING | I baseline234 backend+64 helpers+83 component+20 fullstack, locally recorded | Add real database policy/consent/rights/migration/ownership tests, browser/component/fullstack and honest native gaps |
 
 Database plan: additive V42 only, no applied migration edits; preserve old policy acceptance/version/history and do not fabricate optional consent or notice receipt. New purposes, legal publication and manual intake remain off unless their specific prerequisites are configured.
+
+## Continuation and final evidence
+
+This table preserves the initial audit at1b267c8. Final J includes I beb5b78 (including foreground-response invalidation) through a normal merge. No A–I audit is repeated. The final16-row matrix in [delivery-report.md](delivery-report.md) supplies implementation, principal files, database/security impact, actual tests, decisions and allowed final statuses. Tested executable db2bfb1 passes441 tests in CI40537181467. Continuation fixes older-version publication, revoked-reviewer use, edited-draft approval, immutable review evidence, stale grant transparency and report audience checks. Database scope is additive V42 plus corrective V43; no earlier migration is edited. Legal/operational/device status is separate from automated code results.

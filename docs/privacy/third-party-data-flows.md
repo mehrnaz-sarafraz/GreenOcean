@@ -1,0 +1,18 @@
+# External systems, client storage and transfers
+
+Source inventory only. Actual provider accounts/regions, sub-processors, contracts, transfer safeguards, access rosters and retention/deletion commitments were not supplied. Every external row requires owner/security/legal validation; no signed agreement or adequacy finding is fabricated.
+
+| System / actual code | Data, purpose and boundary | Deletion/transfer responsibility / accountable role |
+|---|---|---|
+| Mail webhook; WebhookMailTransport | Configured HTTPS gateway, private bearer, no redirects; recipient/sender/template/language/delivery ID/expiry and necessary one-use challenge/reset link or fixed security event | D encrypts pending payload and retries idempotently; gateway region/contracts/log retention/actual delivery unverified; delivery owner |
+| Backend and PostgreSQL host | Data inventory categories through configured datasource/API; deployment TLS/network/privileged access must be evidenced | Application erasure/security retention implemented; actual host/DB provider/backups unknown; infrastructure owner |
+| Professional document filesystem | ProfessionalDocumentStorage configured normalized local root, random keys, filename/type/hash and applicant binary; authorized review only | Retryable account file erasure, external filesystem snapshots require operator action; no cloud vendor inferred; professional/infrastructure owner |
+| Avatar/media URLs | Existing validated external references; image fetch may disclose network metadata to host | Clearing app link cannot erase external content/logs/copies; host/region/purpose review required; media owner |
+| Web cookie/memory/local storage | HttpOnly refresh cookie; memory access token; non-secret logout/authChanged markers and language/theme UI choices | Logout clears private memory/legacy bearer storage; offline marker persists until reconciliation; no marketing consent inferred; client/security owner |
+| Native OS secure storage | Access/refresh/pending-revocation credentials in SecureStore WHEN_UNLOCKED_THIS_DEVICE_ONLY, backup exclusion configuration | OS behavior/physical backups not proven by JS export; device QA/vendor responsibilities external; native/security owner |
+| In-app notifications | Owner records and current content audience checks; notify_replies/follows enforced by NotificationRepository | Essential security mail independent of optional campaign choice; no new APNS/FCM provider or topic preview introduced; notification owner |
+| Analytics/crash/marketing | No new SDK/collector/pipeline introduced; optional grants unavailable | Audit actual host/console integrations before release; code does not prove absence of unknown deployment logging; privacy/security owner |
+| Backups/CDN/server logs | Actual configured vendors/inventory not available | Required retention/restore/deletion-replay rehearsal and access contracts; no claim physical erasure achieved; infrastructure owner |
+| CI/QA | Source, synthetic example.test accounts, disposable PG, controlled email, test-only HTTPS certificate | Test-only opt-in/loopback/random-key fixtures; absent from production jar; do not upload production dumps or credentials into artifacts; engineering owner |
+
+For each actual provider, record controller/processor role, data categories, configured endpoint, exact region, authorized access, retention/deletion owner, sub-processors, contractual basis and international-transfer review before approval. No new provider is introduced to fill this document. Existing essential storage remains functional; no decorative cookie banner or optional tracking storage is activated.
