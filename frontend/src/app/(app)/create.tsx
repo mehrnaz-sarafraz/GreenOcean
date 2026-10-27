@@ -59,7 +59,7 @@ export default function Create() {
    <Text style={direction}>{tr('Your social display name and username appear with eligible profile access. No email or legal name is automatically disclosed.','نام نمایشی و نام کاربری اجتماعی با دسترسی مجاز به پروفایل نمایش داده می‌شود؛ ایمیل یا نام قانونی خودکار افشا نمی‌شود.')}</Text>
    <AppButton label={tr('Continue to writing','ادامه به نوشتن')} disabled={!value.publicationIdentity||busy} onPress={()=>{setStage(2);setNotice('');}}/>
    <Text style={direction}>{tr('Private drafts · deleted 7 days after last edit','پیش‌نویس‌های خصوصی · حذف ۷ روز پس از آخرین ویرایش')}</Text>
-   {drafts.map(d=><View key={d.id} style={styles.box}><AppButton label={tr('Resume draft','ادامهٔ پیش‌نویس')+' '+new Date(d.expires_at).toLocaleDateString()} variant="secondary" onPress={()=>{try{setValue(JSON.parse(d.payload));setDraft(d);setStage(1);setBroader(false);}catch{setError(tr('Unable to read draft','خواندن پیش‌نویس انجام نشد'));}}/><AppButton label={tr('Discard draft','حذف پیش‌نویس')} variant="secondary" disabled={busy} onPress={()=>void discard(d.id)}/></View>)}
+   {drafts.map(d=><View key={d.id} style={styles.box}><AppButton label={tr('Resume draft','ادامهٔ پیش‌نویس')+' '+new Date(d.expires_at).toLocaleDateString()} variant="secondary" onPress={()=>{try{setValue(JSON.parse(d.payload));setDraft(d);setStage(1);setBroader(false);}catch{setError(tr('Unable to read draft','خواندن پیش‌نویس انجام نشد'));}}}/><AppButton label={tr('Discard draft','حذف پیش‌نویس')} variant="secondary" disabled={busy} onPress={()=>void discard(d.id)}/></View>)}
   </>}
   {stage===2&&<>
    <Text style={direction}>{value.publicationIdentity==='ANONYMOUS'?tr('Identity: Anonymous','هویت: ناشناس'):tr('Identity: Social identity','هویت: اجتماعی')}</Text>

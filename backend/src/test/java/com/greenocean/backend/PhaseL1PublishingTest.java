@@ -22,8 +22,8 @@ class PhaseL1PublishingTest extends PhaseLFixtures {
   var a=member();var b=member();var anonymous=publish(a,"A general experience بدون طبقه‌بندی 🌊",true);
   assertThat(anonymous.path("status").asText()).isEqualTo("PUBLISHED");assertThat(anonymous.path("category").isNull()).isTrue();
   var view=read("/api/v1/posts/"+anonymous.path("id").asText(),b).toString();
-  assertThat(view).doesNotContain(a.id.toString(),a.email,"member_");
-  assertThat(publish(a,"A named experience",false).path("author").path("userId").asText()).isEqualTo(a.id.toString());
+  assertThat(view).doesNotContain(a.id().toString(),a.email(),"member_");
+  assertThat(publish(a,"A named experience",false).path("author").path("userId").asText()).isEqualTo(a.id().toString());
  }
  @Test @Tag("malicious") void blockedSubmissionCannotAppearAcrossPublicReads()throws Exception{
   var a=member();var b=member();var p=publish(a,"I will kill you",true);String id=p.path("id").asText();
