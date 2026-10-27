@@ -30,7 +30,7 @@ public class SearchService {
                        EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.following_id = p.user_id) AS following,
                        (SELECT COUNT(*) FROM follows f WHERE f.following_id = p.user_id) AS follower_count
                   FROM profiles p
-                 WHERE p.user_id <> ?
+                 WHERE EXISTS(SELECT 1 FROM users u WHERE u.id=p.user_id AND u.status='ACTIVE') AND p.user_id <> ?
                    AND (LOWER(p.username) LIKE ? OR LOWER(p.display_name) LIKE ?)
                    AND NOT EXISTS (
                        SELECT 1 FROM blocks b
@@ -41,8 +41,8 @@ public class SearchService {
                  LIMIT ? OFFSET ?
                 """, (rs, row) -> new UserSearchResponse(
                         rs.getObject("user_id", UUID.class), rs.getString("username"), rs.getString("display_name"),
-                        rs.getString("avatar_url"), rs.getString("bio"), rs.getBoolean("is_profile_private"),
-                        rs.getBoolean("following"), rs.getLong("follower_count")
+                        rs.getString("avatar_url"), (!rs.getBoolean("is_profile_private") || rs.getBoolean("following")) ? rs.getString("bio") : null, rs.getBoolean("is_profile_private"),
+                        rs.getBoolean("following"), (!rs.getBoolean("is_profile_private") || rs.getBoolean("following")) ? rs.getLong("follower_count") : 0
                 ), viewerId, viewerId, term, term, viewerId, viewerId, query.trim().toLowerCase(),
                 size + 1, (long) page * size);
         return page(results, page, size);

@@ -84,6 +84,7 @@ public class MessagingService {
     @Transactional
     public UUID startDirectConversation(UUID otherUserId, UUID userId) {
         access.require(otherUserId,"COMMUNITY");
+        if (Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM blocks WHERE (blocker_id=? AND blocked_id=?) OR (blocker_id=? AND blocked_id=?))",Boolean.class,userId,otherUserId,otherUserId,userId))) throw new ForbiddenException("Conversation is not available");
         return repository.directConversation(userId, otherUserId).orElseGet(() -> {
             if (!repository.canStartDirectConversation(userId, otherUserId)) {
                 throw new ForbiddenException("This account is not accepting message requests from you");

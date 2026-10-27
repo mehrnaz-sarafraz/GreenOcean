@@ -196,24 +196,9 @@ public class SocialInteractionRepository {
 
     public long visiblePostCount(UUID authorId, UUID viewerId) {
         Long count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*) FROM posts p JOIN profiles pr ON pr.user_id = p.author_id
-                 WHERE p.author_id = ? AND p.status = 'PUBLISHED'
-                   AND NOT EXISTS (
-                       SELECT 1 FROM blocks b
-                        WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id)
-                           OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
-                   )
-                   AND (p.author_id = ?
-                        OR (p.visibility = 'PUBLIC' AND (NOT pr.is_profile_private OR EXISTS (
-                            SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.following_id = p.author_id
-                        )))
-                        OR (p.visibility = 'FOLLOWERS' AND EXISTS (
-                            SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.following_id = p.author_id
-                        ))
-                        OR (p.visibility = 'COMMUNITY' AND EXISTS (
-                            SELECT 1 FROM community_members cm WHERE cm.community_id = p.community_id AND cm.user_id = ?
-                        )))
-                """, Long.class, authorId, viewerId, viewerId, viewerId, viewerId, viewerId, viewerId);
+                SELECT COUNT(*) FROM posts p WHERE p.author_id = ? AND can_read_social_post(p.id, ?)
+                AND (NOT p.is_anonymous OR p.author_id = ?)
+                """, Long.class, authorId, viewerId, viewerId);
         return count == null ? 0 : count;
     }
 

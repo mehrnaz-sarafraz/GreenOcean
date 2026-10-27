@@ -34,7 +34,7 @@ public class CatalogRepository {
     public List<SupportCategoryResponse> categories() {
         return jdbcTemplate.query("""
                 SELECT sc.id, sc.slug, sc.category_group, sc.name, sc.description, sc.icon, sc.color, sc.soft_color,
-                       (SELECT COUNT(*) FROM posts p WHERE p.category_id = sc.id AND p.status = 'PUBLISHED') AS post_count
+                       0 AS post_count
                   FROM support_categories sc
                  WHERE sc.is_active = TRUE
                  ORDER BY sc.sort_order, sc.name

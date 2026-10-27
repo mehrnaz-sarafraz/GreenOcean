@@ -50,6 +50,8 @@ public class PostService {
 
     @Transactional
     public PostResponse create(UUID userId, CreatePostRequest request) {
+        if (request.visibility() == PostVisibility.PUBLIC && !request.broaderAudienceConfirmed())
+            throw new IllegalArgumentException("Confirm the broader eligible-member audience before publishing");
         validateVisibility(userId, request.visibility(), request.communityId());
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User was not found"));

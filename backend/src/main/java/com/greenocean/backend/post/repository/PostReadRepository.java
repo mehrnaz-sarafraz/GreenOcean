@@ -26,8 +26,7 @@ public class PostReadRepository {
                    sc.slug AS category_slug, sc.category_group, sc.name AS category_name,
                    sc.description AS category_description, sc.icon AS category_icon,
                    sc.color AS category_color, sc.soft_color AS category_soft_color,
-                   (SELECT COUNT(*) FROM posts category_posts
-                     WHERE category_posts.category_id = sc.id AND category_posts.status = 'PUBLISHED') AS category_post_count,
+                   0 AS category_post_count,
                    pa.id AS professional_answer_id, pa.professional_user_id, pa.body AS professional_answer_body,
                    pa.helpful_count AS professional_answer_helpful_count, pa.created_at AS professional_answer_created_at,
                    pap.username AS professional_username, pap.display_name AS professional_display_name,
@@ -44,25 +43,13 @@ public class PostReadRepository {
               LEFT JOIN professional_profiles pprof ON pprof.user_id = pa.professional_user_id
             """;
 
-    private static final String ACCESS_PREDICATE = """
-               AND NOT EXISTS (
-                   SELECT 1 FROM blocks b
-                    WHERE (b.blocker_id = ? AND b.blocked_id = p.author_id)
-                       OR (b.blocker_id = p.author_id AND b.blocked_id = ?)
-               )
-               AND (
-                   p.author_id = ?
-                   OR (p.visibility = 'PUBLIC' AND (NOT pr.is_profile_private OR EXISTS (
-                       SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.following_id = p.author_id
-                   )))
-                   OR (p.visibility = 'FOLLOWERS' AND EXISTS (
-                       SELECT 1 FROM follows f WHERE f.follower_id = ? AND f.following_id = p.author_id
-                   ))
-                   OR (p.visibility = 'COMMUNITY' AND EXISTS (
-                       SELECT 1 FROM community_members cm WHERE cm.community_id = p.community_id AND cm.user_id = ?
-                   ))
-               )
-            """;
+    private static final String ACCESS_PREDICATE = " AND can_read_social_post(p.id, ?) ";
+    private static final String DISCOVERY_FILTER = """
+      AND NOT EXISTS (SELECT 1 FROM user_preferences pref WHERE pref.user_id=? AND (
+        (pref.stronger_content_controls AND p.content_warning IS NOT NULL)
+        OR (pref.reduce_medication_content AND (LOWER(p.body) LIKE '%medication%' OR sc.slug LIKE '%medication%'))
+        OR EXISTS (SELECT 1 FROM unnest(pref.muted_terms) term WHERE POSITION(LOWER(term) IN LOWER(p.body)) > 0)))
+      """;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -71,44 +58,44 @@ public class PostReadRepository {
     }
 
     public List<PostResponse> findFeed(UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + ACCESS_PREDICATE
+        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + ACCESS_PREDICATE + DISCOVERY_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
-                viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, viewerId,
+                viewerId, viewerId, viewerId, viewerId,
                 size + 1, (long) page * size);
     }
 
     public Optional<PostResponse> findAccessiblePost(UUID postId, UUID viewerId) {
         String sql = POST_SELECT + " WHERE p.id = ? AND p.status = 'PUBLISHED' " + ACCESS_PREDICATE;
         List<PostResponse> posts = jdbcTemplate.query(sql, this::mapPost,
-                viewerId, viewerId, postId, viewerId, viewerId, viewerId, viewerId, viewerId, viewerId);
+                viewerId, viewerId, postId, viewerId);
         return posts.stream().findFirst();
     }
 
     public List<PostResponse> searchPosts(UUID viewerId, String query, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' AND LOWER(p.body) LIKE ? " + ACCESS_PREDICATE
+        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' AND LOWER(p.body) LIKE ? " + ACCESS_PREDICATE + DISCOVERY_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
                 viewerId, viewerId, "%" + query.toLowerCase() + "%",
-                viewerId, viewerId, viewerId, viewerId, viewerId, viewerId,
+                viewerId, viewerId,
                 size + 1, (long) page * size);
     }
 
     public List<PostResponse> findCommunityPosts(UUID communityId, UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.community_id = ? AND p.status = 'PUBLISHED' " + ACCESS_PREDICATE
+        String sql = POST_SELECT + " WHERE p.community_id = ? AND p.status = 'PUBLISHED' " + ACCESS_PREDICATE + DISCOVERY_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
                 viewerId, viewerId, communityId,
-                viewerId, viewerId, viewerId, viewerId, viewerId, viewerId,
+                viewerId, viewerId,
                 size + 1, (long) page * size);
     }
 
     public List<PostResponse> findAuthorPosts(UUID authorId, UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.author_id = ? AND p.status = 'PUBLISHED' " + ACCESS_PREDICATE
+        String sql = POST_SELECT + " WHERE p.author_id = ? AND p.status = 'PUBLISHED' AND (NOT p.is_anonymous OR p.author_id = ?) " + ACCESS_PREDICATE + DISCOVERY_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
-                viewerId, viewerId, authorId,
-                viewerId, viewerId, viewerId, viewerId, viewerId, viewerId,
+                viewerId, viewerId, authorId, viewerId,
+                viewerId, viewerId,
                 size + 1, (long) page * size);
     }
 

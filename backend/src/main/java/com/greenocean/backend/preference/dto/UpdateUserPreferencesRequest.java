@@ -21,6 +21,9 @@ public record UpdateUserPreferencesRequest(
         Boolean notifyArticles,
         Boolean quietHoursEnabled,
         Boolean onboardingComplete,
-        @Pattern(regexp = "MEMBER|PROFESSIONAL") String intendedRole
+        @Pattern(regexp = "MEMBER|PROFESSIONAL") String intendedRole,
+        @Pattern(regexp = "NOT_STARTED|IN_PROGRESS|SKIPPED|COMPLETED") String onboardingStatus,
+        @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(3) Integer onboardingStep,
+        Boolean clearLegacySupportTopics
 ) {
 }
