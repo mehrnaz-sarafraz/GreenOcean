@@ -19,7 +19,7 @@ public class ContentSafety implements ContentClassifier {
                 .replaceAll("\\s+", " ");
         if (text.contains("<script") || text.contains("javascript:") || text.contains("http://") || text.contains("https://")
                 || text.matches("(?s).*\\b[\\w.+-]{1,80}@[\\w.-]{1,100}\\.[a-z]{2,20}\\b.*")
-                || text.matches("(?s).*\\d[\\d ()+-]{7,30}\\d.*"))
+                || text.matches("(?s).*(?:phone|شماره|تلفن)\\s*[:=]?\\s*[+\\d][\\d ()+-]{7,30}.*"))
             return new Assessment(Outcome.HOLD_FOR_REVIEW, "PRIVACY_OR_LINK_REVIEW");
         boolean severe = contains(text,"kill you","hurt you","go kill yourself","بکشمت","میکشمت","خودتو بکش","نشانی خانه","home address","rape you");
         boolean targeted = contains(text,"you are worthless","you are disgusting","تو بیارزشی","تو احمقی","خفه شو");

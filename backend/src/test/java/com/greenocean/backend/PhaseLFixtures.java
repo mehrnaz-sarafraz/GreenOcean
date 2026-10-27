@@ -8,8 +8,13 @@ import java.util.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 abstract class PhaseLFixtures {
+ @Autowired org.springframework.transaction.PlatformTransactionManager transactionManager;
  @Autowired MockMvc mvc; @Autowired JdbcTemplate db; @Autowired ObjectMapper json;
  @Autowired jakarta.persistence.EntityManager entities;
+ @org.junit.jupiter.api.BeforeEach void resetSyntheticRateWindow(){
+  var tx=new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+  tx.setPropagationBehavior(3);tx.executeWithoutResult(s->db.update("DELETE FROM auth_rate_windows"));
+ }
  record Member(UUID id,String token,String email){}
  Member member() throws Exception {
   String email="l-"+UUID.randomUUID()+"@example.test";

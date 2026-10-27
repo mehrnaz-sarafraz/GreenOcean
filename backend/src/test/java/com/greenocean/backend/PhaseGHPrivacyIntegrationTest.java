@@ -142,7 +142,7 @@ class PhaseGHPrivacyIntegrationTest {
   assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
  }
  @Test @Tag("malicious") void broaderAudienceRequiresExplicitPerPostConfirmation() throws Exception {
-  var a=member();mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("body","No accidental broad publication","publicationIdentity","SOCIAL_IDENTITY","publicationIdentity", "SOCIAL_IDENTITY", "anonymous", false, "visibility","PUBLIC")))).andExpect(status().isBadRequest());
+  var a=member();mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("body","No accidental broad publication","publicationIdentity","SOCIAL_IDENTITY", "anonymous", false, "visibility","PUBLIC")))).andExpect(status().isBadRequest());
   assertThat(db.queryForObject("SELECT count(*) FROM posts WHERE author_id=?",Integer.class,a.id)).isZero();
  }
  @Test @Tag("malicious") void communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess() throws Exception {
