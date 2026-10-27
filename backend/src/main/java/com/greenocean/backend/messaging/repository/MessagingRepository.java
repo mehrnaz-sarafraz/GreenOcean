@@ -50,7 +50,7 @@ public class MessagingRepository {
 
     public List<ConversationResponse> conversations(UUID userId) {
         return jdbcTemplate.query("""
-                SELECT c.id,
+                SELECT c.id, c.service_kind,(SELECT live.id FROM live_support_requests live WHERE live.conversation_id=c.id) AS support_request_id,
                        CASE WHEN c.conversation_kind = 'DIRECT' THEN COALESCE(other_profile.display_name, c.title) ELSE c.title END AS title,
                        CASE WHEN c.conversation_kind = 'DIRECT' THEN COALESCE(c.subtitle, '@' || other_profile.username) ELSE c.subtitle END AS subtitle,
                        c.conversation_kind,
@@ -76,7 +76,7 @@ public class MessagingRepository {
                        WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
                        ORDER BY m.created_at DESC LIMIT 1
                   ) last_message ON TRUE
-                 WHERE cm.user_id = ? AND NOT EXISTS (
+                 WHERE cm.user_id = ? AND (c.service_kind<>'LISTENER' OR can_read_live_conversation(c.id,cm.user_id)) AND NOT EXISTS (
                     SELECT 1 FROM conversation_members peer JOIN blocks b
                     ON (b.blocker_id=cm.user_id AND b.blocked_id=peer.user_id)
                     OR (b.blocker_id=peer.user_id AND b.blocked_id=cm.user_id)
@@ -86,7 +86,7 @@ public class MessagingRepository {
                 rs.getObject("id", UUID.class), rs.getString("title"), rs.getString("subtitle"),
                 rs.getString("last_message"), instant(rs.getObject("last_message_at", OffsetDateTime.class)),
                 rs.getLong("unread"), "VERIFIED".equals(rs.getString("verification_status")),
-                rs.getString("conversation_kind"), false), userId, userId, userId);
+                rs.getString("conversation_kind"), false,rs.getString("service_kind"),rs.getObject("support_request_id",UUID.class)), userId, userId, userId);
     }
 
     public Optional<ConversationResponse> conversation(UUID conversationId, UUID userId) {
@@ -114,11 +114,17 @@ public class MessagingRepository {
                 conversationId, userId);
     }
 
-    public void send(UUID id, UUID conversationId, UUID userId, String body) {
-        jdbcTemplate.update("""
-                INSERT INTO messages (id, conversation_id, sender_id, message_kind, body) VALUES (?, ?, ?, 'USER', ?)
-                """, id, conversationId, userId, body);
-        jdbcTemplate.update("UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", conversationId);
+    public UUID send(UUID id, UUID conversationId, UUID userId, String body, UUID clientMessageId) {
+        if(clientMessageId!=null) {
+            var existing=jdbcTemplate.queryForList("SELECT id,body FROM messages WHERE conversation_id=? AND sender_id=? AND client_message_id=?",conversationId,userId,clientMessageId);
+            if(!existing.isEmpty()) {
+                if(!body.equals(existing.getFirst().get("body")))throw new com.greenocean.backend.listener.live.LiveSupportException(409,"IDEMPOTENCY_CONFLICT","The message identifier was already used for different content.");
+                return (UUID)existing.getFirst().get("id");
+            }
+        }
+        jdbcTemplate.update("INSERT INTO messages(id,conversation_id,sender_id,message_kind,body,client_message_id) VALUES (?,?,?,'USER',?,?)",id,conversationId,userId,body,clientMessageId);
+        jdbcTemplate.update("UPDATE conversations SET updated_at=CURRENT_TIMESTAMP WHERE id=?",conversationId);
+        return id;
     }
 
     public Optional<UUID> professionalConversation(UUID userId, UUID professionalId) {
@@ -148,7 +154,7 @@ public class MessagingRepository {
     public Optional<UUID> directConversation(UUID userId, UUID otherUserId) {
         return jdbcTemplate.query("""
                 SELECT c.id FROM conversations c
-                 WHERE c.conversation_kind = 'DIRECT' AND c.is_active = TRUE
+                 WHERE c.conversation_kind = 'DIRECT' AND c.service_kind='COMMUNITY' AND c.is_active = TRUE
                    AND EXISTS (SELECT 1 FROM conversation_members m WHERE m.conversation_id = c.id AND m.user_id = ?)
                    AND EXISTS (SELECT 1 FROM conversation_members m WHERE m.conversation_id = c.id AND m.user_id = ?)
                    AND (SELECT COUNT(*) FROM conversation_members m WHERE m.conversation_id = c.id) = 2
