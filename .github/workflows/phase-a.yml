@@ -2,7 +2,7 @@ name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding, feature/phase-i-first-real-support, feature/phase-j-legal-consent-data-governance, feature/phase-k-final-integration-readiness]
+    branches: [codex/phase-l1-safe-publishing, codex/phase-l2-social-interactions, codex/phase-l3-community-safety, main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding, feature/phase-i-first-real-support, feature/phase-j-legal-consent-data-governance, feature/phase-k-final-integration-readiness]
 concurrency:
   group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true

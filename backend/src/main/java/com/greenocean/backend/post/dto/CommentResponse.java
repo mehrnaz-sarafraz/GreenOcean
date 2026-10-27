@@ -12,6 +12,7 @@ public record CommentResponse(
         boolean anonymous,
         long likeCount,
         boolean liked,
-        Instant createdAt
+        Instant createdAt,
+        long revision, String status, String safetyOutcome, String safetyReason
 ) {
 }

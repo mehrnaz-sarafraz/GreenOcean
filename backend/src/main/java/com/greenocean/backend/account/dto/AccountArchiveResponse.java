@@ -21,6 +21,8 @@ public record AccountArchiveResponse(
         List<SocialConnectionResponse> blockedAccounts,
         List<SearchHistoryResponse> searchHistory,
         AccountActivityResponse activity,
-        java.util.Map<String,Object> governance
+        java.util.Map<String,Object> governance,
+        java.util.List<java.util.Map<String,Object>> socialDrafts,
+        java.util.List<java.util.Map<String,Object>> socialModeration
 ) {
 }

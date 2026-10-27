@@ -38,7 +38,7 @@ class PhaseGHPrivacyIntegrationTest {
  JsonNode read(String path,Member m) throws Exception {return json.readTree(mvc.perform(get(path).header("Authorization","Bearer "+m.token)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());}
  JsonNode change(String path,Member m,Map<String,Object> data) throws Exception {return json.readTree(mvc.perform(patch(path).header("Authorization","Bearer "+m.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(data))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());}
  String publish(Member m,String audience,boolean anonymous,UUID community,String warning) throws Exception {
-  var body=new HashMap<String,Object>();body.put("body","GH synthetic audience marker "+UUID.randomUUID());body.put("visibility",audience);body.put("anonymous",anonymous);body.put("communityId",community);body.put("contentWarning",warning);body.put("broaderAudienceConfirmed",true);
+  var body=new HashMap<String,Object>();body.put("body","GH synthetic audience marker "+UUID.randomUUID());body.put("visibility",audience);body.put("anonymous",anonymous);body.put("publicationIdentity",anonymous?"ANONYMOUS":"SOCIAL_IDENTITY");body.put("communityId",community);body.put("contentWarning",warning);body.put("broaderAudienceConfirmed",true);
   return json.readTree(mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+m.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body))).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asText();
  }
  void denied(String path,Member m) throws Exception {mvc.perform(get(path).header("Authorization","Bearer "+m.token)).andExpect(status().isNotFound());}
@@ -142,7 +142,7 @@ class PhaseGHPrivacyIntegrationTest {
   assertThat(read("/api/v1/account/archive",reader).toString()).doesNotContain(id,body);
  }
  @Test @Tag("malicious") void broaderAudienceRequiresExplicitPerPostConfirmation() throws Exception {
-  var a=member();mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("body","No accidental broad publication","anonymous",false,"visibility","PUBLIC")))).andExpect(status().isBadRequest());
+  var a=member();mvc.perform(post("/api/v1/posts").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("body","No accidental broad publication","publicationIdentity","SOCIAL_IDENTITY","publicationIdentity", "SOCIAL_IDENTITY", "anonymous", false, "visibility","PUBLIC")))).andExpect(status().isBadRequest());
   assertThat(db.queryForObject("SELECT count(*) FROM posts WHERE author_id=?",Integer.class,a.id)).isZero();
  }
  @Test @Tag("malicious") void communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess() throws Exception {

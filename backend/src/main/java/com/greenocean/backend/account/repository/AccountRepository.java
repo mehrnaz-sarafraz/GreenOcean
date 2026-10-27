@@ -77,6 +77,8 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM social_drafts WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM social_assessments WHERE post_id IN(SELECT id FROM posts WHERE author_id=?) OR comment_id IN(SELECT id FROM comments WHERE author_id=?)",userId,userId);
         jdbcTemplate.update("DELETE FROM processing_authorizations WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);

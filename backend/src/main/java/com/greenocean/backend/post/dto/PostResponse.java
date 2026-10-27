@@ -22,6 +22,7 @@ public record PostResponse(
         PostType postType,
         String mood,
         ProfessionalReplyResponse professionalReply,
-        Instant createdAt
+        Instant createdAt,
+        long revision, String status, String safetyOutcome, String safetyReason
 ) {
 }

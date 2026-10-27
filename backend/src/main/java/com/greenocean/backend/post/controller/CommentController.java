@@ -19,6 +19,12 @@ public class CommentController {
 
     public CommentController(PostService postService) { this.postService = postService; }
 
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID commentId) {
+        postService.deleteComment(commentId, UUID.fromString(jwt.getSubject()));
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{commentId}/like")
     public ResponseEntity<Void> like(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID commentId) {
         postService.setCommentLike(commentId, UUID.fromString(jwt.getSubject()), true);

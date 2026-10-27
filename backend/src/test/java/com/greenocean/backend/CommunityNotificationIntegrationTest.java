@@ -62,8 +62,7 @@ class CommunityNotificationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
                                 "body", "Community support story " + suffix,
-                                "anonymous", false,
-                                "visibility", "COMMUNITY",
+                                "publicationIdentity", "SOCIAL_IDENTITY", "anonymous", false, "visibility", "COMMUNITY",
                                 "communityId", communityId))))
                 .andExpect(status().isCreated()).andReturn();
         String postId = objectMapper.readTree(postResult.getResponse().getContentAsString()).get("id").asText();
