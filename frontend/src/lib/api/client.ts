@@ -29,7 +29,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (authenticated && tokens?.accessToken) headers.set('Authorization', `Bearer ${tokens.accessToken}`);
 
   const send=()=>fetchWithTimeout(`${API_URL}${path}`,{...requestInit,headers,credentials:Platform.OS==='web'?'include':'omit'});
-  let response=await(Platform.OS==='web'&&(path==='/api/v1/auth/web/login'||path==='/api/v1/auth/web/mfa/authentication/verify')?browserSessionLock(async()=>{if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Sign-in cancelled.');return send();}):send());
+  let response=await(Platform.OS==='web'&&['/api/v1/auth/web/login','/api/v1/auth/web/reauthenticate','/api/v1/auth/web/mfa/authentication/verify'].includes(path)?browserSessionLock(async()=>{if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Sign-in cancelled.');return send();}):send());
   if (response.status === 401 && authenticated && retryAfterRefresh && tokens?.refreshToken) {
     const refreshed = await refreshTokens(tokens.refreshToken);
     if (refreshed && requestEpoch===tokenStorage.generation()) {

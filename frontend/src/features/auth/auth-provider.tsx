@@ -7,6 +7,7 @@ import { browserSessionLock } from '@/lib/api/browser-session';
 import { fetchWithTimeout } from '@/lib/api/request';
 
 import { CurrentUser, LoginInput, RegisterInput, TokenResponse } from './types';
+import { needsBackgroundReauthentication } from './security-contracts';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -119,7 +120,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const subscription=AppState.addEventListener('change',next=>{
       if(next!=='active'){if(backgroundAt.current===null)backgroundAt.current=Date.now();if(status==='authenticated')setPrivacyHidden(true);}
       else{const elapsed=backgroundAt.current===null?0:Date.now()-backgroundAt.current;backgroundAt.current=null;
-        if(status==='authenticated'&&elapsed>=300000)void signOut({notice:'privacyLocked'});else setPrivacyHidden(false);
+        if(status==='authenticated'&&needsBackgroundReauthentication(0,elapsed))void signOut({notice:'privacyLocked'});else setPrivacyHidden(false);
       }
     });return()=>subscription.remove();
   },[status]);

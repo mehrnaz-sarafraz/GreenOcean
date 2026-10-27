@@ -8,6 +8,7 @@ import { useLanguage } from '@/localization/language-provider';
 import { useAuth } from './auth-provider';
 import { passwordBounds,securityEventLabel } from './security-contracts';
 import { securityKey } from './webauthn';
+import { confirmPassword } from './reauthenticate';
 import { colors } from '@/theme/tokens';
 const card={gap:12,padding:16,borderWidth:1,borderColor:colors.border,borderRadius:16} as const;
 function ErrorMessage({message}:{message:string}){return message?<Text accessibilityRole="alert">{message}</Text>:null;}
@@ -46,7 +47,7 @@ export function SessionsPanel(){
  async function load(){setLoading(true);setError('');try{setSessions(await apiRequest<Session[]>('/api/v1/auth/sessions'));}catch{setError(fa?'نشست‌ها بارگذاری نشدند. دوباره تلاش کنید.':'Could not load sessions. Please retry.');}finally{setLoading(false);}}
  useEffect(()=>{const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[]);
  async function revoke(){if(running.current||!selected)return;running.current=true;setBusy(true);setError('');try{
-  await apiRequest('/api/v1/auth/reauthenticate',{method:'POST',retryAfterRefresh:false,body:JSON.stringify({password:proof})});setProof('');
+  await confirmPassword(proof);setProof('');
   const current=selected==='all'||sessions.some(s=>s.id===selected&&s.current);
   await apiRequest(selected==='all'?'/api/v1/auth/logout-all':`/api/v1/auth/sessions/${selected}`,{method:selected==='all'?'POST':'DELETE',retryAfterRefresh:false});setSelected(null);
   if(current){await signOut({notice:selected==='all'?'allSignedOut':'signedOut'});router.replace('/(auth)/login');}else await load();
@@ -67,7 +68,7 @@ function StaffKeys(){
  const {language}=useLanguage(),fa=language==='fa';const {signOut}=useAuth();const [state,setState]=useState<{available:boolean;credentials:{credential_id:string;label:string}[]}|null>(null),[permit,setPermit]=useState(''),[proof,setProof]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);const running=useRef(false);
  function load(){void apiRequest<NonNullable<typeof state>>('/api/v1/auth/mfa').then(setState).catch(()=>setMessage(fa?'وضعیت کلید امنیتی در دسترس نیست.':'Security key status is unavailable.'));}
  useEffect(()=>{const timer=setTimeout(load,0);return()=>clearTimeout(timer);},[]);
- async function run(action:()=>Promise<void>){if(running.current)return;running.current=true;setBusy(true);setMessage('');try{await apiRequest('/api/v1/auth/reauthenticate',{method:'POST',retryAfterRefresh:false,body:JSON.stringify({password:proof})});setProof('');await action();setPermit('');load();}catch{setMessage(fa?'عملیات کلید امنیتی تأیید نشد. دستگاه، رمز و تنظیمات مجاز را بررسی کنید.':'Security key operation was not confirmed. Check your key, password and approved configuration.');}finally{running.current=false;setBusy(false);}}
+ async function run(action:()=>Promise<void>){if(running.current)return;running.current=true;setBusy(true);setMessage('');try{await confirmPassword(proof);setProof('');await action();setPermit('');load();}catch{setMessage(fa?'عملیات کلید امنیتی تأیید نشد. دستگاه، رمز و تنظیمات مجاز را بررسی کنید.':'Security key operation was not confirmed. Check your key, password and approved configuration.');}finally{running.current=false;setBusy(false);}}
  return <View style={card}><Text accessibilityRole="header">{fa?'کلید امنیتی کارکنان':'Staff security keys'}</Text>
   {!state?.available||Platform.OS!=='web'?<Text>{fa?'دسترسی قوی کارکنان در این محیط آماده نیست. دسترسی مدیریتی بسته می‌ماند؛ از مرورگر HTTPS مجاز استفاده کنید.':'Staff MFA is unavailable in this environment. Privileged access remains disabled; use an approved HTTPS browser.'}</Text>:<>
   <Text>{fa?'ایمیل یا بازیابی رمز جایگزین کلید امنیتی نیست. برای نخستین ثبت، مجوز مستقل مسئول سامانه لازم است.':'Email and password recovery do not replace a security key. First enrollment requires a separate operator-issued permit.'}</Text>

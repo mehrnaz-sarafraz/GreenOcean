@@ -2,7 +2,7 @@ package com.greenocean.backend;
 import com.greenocean.backend.auth.dto.*;import com.greenocean.backend.auth.service.*;import com.greenocean.backend.assistance.service.*;import org.junit.jupiter.api.*;import org.springframework.beans.factory.annotation.Autowired;import org.springframework.boot.test.context.SpringBootTest;import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;import org.springframework.test.context.ActiveProfiles;import org.springframework.test.web.servlet.*;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.transaction.annotation.Transactional;import tools.jackson.databind.ObjectMapper;import java.util.*;import java.time.*;import static org.assertj.core.api.Assertions.*;import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test") @Transactional
 class PhaseEFSessionIntegrationTest {
- @Autowired org.springframework.security.oauth2.jwt.JwtEncoder encoder;@Autowired SecurityEvents securityEvents;
+ @Autowired org.springframework.security.oauth2.jwt.JwtEncoder encoder;@Autowired SecurityEvents securityEvents;@Autowired TokenService tokens;
  @Autowired MockMvc mvc;@Autowired JdbcTemplate db;@Autowired ObjectMapper json;@Autowired RegistrationService registration;@Autowired OutboxCipher cipher;@Autowired AssistanceService assistance;@Autowired org.springframework.transaction.PlatformTransactionManager manager;@Autowired jakarta.persistence.EntityManager entities;
  String password="A synthetic EF authentication passphrase";
  @BeforeEach void rates(){var tx=new org.springframework.transaction.support.TransactionTemplate(manager);tx.setPropagationBehavior(3);tx.executeWithoutResult(s->db.update("DELETE FROM auth_rate_windows"));}
@@ -28,9 +28,10 @@ class PhaseEFSessionIntegrationTest {
  @Test @Tag("confused") void staleLoginNeedsRealPasswordProofForLogoutAll()throws Exception{
   String email=account();TokenResponse first=login(email),second=login(email);db.update("UPDATE user_sessions SET reauthenticated_at=CURRENT_TIMESTAMP-INTERVAL '11 minutes' WHERE id=?",sid(first));
   mvc.perform(post("/api/v1/auth/logout-all").header("Authorization","Bearer "+first.accessToken())).andExpect(status().isForbidden());
-  mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password","incorrect")))).andExpect(status().isForbidden());me(first,200);
-  mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password",password)))).andExpect(status().isNoContent());
-  mvc.perform(post("/api/v1/auth/logout-all").header("Authorization","Bearer "+first.accessToken())).andExpect(status().isNoContent());entities.clear();me(first,401);me(second,401);postJson("/api/v1/auth/refresh",Map.of("refreshToken",second.refreshToken())).andExpect(status().isUnauthorized());
+  mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password","incorrect","refreshToken",first.refreshToken())))).andExpect(status().isForbidden());me(first,200);
+  var confirmed=json.readValue(mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password",password,"refreshToken",first.refreshToken())))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),TokenResponse.class);
+  me(first,401);me(confirmed,200);
+  mvc.perform(post("/api/v1/auth/logout-all").header("Authorization","Bearer "+confirmed.accessToken())).andExpect(status().isNoContent());entities.clear();me(first,401);me(second,401);postJson("/api/v1/auth/refresh",Map.of("refreshToken",second.refreshToken())).andExpect(status().isUnauthorized());
  }
  @Test @Tag("malicious") void sessionOwnershipAndRevocationHavePersistedEffects()throws Exception{
   String one=account(),two=account();TokenResponse a=login(one),b=login(two);mvc.perform(delete("/api/v1/auth/sessions/"+sid(b)).header("Authorization","Bearer "+a.accessToken())).andExpect(status().isNotFound());me(b,200);
@@ -84,4 +85,23 @@ class PhaseEFSessionIntegrationTest {
   db.update("INSERT INTO audit_logs(actor_user_id,action,entity_type,metadata,created_at) VALUES (?,'LOGIN_FAILURE','SECURITY','{}',CURRENT_TIMESTAMP-INTERVAL '31 days'),(?,'POLICY_ACCEPTED','LEGAL','{}',CURRENT_TIMESTAMP-INTERVAL '31 days')",uid(one),uid(one));securityEvents.retain();assertThat(db.queryForObject("SELECT count(*) FROM audit_logs WHERE actor_user_id=? AND entity_type='SECURITY' AND created_at<CURRENT_TIMESTAMP-INTERVAL '30 days'",Integer.class,uid(one))).isZero();assertThat(db.queryForObject("SELECT count(*) FROM audit_logs WHERE actor_user_id=? AND entity_type='LEGAL'",Integer.class,uid(one))).isEqualTo(1);
  }
 
+
+ @Test @Tag("malicious") void passwordStepUpBindsRefreshAndInvalidatesOldBearerWithoutExtendingLifetime()throws Exception{
+  String email=account(),other=account();var first=login(email);var unrelated=login(other);var overall=db.queryForObject("SELECT overall_expires_at FROM user_sessions WHERE id=?",java.sql.Timestamp.class,sid(first));
+  for(String refresh:List.of("wrong",unrelated.refreshToken()))mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password",password,"refreshToken",refresh)))).andExpect(status().isForbidden());
+  me(first,200);var confirmed=json.readValue(mvc.perform(post("/api/v1/auth/reauthenticate").header("Authorization","Bearer "+first.accessToken()).contentType("application/json").content(json.writeValueAsString(Map.of("password",password,"refreshToken",first.refreshToken())))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(),TokenResponse.class);
+  me(first,401);me(confirmed,200);me(unrelated,200);assertThat(confirmed.refreshToken()).isNotEqualTo(first.refreshToken());assertThat(sid(confirmed)).isEqualTo(sid(first));
+  assertThat(db.queryForObject("SELECT overall_expires_at FROM user_sessions WHERE id=?",java.sql.Timestamp.class,sid(first))).isEqualTo(overall);
+  assertThat(db.queryForObject("SELECT token_version FROM user_sessions WHERE id=?",Integer.class,sid(first))).isEqualTo(1);
+  assertThat(db.queryForObject("SELECT count(*) FROM retired_refresh_tokens WHERE token_hash=?",Integer.class,tokens.hashRefreshToken(first.refreshToken()))).isEqualTo(1);
+ }
+ @Test @Tag("malicious") void webPasswordStepUpRequiresOriginAndHeaderAndRotatesOnlyHttpOnlyCookie()throws Exception{
+  String email=account();var login=mvc.perform(post("/api/v1/auth/web/login").header("Origin","http://localhost:8081").header("X-GreenOcean-CSRF","1").contentType("application/json").content(json.writeValueAsString(Map.of("email",email,"password",password)))).andExpect(status().isOk()).andReturn().getResponse();
+  var first=json.readValue(login.getContentAsString(),TokenResponse.class);var cookie=new jakarta.servlet.http.Cookie("greenocean_refresh",login.getHeader("Set-Cookie").split(";",2)[0].substring("greenocean_refresh=".length()));
+  mvc.perform(post("/api/v1/auth/web/reauthenticate").header("Authorization","Bearer "+first.accessToken()).header("Origin","http://localhost:8081").cookie(cookie).contentType("application/json").content(json.writeValueAsString(Map.of("password",password)))).andExpect(status().isForbidden());
+  mvc.perform(post("/api/v1/auth/web/reauthenticate").header("Authorization","Bearer "+first.accessToken()).header("Origin","https://evil.example").header("X-GreenOcean-CSRF","1").cookie(cookie).contentType("application/json").content(json.writeValueAsString(Map.of("password",password)))).andExpect(status().isForbidden());
+  var response=mvc.perform(post("/api/v1/auth/web/reauthenticate").header("Authorization","Bearer "+first.accessToken()).header("Origin","http://localhost:8081").header("X-GreenOcean-CSRF","1").cookie(cookie).contentType("application/json").content(json.writeValueAsString(Map.of("password",password)))).andExpect(status().isOk()).andExpect(jsonPath("$.refreshToken").value("cookie")).andReturn().getResponse();
+  assertThat(response.getHeader("Set-Cookie")).contains("HttpOnly","SameSite=Strict","Path=/api/v1/auth/web").doesNotContain(cookie.getValue());
+  assertThat(response.getContentAsString()).doesNotContain(cookie.getValue());me(first,401);me(json.readValue(response.getContentAsString(),TokenResponse.class),200);
+ }
 }
