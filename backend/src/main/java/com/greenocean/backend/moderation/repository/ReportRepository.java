@@ -13,6 +13,12 @@ public class ReportRepository {
     private final JdbcTemplate jdbcTemplate;
     public ReportRepository(JdbcTemplate jdbcTemplate) { this.jdbcTemplate = jdbcTemplate; }
 
+    public void lockOpenReport(UUID reporterId, String type, UUID targetId) {
+        // Same reporter/target across devices and backend instances; released at transaction end.
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))",
+                "open-report:" + reporterId + ":" + type + ":" + targetId);
+    }
+
     public boolean targetExists(String type, UUID id, UUID userId) {
         String sql = switch (type) {
             case "USER" -> "SELECT EXISTS(SELECT 1 FROM users WHERE id = ? AND deleted_at IS NULL)";
