@@ -82,6 +82,8 @@ class PhaseGHPrivacyIntegrationTest {
  @Test @Tag("malicious") void audienceMatrixSurvivesPrivacyTransitionsAndAlternateApiRequests() throws Exception {
   var a=member();var viewer=member();var stranger=member();follow(viewer,a);
   String restricted=publish(a,"FOLLOWERS",false,null,null), broad=publish(a,"PUBLIC",false,null,null);
+  mvc.perform(put("/api/v1/posts/"+restricted+"/bookmark").header("Authorization","Bearer "+viewer.token)).andExpect(status().isNoContent());
+  assertThat(read("/api/v1/account/archive",viewer).get("activity").get("savedItems").toString()).contains(restricted);
   for(boolean privacy:List.of(false,true,false,true)) {
    change("/api/v1/profiles/me",a,Map.of("profilePrivate",privacy));
    read("/api/v1/posts/"+restricted,viewer);denied("/api/v1/posts/"+restricted,stranger);read("/api/v1/posts/"+broad,stranger);
@@ -91,6 +93,7 @@ class PhaseGHPrivacyIntegrationTest {
    for(String action:List.of("like","bookmark"))mvc.perform(put("/api/v1/posts/"+restricted+"/"+action).header("Authorization","Bearer "+stranger.token)).andExpect(status().isNotFound());
   }
   db.update("DELETE FROM follows WHERE follower_id=? AND following_id=?",viewer.id,a.id);denied("/api/v1/posts/"+restricted,viewer);
+  assertThat(read("/api/v1/account/archive",viewer).get("activity").get("savedItems").toString()).doesNotContain(restricted);
   db.update("INSERT INTO blocks(blocker_id,blocked_id) VALUES (?,?)",a.id,stranger.id);denied("/api/v1/posts/"+broad,stranger);
   db.update("DELETE FROM blocks WHERE blocker_id=? AND blocked_id=?",a.id,stranger.id);read("/api/v1/posts/"+broad,stranger);
   mvc.perform(delete("/api/v1/posts/"+broad).header("Authorization","Bearer "+a.token)).andExpect(status().isNoContent());denied("/api/v1/posts/"+broad,stranger);

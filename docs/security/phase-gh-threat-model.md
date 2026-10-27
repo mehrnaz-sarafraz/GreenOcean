@@ -5,7 +5,7 @@ Authoritative product rules: [profile/audience contract](../product/profile-and-
 | Threat | Mitigation / evidence boundary |
 |---|---|
 | Historical audience escalation | V40 conservatively freezes legacy PUBLIC to FOLLOWERS; durable audiences ignore profile transitions. Real PostgreSQL migration and multi-viewer transition tests. |
-| Alternate content API bypass | Shared `can_read_social_post` on direct/feed/search/community/author reads and notification reads; actions/comments call authorized get. Blocks, deletion/moderation and current community/follow checks apply. |
+| Alternate content API bypass | Shared `can_read_social_post` on direct/feed/search/community/author reads, archive saved-post previews and notification reads/counts; actions/comments call authorized get. Blocks, deletion/moderation and current community/follow checks apply. |
 | Private biography/location/age leakage | Profile DTO uses field audience; user search redacts bio/counts for nonfollowers; account identity/preferences never joined. Eligible-member discoverability includes the explicitly public optional avatar. |
 | Anonymous reidentification | Null author DTO, omit anonymous author-list entries/counts for others, suppress attributable anonymous-comment notification actors; category global post counts withheld. Internal safety attribution is retained. |
 | Cross-account update/cache | Existing authenticated `/me` routes and A–F cache epoch/remount isolation retained; owner row locks prevent unrelated patch loss; direct post focus revalidation clears failed access. Received copies cannot be recalled. |
