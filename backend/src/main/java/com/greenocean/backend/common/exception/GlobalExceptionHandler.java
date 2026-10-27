@@ -22,6 +22,12 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    @ExceptionHandler(com.greenocean.backend.listener.live.LiveSupportException.class)
+    public ResponseEntity<java.util.Map<String,Object>> handleLiveSupport(com.greenocean.backend.listener.live.LiveSupportException error) {
+        var response=ResponseEntity.status(error.status());
+        if(error.status()==429)response.header("Retry-After","60");
+        return response.body(java.util.Map.of("code",error.code(),"message",error.getMessage()));
+    }
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ApiError> handleRateLimit(TooManyRequestsException exception,HttpServletRequest request) {
         return ResponseEntity.status(429).header("Retry-After",String.valueOf(exception.retryAfter())).body(new ApiError(Instant.now(),429,"Too Many Requests",exception.getMessage(),request.getRequestURI(),List.of()));

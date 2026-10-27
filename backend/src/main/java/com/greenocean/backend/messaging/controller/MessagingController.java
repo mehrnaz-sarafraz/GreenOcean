@@ -63,7 +63,7 @@ public class MessagingController {
     @PostMapping("/conversations/{id}/messages")
     public ResponseEntity<MessageResponse> send(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
                                                  @Valid @RequestBody SendMessageRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(id, userId(jwt), request.body()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(id, userId(jwt), request.body(), request.clientMessageId()));
     }
 
     private UUID userId(Jwt jwt) { return UUID.fromString(jwt.getSubject()); }

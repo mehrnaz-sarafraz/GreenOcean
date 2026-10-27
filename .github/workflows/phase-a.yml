@@ -2,7 +2,7 @@ name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding]
+    branches: [main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding, feature/phase-i-first-real-support]
 concurrency:
   group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
@@ -95,6 +95,7 @@ jobs:
       GREENOCEAN_TEST_DB_URL: jdbc:postgresql://127.0.0.1:5432/greenocean_qa
       GREENOCEAN_TEST_DB_PASSWORD: synthetic-qa-only
       GREENOCEAN_LIVE_BROWSER_QA: isolated-only
+      GREENOCEAN_LIVE_SUPPORT_QA: isolated-only
       PLAYWRIGHT_CHANNEL: chrome
     steps:
       - uses: actions/checkout@v4

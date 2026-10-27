@@ -34,7 +34,7 @@ public class PhaseCLiveServer {
            System.getenv("GREENOCEAN_TEST_DB_URL")==null)
             throw new IllegalStateException("An explicitly isolated test database and opt-in are required");
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
-            "--server.port=8080","--server.address=127.0.0.1","--greenocean.mail.enabled=true",
+            "--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
             "--greenocean.webauthn.enabled=true","--greenocean.webauthn.rp-id=localhost","--greenocean.webauthn.origins=https://localhost:8443","--greenocean.security.admin-enabled=true");
@@ -86,6 +86,18 @@ public class PhaseCLiveServer {
             UUID user=ids.getFirst();db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='MODERATOR' ON CONFLICT DO NOTHING",user);
             var tokenService=context.getBean(com.greenocean.backend.auth.service.TokenService.class);String permit=tokenService.createRefreshToken();db.update("INSERT INTO webauthn_enrollment_permits(token_hash,user_id,expires_at) VALUES (?,?,CURRENT_TIMESTAMP+INTERVAL '10 minutes')",tokenService.hashRefreshToken(permit),user);
             byte[] response=json.writeValueAsBytes(Map.of("permit",permit));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,response.length);exchange.getResponseBody().write(response);
+        }finally{exchange.close();}});
+        // Synthetic Phase I provisioning is never part of the production jar.
+        mailbox.createContext("/listener",exchange->{try{
+            if(!"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")) || !"POST".equals(exchange.getRequestMethod()) || !key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))){exchange.sendResponseHeaders(403,-1);return;}
+            var input=json.readTree(exchange.getRequestBody());String email=input.path("email").asText();
+            if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
+            var ids=db.queryForList("SELECT id FROM users WHERE email=? AND status='ACTIVE' AND email_verified",UUID.class,email);
+            if(ids.size()!=1){exchange.sendResponseHeaders(400,-1);return;}
+            PhaseIFixtures.region(db);
+            var reviewer=PhaseIFixtures.member(db,context.getBean(com.greenocean.backend.auth.repository.UserRepository.class),context.getBean(com.greenocean.backend.auth.service.TokenService.class));
+            UUID application=PhaseIFixtures.review(db,ids.getFirst(),reviewer.id(),!input.path("unapproved").asBoolean());
+            byte[] body=json.writeValueAsBytes(Map.of("applicationId",application));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,body.length);exchange.getResponseBody().write(body);
         }finally{exchange.close();}});
         mailbox.start();Runtime.getRuntime().addShutdownHook(new Thread(()->{mailbox.stop(0);context.close();}));
     }

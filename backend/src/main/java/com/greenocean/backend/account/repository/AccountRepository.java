@@ -63,7 +63,9 @@ public class AccountRepository {
                 """, (rs, row) -> new AccountActivityResponse.SavedItem("ARTICLE", rs.getObject("id", UUID.class),
                 rs.getString("title"), rs.getObject("created_at", OffsetDateTime.class).toInstant()), userId));
 
-        return new AccountActivityResponse(posts, comments, communities, List.copyOf(saved));
+        var sessions=jdbcTemplate.query("SELECT id,status,reason_code,CASE WHEN member_id=? THEN 'MEMBER' ELSE 'LISTENER' END AS participant_role,created_at,ended_at FROM live_support_requests WHERE member_id=? OR listener_id=? ORDER BY created_at DESC",(rs,n)->new AccountActivityResponse.ListenerSession(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),rs.getString("participant_role"),rs.getObject("created_at",OffsetDateTime.class).toInstant(),rs.getObject("ended_at",OffsetDateTime.class)==null?null:rs.getObject("ended_at",OffsetDateTime.class).toInstant()),userId,userId,userId);
+        var ownMessages=jdbcTemplate.query("SELECT m.id,m.conversation_id,m.body,m.created_at FROM messages m JOIN conversations c ON c.id=m.conversation_id WHERE m.sender_id=? AND c.service_kind='LISTENER' AND m.deleted_at IS NULL ORDER BY m.created_at",(rs,n)->new AccountActivityResponse.ListenerMessage(rs.getObject("id",UUID.class),rs.getObject("conversation_id",UUID.class),rs.getString("body"),rs.getObject("created_at",OffsetDateTime.class).toInstant()),userId);
+        return new AccountActivityResponse(posts, comments, communities, List.copyOf(saved),sessions,ownMessages);
     }
 
     public java.util.List<String> professionalDocumentKeys(UUID userId) {
@@ -75,6 +77,10 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+        jdbcTemplate.update("DELETE FROM listener_presence WHERE listener_id=?",userId);
+        jdbcTemplate.update("DELETE FROM listener_live_authorizations WHERE listener_id=?",userId);
+        jdbcTemplate.update("DELETE FROM live_support_requests WHERE member_id=? OR listener_id=?",userId,userId);
         jdbcTemplate.update("DELETE FROM webauthn_ceremonies WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM webauthn_credentials WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM webauthn_enrollment_permits WHERE user_id=?",userId);
