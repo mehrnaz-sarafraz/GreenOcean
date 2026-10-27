@@ -852,5 +852,69 @@
         "Malicious live C: direct bypass and concurrent duplicate requests preserve server boundaries"
       ]
     }
+  },
+  "foregroundContinuation": {
+    "date": "2026-10-27",
+    "baseline": "1b267c85c85e61ab37c21c5ec257ec7a21fdc43c",
+    "executableCommit": "4e3bfb4bfcd3b0f080831ffa991e7dab0940174b",
+    "requirements": [
+      "I-04",
+      "I-10",
+      "I-17"
+    ],
+    "ciRun": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40534723099",
+    "ciConclusion": "success",
+    "totals": {
+      "backend": 234,
+      "frontendHelpers": 68,
+      "fixtureBrowser": 84,
+      "realServerBrowser": 20,
+      "passed": 406,
+      "failed": 0,
+      "skipped": 0
+    },
+    "typecheck": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 11
+    },
+    "exports": [
+      "web",
+      "android",
+      "ios"
+    ],
+    "localExecution": "68 helper tests passed; other results above were executed by final-source CI, not this Windows workspace",
+    "nativeDeviceValidation": "NOT_EXECUTED; see phase-j-k-handoff.md",
+    "sourceFiles": [
+      {
+        "path": "frontend/e2e/phase-i.spec.mjs",
+        "sha256": "1f730643887994b2749cafe5a2d030a74a173bd18e2b52644a53cac00e206c65"
+      },
+      {
+        "path": "frontend/src/features/live-support/chat.tsx",
+        "sha256": "4aaf1e0c1be354f7435f8c6c05c182c32928d3d5537c0ffef3b0c6aaea5b67a1"
+      },
+      {
+        "path": "frontend/src/features/live-support/foreground-cycle.ts",
+        "sha256": "fc6420b2a67bd8be9a08a06a92c23067134d02f932e3d42d089a50f23623ca01"
+      },
+      {
+        "path": "frontend/src/features/live-support/foreground.ts",
+        "sha256": "8f69f2fc66ac888bee2a8ce7e6d8c587b3d9d2070dee998e0d78b0d5ee9e062c"
+      },
+      {
+        "path": "frontend/src/features/live-support/member.tsx",
+        "sha256": "9b5fcf2471945d661deeaeafb7cb957ccfbe1e696ac588a0c087c22c719bd7e2"
+      },
+      {
+        "path": "frontend/src/features/live-support/workspace.tsx",
+        "sha256": "2ba231cd52774abbfd68c8f5e1c7318dd2ba81fa7bf5c6fdd6af4251cf12d883"
+      },
+      {
+        "path": "frontend/tests/phase-i-foreground.test.mjs",
+        "sha256": "f214937964663cac15310ae87f812a4723088237e2d8b20332f01b2d2833826d"
+      }
+    ],
+    "note": "The original evidence fields retain the original delivery snapshot. This continuation changes client foreground handling and tests only; no backend or migration change."
   }
 }

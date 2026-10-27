@@ -1,5 +1,13 @@
 # Phase I delivery report
 
+## Continuation against the re-supplied specification
+
+The owner re-supplied the identical Phase I specification on 2026-10-27. Continuation starts at published Phase I `1b267c85c85e61ab37c21c5ec257ec7a21fdc43c`, retaining the G/H baseline and all earlier implementation. The targeted remaining defect concerns I-04/I-10: a foreground poll already awaiting availability/session data could continue after backgrounding or navigation, and a quick return could make the old response appear current again.
+
+`frontend/src/features/live-support/foreground-cycle.ts` assigns each foreground interval its own validity generation. Background, blur, auth/privacy cleanup and unmount invalidate pending work. Member, listener and chat reads check that generation after each awaited response, before updating state or sending another heartbeat. Explicit refresh uses the same serialized foreground cycle. Chat sending is locally disabled on leave until a new foreground server check succeeds; database/session authorization remains authoritative.
+
+The continuation adds four deterministic deferred-response helper tests and one actual-component browser regression. The helper suite passes locally: 68 tests, no failures or skips. Final executable CI passed all three jobs: **234 backend + 68 helpers + 84 fixture browser + 20 real-server browser = 406 tests**, no failures or skips. TypeScript/lint and all-platform JS export passed. Exact commit/run evidence is recorded in [test evidence](test-evidence.md). No migration, new policy, listener authorization, geography, telemetry, production enablement or A–H rewrite is added. Native OS/device and operational gates below remain open; the specification explicitly permits NOT_EXECUTED device results with the exact manual checklist.
+
 ## A. Current state
 
 Phase I continues the validated G/H source, local `785f45a`, published equivalent `38c114add7ce1d0c8ffcce8c68239b43ca004eaa`, on `feature/phase-gh-profile-privacy-onboarding` (PR #6). The targeted [initial gap matrix](gap-matrix.md) identifies the old instant conversation creation, offline fallback, unverified online Boolean and self-completable practice as defects. Existing accounts, roles, authentication/MFA, listener applications/coursework, messaging, reporting, blocks, stories, communities, articles and urgent directory are reused. No earlier migration is rewritten.
