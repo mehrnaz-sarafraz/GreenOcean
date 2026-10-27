@@ -1,7 +1,7 @@
 package com.greenocean.backend;
 import com.greenocean.backend.auth.service.*;import com.greenocean.backend.auth.dto.*;import com.greenocean.backend.assistance.service.*;import com.greenocean.backend.assistance.dto.*;import org.junit.jupiter.api.*;import org.springframework.beans.factory.annotation.Autowired;import org.springframework.boot.test.context.SpringBootTest;import org.springframework.test.context.ActiveProfiles;import org.springframework.jdbc.core.JdbcTemplate;import java.util.*;import java.util.concurrent.*;import static org.assertj.core.api.Assertions.*;
 @SpringBootTest @ActiveProfiles("test") class PhaseEFConcurrencyTest {
- @Autowired RegistrationService registration;@Autowired AuthenticationService auth;@Autowired AssistanceService assistance;@Autowired OutboxCipher cipher;@Autowired TokenService tokens;@Autowired JdbcTemplate db;
+ @Autowired RegistrationService registration;@Autowired AuthenticationService auth;@Autowired AssistanceService assistance;@Autowired OutboxCipher cipher;@Autowired TokenService tokens;@Autowired JdbcTemplate db;@Autowired RecentAuthentication recent;
  String email,password="A synthetic EF concurrent passphrase";UUID user;
  @BeforeEach void setup(){email="ef-race-"+UUID.randomUUID()+"@example.test";registration.register(new RegisterRequest(email,password,null,null,null,"IR",null,null,true,1));user=db.queryForObject("SELECT id FROM users WHERE email=?",UUID.class,email);}
  @AfterEach void clean(){db.update("DELETE FROM audit_logs WHERE actor_user_id=?",user);db.update("DELETE FROM email_outbox WHERE owner_user_id=?",user);db.update("DELETE FROM users WHERE id=?",user);}
@@ -15,4 +15,10 @@ import com.greenocean.backend.auth.service.*;import com.greenocean.backend.auth.
  @Test @Tag("confused") void expiredSessionCannotIssueNewTokens(){var old=login();db.update("UPDATE user_sessions SET overall_expires_at=CURRENT_TIMESTAMP WHERE user_id=?",user);assertThatThrownBy(()->auth.refresh(old.refreshToken())).isInstanceOf(com.greenocean.backend.common.exception.UnauthorizedException.class);assertThat(db.queryForObject("SELECT refresh_token_hash FROM user_sessions WHERE user_id=?",String.class,user)).isEqualTo(tokens.hashRefreshToken(old.refreshToken()));}
  @Test @Tag("creative") void parallelLoginDoesNotExhaustPoolWithNestedRateTransactions()throws Exception{var start=new CountDownLatch(1);try(var pool=Executors.newFixedThreadPool(4)){var results=new ArrayList<Future<TokenResponse>>();for(int n=0;n<4;n++)results.add(pool.submit(()->{start.await();return login();}));start.countDown();for(var result:results)assertThat(result.get(20,TimeUnit.SECONDS).accessToken()).isNotBlank();}assertThat(db.queryForObject("SELECT count(*) FROM user_sessions WHERE user_id=?",Integer.class,user)).isEqualTo(4);}
 
+ @Test @Tag("malicious") void parallelPasswordConfirmationHasOneRotationAndNoOldProofReuse()throws Exception{
+  var old=login();UUID session=db.queryForObject("SELECT id FROM user_sessions WHERE user_id=?",UUID.class,user);var start=new CountDownLatch(1);var winners=new java.util.concurrent.atomic.AtomicInteger();
+  try(var pool=Executors.newFixedThreadPool(2)){var tasks=new ArrayList<Future<?>>();for(int n=0;n<2;n++)tasks.add(pool.submit(()->{try{start.await();recent.completePassword(user,session,password,old.refreshToken());winners.incrementAndGet();}catch(com.greenocean.backend.common.exception.ForbiddenException expected){}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}}));start.countDown();for(var task:tasks)task.get(20,TimeUnit.SECONDS);}
+  assertThat(winners.get()).isEqualTo(1);assertThat(db.queryForObject("SELECT token_version FROM user_sessions WHERE id=?",Integer.class,session)).isEqualTo(1);
+  assertThat(db.queryForObject("SELECT count(*) FROM retired_refresh_tokens WHERE token_hash=?",Integer.class,tokens.hashRefreshToken(old.refreshToken()))).isEqualTo(1);
+ }
 }
