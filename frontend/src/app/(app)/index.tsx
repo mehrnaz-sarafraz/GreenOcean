@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
@@ -16,6 +16,7 @@ const groupNames = { EMOTION: 'Emotion', CONDITION: 'Condition', LIFE_EXPERIENCE
 export default function FeedScreen() {
   const { t } = useLanguage();
   const { categories, posts, professionals, articles, notifications, profile, options, loading, error, refresh } = usePlatformData();
+  useFocusEffect(useCallback(()=>{void refresh();},[refresh]));
   const checkInOptions = optionsIn(options, 'POST_MOOD');
   const [tab, setTab] = useState<'forYou' | 'following' | 'professionalAnswers'>('forYou');
   const [categoryId, setCategoryId] = useState('all');

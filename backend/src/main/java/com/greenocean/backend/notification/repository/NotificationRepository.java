@@ -72,7 +72,13 @@ public class NotificationRepository {
 
     public long unreadCount(UUID userId) {
         Long count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE", Long.class, userId);
+                """
+                SELECT COUNT(*) FROM notifications n WHERE n.user_id = ? AND n.is_read = FALSE
+                  AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id))
+                  AND NOT EXISTS (SELECT 1 FROM blocks b WHERE
+                    (b.blocker_id=n.user_id AND b.blocked_id=n.actor_user_id) OR
+                    (b.blocker_id=n.actor_user_id AND b.blocked_id=n.user_id))
+                """, Long.class, userId);
         return count == null ? 0 : count;
     }
 

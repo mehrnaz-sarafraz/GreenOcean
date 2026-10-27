@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppIcon } from '@/components/app-icon';
@@ -35,7 +35,8 @@ export default function ExploreScreen() {
     catch (caught) { setSearchError(caught instanceof Error ? caught.message : 'Could not save this search.'); }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active=true;setPeople([]);setStoryResults([]);
     const timer = setTimeout(() => {
       if (normalizedQuery.length < 2) {
         setPeople([]); setStoryResults([]); setSearchError(''); setSearching(false);
@@ -46,12 +47,12 @@ export default function ExploreScreen() {
       Promise.all([
         apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12`),
         apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12`),
-      ]).then(([users, stories]) => { setPeople(users.items); setStoryResults(stories.items); })
-        .catch(caught => setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.'))
-        .finally(() => setSearching(false));
+      ]).then(([users, stories]) => { if(!active)return;setPeople(users.items); setStoryResults(stories.items); })
+        .catch(caught => {if(active){setPeople([]);setStoryResults([]);setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.');}})
+        .finally(() => {if(active)setSearching(false);});
     }, 300);
-    return () => clearTimeout(timer);
-  }, [normalizedQuery, query]);
+    return () => {active=false;clearTimeout(timer);};
+  }, [normalizedQuery, query]));
 
   return <Screen scroll style={styles.screen}><View style={styles.content}>
     <Text style={styles.title}>Explore</Text>

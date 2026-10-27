@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/app-button';
@@ -21,24 +21,30 @@ export default function PublicProfileScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isCurrent = () => true) => {
     setError('');
     try {
       const next = await apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(username)}`);
+      if (!isCurrent()) return;
       setProfile(next);
       if (next.canSeeActivity) {
         const page = await apiRequest<PageResponse<PostItem>>(`/api/v1/profiles/${encodeURIComponent(username)}/posts?size=50`);
+        if (!isCurrent()) return;
         setPosts(page.items);
       } else setPosts([]);
     } catch (caught) {
+      if (!isCurrent()) return;
+      setProfile(null); setPosts([]);
       setError(caught instanceof Error ? caught.message : 'Could not load this profile.');
     }
   }, [username]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, [load]);
+  useFocusEffect(useCallback(() => {
+    let active=true;
+    setProfile(null);setPosts([]);
+    void load(()=>active);
+    return () => {active=false;};
+  }, [load]));
 
   async function toggleFollow() {
     if (!profile) return;
