@@ -63,9 +63,12 @@ class PhaseGHPrivacyIntegrationTest {
  }
  @Test @Tag("creative") void persianNamesDuplicateDisplayAndAvatarClearPreserveAccountIdentity() throws Exception {
   var a=member();var b=member();String name="دریای سبز 🌊";
-  change("/api/v1/profiles/me",a,Map.of("displayName",name,"avatarUrl","https://images.example.test/synthetic.png"));change("/api/v1/profiles/me",b,Map.of("displayName",name));
+  follow(b,a);String changedName="Ocean."+UUID.randomUUID().toString().replace("-","").substring(0,10);
+  change("/api/v1/profiles/me",a,Map.of("username",changedName,"displayName",name,"avatarUrl","https://images.example.test/synthetic.png","countryCode","US"));change("/api/v1/profiles/me",b,Map.of("displayName",name));
   var cleared=change("/api/v1/profiles/me",a,Map.of("avatarUrl","","bio",""));assertThat(cleared.get("displayName").asText()).isEqualTo(name);assertThat(cleared.get("avatarUrl").isNull()).isTrue();
   assertThat(db.queryForObject("SELECT email FROM users WHERE id=?",String.class,a.id)).isEqualTo(a.email);
+  assertThat(db.queryForObject("SELECT residence_country FROM account_eligibility WHERE user_id=?",String.class,a.id)).isEqualTo("IR");
+  assertThat(read("/api/v1/profiles/"+changedName.toLowerCase(java.util.Locale.ROOT),b).get("following").asBoolean()).isTrue();denied("/api/v1/profiles/"+a.username,b);
  }
  @Test @Tag("malicious") void rejectsReservedTakenUnsafeIdentityAndAvatarWithoutPersisting() throws Exception {
   var a=member();var b=member();for(var payload:List.of(Map.of("username","admin"),Map.of("username","bad name"),Map.of("displayName","bad\u202ename"),Map.of("avatarUrl","file:///C:/private.png"),Map.of("avatarUrl","javascript:alert(1)"),Map.of("avatarUrl","https://user:pass@example.test/a")))
@@ -125,7 +128,7 @@ class PhaseGHPrivacyIntegrationTest {
  }
  @Test @Tag("malicious") void ownerOnlyPreferencesRejectForgedTopicsStylesProgressAndLargePayloads() throws Exception {
   var a=member();var b=member();
-  for(var payload:List.of(Map.of("supportTopics",List.of("invented-diagnosis")),Map.of("supportStyle","ADMIN"),Map.of("onboardingStatus","ADMIN"),Map.of("onboardingStep",99),Map.of("onboardingStatus","COMPLETED"),Map.of("supportTopics",Collections.nCopies(31,"anxiety"))))
+  for(var payload:List.of(Map.of("supportTopics",List.of("invented-diagnosis")),Map.of("supportStyle","ADMIN"),Map.of("onboardingStatus","ADMIN"),Map.of("onboardingStep",99),Map.of("onboardingStatus","COMPLETED"),Map.of("supportTopics",Collections.nCopies(31,"anxiety")),Map.of("mutedTerms",Arrays.asList((String)null))))
    mvc.perform(patch("/api/v1/preferences/me").header("Authorization","Bearer "+a.token).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload))).andExpect(status().isBadRequest());
   change("/api/v1/preferences/me",a,Map.of("supportStyle","LISTENER","intendedRole","PROFESSIONAL"));
   assertThat(read("/api/v1/preferences/me",b).get("supportStyle").isNull()).isTrue();assertThat(db.queryForObject("SELECT count(*) FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=? AND r.name='PROFESSIONAL'",Integer.class,a.id)).isZero();
