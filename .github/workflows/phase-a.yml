@@ -2,7 +2,7 @@ name: GreenOcean quality gates
 on:
   pull_request:
   push:
-    branches: [codex/phase-m1-group-privacy-approval, codex/phase-m2-membership-governance, codex/phase-m3-activities-safety, codex/phase-l1-safe-publishing, codex/phase-l2-social-interactions, codex/phase-l3-community-safety, main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding, feature/phase-i-first-real-support, feature/phase-j-legal-consent-data-governance, feature/phase-k-final-integration-readiness]
+    branches: [codex/phase-n1-listener-scheduling, codex/phase-n2-bounded-waiting-queue, codex/phase-n3-followup-integration, codex/phase-m1-group-privacy-approval, codex/phase-m2-membership-governance, codex/phase-m3-activities-safety, codex/phase-l1-safe-publishing, codex/phase-l2-social-interactions, codex/phase-l3-community-safety, main, feature/phase-a-identity-privacy-access, feature/phase-b-welcome-trust-experience, feature/phase-c-registration-completion, feature/phase-d-email-verification-activation, feature/phase-ef-account-access-security, feature/phase-gh-profile-privacy-onboarding, feature/phase-i-first-real-support, feature/phase-j-legal-consent-data-governance, feature/phase-k-final-integration-readiness]
 concurrency:
   group: quality-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
