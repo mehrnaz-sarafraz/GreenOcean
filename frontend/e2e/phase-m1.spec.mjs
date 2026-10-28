@@ -1,4 +1,10 @@
 import {test,expect} from '@playwright/test';import {installApi} from './fixtures/public-api.mjs';
+test('M1 cross-phase regression: profile editing waits for source and preserves the exact Unicode edit',async({page})=>{
+ const auth=await installApi(page,{completeActivation:true});auth.signedIn=true;auth.emailVerified=true;auth.onboardingComplete=true;
+ let release;const ready=new Promise(resolve=>release=resolve);let profile={userId:'00000000-0000-0000-0000-000000000001',username:'member_synthetic',displayName:'New member',profilePrivate:true};let written;
+ await page.route('**/api/v1/profiles/me',async r=>{if(r.request().method()==='PATCH'){written=r.request().postDataJSON();profile={...profile,...written};return r.fulfill({json:profile});}await ready;return r.fulfill({json:profile});});
+ await page.goto('/tools/profile-edit');await expect(page.getByText('Loading profile…',{exact:true})).toBeVisible();await expect(page.getByLabel('Display name',{exact:true})).toHaveCount(0);release();await expect(page.getByLabel('Display name',{exact:true})).toHaveValue('New member');await page.getByLabel('Display name',{exact:true}).fill('دریای سبز 🌊');await page.getByRole('button',{name:'Save profile',exact:true}).click();await expect(page.getByText('Profile changes saved to your account.',{exact:true})).toBeVisible();expect(written.displayName).toBe('دریای سبز 🌊');
+});
 test('M1 Persian proposal preserves Unicode and never claims immediate activation',async({page})=>{
  const auth=await installApi(page,{completeActivation:true});auth.signedIn=true;auth.emailVerified=true;auth.onboardingComplete=true;let items=[];let submitted;
  await page.route('**/api/v1/community-proposals/mine',r=>r.fulfill({json:items}));await page.route('**/api/v1/community-proposals',r=>{submitted=r.request().postDataJSON();items=[{...submitted,id:'synthetic-proposal',privacy_type:submitted.privacyType,rules:JSON.stringify(submitted.rules),status:'DRAFT',revision:1}];return r.fulfill({status:201,json:items[0]});});

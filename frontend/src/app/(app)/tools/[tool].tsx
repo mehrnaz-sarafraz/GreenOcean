@@ -1,7 +1,7 @@
 import {ConnectionsPanel} from '@/features/content/connections-panel';
 import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
@@ -94,15 +94,17 @@ function renderScreen(screen: string, params: Params) {
 function ProfileEdit() {
   const { profile: source, refresh } = usePlatformData();
   const [profile, setProfile] = useState({ displayName: '', username: '', bio: '', city: '', countryCode: '', avatarUrl: '', showLocation: false, profilePrivate: true });
+  const edited=useRef(false);const [initialized,setInitialized]=useState(false);
   const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (source) setProfile({ displayName: source.displayName, username: source.username, bio: source.bio || '', city: source.city || '', countryCode: source.countryCode || '', avatarUrl: source.avatarUrl || '', showLocation: source.showLocation, profilePrivate: source.profilePrivate });
+      if (source && !edited.current) {setProfile({ displayName: source.displayName, username: source.username, bio: source.bio || '', city: source.city || '', countryCode: source.countryCode || '', avatarUrl: source.avatarUrl || '', showLocation: source.showLocation, profilePrivate: source.profilePrivate });setInitialized(true);}
     }, 0);
     return () => clearTimeout(timer);
   }, [source]);
-  const set = (key: keyof typeof profile, value: string | boolean) => setProfile(current => ({ ...current, [key]: value }));
-  const save = async () => { setBusy(true); setMessage(''); try { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify(profile) }); await refresh(); setMessage('Profile changes saved to your account.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not save profile'); } finally { setBusy(false); } };
+  const set = (key: keyof typeof profile, value: string | boolean) => {edited.current=true;setProfile(current => ({ ...current, [key]: value }));};
+  const save = async () => { setBusy(true); setMessage(''); try { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify(profile) }); edited.current=false;await refresh(); setMessage('Profile changes saved to your account.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not save profile'); } finally { setBusy(false); } };
+  if(!initialized)return <Text accessibilityLiveRegion="polite">Loading profile…</Text>;
   return <><ProductSection title="Social details"><ProductCard><Field label="Display name" value={profile.displayName} onChangeText={value => set('displayName', value)} /><Field label="Username" value={profile.username} onChangeText={value => set('username', value.replace(/\s/g, ''))} /><Field label="Bio" value={profile.bio} onChangeText={value => set('bio', value)} multiline /><Field label="Avatar HTTPS URL (optional)" value={profile.avatarUrl} onChangeText={value=>set('avatarUrl',value)}/><AppButton variant="secondary" label="Remove avatar" onPress={()=>set('avatarUrl','')}/><Text style={styles.body}>Your avatar is discoverable to eligible members. Use a trusted image host; an external host may receive image requests. Location here is separate from your private country for service eligibility.</Text><Toggle label="Show social location" detail="Only visible to people allowed to view your profile details." value={profile.showLocation} onChange={value=>set('showLocation',value)}/><View style={styles.two}><View style={styles.flex}><Field label="City" value={profile.city} onChangeText={value => set('city', value)} /></View><View style={styles.flex}><Field label="Country code" value={profile.countryCode} onChangeText={value => set('countryCode', value.toUpperCase().slice(0, 2))} /></View></View><Toggle label="Private profile" detail="Approve followers to share profile details. Each post has its own audience." value={profile.profilePrivate} onChange={value => set('profilePrivate', value)} /></ProductCard></ProductSection>{!!message && (message.startsWith('Profile') ? <Success text={message} /> : <ErrorText text={message} />)}<AppButton label="Save profile" loading={busy} disabled={!source} onPress={() => void save()} /></>;
 }
 
