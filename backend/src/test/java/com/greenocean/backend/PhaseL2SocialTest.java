@@ -3,6 +3,31 @@ import org.junit.jupiter.api.*;import org.springframework.boot.test.context.Spri
 import static org.assertj.core.api.Assertions.*;import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test") @Transactional
 class PhaseL2SocialTest extends PhaseLFixtures {
+ @Test @Tag("malicious") void commentReactionsRespectBothBlockDirectionsOnThirdPartyPosts()throws Exception{
+  for(boolean blockedByAuthor:List.of(false,true)){
+   var parent=member();var writer=member();var viewer=member();
+   String post=publish(parent,"Third-party reaction boundary "+blockedByAuthor,false).path("id").asText();
+   String comment=submit("/api/v1/posts/"+post+"/comments",writer,Map.of("body","A respectful third-party response "+blockedByAuthor,"anonymous",true),201).path("id").asText();
+   db.update("INSERT INTO blocks(blocker_id,blocked_id) VALUES(?,?)",blockedByAuthor?writer.id():viewer.id(),blockedByAuthor?viewer.id():writer.id());
+   assertThat(read("/api/v1/posts/"+post+"/comments",viewer).toString()).doesNotContain(comment);
+   for(var action:List.of(put("/api/v1/comments/"+comment+"/like"),delete("/api/v1/comments/"+comment+"/like")))
+    mvc.perform(action.header("Authorization","Bearer "+viewer.token())).andExpect(status().isNotFound());
+   assertThat(db.queryForObject("SELECT count(*) FROM comment_likes WHERE comment_id=?",Integer.class,UUID.fromString(comment))).isZero();
+  }
+ }
+ @Test @Tag("malicious") void reactionsToInactiveCommentAuthorsAreUnavailable()throws Exception{
+  var parent=member();var writer=member();var viewer=member();String post=publish(parent,"Active third-party parent",false).path("id").asText();
+  String comment=submit("/api/v1/posts/"+post+"/comments",writer,Map.of("body","Response before deactivation","anonymous",false),201).path("id").asText();
+  db.update("UPDATE users SET status='SUSPENDED' WHERE id=?",writer.id());
+  mvc.perform(put("/api/v1/comments/"+comment+"/like").header("Authorization","Bearer "+viewer.token())).andExpect(status().isNotFound());
+ }
+ @Test @Tag("confused") void followingEmptyStateUsesOwnRelationshipsWithoutExposingAnonymousContent()throws Exception{
+  var author=member();var viewer=member();String hidden=publish(author,"Anonymous following context",true).path("id").asText();
+  var empty=read("/api/v1/posts/discovery?mode=FOLLOWING",viewer);assertThat(empty.path("followingAnyone").asBoolean()).isFalse();
+  db.update("INSERT INTO follows(follower_id,following_id) VALUES(?,?)",viewer.id(),author.id());
+  var followed=read("/api/v1/posts/discovery?mode=FOLLOWING",viewer);assertThat(followed.path("followingAnyone").asBoolean()).isTrue();assertThat(followed.path("items").size()).isZero();assertThat(followed.toString()).doesNotContain(hidden,author.id().toString());
+  assertThat(read("/api/v1/posts/discovery",viewer).path("followingAnyone").isNull()).isTrue();
+ }
  @Test @Tag("malicious") void followingCannotRevealAnonymousFollowedAuthors()throws Exception{
   var a=member();var b=member();db.update("INSERT INTO follows(follower_id,following_id) VALUES(?,?)",b.id(),a.id());
   String named=publish(a,"Named followed reflection",false).path("id").asText(),anonymous=publish(a,"Anonymous neutral reflection",true).path("id").asText();

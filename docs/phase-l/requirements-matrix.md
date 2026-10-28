@@ -31,4 +31,4 @@ Privacy impact: unpublished narratives stay private, anonymous ordinary projecti
 
 APPROVAL_REQUIRED / EXTERNAL_BLOCKER: final policy wording, actual staffing/escalation/response obligations, production staff MFA/key recovery, processing/evidence retention, K release blockers and real native accessibility/device execution. These qualify L-07/L-08/L-17/L-18/L-20; they are not fabricated or solved by passing code tests. Local screening is limited and publication stays off.
 
-Final execution: 324 backend +69 frontend logic +99 browser +27 real-stack tests passed, with zero final failures/skips. Third PR upload remains blocked by automatic approval review; see delivery-report.md section L. This delivery blocker is not an unimplemented social feature.
+Final execution: 324 backend +69 frontend logic +99 browser +27 real-stack tests passed, with zero final failures/skips. All three draft PRs now exist, including PR12. Published CI on9ed4998 is successful. The follow-up audit corrections and their separate evidence are in audit-follow-up.md; operational/native blockers remain explicit.

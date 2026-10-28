@@ -1,6 +1,6 @@
 # Phase L executed evidence
 
-Executable source: `21ccfcda93a9da7fd22d19a786b4f6b12fffc9c0`. Tree: `a6c60c7c0adad19d8b59b7fa963d73d5ba00889d`. The subsequent documentation commit does not change executable source. Machine summary: test-evidence.json. All counts below are from final reports, not assertions that code exists.
+Verified published baseline: `9ed49986ce0c2f4b2facd275684c04c3c036a3bb`. Machine summary: test-evidence.json. The counts below are the baseline suite results; follow-up source and execution are recorded separately in audit-follow-up.md. All counts below are from final reports, not assertions that code exists.
 
 | Suite / check | Actual result | Command |
 |---|---|---|
@@ -12,7 +12,7 @@ Executable source: `21ccfcda93a9da7fd22d19a786b4f6b12fffc9c0`. Tree: `a6c60c7c0a
 | ESLint | 0errors;11 pre-existing warnings | `npm run lint` |
 | Web/Android/iOS JS and assets | Exported successfully | `CI=1 npx expo export --platform all` |
 | Source secret patterns and tracked historical migration hashes | No candidate credentials;31 tracked originals unchanged | `python3 scripts/phase_k_source_checks.py` |
-| New L3 GitHub CI | NOT EXECUTED: upload rejected by automatic approval review | No remote L3 branch/PR was created |
+| Published L3 GitHub CI | All four jobs successful at head `9ed4998` | [Run40568529464](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40568529464), independently read on2026-10-28 |
 | Physical native devices, TalkBack/VoiceOver, actual staff key custody | NOT EXECUTED | Not inferred from exports or virtual keys |
 
 Local runtime: OpenJDK21.0.12, PostgreSQL16.15 with existing V0 UUID compatibility; repository CI configuration uses PostgreSQL18. Local Java Mockito agent was supplied explicitly through Surefire argLine because self-attach is restricted in this container. PostgreSQL ran only on isolated loopback with synthetic users. The container maps one UID; its disposable PostgreSQL startup used a test-only UID shim outside the repository. No production/user database was used. These are functional tests, not production capacity or real key-custody evidence.
@@ -39,3 +39,7 @@ An initial L3 appeal query used PENDING while the existing appeal schema uses OP
 Local deterministic examples cover legitimate distress/anger, quoted/negated abuse, direct threats/insults, promotion, private information, HTML-like input, mixed scripts/format characters, Persian idioms and bounded invalid/long text. Safe links and quotations can be over-held (false positives). Indirect hate, sexual harassment, coercion, transliteration, homographs and context outside the submitted text can be missed (false negatives). These examples do not establish an accuracy percentage or comprehensive semantic moderation. Unknown rules-only cases can still escape recognized signals; production publishing remains gated on approved policy, human operations and the existing K blockers.
 
 Review states preserve originals and append human decisions; owner exports include explanations/appeals without reviewer identity, erasure removes them with owned assessment data. Removal does not erase previously viewed/copied text. External processing, evidence retention/holds, staffing and response commitments still require actual approval. No external AI was enabled.
+
+## Published evidence correction — 2026-10-28
+
+GitHub job logs directly confirm324 backend,69 logic,99 browser and27 real-stack tests (519 total) at `9ed4998`. Backend job122416934849 reports zero failures/errors/skips; frontend122416935209 reports69 logic and99 browser passes; live122416934664 reports27 passes. This verification reads existing CI and is not a fresh local execution. PR12 exists and the previous upload-blocked labels are obsolete. Native-device and actual staffing evidence remain unexecuted/unverified. Follow-up corrections/tests: audit-follow-up.md.

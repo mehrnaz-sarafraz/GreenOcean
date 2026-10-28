@@ -90,7 +90,8 @@ public class PostService {
         var results=postReadRepository.findDiscovery(user,size,mode,category,before,beforeId);boolean more=results.size()>size;
         var items=List.copyOf(results.subList(0,Math.min(size,results.size())));
         String next=more?items.getLast().createdAt()+"|"+items.getLast().id():null;
-        return new com.greenocean.backend.post.dto.SocialFeedResponse(items,more,next);
+        return new com.greenocean.backend.post.dto.SocialFeedResponse(items,more,next,
+                mode.equals("FOLLOWING") ? postReadRepository.followingAnyone(user) : null);
     }
     @Transactional(readOnly = true)
     public PostResponse get(UUID postId, UUID userId) {
@@ -163,7 +164,9 @@ public class PostService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment was not found"));
         get(comment.getPostId(), userId);
-        if(comment.getStatus()!=ContentStatus.PUBLISHED)throw new NotFoundException("Comment was not found");
+        // Post access does not grant permission to interact with every comment author.
+        postReadRepository.findComment(commentId,userId)
+                .orElseThrow(() -> new NotFoundException("Comment was not found"));
         if (liked) {
             if (interactions.likeComment(userId, commentId)) notificationService.commentLiked(userId, commentId);
         } else {

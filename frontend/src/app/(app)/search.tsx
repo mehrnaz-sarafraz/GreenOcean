@@ -18,7 +18,7 @@ import { colors, layout, radius, shadow, spacing, typography } from '@/theme/tok
 export default function ExploreScreen() {
   const { categories, communities, professionals, articles: professionalArticles, options } = usePlatformData();
   const groups = optionsIn(options, 'CATEGORY_GROUP').map(option => ({ id: option.key as SupportCategoryGroup, title: option.label, subtitle: option.description || '' }));
-  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const {language}=useLanguage();const tr=useCallback((en:string,fa:string)=>language==='fa'?fa:en,[language]);
   const searchGeneration=useRef(0);
   const [resultPage,setResultPage]=useState(0);const [morePeople,setMorePeople]=useState(false);const [moreStories,setMoreStories]=useState(false);
   const [query, setQuery] = useState('');
@@ -37,7 +37,7 @@ export default function ExploreScreen() {
     const term = query.trim();
     if (term.length < 2) return;
     try { await apiRequest('/api/v1/search/history', { method: 'POST', body: JSON.stringify({ term }) }); }
-    catch (caught) { setSearchError(caught instanceof Error ? caught.message : 'Could not save this search.'); }
+    catch (caught) { setSearchError(caught instanceof Error ? caught.message : tr("Could not save this search.","ذخیرهٔ جست‌وجو انجام نشد.")); }
   };
 
   useFocusEffect(useCallback(() => {
@@ -53,28 +53,28 @@ export default function ExploreScreen() {
         apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12`),
         apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12`),
       ]).then(([users, stories]) => { if(!active)return;setPeople(users.items); setStoryResults(stories.items);setMorePeople(users.hasNext);setMoreStories(stories.hasNext); })
-        .catch(caught => {if(active){setPeople([]);setStoryResults([]);setSearchError(caught instanceof Error ? caught.message : 'Search is temporarily unavailable.');}})
+        .catch(caught => {if(active){setPeople([]);setStoryResults([]);setSearchError(caught instanceof Error ? caught.message : tr("Search is temporarily unavailable.","جست‌وجو موقتاً در دسترس نیست."));}})
         .finally(() => {if(active)setSearching(false);});
     }, 300);
     return () => {active=false;searchGeneration.current++;clearTimeout(timer);setPeople([]);setStoryResults([]);};
-  }, [query]));
+  }, [query,tr]));
 
-  async function more(){if(searching)return;setSearching(true);const generation=searchGeneration.current;try{const encoded=encodeURIComponent(query.trim());const [users,stories]=await Promise.all([apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12&page=${resultPage+1}`),apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12&page=${resultPage+1}`)]);if(generation!==searchGeneration.current)return;setPeople(current=>[...current,...users.items.filter(p=>!current.some(old=>old.userId===p.userId))]);setStoryResults(current=>[...current,...stories.items.filter(p=>!current.some(old=>old.id===p.id))]);setMorePeople(users.hasNext);setMoreStories(stories.hasNext);setResultPage(resultPage+1);}catch(e){setPeople([]);setStoryResults([]);setSearchError(e instanceof Error?e.message:'Unavailable');}finally{setSearching(false);}}
-  return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <Text style={styles.title}>Explore</Text>
-    <Text style={styles.subtitle}>Find stories, professional knowledge, support spaces, and thoughtful things to watch.</Text>
+  async function more(){if(searching)return;setSearching(true);const generation=searchGeneration.current;try{const encoded=encodeURIComponent(query.trim());const [users,stories]=await Promise.all([apiRequest<PageResponse<UserSearchItem>>(`/api/v1/search/users?q=${encoded}&size=12&page=${resultPage+1}`),apiRequest<PageResponse<PostItem>>(`/api/v1/search/posts?q=${encoded}&size=12&page=${resultPage+1}`)]);if(generation!==searchGeneration.current)return;setPeople(current=>[...current,...users.items.filter(p=>!current.some(old=>old.userId===p.userId))]);setStoryResults(current=>[...current,...stories.items.filter(p=>!current.some(old=>old.id===p.id))]);setMorePeople(users.hasNext);setMoreStories(stories.hasNext);setResultPage(resultPage+1);}catch(e){setPeople([]);setStoryResults([]);setSearchError(e instanceof Error?e.message:tr("Unavailable","در دسترس نیست"));}finally{setSearching(false);}}
+  return <Screen scroll style={styles.screen}><View style={[styles.content,{direction:language==='fa'?'rtl':'ltr'}]}>
+    <Text style={styles.title}>{tr("Explore","کاوش")}</Text>
+    <Text style={styles.subtitle}>{tr("Find stories, professional knowledge, support spaces, and thoughtful things to watch.","پست‌ها، دانش تخصصی، فضاهای حمایتی و محتوای دیدنی را پیدا کنید.")}</Text>
     <View style={styles.search}>
       <AppIcon name="search" color={colors.muted} />
-      <TextInput accessibilityLabel="Search GreenOcean" value={query} onChangeText={setQuery} onSubmitEditing={() => void rememberSearch()} returnKeyType="search" placeholder="Search topics, communities, or professionals" placeholderTextColor={colors.muted} style={styles.input} />
-      {!!query && <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery('')} style={styles.clearButton}><AppIcon name="close" size={18} color={colors.muted} /></Pressable>}
+      <TextInput accessibilityLabel={tr("Search GreenOcean","جست‌وجو در گرین‌اوشن")} value={query} onChangeText={setQuery} onSubmitEditing={() => void rememberSearch()} returnKeyType="search" placeholder={tr("Search topics, communities, or professionals","جست‌وجوی موضوع، گروه یا متخصص")} placeholderTextColor={colors.muted} style={[styles.input,{textAlign:language==='fa'?'right':'left',writingDirection:language==='fa'?'rtl':'ltr'}]} />
+      {!!query && <Pressable accessibilityRole="button" accessibilityLabel={tr("Clear search","پاک‌کردن جست‌وجو")} onPress={() => setQuery('')} style={styles.clearButton}><AppIcon name="close" size={18} color={colors.muted} /></Pressable>}
     </View>
 
     {normalizedQuery.length >= 2 && <>
-      <Section title="People" subtitle={searching ? 'Searching members…' : `${people.length} matching members`} />
+      <Section title={tr('People','اعضا')} subtitle={searching ? tr('Searching members…','در حال جست‌وجوی اعضا…') : `${people.length} ${tr('matching members','عضو یافت‌شده')}`} />
       {people.map(person => <Pressable accessibilityRole="button" key={person.userId} onPress={() => router.push({ pathname: '/user/[username]' as never, params: { username: person.username } } as never)} style={styles.person}>
-        <Avatar name={person.displayName} uri={person.avatarUrl} size={50} /><View style={styles.flex}><Text style={styles.proName}>{person.displayName}</Text><Text style={styles.proTitle}>@{person.username}{person.profilePrivate ? ' · Private profile' : ''}</Text>{!!person.bio && <Text numberOfLines={2} style={styles.personBio}>{person.bio}</Text>}</View><View style={styles.personCount}><Text style={styles.personCountValue}>{person.followerCount}</Text><Text style={styles.personCountLabel}>followers</Text></View>
+        <Avatar name={person.displayName} uri={person.avatarUrl} size={50} /><View style={styles.flex}><Text style={styles.proName}>{person.displayName}</Text><Text style={styles.proTitle}>@{person.username}{person.profilePrivate ? tr(' · Private profile',' · پروفایل خصوصی') : ''}</Text>{!!person.bio && <Text numberOfLines={2} style={styles.personBio}>{person.bio}</Text>}</View><View style={styles.personCount}><Text style={styles.personCountValue}>{person.followerCount}</Text><Text style={styles.personCountLabel}>{tr("followers","دنبال‌کننده")}</Text></View>
       </Pressable>)}
-      <Section title="Stories" subtitle={searching ? 'Searching stories…' : `${storyResults.length} matching stories`} />
+      <Section title={tr('Stories','پست‌ها')} subtitle={searching ? tr('Searching stories…','در حال جست‌وجوی پست‌ها…') : `${storyResults.length} ${tr('matching stories','پست یافت‌شده')}`} />
       {storyResults.map(post => <PostCard key={post.id} post={post} />)}
       {(morePeople||moreStories)&&<AppButton label={tr('More search results','نتایج جست‌وجوی بیشتر')} disabled={searching} variant="secondary" onPress={()=>void more()}/>}
       {!!searchError && <Text accessibilityRole="alert" style={styles.searchError}>{searchError}</Text>}
@@ -82,10 +82,10 @@ export default function ExploreScreen() {
 
     {(showKnowledge || showMedia) && <View style={styles.hubGrid}>
       {showKnowledge && <Pressable accessibilityRole="button" onPress={() => router.push('/articles')} style={[styles.hub, { backgroundColor: colors.ocean950 }]}>
-        <View style={styles.hubIcon}><AppIcon name="science" color={colors.ocean700} /></View><Text style={styles.hubLabel}>KNOWLEDGE HUB</Text><Text style={styles.hubTitle}>Articles by verified professionals</Text><Text style={styles.hubMeta}>{professionalArticles.length} new reads · Clinician reviewed</Text><View style={styles.hubArrow}><AppIcon name="arrow_forward" color={colors.ocean950} /></View>
+        <View style={styles.hubIcon}><AppIcon name="science" color={colors.ocean700} /></View><Text style={styles.hubLabel}>{tr("KNOWLEDGE HUB","دانشنامه")}</Text><Text style={styles.hubTitle}>{tr("Articles by verified professionals","مقاله‌های متخصصان تأییدشده")}</Text><Text style={styles.hubMeta}>{professionalArticles.length} {tr('published articles','مقالهٔ منتشرشده')}</Text><View style={styles.hubArrow}><AppIcon name="arrow_forward" color={colors.ocean950} /></View>
       </Pressable>}
       {showMedia && <Pressable accessibilityRole="button" onPress={() => router.push('/media')} style={[styles.hub, { backgroundColor: '#392C59' }]}>
-        <View style={[styles.hubIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="movie" color={colors.lavender} /></View><Text style={[styles.hubLabel, { color: '#C8B9F1' }]}>WATCH & REFLECT</Text><Text style={styles.hubTitle}>Psychology movies, series & documentaries</Text><Text style={[styles.hubMeta, { color: '#D8D0ED' }]}>Expert picks · Content notes · Discussion prompts</Text><View style={styles.hubArrow}><AppIcon name="arrow_forward" color="#392C59" /></View>
+        <View style={[styles.hubIcon, { backgroundColor: colors.lavenderSoft }]}><AppIcon name="movie" color={colors.lavender} /></View><Text style={[styles.hubLabel, { color: '#C8B9F1' }]}>{tr("WATCH & REFLECT","تماشا و تأمل")}</Text><Text style={styles.hubTitle}>{tr("Psychology movies, series & documentaries","فیلم، سریال و مستند روان‌شناسی")}</Text><Text style={[styles.hubMeta, { color: '#D8D0ED' }]}>{tr("Expert picks · Content notes · Discussion prompts","گزیده‌ها · توضیحات محتوا · پیشنهادهای گفت‌وگو")}</Text><View style={styles.hubArrow}><AppIcon name="arrow_forward" color="#392C59" /></View>
       </Pressable>}
     </View>}
 
@@ -93,26 +93,27 @@ export default function ExploreScreen() {
       const groupCategories = visibleCategories.filter(category => category.group === group.id);
       return groupCategories.length > 0 && <View key={group.id} style={styles.groupBlock}>
         <Section title={group.title} subtitle={group.subtitle} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>Explore stories</Text></Pressable>)}</ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{groupCategories.map(category => <Pressable accessibilityRole="button" key={category.id} style={[styles.topic, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={25} color={category.color} /><Text style={styles.topicText}>{category.name}</Text><Text style={styles.topicCount}>{tr("Explore stories","دیدن پست‌ها")}</Text></Pressable>)}</ScrollView>
       </View>;
     })}
 
-    {visibleProfessionals.length > 0 && <Section title="Verified professionals" subtitle="Compare fit, expertise, location, and trust score" onPress={() => router.push('/professionals')} />}
+    {visibleProfessionals.length > 0 && <Section title={tr("Verified professionals","متخصصان تأییدشده")} subtitle={tr("Compare fit, expertise, location, and trust score","مقایسهٔ تناسب، تخصص، موقعیت و امتیاز اعتماد")} onPress={() => router.push('/professionals')} />}
     {visibleProfessionals.map(professional => <Pressable accessibilityRole="button" key={professional.id} onPress={() => router.push({ pathname: '/profile', params: { professional: professional.id } })} style={styles.pro}>
-      <Avatar name={professional.displayName} size={58} verified /><View style={styles.flex}><Text style={styles.proName}>{professional.displayName}</Text><Text style={styles.proTitle}>{professional.title} · {professional.city}, {professional.country}</Text><View style={styles.tags}>{professional.specialties.slice(0, 3).map(specialty => <Text key={specialty} style={styles.tag}>{specialty}</Text>)}</View><Text style={styles.languages}>{professional.languages.join(' · ')} · {professional.gender}</Text></View><View style={styles.score}><Text style={styles.scoreValue}>{professional.greenOceanScore}</Text><Text style={styles.scoreLabel}>GO SCORE</Text><View style={styles.rating}><AppIcon name="star" filled size={13} color={colors.sun} /><Text style={styles.ratingText}>{professional.rating}</Text></View></View>
+      <Avatar name={professional.displayName} size={58} verified /><View style={styles.flex}><Text style={styles.proName}>{professional.displayName}</Text><Text style={styles.proTitle}>{professional.title} · {professional.city}, {professional.country}</Text><View style={styles.tags}>{professional.specialties.slice(0, 3).map(specialty => <Text key={specialty} style={styles.tag}>{specialty}</Text>)}</View><Text style={styles.languages}>{professional.languages.join(' · ')} · {professional.gender}</Text></View><View style={styles.score}><Text style={styles.scoreValue}>{professional.greenOceanScore}</Text><Text style={styles.scoreLabel}>{tr("GO SCORE","امتیاز گرین‌اوشن")}</Text><View style={styles.rating}><AppIcon name="star" filled size={13} color={colors.sun} /><Text style={styles.ratingText}>{professional.rating}</Text></View></View>
     </Pressable>)}
 
     {visibleCommunities.length > 0 && <>
-      <Section title="Support circles" subtitle="Moderated communities for shared experiences" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{visibleCommunities.slice(0, 3).map((community, index) => <Pressable accessibilityRole="button" key={community.id} onPress={() => router.push({ pathname: '/community/[slug]', params: { slug: community.slug } })} style={styles.circle}><View style={[styles.circleIcon, { backgroundColor: [colors.ocean100, colors.lavenderSoft, colors.coralSoft][index] }]}><AppIcon name={['bedtime', 'psychology', 'diversity_1'][index]} color={colors.ocean700} /></View><Text style={styles.circleName}>{community.name}</Text><Text style={styles.circleDescription}>{community.description}</Text><Text style={styles.circleCount}>{community.memberCount.toLocaleString()} members</Text></Pressable>)}</ScrollView>
+      <Section title={tr("Support circles","گروه‌های حمایت")} subtitle={tr("Moderated communities for shared experiences","گروه‌های دارای نظارت برای تجربه‌های مشترک")} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontal}>{visibleCommunities.slice(0, 3).map((community, index) => <Pressable accessibilityRole="button" key={community.id} onPress={() => router.push({ pathname: '/community/[slug]', params: { slug: community.slug } })} style={styles.circle}><View style={[styles.circleIcon, { backgroundColor: [colors.ocean100, colors.lavenderSoft, colors.coralSoft][index] }]}><AppIcon name={['bedtime', 'psychology', 'diversity_1'][index]} color={colors.ocean700} /></View><Text style={styles.circleName}>{community.name}</Text><Text style={styles.circleDescription}>{community.description}</Text><Text style={styles.circleCount}>{community.memberCount.toLocaleString(language)} {tr('members','عضو')}</Text></Pressable>)}</ScrollView>
     </>}
 
-    {!hasResults && <View style={styles.empty}><View style={styles.emptyIcon}><AppIcon name="search_off" color={colors.ocean700} /></View><Text style={styles.emptyTitle}>No matches yet</Text><Text style={styles.emptyBody}>Try a broader topic, condition, city, language, or professional name.</Text><Pressable accessibilityRole="button" onPress={() => setQuery('')}><Text style={styles.emptyAction}>Clear search</Text></Pressable></View>}
+    {!hasResults && <View style={styles.empty}><View style={styles.emptyIcon}><AppIcon name="search_off" color={colors.ocean700} /></View><Text style={styles.emptyTitle}>{tr("No matches yet","نتیجه‌ای پیدا نشد")}</Text><Text style={styles.emptyBody}>{tr("Try a broader topic, condition, city, language, or professional name.","موضوع، شهر، زبان یا نام متخصص دیگری را امتحان کنید.")}</Text><Pressable accessibilityRole="button" onPress={() => setQuery('')}><Text style={styles.emptyAction}>{tr("Clear search","پاک‌کردن جست‌وجو")}</Text></Pressable></View>}
   </View></Screen>;
 }
 
 function Section({ title, subtitle, onPress }: { title: string; subtitle: string; onPress?: () => void }) {
-  const content = <><View><Text style={styles.sectionTitle}>{title}</Text><Text style={styles.sectionSubtitle}>{subtitle}</Text></View>{onPress && <View style={styles.sectionAction}><Text style={styles.sectionActionText}>View all</Text><AppIcon name="arrow_forward" color={colors.ocean600} /></View>}</>;
+  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const content = <><View><Text style={styles.sectionTitle}>{title}</Text><Text style={styles.sectionSubtitle}>{subtitle}</Text></View>{onPress && <View style={styles.sectionAction}><Text style={styles.sectionActionText}>{tr("View all","دیدن همه")}</Text><AppIcon name="arrow_forward" color={colors.ocean600} /></View>}</>;
   return onPress ? <Pressable accessibilityRole="button" onPress={onPress} style={styles.section}>{content}</Pressable> : <View style={styles.section}>{content}</View>;
 }
 

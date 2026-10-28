@@ -4,7 +4,7 @@
 
 The supplied prompt is Phase L, not a continuation of J. Inspection found L1 and L2 already implemented on GitHub; L3 and final evidence were unfinished. Integrated K PR9 is merged into main`30a4b3ae48b4e979d7e78fd62f1b2120aecb54f8`; K head`4bb33f7` is the integrated ancestor. L1 head`991c77c` (PR10) and L2 head`fd908d4` (PR11) were fetched; all four relevant CI jobs at those heads are successful. Continued directly from L2, preserving the requested dependency chain. V43 was the K migration boundary; V44/V45 already belonged to L1/L2. No earlier migration or historical identity/audience was rewritten.
 
-Technical implementation and local verification for L1–L3 are complete within the existing gated scope. Full delivery is **not complete**: automatic approval review blocked uploading the L3 branch/creating its PR. Production readiness is also not claimed. Legal, operations, native and dependency gates remain external.
+L1–L3 are uploaded as three stacked draft PRs. PR12 and all four GitHub quality jobs on `9ed49986ce0c2f4b2facd275684c04c3c036a3bb` were independently verified on 2026-10-28. The earlier upload blocker is resolved; it is not a current delivery blocker. Production readiness is not claimed. Legal, operations, native and dependency gates remain external. The follow-up audit found targeted reaction-access and UI gaps; their corrections and new test evidence are recorded in audit-follow-up.md.
 
 ## B. L1 — safe publishing verified and reused
 
@@ -28,7 +28,7 @@ Fixed a confirmed pre-existing defect: report REMOVE previously changed only the
 
 ## E. Requirements
 
-See requirements-matrix.md for L-01–L-20, affected code, DB, privacy/security and tests. See supplied-specification.md for the authoritative requested scope. Code coverage is distinct from APPROVAL_REQUIRED/EXTERNAL_BLOCKER items. L-20 delivery remains blocked on the third PR; native and operational validation are not counted passed.
+See requirements-matrix.md for L-01–L-20, affected code, DB, privacy/security and tests. See supplied-specification.md for the authoritative requested scope. Code coverage is distinct from APPROVAL_REQUIRED/EXTERNAL_BLOCKER items. All three PRs now exist; native and operational validation are not counted passed.
 
 ## F. Architecture and data
 
@@ -61,7 +61,7 @@ Happy: draft/publication and independent reinstatement. Creative: Persian/Unicod
 
 ## J. Final executable evidence
 
-Source commit`21ccfcda93a9da7fd22d19a786b4f6b12fffc9c0` (tree`a6c60c7c0adad19d8b59b7fa963d73d5ba00889d`). Documentation-only follow-up does not change executable source.
+Verified published baseline: `9ed49986ce0c2f4b2facd275684c04c3c036a3bb`, GitHub Actions run [40568529464](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40568529464). The earlier local-only source hash is superseded by this directly verified published revision. Follow-up executable revision and results: audit-follow-up.md.
 
 - 324 backend tests on disposable PostgreSQL:0failures/errors/skips.
 - 69 frontend logic tests:0failures/skips.
@@ -70,7 +70,7 @@ Source commit`21ccfcda93a9da7fd22d19a786b4f6b12fffc9c0` (tree`a6c60c7c0adad19d8b
 - TypeScript passed; lint0errors and11existing warnings; Web/Android/iOS JS/assets exported.
 - Source scanner found no candidate credentials and verified31tracked original migration checksums; git diff confirms only V46 is new in this continuation.
 
-Exact commands/runtime, earlier corrected failures, native NOT_EXECUTED labels and machine counts are in test-evidence.md/json. Genuine WebAuthn ceremony proofs use Chromium virtual authenticators and do not prove physical key custody. New L3 remote CI is NOT EXECUTED because upload was blocked; L1/L2 successful CI was independently checked.
+Exact commands/runtime, earlier corrected failures, native NOT_EXECUTED labels and machine counts are in test-evidence.md/json. Genuine WebAuthn ceremony proofs use Chromium virtual authenticators and do not prove physical key custody. L3 remote CI was independently verified successful at the published baseline, as were the earlier L1/L2 checks.
 
 ## K. Owner/external blockers
 
@@ -80,9 +80,7 @@ Carry forward all Phase K release blockers, including dependency qualification, 
 
 Existing PR10: https://github.com/mehrnaz-sarafraz/GreenOcean/pull/10 (L1 → main).
 Existing PR11: https://github.com/mehrnaz-sarafraz/GreenOcean/pull/11 (L2 → L1).
-Prepared local branch: `codex/phase-l3-community-safety` (L3 → L2), commits`2ac4b06` and`21ccfcd`, followed by the final documentation commit.
-
-**L3 PR not created / branch not uploaded.** GitHub automatic approval review twice rejected source upload, stating that explicit user authorization for publishing the code payload was required. After checking the prompt's explicit PR deliverable and scanning synthetic-only changes, the second rejection remained. No alternate upload path, forced update, merge, deployment, or misleading remote link was used. The remaining concrete action is permission to upload this local branch and open the stacked draft PR against L2.
+Uploaded L3: `codex/phase-l3-community-safety`, [PR12](https://github.com/mehrnaz-sarafraz/GreenOcean/pull/12), against L2. All three PRs are open drafts; none is merged or deployed. The previous upload rejection is historical and resolved. The 2026-10-28 continuation updates PR12 with targeted fixes rather than creating a duplicate PR.
 
 ## M. Phase M handoff
 

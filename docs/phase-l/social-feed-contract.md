@@ -11,3 +11,9 @@ Replies retain the same-post visible parent constraint, at most8 server levels, 
 Existing follow requests are reused; accept/decline/cancel/unfollow are voluntary. Pair-level transaction locks serialize follow/block operations. New non-trusted direct conversations reuse conversations/members/messages but stay PENDING until recipient accepts. Existing accepted conversations retain access. Current request settings, professional-only preference and blocks are rechecked at acceptance. Only recipient can accept/decline; sender may cancel. Decline prevents repeat sender requests to the same closed conversation, not global account lockout. No message body is available while pending. Listener service kinds/acceptance remain separate.
 
 Notifications contain no post narrative preview. Anonymous actors are redacted at read time, including historical records; inaccessible/hidden/deleted comment/post notices and unread counts are filtered. Follow acceptance and message requests use named relationships only. Search keeps existing authorized projections/ordering and now exposes bounded result pagination with stale-response cleanup. No drafts or pending content enter ordinary search.
+
+## Audit follow-up
+
+FOLLOWING responses include nullable `followingAnyone`: a boolean derived only from the authenticated viewer's current active, unblocked follow relationships; null for other modes. It never identifies a followed account or changes anonymous-post exclusion. The UI distinguishes no follows, no permitted stories, loading and a failed request. Old clients can ignore the additive field; old servers omitting it retain the generic empty message rather than claiming no follows.
+
+Comment reactions now reuse the visible-comment projection, in addition to parent-post access, so both block directions and inactive comment authors prevent direct reaction writes. A known old comment ID does not bypass the listing predicate.
