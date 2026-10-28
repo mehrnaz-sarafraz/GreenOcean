@@ -131,6 +131,18 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM consultation_requests WHERE requester_user_id = ? OR professional_user_id = ?", userId, userId);
         jdbcTemplate.update("DELETE FROM professional_reviews WHERE reviewer_user_id = ? OR professional_user_id = ?", userId, userId);
         jdbcTemplate.update("DELETE FROM professional_answers WHERE professional_user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM post_resource_attachments WHERE proposed_by=? OR reviewed_by=? OR post_id IN(SELECT id FROM posts WHERE author_id=?)",userId,userId,userId);
+        jdbcTemplate.update("DELETE FROM post_resource_preferences WHERE post_id IN(SELECT id FROM posts WHERE author_id=?)",userId);
+        jdbcTemplate.update("DELETE FROM growth_resource_saves WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM growth_resources WHERE author_id=?",userId);
+        jdbcTemplate.update("UPDATE growth_resources SET retired=TRUE,featured=FALSE WHERE id IN(SELECT resource_id FROM growth_resource_versions WHERE reviewer_id=?)",userId);
+        jdbcTemplate.update("UPDATE growth_resource_versions SET state='RETIRED',reviewer_id=NULL WHERE reviewer_id=?",userId);
+        jdbcTemplate.update("UPDATE growth_resource_versions SET published_by=NULL WHERE published_by=?",userId);
+        jdbcTemplate.update("UPDATE growth_editorial_events SET actor_id=NULL WHERE actor_id=?",userId);
+        jdbcTemplate.update("DELETE FROM educational_permissions WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE educational_permissions SET issued_by=NULL,revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE issued_by=?",userId);
+        jdbcTemplate.update("DELETE FROM educational_credentials WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE educational_credentials SET verified_by=NULL,revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE verified_by=?",userId);
         jdbcTemplate.update("DELETE FROM professional_articles WHERE author_id = ?", userId);
         jdbcTemplate.update("DELETE FROM professional_verifications WHERE professional_user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM professional_profiles WHERE user_id = ?", userId);

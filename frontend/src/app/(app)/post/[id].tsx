@@ -1,3 +1,4 @@
+import {FurtherReading} from '@/features/wellbeing/growth-library';
 import {router,useLocalSearchParams} from 'expo-router';
 import {useState} from 'react';
 import {ActivityIndicator,Switch,Text,TextInput,View} from 'react-native';
@@ -28,7 +29,7 @@ export default function PostDetail(){
  const direction={textAlign:language==='fa'?'right' as const:'left' as const,writingDirection:language==='fa'?'rtl' as const:'ltr' as const};
  return <Screen scroll><View style={{gap:16,maxWidth:720,width:'100%',alignSelf:'center'}}><AppButton label={tr('Back','بازگشت')} variant="secondary" onPress={()=>router.back()}/>
  {loading&&<ActivityIndicator/>}{!!error&&<Text accessibilityRole="alert">{error}</Text>}{!!notice&&<Text accessibilityRole="alert">{notice}</Text>}
- {post&&<><PostCard post={post}/><Text accessibilityRole="header">{t('comments')}</Text>
+ {post&&<><PostCard post={post}/><FurtherReading key={post.id} postId={post.id} owned={post.owned??false}/><Text accessibilityRole="header">{t('comments')}</Text>
  {comments.map(c=><View key={c.id} style={{gap:8,padding:16,marginStart:c.parentCommentId?18:0,borderWidth:1,borderColor:'#b9d2d0'}}>
  <Text style={direction}>{c.author?.displayName??t('anonymous')}</Text>
  {!!c.parentCommentId&&<Text style={direction}>{tr('In reply to','در پاسخ به')}: {comments.find(parent=>parent.id===c.parentCommentId)?.author?.displayName??tr('Anonymous or unavailable response','پاسخ ناشناس یا خارج از دسترس')}</Text>}

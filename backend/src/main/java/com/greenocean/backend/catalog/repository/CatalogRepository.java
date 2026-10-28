@@ -112,13 +112,13 @@ public class CatalogRepository {
     public List<ArticleResponse> articles(UUID viewerId, String topic) {
         String topicFilter = topic == null || topic.isBlank() || "all".equalsIgnoreCase(topic) ? null : topic.trim();
         return jdbcTemplate.query(articleSelect() + """
-                 WHERE a.status = 'PUBLISHED' AND (CAST(? AS TEXT) IS NULL OR LOWER(a.topic) = LOWER(CAST(? AS TEXT)))
+                 WHERE a.status = 'PUBLISHED' AND growth_resource_available(a.id) AND (CAST(? AS TEXT) IS NULL OR LOWER(a.topic) = LOWER(CAST(? AS TEXT)))
                  ORDER BY a.pinned DESC, a.published_at DESC
                 """, this::mapArticle, viewerId, viewerId, topicFilter, topicFilter);
     }
 
     public Optional<ArticleResponse> article(UUID viewerId, UUID articleId) {
-        return jdbcTemplate.query(articleSelect() + " WHERE a.id = ? AND a.status = 'PUBLISHED'",
+        return jdbcTemplate.query(articleSelect() + " WHERE a.id = ? AND a.status = 'PUBLISHED' AND growth_resource_available(a.id)",
                 this::mapArticle, viewerId, viewerId, articleId).stream().findFirst();
     }
 
@@ -166,7 +166,7 @@ public class CatalogRepository {
         return jdbcTemplate.query("""
                 SELECT m.*, EXISTS(SELECT 1 FROM media_saves s WHERE s.media_id = m.id AND s.user_id = ?) AS saved
                   FROM media_recommendations m
-                 WHERE m.is_published = TRUE AND (CAST(? AS TEXT) IS NULL OR m.media_kind = CAST(? AS TEXT))
+                 WHERE m.is_published = TRUE AND growth_resource_available(m.id) AND (CAST(? AS TEXT) IS NULL OR m.media_kind = CAST(? AS TEXT))
                  ORDER BY m.created_at, m.title
                 """, (rs, row) -> new MediaRecommendationResponse(
                 rs.getObject("id", UUID.class), rs.getString("title"), rs.getString("media_kind"),
