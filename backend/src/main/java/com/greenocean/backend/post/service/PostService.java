@@ -28,6 +28,7 @@ import java.util.UUID;
 @Service
 public class PostService {
     private final SocialPublishing publishing;
+    private final com.greenocean.backend.community.service.GroupPolicy groups;
     private final org.springframework.jdbc.core.JdbcTemplate db;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
@@ -40,8 +41,8 @@ public class PostService {
     public PostService(PostRepository postRepository, CommentRepository commentRepository,
                        PostReadRepository postReadRepository, UserRepository userRepository,
                        SocialInteractionRepository interactions, DatabaseUuidGenerator uuidGenerator,
-                       NotificationService notificationService, SocialPublishing publishing, org.springframework.jdbc.core.JdbcTemplate db) {
-        this.publishing=publishing;this.db=db;
+                       NotificationService notificationService, SocialPublishing publishing, org.springframework.jdbc.core.JdbcTemplate db,com.greenocean.backend.community.service.GroupPolicy groups) {
+        this.publishing=publishing;this.db=db;this.groups=groups;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.postReadRepository = postReadRepository;
@@ -113,6 +114,7 @@ public class PostService {
         get(postId, userId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post was not found"));
+        checkGroup(post.getCommunityId(),userId);
         var assessment=publishing.check(userId,"COMMENT",request.body(),null);
         if (request.parentCommentId() != null
                 && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM comments c WHERE c.id=? AND c.post_id=? AND c.status='PUBLISHED' AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=? AND b.blocked_id=c.author_id) OR (b.blocker_id=c.author_id AND b.blocked_id=?)))",Boolean.class,request.parentCommentId(),postId,userId,userId))) {
@@ -176,9 +178,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> communityFeed(UUID communityId, UUID userId, int page, int size) {
-        if (!interactions.isCommunityMember(communityId, userId)) {
-            throw new ForbiddenException("You must be a member to view community posts");
-        }
+        groups.member(communityId,userId);
         return page(postReadRepository.findCommunityPosts(communityId, userId, page, size), page, size);
     }
 
@@ -190,6 +190,7 @@ public class PostService {
         Post post=postRepository.findById(id).orElseThrow(()->new NotFoundException("Post was not found"));
         if(!post.getAuthorId().equals(owner) || post.getStatus()==ContentStatus.DELETED)throw new NotFoundException("Post was not found");
         if(post.getRevision()!=request.revision())throw new com.greenocean.backend.common.exception.ConflictException("Post changed; reload before editing");
+        checkGroup(post.getCommunityId(),owner);
         var assessment=publishing.check(owner,"POST",request.body(),id);
         post.revise(request.body().trim());post.assess(assessment);postRepository.flush();
         publishing.record(id,false,post.getRevision(),assessment);
@@ -201,9 +202,11 @@ public class PostService {
         if(!comment.getAuthorId().equals(owner))throw new NotFoundException("Comment was not found");
         comment.softDelete();commentRepository.flush();
     }
+    private void checkGroup(UUID group,UUID user){if(group!=null){groups.lock(group);groups.member(group,user);groups.writable(group);}}
     private void validateVisibility(UUID userId, PostVisibility visibility, UUID communityId) {
         if (visibility == PostVisibility.COMMUNITY) {
             if (communityId == null) throw new IllegalArgumentException("communityId is required for COMMUNITY visibility");
+            checkGroup(communityId,userId);
             if (!interactions.isCommunityMember(communityId, userId)) {
                 throw new ForbiddenException("You must be a member of the community to publish there");
             }

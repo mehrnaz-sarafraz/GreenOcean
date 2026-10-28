@@ -51,12 +51,12 @@ class CommunityNotificationIntegrationTest {
                 .andExpect(jsonPath("$.items[0].member").value(false));
 
         mockMvc.perform(get("/api/v1/communities/{id}/posts", communityId).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(put("/api/v1/communities/{id}/membership", communityId).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.member").value(true))
-                .andExpect(jsonPath("$.memberCount").value(2));
+                .andExpect(jsonPath("$.memberCount").doesNotExist());
 
         MvcResult postResult = mockMvc.perform(post("/api/v1/posts").header(HttpHeaders.AUTHORIZATION, auth(owner.token()))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,12 +113,11 @@ class CommunityNotificationIntegrationTest {
     }
 
     private JsonNode createCommunity(String token, String name, String slug, boolean privateCommunity) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/communities").header(HttpHeaders.AUTHORIZATION, auth(token))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("name", name, "slug", slug, "description", "A safe support space",
-                                "privateCommunity", privateCommunity))))
-                .andExpect(status().isCreated()).andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString());
+        // Historical approved-group fixture; the legacy creation route is covered by M1 denial tests.
+        UUID owner=UUID.fromString(objectMapper.readTree(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1])).path("sub").asText());
+        UUID id=UUID.randomUUID();fixtureDb.update("INSERT INTO communities(id,name,slug,description,is_private,created_by) VALUES(?,?,?,'A safe support space',?,?)",id,name,slug,privateCommunity,owner);
+        fixtureDb.update("INSERT INTO community_members(community_id,user_id,role) VALUES(?,?,'OWNER')",id,owner);
+        return objectMapper.readTree(mockMvc.perform(get("/api/v1/communities/slug/"+slug).header(HttpHeaders.AUTHORIZATION,auth(token))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
 
     private TestUser registerAndLogin(String prefix) throws Exception {

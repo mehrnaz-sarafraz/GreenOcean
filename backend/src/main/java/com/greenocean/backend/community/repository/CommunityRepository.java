@@ -17,14 +17,15 @@ import java.util.UUID;
 @Repository
 public class CommunityRepository {
     private static final String SELECT = """
-            SELECT c.id, c.name, c.slug, c.description, c.icon_url, c.is_private, c.created_at,
-                   (SELECT COUNT(*) FROM community_members all_members WHERE all_members.community_id = c.id) AS member_count,
+            SELECT c.id, c.name, c.slug, c.description, c.icon_url, c.is_private, c.created_at,c.privacy_type,c.status,c.rules_version,
+                   (SELECT jsonb_agg(rule_text ORDER BY position) FROM community_rules WHERE community_id=c.id)::text AS rules_json,
+                   NULL::bigint AS member_count,
                    EXISTS(SELECT 1 FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS member,
                    (SELECT mine.role FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS membership_role
                    ,EXISTS(SELECT 1 FROM community_join_requests request
                             WHERE request.community_id = c.id AND request.requester_id = ? AND request.status = 'PENDING') AS join_requested
               FROM communities c
-             WHERE c.status = 'ACTIVE'
+             WHERE visible_group(c.id, ?)
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -53,22 +54,22 @@ public class CommunityRepository {
 
     public Optional<CommunityResponse> findById(UUID communityId, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.id = ?", this::map,
-                viewerId, viewerId, viewerId, communityId).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, communityId).stream().findFirst();
     }
 
     public Optional<CommunityResponse> findBySlug(String slug, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.slug = ?", this::map,
-                viewerId, viewerId, viewerId, slug).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, slug).stream().findFirst();
     }
 
     public List<CommunityResponse> findAll(UUID viewerId, String query, int page, int size) {
         String term = "%" + query.trim().toLowerCase() + "%";
         String sql = SELECT + """
-                 AND (LOWER(c.name) LIKE ? OR LOWER(COALESCE(c.description, '')) LIKE ? OR LOWER(c.slug) LIKE ?)
-                 ORDER BY member DESC, member_count DESC, c.name
+                 AND c.privacy_type<>'HIDDEN' AND (LOWER(c.name) LIKE ? OR LOWER(COALESCE(c.description, '')) LIKE ? OR LOWER(c.slug) LIKE ?)
+                 ORDER BY c.created_at DESC,c.id DESC
                  LIMIT ? OFFSET ?
                 """;
-        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, term, term, term,
+        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, viewerId, term, term, term,
                 size + 1, (long) page * size);
     }
 
@@ -185,14 +186,15 @@ public class CommunityRepository {
                 SELECT cm.user_id, p.display_name, p.username, p.avatar_url, cm.role, cm.joined_at
                   FROM community_members cm
                   JOIN profiles p ON p.user_id = cm.user_id
-                 WHERE cm.community_id = ?
+                 WHERE cm.community_id = ? AND EXISTS(SELECT 1 FROM community_members manager
+                   WHERE manager.community_id=cm.community_id AND manager.user_id=? AND manager.role IN('OWNER','MODERATOR'))
                  ORDER BY CASE cm.role WHEN 'OWNER' THEN 1 WHEN 'MODERATOR' THEN 2 ELSE 3 END,
                           LOWER(p.display_name)
                 """, (resultSet, row) -> new CommunityDetailsResponse.Member(
                 resultSet.getObject("user_id", UUID.class), resultSet.getString("display_name"),
                 resultSet.getString("username"), resultSet.getString("avatar_url"), resultSet.getString("role"),
                 resultSet.getObject("joined_at", OffsetDateTime.class).toInstant()
-        ), communityId);
+        ), communityId,viewerId);
 
         List<CommunityDetailsResponse.Event> events = jdbcTemplate.query("""
                 SELECT e.id, e.title, e.description, e.format, p.display_name AS host_name,
@@ -262,9 +264,10 @@ public class CommunityRepository {
         return new CommunityResponse(
                 resultSet.getObject("id", UUID.class), resultSet.getString("name"), resultSet.getString("slug"),
                 resultSet.getString("description"), resultSet.getString("icon_url"), resultSet.getBoolean("is_private"),
-                resultSet.getLong("member_count"), resultSet.getBoolean("member"), resultSet.getString("membership_role"),
+                resultSet.getObject("member_count",Long.class), resultSet.getBoolean("member"), resultSet.getString("membership_role"),
                 resultSet.getBoolean("join_requested"),
-                resultSet.getObject("created_at", OffsetDateTime.class).toInstant()
+                resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+                resultSet.getString("privacy_type"),resultSet.getString("status"),resultSet.getLong("rules_version"),resultSet.getString("rules_json")
         );
     }
 }

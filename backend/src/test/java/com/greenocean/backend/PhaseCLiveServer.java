@@ -34,7 +34,7 @@ public class PhaseCLiveServer {
            System.getenv("GREENOCEAN_TEST_DB_URL")==null)
             throw new IllegalStateException("An explicitly isolated test database and opt-in are required");
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
-            "--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
+            "--greenocean.groups.proposals-enabled=true","--greenocean.groups.activation-approved=true","--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
             "--greenocean.webauthn.enabled=true","--greenocean.webauthn.rp-id=localhost","--greenocean.webauthn.origins=https://localhost:8443","--greenocean.security.admin-enabled=true");

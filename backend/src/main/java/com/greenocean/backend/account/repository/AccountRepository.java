@@ -77,6 +77,7 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM community_proposals WHERE owner_id=?",userId);
         jdbcTemplate.update("UPDATE conversations SET request_status='CANCELLED' WHERE request_status='PENDING' AND (requester_id=? OR request_target_id=?)",userId,userId);
         jdbcTemplate.update("UPDATE conversations SET requester_id=NULL,request_target_id=NULL WHERE requester_id=? OR request_target_id=?",userId,userId);
         jdbcTemplate.update("DELETE FROM moderation_appeals WHERE appellant_user_id=?",userId);
