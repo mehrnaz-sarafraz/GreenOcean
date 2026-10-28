@@ -18,20 +18,20 @@
 | N-14 | Queue capacity and contention | Verified N2: run 40702893879 |
 | N-15 | Queue notifications | Verified N2: run 40702893879 |
 | N-16 | Preserve the direct Live Now pathway | Verified direct I in N1; preserved by N2 |
-| N-17 | Thirty-minute planned support sessions | Implemented N3; final exact-head CI pending |
-| N-18 | Limited consensual extension | Implemented N3; final exact-head CI pending |
-| N-19 | No-show and delayed-start handling | Implemented N3; final exact-head CI pending |
-| N-20 | Optional post-session feedback | Implemented N3; final exact-head CI pending |
-| N-21 | Optional repeat booking | Implemented N3; final exact-head CI pending |
+| N-17 | Thirty-minute planned support sessions | Verified N3: run 40734496345 |
+| N-18 | Limited consensual extension | Verified N3: run 40734496345 |
+| N-19 | No-show and delayed-start handling | Verified N3: run 40734496345 |
+| N-20 | Optional post-session feedback | Verified N3: run 40734496345 |
+| N-21 | Optional repeat booking | Verified N3: run 40734496345 |
 | N-22 | Private follow-up notes | Safely deferred per prompt: no durable note store; separate purpose remains unapproved |
-| N-23 | Listener scheduling dashboard | Implemented N3; final exact-head CI pending |
-| N-24 | Member Support dashboard | Implemented N3; final exact-head CI pending |
-| N-25 | Regional and operational authorization | Implemented N3; final exact-head CI pending |
-| N-26 | Privacy and data governance | Implemented N3; final exact-head CI pending |
-| N-27 | Notifications and reminders | Implemented N3; final exact-head CI pending |
-| N-28 | Safety, reporting and incident handling | Implemented N3; final exact-head CI pending |
-| N-29 | Security and concurrency threat model | Implemented N3; final exact-head CI pending |
-| N-30 | Final integration and release verification | Implemented N3; final exact-head CI pending |
+| N-23 | Listener scheduling dashboard | Verified N3: run 40734496345 |
+| N-24 | Member Support dashboard | Verified N3: run 40734496345 |
+| N-25 | Regional and operational authorization | Verified N3: run 40734496345 |
+| N-26 | Privacy and data governance | Verified N3: run 40734496345 |
+| N-27 | Notifications and reminders | Verified N3: run 40734496345 |
+| N-28 | Safety, reporting and incident handling | Verified N3: run 40734496345 |
+| N-29 | Security and concurrency threat model | Verified N3: run 40734496345 |
+| N-30 | Final integration and release verification | Verified N3: run 40734496345 |
 
 N1 sources: ListenerCalendar, ListenerBookings, V52–V53, PhaseN1SchedulingTest, PhaseN1ConcurrencyTest, PhaseN1MigrationTest, frontend planning.tsx and phase-n1 browser journeys. Final run links belong in test-evidence.md.
 

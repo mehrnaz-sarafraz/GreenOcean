@@ -1,4 +1,17 @@
 # Phase N evidence
+The entries below are chronological; an earlier pending or failed result is superseded only by its explicitly recorded later validation.
+
+## Reproduction commands
+Use isolated synthetic PostgreSQL 18 databases, JDK 21 and Node 24. The checked-in workflow supplies its disposable database and test-only live-server environment; never direct these fixtures at production.
+
+- Backend (backend/): `./mvnw -B clean verify`.
+- Frontend (frontend/): `npm ci --no-audit --no-fund`, `npx expo customize tsconfig.json`, `npm run typecheck`, `npm run lint`, `npm test`, `npx expo export --platform all`, `npm run test:e2e`.
+- Real stack: compile the test-only server with `./mvnw -B test-compile dependency:build-classpath -Dmdep.outputFile=target/live-classpath` in backend/, then run `npx playwright test --config playwright.live.config.mjs` in frontend/ with the workflow's local Java server, synthetic mail and TLS setup.
+- Backup restore: the workflow uses PostgreSQL 18 `pg_dump -Fc`, restores to a second disposable database with `pg_restore --exit-on-error`, executes `scripts/phase_k_restore_verify.sql` against both, and requires identical selected-table and Flyway checksums.
+- Release checks (repository root): `python3 scripts/phase_k_source_checks.py`, runtime Maven dependency JSON generation, then `python3 scripts/phase_k_dependency_scan.py`.
+
+Windows local equivalents were `.tmp/run-phase-n-checks.ps1 -Tests 'PhaseN3SessionsTest' -Log 'phase-n3-history-validated.log'` and `.tmp/run-phase-n-live.ps1 -Tests 'phase-n3.spec.mjs' -Log 'phase-n3-live-validated.log'`. These ignored helpers own and stop the disposable local database/server. The full local backend run is `.tmp/phase-n3-full-regression.log`. Final remote evidence below is reproducible from the checked-in workflow rather than depending on those local helpers.
+
 ## N1 local checks (2026-10-28)
 - 30 existing Phase I integration and concurrency tests passed before scheduling UI changes.
 - Ten new scheduling integration tests and eight genuine PostgreSQL multi-connection concurrency tests passed together, no failures/skips.
@@ -39,3 +52,19 @@ Synthetic time fixtures demonstrate deadline and retention boundaries; they do n
 
 ## N3 real-stack verification
 Both new N3 browser/API/PostgreSQL journeys passed locally (53.1 seconds): mutual approval changes the deadline by exactly 600 seconds; the authoritative deadline closes messaging; only the member can save/read feedback; voluntary same-listener booking creates no new live request; qualification revocation cancels an appointment and denies check-in/slot discovery. The test-only clock fixture first hit PostgreSQL pending deferred-trigger events when re-enabling its duration guard; it now checks all deferred participant constraints before restoring the guard. No production guard was weakened. The initial service boundary uses explicit UTC. Full frontend lint has zero errors and only the unchanged 11 baseline warnings. Exact committed-head CI is pending below.
+
+## Final validated N3 executable f9200c4
+[Run 40734496345](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40734496345) completed successfully on 2026-10-28 for f9200c4d2b25e0373430f6cbe371ac70b517c3bf. All four jobs passed:
+
+| Gate | Result |
+|---|---|
+| Backend | 457 passed; 0 failures, errors or skipped |
+| Frontend logic | 69 passed; 0 failed, cancelled, skipped or todo |
+| Actual component/browser | 131 passed |
+| Real browser/API/PostgreSQL | 38 passed, including both new N3 journeys and all prior N1/N2 journeys |
+| TypeScript, ESLint | Passed; 0 lint errors, unchanged 11 baseline warnings |
+| Expo export | All platforms exported successfully |
+| Synthetic restore | Selected-table and Flyway checksums identical, including the added N tables |
+| Source/dependency release scans | Passed |
+
+Total executable tests: 695 passed. No CI test failure or skip occurred in this N3 run. The push-triggered duplicate run was cancelled by the existing concurrency policy in favor of this successful PR run. The following documentation-only commit records these results and the A–M report structure; it changes no executable source or tests. PR #18 remains a draft, based on #17; no merge, deployment or real-service activation occurred.
