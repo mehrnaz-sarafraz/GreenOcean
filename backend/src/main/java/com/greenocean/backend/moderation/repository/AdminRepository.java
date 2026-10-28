@@ -47,7 +47,19 @@ public class AdminRepository {
                        resolved_at = CASE WHEN ? IN ('RESOLVED', 'DISMISSED') THEN CURRENT_TIMESTAMP ELSE NULL END
                  WHERE id = ?
                 """, status, actorId, normalize(note), status, reportId);
-        if (updated == 1) audit(actorId, "REPORT_" + action, "REPORT", reportId);
+        if (updated == 1) {
+            if ("REMOVE".equals(action)) {
+                jdbcTemplate.update("UPDATE posts SET status='HIDDEN' WHERE id=(SELECT post_id FROM reports WHERE id=?) AND status <> 'DELETED'",reportId);
+                jdbcTemplate.update("UPDATE comments SET status='HIDDEN' WHERE id=(SELECT comment_id FROM reports WHERE id=?) AND status <> 'DELETED'",reportId);
+            }
+            if ("REMOVE".equals(action)) {
+                jdbcTemplate.update("INSERT INTO social_review_decisions(assessment_id,revision,outcome,reviewer_id,note) SELECT a.id,a.revision,'BLOCK_PROHIBITED',?,? FROM social_assessments a LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id JOIN reports r ON (r.post_id=a.post_id OR r.comment_id=a.comment_id) WHERE r.id=? AND a.revision=COALESCE(p.revision,c.revision)",actorId,normalize(note)==null?"Content removed following report review.":normalize(note),reportId);
+                jdbcTemplate.update("UPDATE social_assessments a SET outcome='BLOCK_PROHIBITED',reason_code='REPORT_REMOVAL',decision_note=?,reviewer_id=?,reviewed_at=CURRENT_TIMESTAMP FROM posts p,reports r WHERE r.id=? AND p.id=r.post_id AND a.post_id=p.id AND a.revision=p.revision",normalize(note),actorId,reportId);
+                jdbcTemplate.update("UPDATE social_assessments a SET outcome='BLOCK_PROHIBITED',reason_code='REPORT_REMOVAL',decision_note=?,reviewer_id=?,reviewed_at=CURRENT_TIMESTAMP FROM comments c,reports r WHERE r.id=? AND c.id=r.comment_id AND a.comment_id=c.id AND a.revision=c.revision",normalize(note),actorId,reportId);
+            }
+            // Dismissal must never publish a held or unreviewed revision.
+            audit(actorId, "REPORT_" + action, "REPORT", reportId);
+        }
         return updated == 1;
     }
 
@@ -170,6 +182,8 @@ public class AdminRepository {
             case "OVERTURN_APPEAL" -> "OVERTURNED";
             default -> throw new IllegalArgumentException("Unsupported appeal action");
         };
+        if (Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM moderation_appeals WHERE id=? AND assessment_id IS NOT NULL)",Boolean.class,id)))
+            throw new com.greenocean.backend.common.exception.ConflictException("Review the linked content revision through social moderation");
         int updated = jdbcTemplate.update("""
                 UPDATE moderation_appeals SET status = ?, decision_note = ?, decided_by = ?,
                        decided_at = CASE WHEN ? IN ('UPHELD','OVERTURNED') THEN CURRENT_TIMESTAMP ELSE NULL END

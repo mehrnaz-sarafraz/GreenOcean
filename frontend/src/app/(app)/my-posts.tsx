@@ -1,4 +1,4 @@
-import {useFocusEffect} from 'expo-router';
+import {router,useFocusEffect} from 'expo-router';
 import {useCallback,useState} from 'react';
 import {Text,TextInput,View} from 'react-native';
 import {Screen} from '@/components/screen';
@@ -20,6 +20,7 @@ export default function MyPosts(){
  async function remove(id:string){setBusy(true);try{await apiRequest(`/api/v1/posts/${id}`,{method:'DELETE'});setItems(current=>current.filter(p=>p.id!==id));setEdit(null);}catch(e){setError(e instanceof Error?e.message:'Unable to delete');}finally{setBusy(false);}}
  const status=(p:PostItem)=>p.status==='PUBLISHED'?tr('Published','منتشرشده'):p.safetyOutcome==='REQUEST_REVISION'?tr('Changes requested','نیازمند اصلاح'):p.safetyOutcome==='BLOCK_PROHIBITED'?tr('Not published','منتشرنشده'):p.status==='HIDDEN'?tr('Hidden','پنهان‌شده'):tr('Awaiting review; no response time promised','در انتظار بررسی؛ زمان پاسخ تضمین نمی‌شود');
  return <Screen scroll><View style={{gap:16,maxWidth:720,width:'100%',alignSelf:'center'}}><Text accessibilityRole="header">{tr('My posts and decisions','پست‌های من و تصمیم‌ها')}</Text>
+ <AppButton label={tr('My content decisions and appeals','تصمیم‌ها و اعتراض‌های من')} variant="secondary" onPress={()=>router.push('/content-decisions')}/>
  {!!error&&<Text accessibilityRole="alert">{error}</Text>}
  {items.length===0&&<Text>{tr('No posts to manage.','پستی برای مدیریت وجود ندارد.')}</Text>}
  {items.map(p=><View key={p.id} style={{gap:10,padding:16,borderWidth:1,borderColor:'#b9d2d0'}}><Text accessibilityRole="alert">{status(p)}</Text><Text>{p.anonymous?tr('Anonymous','ناشناس'):tr('Social identity','هویت اجتماعی')} · {p.visibility}</Text><Text>{p.body}</Text>

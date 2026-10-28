@@ -85,7 +85,7 @@ function Verification({ data, reload }: { data: AdminDashboard; reload: () => Pr
 }
 
 function Content({ data }: { data: AdminDashboard }) {
-  return <><PageHeading title="Content operations" subtitle="Live indicators derived from reports and professional review queues." /><View style={styles.kpis}><Kpi icon="flag" label="Open reports" value={String(data.stats.openReports)} delta="All content types" /><Kpi icon="emergency" label="Critical" value={String(data.stats.criticalReports)} delta="Priority queue" /><Kpi icon="workspace_premium" label="Verification pending" value={String(data.stats.pendingVerifications)} delta="Credential review" /><Kpi icon="task_alt" label="Resolved this week" value={String(data.stats.resolvedWeek)} delta="Completed actions" /></View></>;
+  return <><Pressable accessibilityRole="button" onPress={() => router.push('/community-review')}><Text>Community review / بررسی ایمنی انجمن</Text></Pressable><PageHeading title="Content operations" subtitle="Live indicators derived from reports and professional review queues." /><View style={styles.kpis}><Kpi icon="flag" label="Open reports" value={String(data.stats.openReports)} delta="All content types" /><Kpi icon="emergency" label="Critical" value={String(data.stats.criticalReports)} delta="Priority queue" /><Kpi icon="workspace_premium" label="Verification pending" value={String(data.stats.pendingVerifications)} delta="Credential review" /><Kpi icon="task_alt" label="Resolved this week" value={String(data.stats.resolvedWeek)} delta="Completed actions" /></View></>;
 }
 
 function Audit({ data }: { data: AdminDashboard }) {

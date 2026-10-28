@@ -21,6 +21,7 @@ public class ReportService {
 
     @Transactional
     public ReportResponse create(UUID userId, CreateReportRequest request) {
+        repository.limitSubmissions(userId);
         if (!repository.targetExists(request.targetType(), request.targetId(), userId))
             throw new NotFoundException("Report target was not found or is not available");
         repository.lockOpenReport(userId, request.targetType(), request.targetId());
@@ -44,6 +45,7 @@ public class ReportService {
 
     @Transactional
     public AppealResponse appeal(UUID userId, CreateAppealRequest request) {
+        repository.limitSubmissions(userId);
         if (request.reportId() != null && !repository.reportBelongsTo(request.reportId(), userId))
             throw new NotFoundException("Report was not found");
         UUID id = uuidGenerator.nextUuid(); repository.createAppeal(id, userId, request);

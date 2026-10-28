@@ -57,6 +57,15 @@ public class PostReadRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean followingAnyone(UUID viewer) {
+        return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM follows f JOIN users u ON u.id=f.following_id
+              WHERE f.follower_id=? AND u.status='ACTIVE' AND u.deleted_at IS NULL
+                AND NOT EXISTS(SELECT 1 FROM blocks b WHERE
+                  (b.blocker_id=f.follower_id AND b.blocked_id=f.following_id)
+                  OR (b.blocker_id=f.following_id AND b.blocked_id=f.follower_id)))
+            """,Boolean.class,viewer));
+    }
     public List<PostResponse> findDiscovery(UUID viewer,int size,String mode,UUID category,java.time.Instant before,UUID beforeId) {
         var args=new java.util.ArrayList<Object>();args.add(viewer);args.add(viewer);args.add(viewer);
         String sql=POST_SELECT+" WHERE p.status='PUBLISHED' "+ACCESS_PREDICATE+DISCOVERY_FILTER;

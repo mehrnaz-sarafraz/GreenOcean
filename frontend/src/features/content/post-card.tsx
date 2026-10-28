@@ -17,7 +17,7 @@ function relativeTime(value: string) {
   const hours = Math.floor(minutes / 60); return `${hours}h`;
 }
 export function PostCard({ post: initialPost, elevated = true }: { post: PostItem; elevated?: boolean }) {
-  const { t } = useLanguage();
+  const { t,language } = useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
   const [override,setOverride]=useState<{source:PostItem;value:PostItem}|null>(null);
   const post=override?.source===initialPost?override.value:initialPost;
   const setPost=(update:(value:PostItem)=>PostItem)=>setOverride(current=>({source:initialPost,value:update(current?.source===initialPost?current.value:initialPost)}));
@@ -35,30 +35,30 @@ export function PostCard({ post: initialPost, elevated = true }: { post: PostIte
   const openAuthor = () => post.author
     ? router.push({ pathname: '/user/[username]' as never, params: { username: post.author.username } } as never)
     : openPost();
-  return <View style={[styles.card, elevated && shadow.soft]}>
-    <Pressable accessibilityRole="button" accessibilityLabel={`Open ${authorName}'s profile`} onPress={openAuthor} style={styles.authorRow}>
+  return <View style={[styles.card, elevated && shadow.soft,{direction:language==='fa'?'rtl':'ltr'}]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={post.author?tr(`Open ${authorName}'s profile`,`نمایش پروفایل ${authorName}`):tr('Read anonymous post','خواندن پست ناشناس')} onPress={openAuthor} style={styles.authorRow}>
       <Avatar name={authorName} uri={post.author?.avatarUrl} />
       <View style={styles.authorText}><View style={styles.nameLine}><Text style={styles.name}>{authorName}</Text>{post.anonymous && <View style={styles.anonymousBadge}><AppIcon name="visibility_off" size={13} color={colors.muted} /><Text style={styles.badgeText}>{t('anonymous')}</Text></View>}</View>
-        <Text style={styles.meta}>{post.author ? `@${post.author.username} · ` : ''}{relativeTime(post.createdAt)} · {post.visibility==='PUBLIC'?'Eligible members':post.visibility==='COMMUNITY'?'Community members':'Approved followers'}</Text></View>
+        <Text style={styles.meta}>{post.author ? `@${post.author.username} · ` : ''}{relativeTime(post.createdAt).replace('m',tr('m',' دقیقه')).replace('h',tr('h',' ساعت'))} · {post.visibility==='PUBLIC'?tr('Eligible members','اعضای مجاز'):post.visibility==='COMMUNITY'?tr('Community members','اعضای گروه'):tr('Approved followers','دنبال‌کنندگان تأییدشده')}</Text></View>
       <AppIcon name="more_horiz" color={colors.muted} />
     </Pressable>
-    <View style={styles.chips}>{category && <><View style={styles.groupChip}><Text style={styles.groupText}>{categoryGroupNames[category.group]}</Text></View><View style={[styles.categoryChip, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={15} color={category.color} /><Text style={[styles.categoryText, { color: category.color }]}>{category.name}</Text></View></>}<View style={styles.typeChip}><Text style={styles.typeText}>{postType === 'QUESTION' ? t('question') : postType === 'REFLECTION' ? t('reflection') : t('experience')}</Text></View>{post.mood && <View style={[styles.chip, styles.moodChip]}><Text style={styles.moodText}>● {post.mood}</Text></View>}</View>
+    <View style={styles.chips}>{category && <><View style={styles.groupChip}><Text style={styles.groupText}>{language==='fa'?{EMOTION:'احساس',CONDITION:'وضعیت',LIFE_EXPERIENCE:'تجربهٔ زندگی'}[category.group]:categoryGroupNames[category.group]}</Text></View><View style={[styles.categoryChip, { backgroundColor: category.softColor }]}><AppIcon name={category.icon} size={15} color={category.color} /><Text style={[styles.categoryText, { color: category.color }]}>{category.name}</Text></View></>}<View style={styles.typeChip}><Text style={styles.typeText}>{postType === 'QUESTION' ? t('question') : postType === 'REFLECTION' ? t('reflection') : t('experience')}</Text></View>{post.mood && <View style={[styles.chip, styles.moodChip]}><Text style={styles.moodText}>● {post.mood}</Text></View>}</View>
     {!!post.contentWarning && !sensitiveRevealed && <View style={styles.warningGate}>
       <View style={styles.warningIcon}><AppIcon name="visibility_off" size={22} color={colors.coral} /></View>
-      <View style={styles.warningCopy}><Text style={styles.warningTitle}>Sensitive story hidden</Text><Text style={styles.warningText}>{post.contentWarning}. Your safety settings keep this content covered until you choose to see it.</Text></View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Show sensitive story" onPress={event => { event.stopPropagation(); setSensitiveRevealed(true); }} style={styles.revealButton}><Text style={styles.revealButtonText}>Show story</Text></Pressable>
+      <View style={styles.warningCopy}><Text style={styles.warningTitle}>{tr("Sensitive story hidden","پست حساس پنهان است")}</Text><Text style={styles.warningText}>{post.contentWarning}. {tr('Your safety settings keep this content covered until you choose to see it.','این محتوا طبق تنظیمات ایمنی تا انتخاب شما پنهان می‌ماند.')}</Text></View>
+      <Pressable accessibilityRole="button" accessibilityLabel={tr("Show sensitive story","نمایش پست حساس")} onPress={event => { event.stopPropagation(); setSensitiveRevealed(true); }} style={styles.revealButton}><Text style={styles.revealButtonText}>{tr("Show story","نمایش پست")}</Text></Pressable>
     </View>}
-    {!!post.contentWarning && sensitiveRevealed && <View style={styles.warning}><AppIcon name="shield" size={18} color={colors.coral} /><Text style={[styles.warningText, styles.warningGrow]}>{post.contentWarning}</Text><Pressable accessibilityRole="button" accessibilityLabel="Hide sensitive story" onPress={event => { event.stopPropagation(); setSensitiveRevealed(false); }}><Text style={styles.warningAction}>Hide</Text></Pressable></View>}
-    {sensitiveRevealed && <Pressable accessibilityRole="button" accessibilityLabel={`Read full post by ${authorName}`} onPress={openPost} style={styles.storyContent}><Text style={styles.body}>{post.body}</Text>
+    {!!post.contentWarning && sensitiveRevealed && <View style={styles.warning}><AppIcon name="shield" size={18} color={colors.coral} /><Text style={[styles.warningText, styles.warningGrow]}>{post.contentWarning}</Text><Pressable accessibilityRole="button" accessibilityLabel={tr("Hide sensitive story","پنهان‌کردن پست حساس")} onPress={event => { event.stopPropagation(); setSensitiveRevealed(false); }}><Text style={styles.warningAction}>{tr("Hide","پنهان‌کردن")}</Text></Pressable></View>}
+    {sensitiveRevealed && <Pressable accessibilityRole="button" accessibilityLabel={tr(`Read full post by ${authorName}`,`خواندن پست کامل ${authorName}`)} onPress={openPost} style={styles.storyContent}><Text style={[styles.body,{textAlign:language==='fa'?'right':'left',writingDirection:language==='fa'?'rtl':'ltr'}]}>{post.body}</Text>
     {!!post.professionalReply && <View style={styles.professionalBox}>
       <View style={styles.profHeader}><Avatar name={post.professionalReply.professional.displayName} size={34} verified /><View style={{ flex: 1 }}><Text style={styles.profLabel}>{t('professionalResponse')}</Text><Text style={styles.profName}>{post.professionalReply.professional.displayName} · {post.professionalReply.professional.title}</Text></View></View>
       <Text style={styles.profBody} numberOfLines={3}>{post.professionalReply.body}</Text>
     </View>}</Pressable>}
     <View style={styles.actions}>
-      <Pressable accessibilityRole="button" accessibilityLabel={post.liked ? 'Unlike post' : 'Like post'} accessibilityState={{ selected: post.liked }} onPress={e => { e.stopPropagation(); void toggleLike(); }} style={styles.action}><AppIcon name="favorite" filled={post.liked} size={22} color={post.liked ? colors.coral : colors.muted} /><Text style={[styles.actionText, post.liked && { color: colors.coral }]}>{post.likeCount}</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={post.liked ? tr('Unlike post','لغو پسندیدن پست') : tr('Like post','پسندیدن پست')} accessibilityState={{ selected: post.liked }} onPress={e => { e.stopPropagation(); void toggleLike(); }} style={styles.action}><AppIcon name="favorite" filled={post.liked} size={22} color={post.liked ? colors.coral : colors.muted} /><Text style={[styles.actionText, post.liked && { color: colors.coral }]}>{post.likeCount}</Text></Pressable>
       <View style={styles.action}><AppIcon name="chat_bubble" size={21} color={colors.muted} /><Text style={styles.actionText}>{post.commentCount}</Text></View>
       <View style={styles.action}><AppIcon name="ios_share" size={22} color={colors.muted} /></View>
-      <Pressable accessibilityRole="button" accessibilityLabel={post.bookmarked ? 'Remove bookmark' : 'Bookmark post'} accessibilityState={{ selected: post.bookmarked }} onPress={e => { e.stopPropagation(); void toggleBookmark(); }} style={[styles.action, styles.save]}><AppIcon name="bookmark" filled={post.bookmarked} size={22} color={post.bookmarked ? colors.ocean600 : colors.muted} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={post.bookmarked ? tr('Remove bookmark','حذف نشانک') : tr('Bookmark post','ذخیرهٔ پست')} accessibilityState={{ selected: post.bookmarked }} onPress={e => { e.stopPropagation(); void toggleBookmark(); }} style={[styles.action, styles.save]}><AppIcon name="bookmark" filled={post.bookmarked} size={22} color={post.bookmarked ? colors.ocean600 : colors.muted} /></Pressable>
     </View>
   </View>;
 }

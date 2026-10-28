@@ -57,7 +57,7 @@ public class AccountService {
                 wellbeing.snapshot(userId), reports.mine(userId), social.following(userId), social.followers(userId),
                 social.blocked(userId), search.history(userId), repository.activity(userId),governance.archive(userId),
                 db.queryForList("SELECT id,payload::text,revision,updated_at,expires_at FROM social_drafts WHERE owner_id=? AND expires_at>CURRENT_TIMESTAMP ORDER BY updated_at",userId),
-                db.queryForList("SELECT a.id,a.post_id,a.comment_id,a.revision,a.policy_version,a.outcome,a.reason_code,a.assessed_at FROM social_assessments a LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id WHERE p.author_id=? OR c.author_id=? ORDER BY a.assessed_at",userId,userId),
+                db.queryForList("SELECT a.id,a.post_id,a.comment_id,a.revision,a.policy_version,a.outcome,a.reason_code,a.assessed_at,a.decision_note,a.reviewed_at,a.initial_outcome,a.initial_reason_code,d.outcome AS review_outcome,d.note AS review_note,d.created_at AS reviewed_history_at,ap.id AS appeal_id,ap.reason AS appeal_reason,ap.status AS appeal_status,ap.decision_note AS appeal_note FROM social_assessments a LEFT JOIN social_review_decisions d ON d.assessment_id=a.id LEFT JOIN moderation_appeals ap ON ap.assessment_id=a.id LEFT JOIN posts p ON p.id=a.post_id LEFT JOIN comments c ON c.id=a.comment_id WHERE p.author_id=? OR c.author_id=? ORDER BY a.assessed_at",userId,userId),
                 db.queryForList("SELECT id,request_status,requester_id,request_target_id,updated_at FROM conversations WHERE service_kind='COMMUNITY' AND (requester_id=? OR request_target_id=?) ORDER BY updated_at,id",userId,userId));
     }
 
