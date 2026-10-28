@@ -57,6 +57,10 @@ public class UserPreferencesRepository {
              !Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM catalog_options WHERE option_group='SUPPORT_STYLE' AND option_key=? AND is_active)", Boolean.class, request.supportStyle()))))
             throw new com.greenocean.backend.common.exception.PreferenceValidationException("Unknown support style");
         String onboardingStatus = request.onboardingStatus() != null ? request.onboardingStatus() : current.onboardingStatus();
+        // A delayed initial screen-mount intent must not undo an explicit dismissal.
+        if ("IN_PROGRESS".equals(request.onboardingStatus()) && request.onboardingStep()==null &&
+                java.util.Set.of("SKIPPED","COMPLETED","LEGACY_UNKNOWN").contains(current.onboardingStatus()))
+            onboardingStatus=current.onboardingStatus();
         int step = request.onboardingStep() == null ? current.onboardingStep() : request.onboardingStep();
         if (request.onboardingStatus() == null && request.onboardingComplete() != null && request.onboardingComplete())
             onboardingStatus = "LEGACY_UNKNOWN";

@@ -136,6 +136,8 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM professional_profiles WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM listener_applications WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM listener_profiles WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_daily_sets WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_journal_drafts WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM wellbeing_check_ins WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM wellbeing_journal_entries WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM wellbeing_goals WHERE user_id = ?", userId);

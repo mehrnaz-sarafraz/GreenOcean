@@ -1,3 +1,4 @@
+import {PrivateSpace} from '@/features/wellbeing/private-space';
 import {ConnectionsPanel} from '@/features/content/connections-panel';
 import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -36,6 +37,7 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
   'community-rules': { title: 'Community rules', subtitle: 'Clear expectations help people share more safely.' },
   'community-members': { title: 'Members & moderators', subtitle: 'See who helps care for this community.' },
   'community-events': { title: 'Community events', subtitle: 'Join structured, moderated conversations and workshops.' },
+  'daily-reflection': {title:'Daily reflection / تأمل روزانه',subtitle:'Three optional reviewed questions. Private answers, no points.'},
   wellbeing: { title: 'Wellbeing hub', subtitle: 'Small tools for reflection, routine, and progress—not diagnosis.', eyebrow: 'YOUR PRIVATE SPACE' },
   'check-ins': { title: 'Mood check-ins', subtitle: 'Notice patterns without judging the day.' },
   goals: { title: 'Gentle goals', subtitle: 'Turn care into small, realistic steps.' },
@@ -76,13 +78,14 @@ function renderScreen(screen: string, params: Params) {
     case 'community-rules': return <CommunityRules slug={String(params.slug || 'better-sleep')} />;
     case 'community-members': return <CommunityMembers slug={String(params.slug || 'better-sleep')} />;
     case 'community-events': return <CommunityEvents slug={String(params.slug || 'better-sleep')} />;
+    case 'daily-reflection': return <PrivateSpace section="daily-reflection" />;
     case 'wellbeing': return <WellbeingHub />;
-    case 'check-ins': return <CheckIns />;
-    case 'goals': return <Goals />;
-    case 'journal': return <Journal />;
+    case 'check-ins': return <PrivateSpace section="check-ins" />;
+    case 'goals': return <PrivateSpace section="goals" />;
+    case 'journal': return <PrivateSpace section="journal" />;
     case 'assessments': return <Assessment />;
     case 'growth-paths': return <GrowthPaths />;
-    case 'companion': return <Companion />;
+    case 'companion': return <PrivateSpace section="companion" />;
     case 'search-history': return <SearchHistory />;
     case 'session-management': return <Sessions />;
     case 'data-export': return <DataExport />;
@@ -291,28 +294,7 @@ function useCommunityDetails(slug: string) {
 }
 
 function WellbeingHub() {
-  return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
-}
-
-function CheckIns() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'POST_MOOD'); const [mood, setMood] = useState(''); const [note, setNote] = useState(''); const [done, setDone] = useState(false);
-  const selectedMood = mood || moods[0]?.label || '';
-  const add = async () => { if (!selectedMood) return; await apiRequest('/api/v1/wellbeing/check-ins', { method: 'POST', body: JSON.stringify({ mood: selectedMood, note }) }); setNote(''); setDone(true); await refresh(); };
-  return <><ProductCard tone="soft"><Text style={styles.label}>How are you feeling?</Text><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><Field label="A note for yourself (optional)" value={note} onChangeText={setNote} multiline /><AppButton label="Save check-in" disabled={!selectedMood} onPress={() => void add()} /></ProductCard>{done && <Success text="Check-in saved privately to your account." />}<ProductSection title="Recent check-ins">{snapshot.checkIns.length ? snapshot.checkIns.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.cardTitle}>{item.mood}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>{!!item.note && <Text style={styles.body}>{item.note}</Text>}</ProductCard>) : <EmptyState icon="mood" title="Your first check-in starts here" body="There is no good or bad score—just a moment worth noticing." />}</ProductSection></>;
-}
-
-function Goals() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const cadences = optionsIn(options, 'GOAL_CADENCE'); const [title, setTitle] = useState(''); const [cadence, setCadence] = useState('');
-  const selectedCadence = cadence || cadences[0]?.label || '';
-  const add = async () => { if (!title.trim() || !selectedCadence) return; await apiRequest('/api/v1/wellbeing/goals', { method: 'POST', body: JSON.stringify({ title, cadence: selectedCadence }) }); setTitle(''); await refresh(); };
-  const progress = async (goalId: string, current: number) => { await apiRequest(`/api/v1/wellbeing/goals/${goalId}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, current + 15), completed: current >= 85 }) }); await refresh(); };
-  return <><ProductCard><Field label="A small, specific step" value={title} onChangeText={setTitle} placeholder="Example: Step outside for five minutes" /><View style={styles.wrap}>{cadences.map(item => <Pill key={item.key} label={item.label} active={selectedCadence === item.label} onPress={() => setCadence(item.label)} />)}</View><AppButton label="Add goal" disabled={!selectedCadence} onPress={() => void add()} /></ProductCard>{snapshot.goals.map(goal => <ProductCard key={goal.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{goal.title}</Text><Text style={styles.body}>{goal.cadence} · {goal.progress}%</Text></View><Pill label={goal.completed ? 'Completed' : '+ Progress'} active={goal.completed} onPress={() => !goal.completed && void progress(goal.id, goal.progress)} /></View></ProductCard>)}</>;
-}
-
-function Journal() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'JOURNAL_MOOD'); const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [mood, setMood] = useState(''); const selectedMood = mood || moods[0]?.label || '';
-  const add = async () => { if (!body.trim()) return; await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: title.trim() || 'Untitled reflection', body, mood: selectedMood || null }) }); setTitle(''); setBody(''); await refresh(); };
-  return <><Notice icon="lock" title="Private—not a post" body="Journal entries are private account data. Use Create only if you decide to share something publicly." /><ProductCard><Field label="Title" value={title} onChangeText={setTitle} /><Field label="What feels important to name?" value={body} onChangeText={setBody} multiline /><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><AppButton label="Save privately" onPress={() => void add()} /></ProductCard>{snapshot.journalEntries.map(entry => <ProductCard key={entry.id}><View style={styles.between}><Text style={styles.cardTitle}>{entry.title}</Text><Pill label={entry.mood || 'Journal'} /></View><Text style={styles.body}>{entry.body}</Text><Text style={styles.meta}>{new Date(entry.createdAt).toLocaleString()}</Text></ProductCard>)}</>;
+  return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="book" title="Daily reflection / تأمل روزانه" subtitle="Three optional questions; skip freely" onPress={() => nav('daily-reflection')} /><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
 }
 
 const emptyWellbeing: WellbeingSnapshot = { checkIns: [], journalEntries: [], goals: [], growthPaths: [], reflections: [] };
@@ -327,9 +309,9 @@ function useWellbeing() {
 }
 
 function Assessment() {
-  const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0); const score = orderedAnswers.reduce((sum, value) => sum + value, 0); const maxScore = Math.max(0, questions.length * Math.max(0, responses.length - 1));
+  const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0);
   const finish = async () => { setSaving(true); setSaveError(''); try { await apiRequest('/api/v1/wellbeing/reflections', { method: 'POST', body: JSON.stringify({ answers: orderedAnswers }) }); setDone(true); } catch (caught) { setSaveError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } finally { setSaving(false); } };
-  if (done) return <><Notice title="Your reflection summary" body={score >= maxScore * .75 ? 'Several areas feel supported right now. Keep the routines and relationships that help.' : score >= maxScore * .4 ? 'Some areas may need more support. A small goal, peer conversation, or professional directory may help.' : 'You reported strain across several areas. Consider reaching out to someone you trust or a verified professional. If you may be in danger, use urgent help now.'} tone={score < maxScore * .4 ? 'warning' : 'ocean'} /><ProductCard><Text style={styles.bigScore}>{score}/{maxScore}</Text><Text style={styles.body}>This is a GreenOcean reflection score, not a validated clinical scale, diagnosis, or risk assessment.</Text></ProductCard><ActionRow icon="support_agent" title="Choose support now" onPress={() => router.push('/support')} /><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
+  if (done) return <><Notice title="Private reflection saved" body="These are your own observations. No diagnostic result, risk estimate or treatment recommendation is inferred from them." /><Text>This optional tool is not a validated clinical measurement. Historical responses remain private and unchanged.</Text><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
   return <><Notice title="Important boundary" body="Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition." />{questions.map((question, index) => <ProductCard key={question.key}><Text style={styles.cardTitle}>{index + 1}. {question.label}</Text><View style={styles.wrap}>{responses.map(response => <Pill key={response.key} label={response.label} active={(answers[question.key] ?? 0) === response.sortOrder} onPress={() => setAnswers(current => ({ ...current, [question.key]: response.sortOrder }))} />)}</View></ProductCard>)}{!!saveError && <ErrorText text={saveError} />}<AppButton label="Save and see reflection" disabled={!questions.length || !responses.length} loading={saving} onPress={() => void finish()} /></>;
 }
 
@@ -340,13 +322,6 @@ function GrowthPaths() {
     await refresh();
   };
   return <>{snapshot.growthPaths.map(path => <ProductCard key={path.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{path.title}</Text><Text style={styles.body}>{path.summary}</Text></View><Pill label={path.completed ? 'Completed' : path.progress ? `${path.progress}% · Continue` : 'Start'} active={path.completed} onPress={() => !path.completed && void advance(path.id, path.progress)} /></View><Text style={styles.meta}>{path.lessonCount} lessons · {path.durationMinutes} minutes · by {path.authorName}</Text><Text style={styles.meta}>{path.evidenceNote} · reviewed {new Date(path.reviewedAt).toLocaleDateString()}</Text><Text style={styles.meta}>Sources: {path.references.join(' · ')}</Text></ProductCard>)}{!snapshot.growthPaths.length && <EmptyState icon="route" title="No growth paths available" body="Reviewed learning paths will appear here when published." />}<Notice title="Educational scope" body="Growth paths teach reflection and coping skills. They do not diagnose conditions or replace individualized professional care." /></>;
-}
-
-function Companion() {
-  const { options } = usePlatformData(); const prompts = optionsIn(options, 'REFLECTION_PROMPT'); const [index, setIndex] = useState(0); const [answer, setAnswer] = useState(''); const [notes, setNotes] = useState<string[]>([]); const [saved, setSaved] = useState(false); const [error, setError] = useState('');
-  const advance = async () => { const nextNotes = [...notes, answer.trim()]; if (index < prompts.length - 1) { setNotes(nextNotes); setAnswer(''); setIndex(index + 1); return; } setError(''); try { const body = prompts.map((prompt, promptIndex) => `${prompt.label}\n${nextNotes[promptIndex] || 'No response'}`).join('\n\n'); await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: 'Guided reflection', body, mood: 'Reflective' }) }); setNotes([]); setAnswer(''); setIndex(0); setSaved(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } };
-  if (!prompts.length) return <EmptyState icon="auto_awesome" title="No reflection prompts available" body="Published reflection prompts will appear here." />;
-  return <><Notice title="Clear boundary" body="This companion follows fixed reflection prompts. It does not understand emergencies, provide therapy, or make clinical recommendations." /><ProductCard tone="soft"><Text style={styles.eyebrow}>PROMPT {index + 1} OF {prompts.length}</Text><Text style={styles.prompt}>{prompts[index].label}</Text><Field label="Your private reflection" value={answer} onChangeText={setAnswer} multiline /><AppButton label={index === prompts.length - 1 ? 'Save to private journal' : 'Save and continue'} disabled={!answer.trim()} onPress={() => void advance()} /></ProductCard>{saved && <Success text="Your guided reflection was saved in the private journal." />}{!!error && <ErrorText text={error} />}<ActionRow icon="emergency" title="I need urgent help" danger onPress={() => nav('urgent-help')} /></>;
 }
 
 function SearchHistory() {
