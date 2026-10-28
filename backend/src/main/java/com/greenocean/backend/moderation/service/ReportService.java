@@ -37,6 +37,7 @@ public class ReportService {
                 ? new String[]{"Safety triage required"} : new String[0];
         UUID id = uuidGenerator.nextUuid();
         repository.create(id, userId, request, severity, signals);
+        repository.bindGroupContext(id);
         return repository.mine(userId).stream().filter(item -> item.id().equals(id)).findFirst().orElseThrow();
     }
 

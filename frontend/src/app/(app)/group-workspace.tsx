@@ -1,3 +1,4 @@
+import {GroupAppeals} from '@/features/community/group-safety';
 import {GroupInbox} from '@/features/community/group-inbox';
 import {useState} from 'react';
 import {router} from 'expo-router';
@@ -15,7 +16,7 @@ export default function GroupWorkspace(){
  async function save(){if(busy)return;setBusy(true);setError('');try{await apiRequest(edit?`/api/v1/community-proposals/${edit.id}`:'/api/v1/community-proposals',{method:edit?'PUT':'POST',body:JSON.stringify({name,description,purpose,privacyType:privacy,rules:rules.split('\n').filter(s=>s.trim()),revision:edit?.revision??0})});setEdit(null);setName('');setDescription('');setPurpose('');setRules('');await refresh();}catch(e){setError(e instanceof Error?e.message:'Unable to save');}finally{setBusy(false);}}
  async function move(p:Proposal,action:string){if(busy)return;setBusy(true);try{await apiRequest(`/api/v1/community-proposals/${p.id}/${action}`,{method:'POST',body:JSON.stringify({revision:p.revision})});await refresh();}catch(e){setError(e instanceof Error?e.message:'Unable to save');}finally{setBusy(false);}}
  return <Screen scroll><View style={{gap:16,direction:language==='fa'?'rtl':'ltr',maxWidth:720,width:'100%',alignSelf:'center'}}>
- <GroupInbox/><Text accessibilityRole="header">{tr('My groups and proposals','گروه‌ها و پیشنهادهای من')}</Text><Text>{tr('A proposal is private until independently approved. Peer support is not treatment or an emergency service. No review time is promised.','پیشنهاد تا تأیید مستقل خصوصی است. حمایت همتا درمان یا خدمات اضطراری نیست. زمان بررسی تضمین نمی‌شود.')}</Text>
+ <GroupInbox/><GroupAppeals/><Text accessibilityRole="header">{tr('My groups and proposals','گروه‌ها و پیشنهادهای من')}</Text><Text>{tr('A proposal is private until independently approved. Peer support is not treatment or an emergency service. No review time is promised.','پیشنهاد تا تأیید مستقل خصوصی است. حمایت همتا درمان یا خدمات اضطراری نیست. زمان بررسی تضمین نمی‌شود.')}</Text>
  {!!error&&<Text accessibilityRole="alert">{error}</Text>}<AppButton label={tr('Refresh groups','دریافت دوبارهٔ گروه‌ها')} variant="secondary" onPress={()=>void refresh()}/>
  <TextInput accessibilityLabel={tr('Group name','نام گروه')} maxLength={80} value={name} onChangeText={setName}/><TextInput accessibilityLabel={tr('Group description','توضیح گروه')} maxLength={500} value={description} onChangeText={setDescription} multiline/>
  <TextInput accessibilityLabel={tr('Peer-support purpose','هدف حمایت همتا')} maxLength={1000} value={purpose} onChangeText={setPurpose} multiline/>

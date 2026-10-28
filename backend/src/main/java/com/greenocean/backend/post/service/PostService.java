@@ -117,7 +117,7 @@ public class PostService {
         checkGroup(post.getCommunityId(),userId);
         var assessment=publishing.check(userId,"COMMENT",request.body(),null);
         if (request.parentCommentId() != null
-                && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM comments c WHERE c.id=? AND c.post_id=? AND c.status='PUBLISHED' AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=? AND b.blocked_id=c.author_id) OR (b.blocker_id=c.author_id AND b.blocked_id=?)))",Boolean.class,request.parentCommentId(),postId,userId,userId))) {
+                && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM comments c WHERE c.id=? AND c.post_id=? AND c.status='PUBLISHED' AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN') AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=? AND b.blocked_id=c.author_id) OR (b.blocker_id=c.author_id AND b.blocked_id=?)))",Boolean.class,request.parentCommentId(),postId,userId,userId))) {
             throw new IllegalArgumentException("Parent comment does not belong to this post");
         }
         if(request.parentCommentId()!=null) {
@@ -186,6 +186,9 @@ public class PostService {
     public PageResponse<PostResponse> owned(UUID owner,int page,int size) {return page(postReadRepository.findOwned(owner,page,size),page,size);}
     @Transactional
     public PostResponse edit(UUID id,UUID owner,com.greenocean.backend.post.dto.EditPostRequest request) {
+        var scope=db.queryForList("SELECT community_id FROM posts WHERE id=? AND author_id=?",id,owner);
+        if(scope.isEmpty())throw new NotFoundException("Post was not found");
+        checkGroup((UUID)scope.getFirst().get("community_id"),owner);
         db.queryForList("SELECT id FROM posts WHERE id=? FOR UPDATE",id);
         Post post=postRepository.findById(id).orElseThrow(()->new NotFoundException("Post was not found"));
         if(!post.getAuthorId().equals(owner) || post.getStatus()==ContentStatus.DELETED)throw new NotFoundException("Post was not found");

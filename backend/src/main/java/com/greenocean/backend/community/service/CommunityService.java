@@ -22,12 +22,12 @@ import java.util.UUID;
 public class CommunityService {
     private final CommunityRepository communityRepository;
     private final DatabaseUuidGenerator uuidGenerator;
-    private final GroupPolicy policy;private final GroupMemberships memberships;private final com.greenocean.backend.post.service.ContentClassifier safety;
+    private final GroupActivities activities;private final GroupPolicy policy;private final GroupMemberships memberships;private final com.greenocean.backend.post.service.ContentClassifier safety;
 
-    public CommunityService(CommunityRepository communityRepository, DatabaseUuidGenerator uuidGenerator,GroupPolicy policy,GroupMemberships memberships,com.greenocean.backend.post.service.ContentClassifier safety) {
+    public CommunityService(CommunityRepository communityRepository, DatabaseUuidGenerator uuidGenerator,GroupPolicy policy,GroupMemberships memberships,GroupActivities activities,com.greenocean.backend.post.service.ContentClassifier safety) {
         this.communityRepository = communityRepository;
         this.uuidGenerator = uuidGenerator;
-        this.policy=policy;this.memberships=memberships;this.safety=safety;
+        this.activities=activities;this.policy=policy;this.memberships=memberships;this.safety=safety;
     }
 
     @Transactional
@@ -64,26 +64,13 @@ public class CommunityService {
 
     @Transactional
     public CommunityDetailsResponse joinEvent(UUID communityId, UUID eventId, UUID userId) {
-        getById(communityId, userId);
-        requireMember(communityId, userId);
-        if (!communityRepository.eventBelongsToCommunity(eventId, communityId)) {
-            throw new NotFoundException("Community event was not found");
-        }
-        int inserted = communityRepository.joinEvent(eventId, userId);
-        if (inserted == 0 && !communityRepository.isEventAttendee(eventId, userId)) {
-            throw new ConflictException("This event has reached its capacity");
-        }
+        activities.attendance(communityId,eventId,userId,true);
         return communityRepository.details(communityId, userId);
     }
 
     @Transactional
     public CommunityDetailsResponse leaveEvent(UUID communityId, UUID eventId, UUID userId) {
-        getById(communityId, userId);
-        requireMember(communityId, userId);
-        if (!communityRepository.eventBelongsToCommunity(eventId, communityId)) {
-            throw new NotFoundException("Community event was not found");
-        }
-        communityRepository.leaveEvent(eventId, userId);
+        activities.attendance(communityId,eventId,userId,false);
         return communityRepository.details(communityId, userId);
     }
 
@@ -131,21 +118,15 @@ public class CommunityService {
 
     @Transactional
     public CommunityDetailsResponse createEvent(UUID communityId, UUID userId, CreateCommunityEventRequest request) {
-        requireModerator(communityId, userId);
-        if (!request.endsAt().isAfter(request.startsAt())) throw new IllegalArgumentException("endsAt must be after startsAt");
-        String format = request.format().trim().toUpperCase();
-        if (!List.of("TEXT_CIRCLE", "WORKSHOP", "Q_AND_A").contains(format)) {
-            throw new IllegalArgumentException("Unsupported event format");
-        }
-        communityRepository.createEvent(uuidGenerator.nextUuid(), communityId, userId, request.title().trim(),
-                normalize(request.description()), format, request.startsAt(), request.endsAt(), request.capacity());
+        activities.save(communityId,userId,null,0,request);
         return communityRepository.details(communityId, userId);
     }
 
     @Transactional
     public CommunityDetailsResponse cancelEvent(UUID communityId, UUID eventId, UUID userId) {
-        requireModerator(communityId, userId);
-        if (!communityRepository.cancelEvent(communityId, eventId)) throw new NotFoundException("Active event was not found");
+        policy.lock(communityId);policy.manager(communityId,userId);
+        Long revision=policy.db.queryForList("SELECT revision FROM community_events WHERE community_id=? AND id=?",Long.class,communityId,eventId).stream().findFirst().orElseThrow(()->new NotFoundException("Community was not found"));
+        activities.transition(communityId,eventId,userId,revision,"CANCELLED");
         return communityRepository.details(communityId, userId);
     }
 

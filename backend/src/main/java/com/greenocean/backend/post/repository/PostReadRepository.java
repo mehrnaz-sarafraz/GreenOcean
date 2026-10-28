@@ -32,7 +32,7 @@ public class PostReadRepository {
                    pap.username AS professional_username, pap.display_name AS professional_display_name,
                    pap.avatar_url AS professional_avatar_url, pprof.title AS professional_title,
                    (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
-                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'PUBLISHED') AS comment_count,
+                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'PUBLISHED' AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN')) AS comment_count,
                    EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked,
                    EXISTS(SELECT 1 FROM bookmarks b WHERE b.post_id = p.id AND b.user_id = ?) AS bookmarked
               FROM posts p
@@ -43,6 +43,7 @@ public class PostReadRepository {
               LEFT JOIN professional_profiles pprof ON pprof.user_id = pa.professional_user_id
             """;
 
+    private static final String GLOBAL_GROUP_FILTER=" AND NOT EXISTS(SELECT 1 FROM communities hidden WHERE hidden.id=p.community_id AND hidden.privacy_type='HIDDEN') ";
     private static final String ACCESS_PREDICATE = " AND can_read_social_post(p.id, ?) ";
     private static final String DISCOVERY_FILTER = """
       AND NOT EXISTS (SELECT 1 FROM user_preferences pref WHERE pref.user_id=? AND (
@@ -70,6 +71,7 @@ public class PostReadRepository {
         var args=new java.util.ArrayList<Object>();args.add(viewer);args.add(viewer);args.add(viewer);
         String sql=POST_SELECT+" WHERE p.status='PUBLISHED' "+ACCESS_PREDICATE+DISCOVERY_FILTER;
         args.add(viewer);args.add(viewer);
+        if(!mode.equals("SAVED"))sql+=GLOBAL_GROUP_FILTER;
         if(mode.equals("FOLLOWING")) {sql+=" AND NOT p.is_anonymous AND EXISTS(SELECT 1 FROM follows f WHERE f.follower_id=? AND f.following_id=p.author_id)";args.add(viewer);}
         if(mode.equals("SAVED")) {sql+=" AND EXISTS(SELECT 1 FROM bookmarks b WHERE b.user_id=? AND b.post_id=p.id)";args.add(viewer);}
         if(category!=null){sql+=" AND p.category_id=?";args.add(category);}
@@ -78,7 +80,7 @@ public class PostReadRepository {
         return jdbcTemplate.query(sql,this::mapPost,args.toArray());
     }
     public List<PostResponse> findFeed(UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + ACCESS_PREDICATE + DISCOVERY_FILTER
+        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' " + ACCESS_PREDICATE + DISCOVERY_FILTER + GLOBAL_GROUP_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
                 viewerId, viewerId, viewerId, viewerId, viewerId,
@@ -102,7 +104,7 @@ public class PostReadRepository {
     }
 
     public List<PostResponse> searchPosts(UUID viewerId, String query, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' AND LOWER(p.body) LIKE ? " + ACCESS_PREDICATE + DISCOVERY_FILTER
+        String sql = POST_SELECT + " WHERE p.status = 'PUBLISHED' AND LOWER(p.body) LIKE ? " + ACCESS_PREDICATE + DISCOVERY_FILTER + GLOBAL_GROUP_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
                 viewerId, viewerId, viewerId, "%" + query.toLowerCase() + "%",
@@ -120,7 +122,7 @@ public class PostReadRepository {
     }
 
     public List<PostResponse> findAuthorPosts(UUID authorId, UUID viewerId, int page, int size) {
-        String sql = POST_SELECT + " WHERE p.author_id = ? AND p.status = 'PUBLISHED' AND (NOT p.is_anonymous OR p.author_id = ?) " + ACCESS_PREDICATE + DISCOVERY_FILTER
+        String sql = POST_SELECT + " WHERE p.author_id = ? AND p.community_id IS NULL AND p.status = 'PUBLISHED' AND (NOT p.is_anonymous OR p.author_id = ?) " + ACCESS_PREDICATE + DISCOVERY_FILTER
                 + " ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.query(sql, this::mapPost,
                 viewerId, viewerId, viewerId, authorId, viewerId,
@@ -160,6 +162,7 @@ public class PostReadRepository {
 
     private String commentBlockPredicate() {
         return """
+                   AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN')
                    AND EXISTS(SELECT 1 FROM users cu WHERE cu.id=c.author_id AND cu.status='ACTIVE')
                    AND NOT EXISTS (
                        SELECT 1 FROM blocks b

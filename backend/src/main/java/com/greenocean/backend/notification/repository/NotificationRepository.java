@@ -58,7 +58,7 @@ public class NotificationRepository {
                        p.username, p.display_name, p.avatar_url
                   FROM notifications n
                   LEFT JOIN profiles p ON p.user_id = n.actor_user_id
-                 WHERE n.user_id = ? AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR EXISTS(SELECT 1 FROM comments nc WHERE nc.id=n.comment_id AND nc.status='PUBLISHED' AND nc.deleted_at IS NULL))
+                 WHERE n.user_id = ? AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR can_read_social_comment(n.comment_id,n.user_id))
                    AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id=n.user_id AND b.blocked_id=n.actor_user_id) OR (b.blocker_id=n.actor_user_id AND b.blocked_id=n.user_id))
                  ORDER BY n.created_at DESC, n.id DESC
                  LIMIT ? OFFSET ?
@@ -78,7 +78,7 @@ public class NotificationRepository {
         Long count = jdbcTemplate.queryForObject(
                 """
                 SELECT COUNT(*) FROM notifications n WHERE n.user_id = ? AND n.is_read = FALSE
-                  AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR EXISTS(SELECT 1 FROM comments nc WHERE nc.id=n.comment_id AND nc.status='PUBLISHED' AND nc.deleted_at IS NULL))
+                  AND (n.post_id IS NULL OR can_read_social_post(n.post_id,n.user_id)) AND (n.comment_id IS NULL OR can_read_social_comment(n.comment_id,n.user_id))
                   AND NOT EXISTS (SELECT 1 FROM blocks b WHERE
                     (b.blocker_id=n.user_id AND b.blocked_id=n.actor_user_id) OR
                     (b.blocker_id=n.actor_user_id AND b.blocked_id=n.user_id))

@@ -1,0 +1,13 @@
+# Phase M operations
+
+PRODUCTION_NO_GO / PILOT_BLOCKED. No automatic merge, deployment, public launch or real-user hidden pilot. Read K release-blockers and L operations/audit-follow-up for current inherited gates; older vulnerability inventories are historical, not a claim fresh scans are clean.
+
+M1 intake and activation default off: greenocean.groups.proposals-enabled and greenocean.groups.activation-approved. M3 activities default off: greenocean.groups.activities-enabled / GREENOCEAN_GROUP_ACTIVITIES_ENABLED. L publishing/policy flags remain off unless separately approved. A verified code path does not appoint trained reviewers, approve legal copy or authorize a service region. Synthetic QA explicitly enables flags; never copy test configuration into production.
+
+Before a pilot: approve proposal/invitation/attendance/sanction/evidence purposes and retention; provision independent platform reviewers with genuine enrolled keys and coverage/escalation; qualify local classifier examples and false positives/negatives; verify appropriate regional service permission; test hidden ID/search/count/cache boundaries; rehearse invitations, last-seat capacity, owner transfer, report/appeal and closure. Physical Android/iOS, VoiceOver/TalkBack, signed builds, actual backup replay and production load remain unverified.
+
+Group ACTIVE allows authorized writes. RESTRICTED allows existing members to read but refuses normal contributions/membership/event creation. SUSPENDED/ARCHIVED deny ordinary group access and revoke pending grants, cancel schedules. Owner closure requires explicit reason/confirmation. Current strong-MFA platform review with documented reason is required for suspension/restoration; restoration checks eligible owner continuity, preserves immutable privacy and never revives old invitations or cancelled events. Owner loss is a platform recovery case, not a self-service role escalation.
+
+Migrations V47/V48/V49/V50/V51 are additive; never edit applied checksums. Fresh/populated disposable QA must precede a rollout. Roll forward for corrections and take approved backups. Disable new flags for incident containment; preserve rights/reporting flows as appropriate. Avoid sensitive request bodies, SQL parameter logging, invitation IDs in analytics and hidden-group URL previews. No email/lock-screen payload includes group narratives, names or rosters.
+
+Cross-instance group locks, unique constraints and current-role checks are authoritative. Monitor minimized counts of failures/pending work and expiry backlog only under approved governance; no clinical scoring or fabricated monitoring SLA. The current health endpoint is liveness, not proof of staffed moderation or full readiness.

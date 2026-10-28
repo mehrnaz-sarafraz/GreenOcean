@@ -44,7 +44,7 @@ export default function AppLayout() {
     <Tabs.Screen name="user/[username]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     <Tabs.Screen name="community-review" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     <Tabs.Screen name="content-decisions" options={{ href: null }} />
-    <Tabs.Screen name="group-workspace" options={{href:null}} /><Tabs.Screen name="group-review" options={{href:null}} />
+    <Tabs.Screen name="group-workspace" options={{href:null}} /><Tabs.Screen name="group-review" options={{href:null}} /><Tabs.Screen name="group-safety-review" options={{href:null}} />
     <Tabs.Screen name="my-posts" options={{ href: null }} />
     <Tabs.Screen name="message-requests" options={{ href: null }} />
   </Tabs>;
