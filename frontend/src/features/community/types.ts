@@ -36,6 +36,8 @@ export type CommunityDetails = {
     startsAt: string;
     endsAt: string;
     capacity?: number | null;
+    revision: number;
+    discussionPostId?: string|null;
     attendeeCount: number;
     joined: boolean;
     status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';

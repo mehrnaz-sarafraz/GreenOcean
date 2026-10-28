@@ -198,22 +198,22 @@ public class CommunityRepository {
 
         List<CommunityDetailsResponse.Event> events = jdbcTemplate.query("""
                 SELECT e.id, e.title, e.description, e.format, p.display_name AS host_name,
-                       e.starts_at, e.ends_at, e.capacity, e.status,
+                       e.starts_at, e.ends_at, e.capacity, e.status,e.revision,e.discussion_post_id,
                        COUNT(a.user_id) AS attendee_count,
                        BOOL_OR(a.user_id = ?) AS joined
                   FROM community_events e
                   LEFT JOIN profiles p ON p.user_id = e.host_user_id
                   LEFT JOIN community_event_attendees a ON a.event_id = e.id
-                 WHERE e.community_id = ? AND e.status <> 'CANCELLED'
+                 WHERE e.community_id = ? AND e.status IN('SCHEDULED','COMPLETED','CANCELLED')
                  GROUP BY e.id, p.display_name
-                 ORDER BY e.starts_at
+                 ORDER BY e.starts_at DESC,e.id DESC LIMIT 50
                 """, (resultSet, row) -> new CommunityDetailsResponse.Event(
                 resultSet.getObject("id", UUID.class), resultSet.getString("title"), resultSet.getString("description"),
                 resultSet.getString("format"), resultSet.getString("host_name"),
                 resultSet.getObject("starts_at", OffsetDateTime.class).toInstant(),
                 resultSet.getObject("ends_at", OffsetDateTime.class).toInstant(),
                 resultSet.getObject("capacity", Integer.class), resultSet.getLong("attendee_count"),
-                resultSet.getBoolean("joined"), resultSet.getString("status")
+                resultSet.getBoolean("joined"), resultSet.getString("status"),resultSet.getLong("revision"),resultSet.getObject("discussion_post_id",UUID.class)
         ), viewerId, communityId);
 
         return new CommunityDetailsResponse(rules, members, events);

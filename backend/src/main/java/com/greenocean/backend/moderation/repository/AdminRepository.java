@@ -35,6 +35,7 @@ public class AdminRepository {
     }
 
     public boolean updateReport(UUID reportId, UUID actorId, String action, String note) {
+        if(Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM reports WHERE id=? AND context_group_id IS NOT NULL)",Boolean.class,reportId)))throw new com.greenocean.backend.common.exception.ConflictException("Use independent group safety review");
         String status = switch (action) {
             case "APPROVE" -> "DISMISSED";
             case "REVIEW" -> "IN_REVIEW";
@@ -182,7 +183,7 @@ public class AdminRepository {
             case "OVERTURN_APPEAL" -> "OVERTURNED";
             default -> throw new IllegalArgumentException("Unsupported appeal action");
         };
-        if (Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM moderation_appeals WHERE id=? AND assessment_id IS NOT NULL)",Boolean.class,id)))
+        if (Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM moderation_appeals WHERE id=? AND (assessment_id IS NOT NULL OR group_action_id IS NOT NULL))",Boolean.class,id)))
             throw new com.greenocean.backend.common.exception.ConflictException("Review the linked content revision through social moderation");
         int updated = jdbcTemplate.update("""
                 UPDATE moderation_appeals SET status = ?, decision_note = ?, decided_by = ?,
@@ -344,9 +345,8 @@ public class AdminRepository {
     }
 
     public boolean updateCommunityStatus(UUID id, UUID actorId, String status, String note) {
-        int updated = jdbcTemplate.update("UPDATE communities SET status = ? WHERE id = ?", status, id);
-        if (updated == 1) audit(actorId, "COMMUNITY_" + status + (normalize(note) == null ? "" : "_WITH_NOTE"), "COMMUNITY", id);
-        return updated == 1;
+        throw new com.greenocean.backend.common.exception.ConflictException("Use the purpose-authorized group lifecycle workflow");
+
     }
 
     public boolean updateDocumentScan(UUID id, UUID actorId, String status) {
@@ -425,6 +425,7 @@ public class AdminRepository {
                   LEFT JOIN comments target_comment ON target_comment.id = r.comment_id
                   LEFT JOIN profiles comment_profile ON comment_profile.user_id = target_comment.author_id
                   LEFT JOIN communities community ON community.id = r.community_id
+                 WHERE r.context_group_id IS NULL AND r.event_id IS NULL AND NOT EXISTS(SELECT 1 FROM communities hidden WHERE hidden.privacy_type='HIDDEN' AND (hidden.id=r.community_id OR hidden.id=target_post.community_id OR hidden.id=(SELECT community_id FROM posts WHERE id=target_comment.post_id)))
                  ORDER BY CASE r.severity WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 ELSE 4 END,
                           r.created_at
                 """, (rs, row) -> new AdminDashboardResponse.ReportItem(
@@ -546,6 +547,7 @@ public class AdminRepository {
         return jdbcTemplate.query("""
                 SELECT a.*, p.display_name FROM moderation_appeals a
                   JOIN profiles p ON p.user_id = a.appellant_user_id
+                 WHERE a.group_action_id IS NULL
                  ORDER BY CASE a.status WHEN 'OPEN' THEN 0 WHEN 'REVIEWING' THEN 1 ELSE 2 END, a.created_at
                 """, (rs, row) -> {
             OffsetDateTime decided = rs.getObject("decided_at", OffsetDateTime.class);
@@ -568,6 +570,7 @@ public class AdminRepository {
                   LEFT JOIN community_members m ON m.community_id = c.id
                   LEFT JOIN posts p ON p.community_id = c.id
                   LEFT JOIN reports r ON r.community_id = c.id
+                 WHERE c.privacy_type<>'HIDDEN'
                  GROUP BY c.id ORDER BY open_reports DESC, members DESC
                 """, (rs, row) -> new AdminOperationsResponse.CommunityItem(rs.getObject("id", UUID.class),
                 rs.getString("name"), rs.getString("slug"), rs.getLong("members"), rs.getLong("moderators"),

@@ -32,7 +32,7 @@ public class PostReadRepository {
                    pap.username AS professional_username, pap.display_name AS professional_display_name,
                    pap.avatar_url AS professional_avatar_url, pprof.title AS professional_title,
                    (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
-                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'PUBLISHED') AS comment_count,
+                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'PUBLISHED' AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN')) AS comment_count,
                    EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked,
                    EXISTS(SELECT 1 FROM bookmarks b WHERE b.post_id = p.id AND b.user_id = ?) AS bookmarked
               FROM posts p
@@ -160,6 +160,7 @@ public class PostReadRepository {
 
     private String commentBlockPredicate() {
         return """
+                   AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN')
                    AND EXISTS(SELECT 1 FROM users cu WHERE cu.id=c.author_id AND cu.status='ACTIVE')
                    AND NOT EXISTS (
                        SELECT 1 FROM blocks b

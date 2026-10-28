@@ -29,12 +29,13 @@ public class ReportRepository {
         String sql = switch (type) {
             case "USER" -> "SELECT EXISTS(SELECT 1 FROM users WHERE id = ? AND deleted_at IS NULL)";
             case "POST" -> "SELECT EXISTS(SELECT 1 FROM posts WHERE id = ? AND deleted_at IS NULL AND can_read_social_post(id,?))";
-            case "COMMENT" -> "SELECT EXISTS(SELECT 1 FROM comments WHERE id = ? AND deleted_at IS NULL AND can_read_social_post(post_id,?))";
+            case "COMMENT" -> "SELECT EXISTS(SELECT 1 FROM comments WHERE id = ? AND deleted_at IS NULL AND can_read_social_comment(id,?))";
             case "CONVERSATION" -> "SELECT EXISTS(SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ?)";
-            case "COMMUNITY" -> "SELECT EXISTS(SELECT 1 FROM communities WHERE id = ? AND status = 'ACTIVE')";
+            case "COMMUNITY" -> "SELECT visible_group(?,?)";
+            case "EVENT" -> "SELECT EXISTS(SELECT 1 FROM community_events WHERE id=? AND active_group_member(community_id,?))";
             default -> throw new IllegalArgumentException("Unsupported report target");
         };
-        Boolean exists = java.util.Set.of("CONVERSATION","POST","COMMENT").contains(type)
+        Boolean exists = java.util.Set.of("CONVERSATION","POST","COMMENT","COMMUNITY","EVENT").contains(type)
                 ? jdbcTemplate.queryForObject(sql, Boolean.class, id, userId)
                 : jdbcTemplate.queryForObject(sql, Boolean.class, id);
         return Boolean.TRUE.equals(exists);
@@ -54,13 +55,15 @@ public class ReportRepository {
                 normalize(request.description()), severity, signals);
     }
 
+    public void bindGroupContext(UUID id){jdbcTemplate.update("UPDATE reports r SET context_group_id=COALESCE(r.community_id,(SELECT community_id FROM posts WHERE id=r.post_id),(SELECT p.community_id FROM comments c JOIN posts p ON p.id=c.post_id WHERE c.id=r.comment_id),(SELECT community_id FROM community_events WHERE id=r.event_id)) WHERE r.id=?",id);}
+
     public List<ReportResponse> mine(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT r.*, CASE WHEN target_user_id IS NOT NULL THEN 'USER'
                                  WHEN post_id IS NOT NULL THEN 'POST'
                                  WHEN comment_id IS NOT NULL THEN 'COMMENT'
-                                 WHEN conversation_id IS NOT NULL THEN 'CONVERSATION' ELSE 'COMMUNITY' END AS target_type,
-                       COALESCE(target_user_id, post_id, comment_id, conversation_id, community_id) AS target_id
+                                 WHEN conversation_id IS NOT NULL THEN 'CONVERSATION' WHEN event_id IS NOT NULL THEN 'EVENT' ELSE 'COMMUNITY' END AS target_type,
+                       COALESCE(target_user_id, post_id, comment_id, conversation_id, community_id,event_id) AS target_id
                   FROM reports r WHERE reporter_id = ? ORDER BY created_at DESC
                 """, (rs, row) -> {
             OffsetDateTime resolved = rs.getObject("resolved_at", OffsetDateTime.class);
@@ -103,6 +106,7 @@ public class ReportRepository {
             case "COMMENT" -> "comment_id";
             case "CONVERSATION" -> "conversation_id";
             case "COMMUNITY" -> "community_id";
+            case "EVENT" -> "event_id";
             default -> throw new IllegalArgumentException("Unsupported report target");
         };
     }
