@@ -51,10 +51,6 @@ public class WellbeingService {
     @Transactional
     public WellbeingSnapshotResponse.GrowthPath updateGrowthPath(UUID id, UUID userId,
                                                                   UpdateGrowthPathProgressRequest request) {
-        if (!repository.updateGrowthPath(id, userId, request.progress())) {
-            throw new NotFoundException("Growth path was not found");
-        }
-        return repository.growthPaths(userId).stream().filter(path -> path.id().equals(id)).findFirst()
-                .orElseThrow(() -> new NotFoundException("Growth path was not found"));
+        throw new com.greenocean.backend.common.exception.ConflictException("Learning progress derives from actual reviewed lesson completion; arbitrary percentages are no longer accepted.");
     }
 }

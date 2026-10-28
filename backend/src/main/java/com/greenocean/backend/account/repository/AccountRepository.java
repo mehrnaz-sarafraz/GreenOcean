@@ -134,6 +134,13 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM post_resource_attachments WHERE proposed_by=? OR reviewed_by=? OR post_id IN(SELECT id FROM posts WHERE author_id=?)",userId,userId,userId);
         jdbcTemplate.update("DELETE FROM post_resource_preferences WHERE post_id IN(SELECT id FROM posts WHERE author_id=?)",userId);
         jdbcTemplate.update("DELETE FROM growth_resource_saves WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM learning_lesson_views WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM learning_lesson_completions WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM learning_exercise_completions WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM learning_course_completions WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM wellbeing_prompt_versions p WHERE author_id=? AND NOT EXISTS(SELECT 1 FROM wellbeing_daily_questions q WHERE q.prompt_id=p.id)",userId);
+        jdbcTemplate.update("UPDATE wellbeing_prompt_versions SET status='RETIRED',review_state='RETIRED',author_id=CASE WHEN author_id=? THEN NULL ELSE author_id END,reviewer_id=CASE WHEN reviewer_id=? THEN NULL ELSE reviewer_id END,review_note='Editorial account erased' WHERE author_id=? OR reviewer_id=?",userId,userId,userId,userId);
+        jdbcTemplate.update("UPDATE guided_growth_paths SET author_name='Removed author',is_published=FALSE WHERE resource_id IN(SELECT id FROM growth_resources WHERE author_id=?)",userId);
         jdbcTemplate.update("DELETE FROM growth_resources WHERE author_id=?",userId);
         jdbcTemplate.update("UPDATE growth_resources SET retired=TRUE,featured=FALSE WHERE id IN(SELECT resource_id FROM growth_resource_versions WHERE reviewer_id=?)",userId);
         jdbcTemplate.update("UPDATE growth_resource_versions SET state='RETIRED',reviewer_id=NULL WHERE reviewer_id=?",userId);

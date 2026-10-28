@@ -1,0 +1,112 @@
+{
+  "status": "DRAFT_NOT_REVIEWED",
+  "author": null,
+  "reviewer": null,
+  "publication": "Not seeded or published; actual sources, rights, attribution and independent English/Persian reviews are pending.",
+  "documents": [
+    {
+      "kind": "COURSE",
+      "scope": "GENERAL",
+      "audience": "ADULT",
+      "rights": "Original draft; actual organizational rights and attribution must be reviewed before publication.",
+      "sources": [],
+      "warnings": [],
+      "creator": "",
+      "body": "",
+      "externalUrl": "",
+      "topic": "Manageable planning",
+      "why": "General education about making and adapting a small plan.",
+      "title": "Planning a manageable step",
+      "summary": "Practise choosing and adapting a small action without pressure.",
+      "language": "en",
+      "objectives": "Choose a specific, manageable action; adapt it to available resources; treat missed days neutrally.",
+      "modules": [
+        {
+          "title": "Choice and adaptation",
+          "lessons": [
+            {
+              "title": "Choose a step that fits",
+              "body": "Start with an action you can describe in one sentence. Identify the time, place and resources it needs. Make the first version small enough to try without promising a perfect routine. A plan is an experiment you can change, not a test of your worth. You may decide this action is not useful and choose another.",
+              "objectives": "Describe one optional action and the resources needed to try it.",
+              "minutes": 5,
+              "required": true,
+              "exercise": {
+                "type": "CHOICE",
+                "instruction": "Which response preserves autonomy when a plan no longer fits?",
+                "choices": [
+                  "Make the plan smaller or choose another action.",
+                  "Punish yourself for not maintaining the original plan."
+                ],
+                "correctIndex": 0,
+                "explanation": "Adapting the plan respects choice and changing resources. A missed day does not require punishment."
+              }
+            },
+            {
+              "title": "Review without pressure",
+              "body": "After trying a small action, consider what was useful and what did not fit. You can change its size, timing or purpose, pause it, or stop. Days without activity do not imply a positive or negative emotional state. If you choose to write about the experiment, use your private space and save only what you want to keep. No written disclosure is needed to complete this lesson.",
+              "objectives": "Identify an optional adaptation without equating participation with personal worth.",
+              "minutes": 5,
+              "required": true,
+              "exercise": {
+                "type": "REFLECTION",
+                "instruction": "Consider one possible adaptation privately or away from the app. You do not need to submit a personal response."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "COURSE",
+      "scope": "GENERAL",
+      "audience": "ADULT",
+      "rights": "Original draft; actual organizational rights and attribution must be reviewed before publication.",
+      "sources": [],
+      "warnings": [],
+      "creator": "",
+      "body": "",
+      "externalUrl": "",
+      "topic": "برنامه‌ریزی قابل انجام",
+      "why": "آموزش عمومی برای انتخاب و تغییر یک برنامهٔ کوچک.",
+      "title": "برنامه‌ریزی یک گام قابل انجام",
+      "summary": "انتخاب و تغییر یک کار کوچک را بدون فشار تمرین کن.",
+      "language": "fa",
+      "objectives": "یک کار مشخص و اختیاری انتخاب کن؛ آن را با امکانات موجود هماهنگ کن؛ روزهای بدون انجام کار را خنثی بدان.",
+      "modules": [
+        {
+          "title": "انتخاب و سازگار کردن",
+          "lessons": [
+            {
+              "title": "انتخاب گامی که مناسب توست",
+              "body": "از کاری شروع کن که بتوانی آن را در یک جمله توضیح بدهی. زمان، مکان و امکانات مورد نیازش را مشخص کن. شکل اول برنامه را آن‌قدر کوچک انتخاب کن که بدون قول یک روال بی‌نقص بتوانی امتحانش کنی. برنامه یک آزمایش قابل تغییر است، نه آزمون ارزش تو. می‌توانی تصمیم بگیری این کار برایت مناسب نیست و کار دیگری انتخاب کنی.",
+              "objectives": "یک کار اختیاری و امکانات لازم برای امتحان کردنش را توصیف کن.",
+              "minutes": 5,
+              "required": true,
+              "exercise": {
+                "type": "CHOICE",
+                "instruction": "وقتی برنامه دیگر مناسب نیست، کدام پاسخ حق انتخاب را حفظ می‌کند؟",
+                "choices": [
+                  "برنامه را کوچک‌تر کن یا کار دیگری انتخاب کن.",
+                  "برای ادامه ندادن برنامهٔ اول خودت را تنبیه کن."
+                ],
+                "correctIndex": 0,
+                "explanation": "تغییر برنامه، حق انتخاب و تغییر امکانات را در نظر می‌گیرد. یک روز انجام ندادن کار به تنبیه نیاز ندارد."
+              }
+            },
+            {
+              "title": "بازنگری بدون فشار",
+              "body": "پس از امتحان کردن یک کار کوچک، ببین چه چیزی مفید بود و چه چیزی با شرایطت جور نبود. می‌توانی اندازه، زمان یا هدفش را تغییر بدهی، مکث کنی یا کنار بگذاری. روزهای بدون انجام کار، نشانهٔ مثبت یا منفی بودن حالت عاطفی نیستند. اگر خواستی دربارهٔ این تجربه بنویسی، از فضای خصوصی خودت استفاده کن و فقط چیزی را ذخیره کن که می‌خواهی نگه داری. برای تکمیل این درس، توضیح خصوصی لازم نیست.",
+              "objectives": "یک تغییر اختیاری را بدون یکی دانستن مشارکت و ارزش شخصی در نظر بگیر.",
+              "minutes": 5,
+              "required": true,
+              "exercise": {
+                "type": "REFLECTION",
+                "instruction": "یک تغییر احتمالی را برای خودت یا بیرون از برنامه در نظر بگیر. نیازی به ارسال پاسخ شخصی نیست."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

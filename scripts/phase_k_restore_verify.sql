@@ -30,3 +30,8 @@ SELECT 'o_attachments', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY 
 SELECT 'o_permissions', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM educational_permissions t;
 SELECT 'o_credentials', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM educational_credentials t;
 SELECT 'o_editorial_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM growth_editorial_events t;
+
+SELECT 'o_lesson_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM learning_lesson_completions t;
+SELECT 'o_course_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM learning_course_completions t;
+SELECT 'o_exercise_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM learning_exercise_completions t;
+SELECT 'o_questions', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM wellbeing_prompt_versions t;
