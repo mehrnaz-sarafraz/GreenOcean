@@ -21,6 +21,12 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiError> methodNotAllowed(org.springframework.web.HttpRequestMethodNotSupportedException exception,HttpServletRequest request){
+        var response=ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
+        if(exception.getSupportedHttpMethods()!=null)response.allow(exception.getSupportedHttpMethods().toArray(org.springframework.http.HttpMethod[]::new));
+        return response.body(new ApiError(Instant.now(),405,"Method Not Allowed","This method is not supported",request.getRequestURI(),List.of()));
+    }
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     @ExceptionHandler(com.greenocean.backend.listener.live.LiveSupportException.class)
     public ResponseEntity<java.util.Map<String,Object>> handleLiveSupport(com.greenocean.backend.listener.live.LiveSupportException error) {
