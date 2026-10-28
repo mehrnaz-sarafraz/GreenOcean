@@ -1,0 +1,34 @@
+package com.greenocean.backend;
+import com.greenocean.backend.catalog.service.GrowthLibrary;
+import com.greenocean.backend.wellbeing.service.*;
+import com.greenocean.backend.account.repository.AccountRepository;
+import com.greenocean.backend.auth.repository.UserRepository;
+import com.greenocean.backend.auth.service.TokenService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.junit.jupiter.api.*;
+import java.time.*;import java.util.*;import java.util.concurrent.*;import java.util.function.Supplier;
+import static org.assertj.core.api.Assertions.*;
+@SpringBootTest @ActiveProfiles("test") @org.springframework.test.annotation.DirtiesContext(classMode=org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
+class PhaseO4ConcurrencyTest extends MigrationTestSupport {
+ static final String SCHEMA="qa_o4_race_"+UUID.randomUUID().toString().replace("-","");
+ @org.springframework.test.context.DynamicPropertySource static void schema(org.springframework.test.context.DynamicPropertyRegistry p){String url=System.getenv("GREENOCEAN_TEST_DB_URL");p.add("spring.datasource.url",()->url+(url.contains("?")?"&":"?")+"currentSchema="+SCHEMA+",public");p.add("spring.flyway.schemas",()->SCHEMA);p.add("spring.flyway.default-schema",()->SCHEMA);p.add("spring.jpa.properties.hibernate.default_schema",()->SCHEMA);}
+ @AfterAll static void drop(@Autowired JdbcTemplate db){db.execute("DROP SCHEMA "+SCHEMA+" CASCADE");}
+ @Autowired JdbcTemplate db;@Autowired GrowthLibrary library;@Autowired LearningCourses learning;@Autowired ReviewedQuestions questions;@Autowired UserRepository users;@Autowired TokenService tokens;@Autowired AccountRepository accounts;@Autowired PlatformTransactionManager manager;
+ PhaseIFixtures.Actor author,reviewer,issuer,learner;
+ @BeforeEach void setup(){PhaseIFixtures.region(db);author=PhaseIFixtures.member(db,users,tokens);reviewer=PhaseIFixtures.member(db,users,tokens);issuer=PhaseIFixtures.member(db,users,tokens);learner=PhaseIFixtures.member(db,users,tokens);for(var pair:List.of(Map.entry(issuer.id(),"ADMIN"),Map.entry(reviewer.id(),"MODERATOR")))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name=? ON CONFLICT DO NOTHING",pair.getKey(),pair.getValue());for(String a:List.of("DRAFT","SUBMIT"))library.grant(issuer.id(),new GrowthLibrary.Grant(author.id(),a,"GENERAL","Synthetic QA grant",Instant.now().plusSeconds(3600)));for(String a:List.of("REVIEW","APPROVE","PUBLISH","RETIRE"))library.grant(issuer.id(),new GrowthLibrary.Grant(reviewer.id(),a,"GENERAL","Synthetic QA grant",Instant.now().plusSeconds(3600)));}
+ @AfterEach void clean(){for(var actor:List.of(author,learner,reviewer,issuer))new TransactionTemplate(manager).executeWithoutResult(tx->accounts.erase(actor.id()));}
+ Map<String,Object> doc(){return new PhaseO3LearningTest().doc();}
+ UUID course(){UUID id=(UUID)library.create(author.id(),new GrowthLibrary.Draft(doc(),0,0)).get("resource_id");library.transition(author.id(),id,new GrowthLibrary.Decision(1,0,"SUBMIT","Synthetic submission",false,false));library.transition(reviewer.id(),id,new GrowthLibrary.Decision(1,1,"APPROVE","Synthetic independent review",true,true));library.transition(reviewer.id(),id,new GrowthLibrary.Decision(1,2,"PUBLISH","Synthetic publication",true,true));return id;}
+ UUID key(UUID id){return db.queryForList("SELECT lesson_key FROM learning_lessons(?,1) ORDER BY module_position,lesson_position",UUID.class,id).getFirst();}
+ Object result(Supplier<?> work){try{return work.get();}catch(RuntimeException error){return error;}}
+ List<Object> race(Supplier<?> a,Supplier<?> b)throws Exception{try(var pool=Executors.newFixedThreadPool(2)){var go=new CountDownLatch(1);var x=pool.submit(()->{go.await();return result(a);});var y=pool.submit(()->{go.await();return result(b);});go.countDown();return List.of(x.get(20,TimeUnit.SECONDS),y.get(20,TimeUnit.SECONDS));}}
+ @Autowired GrowthRewards rewards;
+ @Test void twoConnectionsCannotIssueDuplicatePoints()throws Exception{UUID id=course(),key=key(id);var opened=learning.open(learner.id(),id,key);var in=new LearningCourses.Completion((String)opened.get("content_digest"),true);var results=race(()->learning.complete(learner.id(),id,key,in),()->learning.complete(learner.id(),id,key,in));assertThat(results).allMatch(Map.class::isInstance);assertThat(db.queryForObject("SELECT sum(point_delta) FROM growth_reward_ledger WHERE owner_id=?",Long.class,learner.id())).isEqualTo(10L);assertThat(db.queryForObject("SELECT count(*) FROM growth_learning_badges WHERE owner_id=?",Integer.class,learner.id())).isEqualTo(1);}
+ @Test void concurrentCorrectionAndReplayCannotRestoreReversedCredit()throws Exception{UUID id=course(),key=key(id);var opened=learning.open(learner.id(),id,key);var in=new LearningCourses.Completion((String)opened.get("content_digest"),true);learning.complete(learner.id(),id,key,in);UUID event=db.queryForObject("SELECT id FROM growth_reward_ledger WHERE owner_id=?",UUID.class,learner.id());race(()->{rewards.reverse(issuer.id(),event,"Synthetic independent correction");return "corrected";},()->learning.complete(learner.id(),id,key,in));assertThat(db.queryForObject("SELECT sum(point_delta) FROM growth_reward_ledger WHERE owner_id=?",Long.class,learner.id())).isZero();}
+ @Test void erasureRacingRewardReconciliationLeavesNoPrivateData()throws Exception{UUID id=course(),key=key(id);var opened=learning.open(learner.id(),id,key);learning.complete(learner.id(),id,key,new LearningCourses.Completion((String)opened.get("content_digest"),true));race(()->{rewards.reconcile(issuer.id(),learner.id(),"Synthetic authorized reconciliation");return "reconciled";},()->new TransactionTemplate(manager).execute(tx->{accounts.erase(learner.id());return "erased";}));assertThat(db.queryForObject("SELECT count(*) FROM growth_reward_ledger WHERE owner_id=?",Integer.class,learner.id())).isZero();assertThat(db.queryForObject("SELECT count(*) FROM growth_learning_badges WHERE owner_id=?",Integer.class,learner.id())).isZero();}
+}

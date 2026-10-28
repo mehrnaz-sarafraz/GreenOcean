@@ -35,3 +35,6 @@ SELECT 'o_lesson_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER B
 SELECT 'o_course_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM learning_course_completions t;
 SELECT 'o_exercise_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM learning_exercise_completions t;
 SELECT 'o_questions', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM wellbeing_prompt_versions t;
+SELECT 'o_reward_rules', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY version), '')) FROM growth_reward_rules t;
+SELECT 'o_reward_ledger', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM growth_reward_ledger t;
+SELECT 'o_learning_badges', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY owner_id,code), '')) FROM growth_learning_badges t;

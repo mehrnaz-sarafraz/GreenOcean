@@ -134,6 +134,9 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM post_resource_attachments WHERE proposed_by=? OR reviewed_by=? OR post_id IN(SELECT id FROM posts WHERE author_id=?)",userId,userId,userId);
         jdbcTemplate.update("DELETE FROM post_resource_preferences WHERE post_id IN(SELECT id FROM posts WHERE author_id=?)",userId);
         jdbcTemplate.update("DELETE FROM growth_resource_saves WHERE user_id=?",userId);
+        jdbcTemplate.update("DELETE FROM growth_reward_ledger WHERE owner_id=?",userId);
+        jdbcTemplate.update("DELETE FROM growth_learning_badges WHERE owner_id=?",userId);
+        jdbcTemplate.update("UPDATE growth_reward_ledger SET actor_id=NULL WHERE actor_id=?",userId);
         jdbcTemplate.update("DELETE FROM learning_lesson_views WHERE owner_id=?",userId);
         jdbcTemplate.update("DELETE FROM learning_lesson_completions WHERE owner_id=?",userId);
         jdbcTemplate.update("DELETE FROM learning_exercise_completions WHERE owner_id=?",userId);

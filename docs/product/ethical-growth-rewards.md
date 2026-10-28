@@ -1,0 +1,5 @@
+# Ethical Growth Points contract
+
+Growth Points / امتیاز رشد recognize optional educational participation privately. They are not a mental-health score, recovery measure, diagnosis, professional qualification, money or priority for support. A lesson earns10, a genuine optional educational check5 and a course30 under version1; revised policy requires a distinct immutable version. Real completion remains governed by O3.
+
+Journal length, mood, private answers/reflections, social posts/comments/likes/follows/reports and listener support earn zero. Users never need to disclose personal experiences to complete learning. No leaderboard, transfer, cash value, shame reminders, lost-day penalties or public badge projection exists. Badges survive inactivity; an invalid underlying award can be corrected with an auditable reversal. Owner-only dashboard/export and account erasure apply. Current staff privilege/MFA is required for case-specific correction. New rewards remain default off pending release approval.
