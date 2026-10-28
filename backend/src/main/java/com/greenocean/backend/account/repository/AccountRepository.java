@@ -77,6 +77,8 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.queryForList("SELECT id FROM users WHERE id=? FOR NO KEY UPDATE",userId);
+        jdbcTemplate.queryForList("SELECT g.id FROM communities g WHERE g.id IN(SELECT community_id FROM community_members WHERE user_id=? UNION SELECT community_id FROM posts WHERE author_id=? UNION SELECT p.community_id FROM comments c JOIN posts p ON p.id=c.post_id WHERE c.author_id=?) ORDER BY g.id FOR UPDATE",userId,userId,userId);
         jdbcTemplate.update("DELETE FROM community_content_actions WHERE post_id IN(SELECT id FROM posts WHERE author_id=?) OR comment_id IN(SELECT id FROM comments WHERE author_id=?)",userId,userId);
         jdbcTemplate.update("UPDATE community_content_actions SET actor_id=NULL WHERE actor_id=?",userId);
         jdbcTemplate.update("UPDATE community_lifecycle_decisions SET actor_id=NULL WHERE actor_id=?",userId);

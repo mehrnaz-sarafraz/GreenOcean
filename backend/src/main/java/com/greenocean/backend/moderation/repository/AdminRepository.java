@@ -183,7 +183,7 @@ public class AdminRepository {
             case "OVERTURN_APPEAL" -> "OVERTURNED";
             default -> throw new IllegalArgumentException("Unsupported appeal action");
         };
-        if (Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM moderation_appeals WHERE id=? AND (assessment_id IS NOT NULL OR group_action_id IS NOT NULL))",Boolean.class,id)))
+        if (Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM moderation_appeals WHERE id=? AND (assessment_id IS NOT NULL OR group_action_id IS NOT NULL OR EXISTS(SELECT 1 FROM reports gr WHERE gr.id=moderation_appeals.report_id AND gr.context_group_id IS NOT NULL)))",Boolean.class,id)))
             throw new com.greenocean.backend.common.exception.ConflictException("Review the linked content revision through social moderation");
         int updated = jdbcTemplate.update("""
                 UPDATE moderation_appeals SET status = ?, decision_note = ?, decided_by = ?,
@@ -547,7 +547,7 @@ public class AdminRepository {
         return jdbcTemplate.query("""
                 SELECT a.*, p.display_name FROM moderation_appeals a
                   JOIN profiles p ON p.user_id = a.appellant_user_id
-                 WHERE a.group_action_id IS NULL
+                 WHERE a.group_action_id IS NULL AND NOT EXISTS(SELECT 1 FROM reports gr WHERE gr.id=a.report_id AND gr.context_group_id IS NOT NULL)
                  ORDER BY CASE a.status WHEN 'OPEN' THEN 0 WHEN 'REVIEWING' THEN 1 ELSE 2 END, a.created_at
                 """, (rs, row) -> {
             OffsetDateTime decided = rs.getObject("decided_at", OffsetDateTime.class);
