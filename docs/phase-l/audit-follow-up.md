@@ -23,6 +23,16 @@ New browser journeys in `phase-l2.spec.mjs` cover no follows versus no eligible 
 
 Local Windows verification on Java21 / disposable PostgreSQL18: **327 backend passed, zero failures/errors/skips** using `scripts/run-phase-a-qa.ps1 -Offline`. The initial frontend logic attempt failed the existing K dependency assertion because node_modules still contained the older J dependency; it is not counted as passing. Dependencies are restored from the checked-in lockfile before final execution. TypeScript passed after Expo regenerated its stale J-era route cache. No production database was used. Browser and final published CI outcomes are recorded below after execution; baseline results must not be counted as new execution.
 
+Local re-execution after `npm ci --no-audit --no-fund`: **69 logic tests passed, zero failures/skips**, and `PLAYWRIGHT_CHANNEL=chrome EXPO_OFFLINE=1 npx playwright test e2e/phase-l2.spec.mjs` passed **all3 tests**, including both new browser journeys. No dependency files were changed; this restored the checked-in L lockfile's installed versions. The original failed attempts remain recorded above.
+
 ## External release dependencies
 
 Actual moderation staffing, approved policy wording, legal/evidence retention decisions, real staff key custody and physical Android/iOS/TalkBack/VoiceOver remain unverified external dependencies. These cannot be completed by relabeling code tests. Local classifier coverage remains limited; no external AI, new sensitive analytics, production activation, merge or deployment is introduced here.
+
+## Final execution
+
+Tested executable head: `8843a613a52ac5120c97b3eeddba6a6da75c25ca`. [GitHub Actions run 40640710127](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40640710127) completed successfully in all four jobs. Direct logs confirm **327 backend +69 logic +101 browser +27 real-stack =524 passing tests**, no final failures/skips. TypeScript, lint (zero errors;11 inherited warnings), Web/Android/iOS JavaScript/assets export and release-scans passed. Browser/full-stack evidence is from Chromium; it is not physical-device evidence.
+
+Windows local backend verification also passed327 tests on disposable PostgreSQL18. The initial local69-test logic attempt was68pass/1failure due to stale J node_modules; lockfile installation corrected the local environment. The initial new Persian browser case selected two equivalent clear-search controls; its selector was corrected without removing the behavioral assertion. Final CI used a clean dependency install and passed every case. See the separate local outcome below if recorded; failed attempts are not included in the524 total.
+
+No executable changes follow this tested head in the evidence-only documentation commit. PR12 remains stacked on L2; no merge or activation occurred.

@@ -61,11 +61,11 @@ Happy: draft/publication and independent reinstatement. Creative: Persian/Unicod
 
 ## J. Final executable evidence
 
-Verified published baseline: `9ed49986ce0c2f4b2facd275684c04c3c036a3bb`, GitHub Actions run [40568529464](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40568529464). The earlier local-only source hash is superseded by this directly verified published revision. Follow-up executable revision and results: audit-follow-up.md.
+Final tested executable source: `8843a613a52ac5120c97b3eeddba6a6da75c25ca`, [GitHub Actions run 40640710127](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40640710127). All four jobs passed. Follow-up corrections and initial failed attempts are documented in audit-follow-up.md.
 
-- 324 backend tests on disposable PostgreSQL:0failures/errors/skips.
+- 327 backend tests on disposable PostgreSQL:0failures/errors/skips.
 - 69 frontend logic tests:0failures/skips.
-- 99 browser integration tests:0failures/skips.
+- 101 browser integration tests:0failures/skips.
 - 27 complete browser journeys against running backend/PostgreSQL:0failures/skips.
 - TypeScript passed; lint0errors and11existing warnings; Web/Android/iOS JS/assets exported.
 - Source scanner found no candidate credentials and verified31tracked original migration checksums; git diff confirms only V46 is new in this continuation.

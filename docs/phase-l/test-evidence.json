@@ -1,7 +1,7 @@
 {
-  "executableSource": "9ed49986ce0c2f4b2facd275684c04c3c036a3bb",
+  "executableSource": "8843a613a52ac5120c97b3eeddba6a6da75c25ca",
   "backend": {
-    "tests": 324,
+    "tests": 327,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -12,7 +12,7 @@
     "skipped": 0
   },
   "browser": {
-    "tests": 99,
+    "tests": 101,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -32,16 +32,17 @@
   "nativeDevicesAndScreenReaders": "NOT_EXECUTED_DEVICE_REQUIRED",
   "l3GithubCI": {
     "status": "PASSED",
-    "runId": 40568529464,
+    "runId": 40640710127,
     "verifiedOn": "2026-10-28",
-    "head": "9ed49986ce0c2f4b2facd275684c04c3c036a3bb",
+    "head": "8843a613a52ac5120c97b3eeddba6a6da75c25ca",
     "jobIds": [
-      122416934849,
-      122416935209,
-      122416934664,
-      122416935023
+      122658108635,
+      122658108953,
+      122658108990,
+      122658109014
     ]
   },
   "productionActivation": "DISABLED",
-  "followUpEvidence": "audit-follow-up.md"
+  "followUpEvidence": "audit-follow-up.md",
+  "totalPassing": 524
 }

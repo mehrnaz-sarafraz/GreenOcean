@@ -1,12 +1,12 @@
 # Phase L executed evidence
 
-Verified published baseline: `9ed49986ce0c2f4b2facd275684c04c3c036a3bb`. Machine summary: test-evidence.json. The counts below are the baseline suite results; follow-up source and execution are recorded separately in audit-follow-up.md. All counts below are from final reports, not assertions that code exists.
+Final tested executable source: `8843a613a52ac5120c97b3eeddba6a6da75c25ca`. Machine summary: test-evidence.json. The counts below are from the clean published follow-up execution; baseline history and corrected initial failures are retained separately in audit-follow-up.md. All counts below are from final reports, not assertions that code exists.
 
 | Suite / check | Actual result | Command |
 |---|---|---|
-| Complete A–L backend, disposable PostgreSQL | 324 passed;0failed/errors/skipped | `cd backend && bash mvnw -B verify` with isolated GREENOCEAN_TEST_DB_URL |
+| Complete A–L backend, disposable PostgreSQL | 327 passed;0failed/errors/skipped | `cd backend && bash mvnw -B verify` with isolated GREENOCEAN_TEST_DB_URL |
 | Frontend logic | 69 passed;0failed/skipped | `cd frontend && npm test` |
-| Complete browser/component integration | 99 passed;0failed/skipped | `cd frontend && CI=1 npx playwright test` |
+| Complete browser/component integration | 101 passed;0failed/skipped | `cd frontend && CI=1 npx playwright test` |
 | Complete real-backend browser journeys | 27 passed;0failed/skipped | Start PhaseCLiveServer + disposable PostgreSQL; `cd frontend && CI=1 npx playwright test --config playwright.live.config.mjs` |
 | TypeScript | Passed | `npm run typecheck` |
 | ESLint | 0errors;11 pre-existing warnings | `npm run lint` |
@@ -15,7 +15,7 @@ Verified published baseline: `9ed49986ce0c2f4b2facd275684c04c3c036a3bb`. Machine
 | Published L3 GitHub CI | All four jobs successful at head `9ed4998` | [Run40568529464](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40568529464), independently read on2026-10-28 |
 | Physical native devices, TalkBack/VoiceOver, actual staff key custody | NOT EXECUTED | Not inferred from exports or virtual keys |
 
-Local runtime: OpenJDK21.0.12, PostgreSQL16.15 with existing V0 UUID compatibility; repository CI configuration uses PostgreSQL18. Local Java Mockito agent was supplied explicitly through Surefire argLine because self-attach is restricted in this container. PostgreSQL ran only on isolated loopback with synthetic users. The container maps one UID; its disposable PostgreSQL startup used a test-only UID shim outside the repository. No production/user database was used. These are functional tests, not production capacity or real key-custody evidence.
+Historical original L3 local runtime (not the current CI runner): OpenJDK21.0.12, PostgreSQL16.15 with existing V0 UUID compatibility; repository CI configuration uses PostgreSQL18. Local Java Mockito agent was supplied explicitly through Surefire argLine because self-attach is restricted in this container. PostgreSQL ran only on isolated loopback with synthetic users. The container maps one UID; its disposable PostgreSQL startup used a test-only UID shim outside the repository. No production/user database was used. These are functional tests, not production capacity or real key-custody evidence.
 
 L1/L2 remote heads991c77c/fd908d4 were checked through GitHub: backend, frontend, registration-live and release-scans completed successfully. Their historical successful CI is not called new L3 CI. Phase K PR9 is merged into main30a4b3a; L1 PR10 and L2 PR11 remain stacked separately.
 
@@ -43,3 +43,5 @@ Review states preserve originals and append human decisions; owner exports inclu
 ## Published evidence correction — 2026-10-28
 
 GitHub job logs directly confirm324 backend,69 logic,99 browser and27 real-stack tests (519 total) at `9ed4998`. Backend job122416934849 reports zero failures/errors/skips; frontend122416935209 reports69 logic and99 browser passes; live122416934664 reports27 passes. This verification reads existing CI and is not a fresh local execution. PR12 exists and the previous upload-blocked labels are obsolete. Native-device and actual staffing evidence remain unexecuted/unverified. Follow-up corrections/tests: audit-follow-up.md.
+
+Final follow-up clean CI:327+69+101+27=524 passes at `8843a613a52ac5120c97b3eeddba6a6da75c25ca`. Current CI uses Java21/PostgreSQL18/Node24; native tests remain NOT_EXECUTED.
