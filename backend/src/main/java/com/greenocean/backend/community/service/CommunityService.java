@@ -22,10 +22,12 @@ import java.util.UUID;
 public class CommunityService {
     private final CommunityRepository communityRepository;
     private final DatabaseUuidGenerator uuidGenerator;
+    private final GroupPolicy policy;private final GroupMemberships memberships;private final com.greenocean.backend.post.service.ContentClassifier safety;
 
-    public CommunityService(CommunityRepository communityRepository, DatabaseUuidGenerator uuidGenerator) {
+    public CommunityService(CommunityRepository communityRepository, DatabaseUuidGenerator uuidGenerator,GroupPolicy policy,GroupMemberships memberships,com.greenocean.backend.post.service.ContentClassifier safety) {
         this.communityRepository = communityRepository;
         this.uuidGenerator = uuidGenerator;
+        this.policy=policy;this.memberships=memberships;this.safety=safety;
     }
 
     @Transactional
@@ -86,29 +88,19 @@ public class CommunityService {
     }
 
     @Transactional
-    public CommunityResponse join(UUID communityId, UUID userId) {
-        CommunityResponse community = getById(communityId, userId);
-        if (community.privateCommunity() && !community.member()) {
-            communityRepository.requestJoin(communityId, userId);
-            return getById(communityId, userId);
-        }
-        communityRepository.join(communityId, userId);
+    public CommunityResponse join(UUID communityId, UUID userId,long rulesVersion) {
+        memberships.join(communityId,userId,rulesVersion);
         return getById(communityId, userId);
     }
 
     @Transactional
     public void leave(UUID communityId, UUID userId) {
-        getById(communityId, userId);
-        String role = communityRepository.membershipRole(communityId, userId);
-        if (role == null) return;
-        if ("OWNER".equals(role)) throw new ConflictException("The owner cannot leave the community");
-        communityRepository.leave(communityId, userId);
+        memberships.leave(communityId,userId);
     }
 
     @Transactional
-    public void cancelJoinRequest(UUID communityId, UUID userId) {
-        getById(communityId, userId);
-        communityRepository.cancelJoinRequest(communityId, userId);
+    public void cancelJoinRequest(UUID communityId, UUID userId,long revision) {
+        memberships.cancel(communityId,userId,revision);
     }
 
     @Transactional(readOnly = true)
@@ -118,19 +110,22 @@ public class CommunityService {
     }
 
     @Transactional
-    public void resolveJoinRequest(UUID communityId, UUID requesterId, UUID userId, boolean approved) {
-        requireModerator(communityId, userId);
-        if (!communityRepository.resolveJoinRequest(communityId, requesterId, userId, approved)) {
-            throw new NotFoundException("Pending community request was not found");
-        }
+    public void resolveJoinRequest(UUID communityId, UUID requesterId, UUID userId, boolean approved,long revision) {
+        memberships.resolve(communityId,requesterId,userId,revision,approved);
     }
 
     @Transactional
     public CommunityDetailsResponse replaceRules(UUID communityId, UUID userId, UpdateCommunityRulesRequest request) {
+        policy.lock(communityId);policy.writable(communityId);
         requireModerator(communityId, userId);
         List<String> rules = request.rules().stream().map(String::trim).filter(rule -> !rule.isBlank()).distinct().toList();
         if (rules.isEmpty()) throw new IllegalArgumentException("At least one rule is required");
+        if(safety.assess(String.join("\n",rules)).outcome()!=com.greenocean.backend.post.service.ContentSafety.Outcome.ALLOW)throw new ConflictException("Rules require revision under platform safety standards");
+        policy.bound(userId,"GROUP_RULE_CHANGE",10);
         communityRepository.replaceRules(communityId, rules);
+        policy.db.update("UPDATE communities SET rules_version=rules_version+1 WHERE id=?",communityId);
+        policy.db.update("INSERT INTO community_rule_revisions(community_id,version,rules,actor_id) SELECT c.id,c.rules_version,(SELECT jsonb_agg(rule_text ORDER BY position) FROM community_rules WHERE community_id=c.id),? FROM communities c WHERE c.id=?",userId,communityId);
+        policy.db.queryForList("SELECT user_id FROM community_members WHERE community_id=? LIMIT 1000",UUID.class,communityId).forEach(policy::notify);policy.audit(userId,communityId,"GROUP_RULES_CHANGED");
         return communityRepository.details(communityId, userId);
     }
 
@@ -139,7 +134,7 @@ public class CommunityService {
         requireModerator(communityId, userId);
         if (!request.endsAt().isAfter(request.startsAt())) throw new IllegalArgumentException("endsAt must be after startsAt");
         String format = request.format().trim().toUpperCase();
-        if (!List.of("TEXT_CIRCLE", "VIDEO", "AUDIO", "WORKSHOP", "Q_AND_A").contains(format)) {
+        if (!List.of("TEXT_CIRCLE", "WORKSHOP", "Q_AND_A").contains(format)) {
             throw new IllegalArgumentException("Unsupported event format");
         }
         communityRepository.createEvent(uuidGenerator.nextUuid(), communityId, userId, request.title().trim(),
@@ -156,21 +151,17 @@ public class CommunityService {
 
     @Transactional
     public CommunityDetailsResponse updateMemberRole(UUID communityId, UUID memberId, UUID userId, String role) {
+        policy.lock(communityId);policy.writable(communityId);memberships.allowed(communityId,memberId);
         requireOwner(communityId, userId);
         if (!List.of("MEMBER", "MODERATOR").contains(role)) throw new IllegalArgumentException("Unsupported community role");
         if (!communityRepository.updateMemberRole(communityId, memberId, role)) throw new NotFoundException("Community member was not found");
+        policy.bound(userId,"GROUP_ROLE_CHANGE",20);policy.audit(userId,communityId,"GROUP_ROLE_CHANGED");policy.notify(memberId);
         return communityRepository.details(communityId, userId);
     }
 
     @Transactional
     public CommunityDetailsResponse removeMember(UUID communityId, UUID memberId, UUID userId) {
-        String currentRole = communityRepository.membershipRole(communityId, userId);
-        if (!"OWNER".equals(currentRole) && !"MODERATOR".equals(currentRole)) throw new ForbiddenException("Community moderators only");
-        String targetRole = communityRepository.membershipRole(communityId, memberId);
-        if ("OWNER".equals(targetRole) || ("MODERATOR".equals(targetRole) && !"OWNER".equals(currentRole))) {
-            throw new ForbiddenException("Only the owner can remove a moderator");
-        }
-        if (!communityRepository.removeMember(communityId, memberId)) throw new NotFoundException("Community member was not found");
+        memberships.remove(communityId,memberId,userId,"REMOVE","Removed by an authorized group manager",null);
         return communityRepository.details(communityId, userId);
     }
 
@@ -179,19 +170,14 @@ public class CommunityService {
     }
 
     private void requireMember(UUID communityId, UUID userId) {
-        if (!communityRepository.isMember(communityId, userId)) {
-            throw new ForbiddenException("Join this community to view its members and events");
-        }
+        policy.member(communityId,userId);
     }
 
     private void requireModerator(UUID communityId, UUID userId) {
-        String role = communityRepository.membershipRole(communityId, userId);
-        if (!"OWNER".equals(role) && !"MODERATOR".equals(role)) throw new ForbiddenException("Community moderators only");
+        policy.manager(communityId,userId);
     }
 
     private void requireOwner(UUID communityId, UUID userId) {
-        if (!"OWNER".equals(communityRepository.membershipRole(communityId, userId))) {
-            throw new ForbiddenException("Community owner only");
-        }
+        policy.owner(communityId,userId);
     }
 }

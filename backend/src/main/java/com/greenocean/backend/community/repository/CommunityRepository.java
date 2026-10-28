@@ -23,7 +23,7 @@ public class CommunityRepository {
                    EXISTS(SELECT 1 FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS member,
                    (SELECT mine.role FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS membership_role
                    ,EXISTS(SELECT 1 FROM community_join_requests request
-                            WHERE request.community_id = c.id AND request.requester_id = ? AND request.status = 'PENDING') AS join_requested
+                            WHERE request.community_id = c.id AND request.requester_id = ? AND request.status = 'PENDING') AS join_requested, (SELECT request_version FROM community_join_requests r WHERE r.community_id=c.id AND r.requester_id=?) AS request_revision
               FROM communities c
              WHERE visible_group(c.id, ?)
             """;
@@ -54,12 +54,12 @@ public class CommunityRepository {
 
     public Optional<CommunityResponse> findById(UUID communityId, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.id = ?", this::map,
-                viewerId, viewerId, viewerId, viewerId, communityId).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, viewerId, communityId).stream().findFirst();
     }
 
     public Optional<CommunityResponse> findBySlug(String slug, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.slug = ?", this::map,
-                viewerId, viewerId, viewerId, viewerId, slug).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, viewerId, slug).stream().findFirst();
     }
 
     public List<CommunityResponse> findAll(UUID viewerId, String query, int page, int size) {
@@ -69,7 +69,7 @@ public class CommunityRepository {
                  ORDER BY c.created_at DESC,c.id DESC
                  LIMIT ? OFFSET ?
                 """;
-        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, viewerId, term, term, term,
+        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, viewerId, viewerId, term, term, term,
                 size + 1, (long) page * size);
     }
 
@@ -100,13 +100,13 @@ public class CommunityRepository {
 
     public List<CommunityJoinRequestResponse> joinRequests(UUID communityId) {
         return jdbcTemplate.query("""
-                SELECT p.user_id, p.display_name, p.username, p.avatar_url, r.requested_at
+                SELECT p.user_id, p.display_name, p.username, p.avatar_url, r.requested_at,r.request_version
                   FROM community_join_requests r JOIN profiles p ON p.user_id = r.requester_id
                  WHERE r.community_id = ? AND r.status = 'PENDING'
                  ORDER BY r.requested_at
                 """, (rs, row) -> new CommunityJoinRequestResponse(
                 rs.getObject("user_id", UUID.class), rs.getString("display_name"), rs.getString("username"),
-                rs.getString("avatar_url"), rs.getObject("requested_at", OffsetDateTime.class).toInstant()), communityId);
+                rs.getString("avatar_url"), rs.getObject("requested_at", OffsetDateTime.class).toInstant(),rs.getLong("request_version")), communityId);
     }
 
     public boolean resolveJoinRequest(UUID communityId, UUID requesterId, UUID resolverId, boolean approved) {
@@ -267,7 +267,7 @@ public class CommunityRepository {
                 resultSet.getObject("member_count",Long.class), resultSet.getBoolean("member"), resultSet.getString("membership_role"),
                 resultSet.getBoolean("join_requested"),
                 resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
-                resultSet.getString("privacy_type"),resultSet.getString("status"),resultSet.getLong("rules_version"),resultSet.getString("rules_json")
+                resultSet.getString("privacy_type"),resultSet.getString("status"),resultSet.getLong("rules_version"),resultSet.getString("rules_json"),resultSet.getObject("request_revision",Long.class)
         );
     }
 }

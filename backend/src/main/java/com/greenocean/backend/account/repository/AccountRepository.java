@@ -77,6 +77,13 @@ public class AccountRepository {
     }
 
     public void erase(UUID userId) {
+        jdbcTemplate.update("DELETE FROM community_member_actions WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE community_member_actions SET actor_id=NULL WHERE actor_id=?",userId);
+        jdbcTemplate.update("DELETE FROM community_invitations WHERE target_id=? OR inviter_id=?",userId,userId);
+        jdbcTemplate.update("DELETE FROM community_ownership_transfers WHERE target_id=? OR from_owner=?",userId,userId);
+        jdbcTemplate.update("DELETE FROM community_bans WHERE user_id=?",userId);
+        jdbcTemplate.update("UPDATE community_bans SET actor_id=NULL WHERE actor_id=?",userId);
+        jdbcTemplate.update("UPDATE community_rule_revisions SET actor_id=NULL WHERE actor_id=?",userId);
         jdbcTemplate.update("DELETE FROM community_proposals WHERE owner_id=?",userId);
         jdbcTemplate.update("UPDATE conversations SET request_status='CANCELLED' WHERE request_status='PENDING' AND (requester_id=? OR request_target_id=?)",userId,userId);
         jdbcTemplate.update("UPDATE conversations SET requester_id=NULL,request_target_id=NULL WHERE requester_id=? OR request_target_id=?",userId,userId);
@@ -104,7 +111,7 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM user_search_history WHERE user_id=?",userId);
         jdbcTemplate.update("UPDATE conversations SET title='Deleted member',subtitle=NULL,is_active=FALSE WHERE id IN (SELECT conversation_id FROM conversation_members WHERE user_id=?) AND conversation_kind <> 'GROUP'",userId);
         jdbcTemplate.update("UPDATE account_deletions SET status='COMPLETED',completed_at=CURRENT_TIMESTAMP WHERE user_id=?",userId);
-        jdbcTemplate.update("UPDATE communities SET status = 'ARCHIVED' WHERE created_by = ?", userId);
+        jdbcTemplate.update("UPDATE communities SET status = 'ARCHIVED' WHERE id IN(SELECT community_id FROM community_members WHERE user_id=? AND role='OWNER')", userId);
         jdbcTemplate.update("DELETE FROM promotion_campaigns WHERE professional_user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM consultation_requests WHERE requester_user_id = ? OR professional_user_id = ?", userId, userId);
         jdbcTemplate.update("DELETE FROM professional_reviews WHERE reviewer_user_id = ? OR professional_user_id = ?", userId, userId);

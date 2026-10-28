@@ -115,7 +115,7 @@ class PhaseGHPrivacyIntegrationTest {
  @Test @Tag("malicious") void savedExportPreviewsDisappearAfterCommunityMembershipIsRevoked() throws Exception {
   var author=member();var reader=member();follow(reader,author);
   UUID community=db.queryForObject("INSERT INTO communities(name,slug,is_private,created_by) VALUES ('GH export synthetic',?,TRUE,?) RETURNING id",UUID.class,"gh-export-"+UUID.randomUUID(),author.id);
-  db.update("INSERT INTO community_members(community_id,user_id,role) VALUES (?,?,'OWNER')",community,author.id);
+  db.update("INSERT INTO community_members(community_id,user_id,role,rules_version_ack) VALUES (?,?,'OWNER',1)",community,author.id);
   db.update("INSERT INTO community_members(community_id,user_id) VALUES (?,?)",community,reader.id);
   String id=publish(author,"COMMUNITY",false,community,null);
   mvc.perform(put("/api/v1/posts/"+id+"/bookmark").header("Authorization","Bearer "+reader.token)).andExpect(status().isNoContent());
@@ -148,7 +148,7 @@ class PhaseGHPrivacyIntegrationTest {
  @Test @Tag("malicious") void communityMembershipCannotBeReplacedByFollowAndLeavingRevokesAccess() throws Exception {
   var a=member();var b=member();follow(b,a);
   UUID community=db.queryForObject("INSERT INTO communities(name,slug,is_private,created_by) VALUES ('GH synthetic',?,TRUE,?) RETURNING id",UUID.class,"gh-"+UUID.randomUUID(),a.id);
-  db.update("INSERT INTO community_members(community_id,user_id,role) VALUES (?,?,'OWNER')",community,a.id);
+  db.update("INSERT INTO community_members(community_id,user_id,role,rules_version_ack) VALUES (?,?,'OWNER',1)",community,a.id);
   String id=publish(a,"COMMUNITY",false,community,null);denied("/api/v1/posts/"+id,b);
   db.update("INSERT INTO community_members(community_id,user_id) VALUES (?,?)",community,b.id);read("/api/v1/posts/"+id,b);
   db.update("DELETE FROM community_members WHERE community_id=? AND user_id=?",community,b.id);denied("/api/v1/posts/"+id,b);

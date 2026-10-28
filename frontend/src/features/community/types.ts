@@ -13,6 +13,7 @@ export type Community = {
   member: boolean;
   membershipRole?: 'MEMBER' | 'MODERATOR' | 'OWNER' | null;
   joinRequested: boolean;
+  joinRequestRevision?: number | null;
   createdAt: string;
 };
 
