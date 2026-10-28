@@ -97,7 +97,13 @@ class CommunityNotificationIntegrationTest {
         Set<String> types = new HashSet<>();
         notifications.forEach(item -> types.add(item.get("type").asText()));
         assertEquals(Set.of("FOLLOW", "LIKE", "COMMENT", "SYSTEM_NOTICE"), types);
-        assertTrue(notifications.get(0).hasNonNull("actor"));
+        // CURRENT_TIMESTAMP is stable within this transaction; UUID tie order does not imply event order.
+        notifications.forEach(item -> {
+            if (!"SYSTEM_NOTICE".equals(item.get("type").asText())) {
+                assertTrue(item.hasNonNull("actor"));
+                assertEquals(member.userId().toString(), item.get("actor").get("userId").asText());
+            }
+        });
 
         mockMvc.perform(get("/api/v1/notifications/unread-count").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(4));

@@ -1,3 +1,5 @@
+import {ProfessionalQualificationReview} from '@/features/professional-qualification-review';
+import {ProfessionalWorkspace} from '@/features/professional-workspace';
 import {useLanguage} from '@/localization/language-provider';
 import {GrowthRewardsScreen} from '@/features/wellbeing/growth-rewards';
 import {LearningScreen} from '@/features/wellbeing/learning';
@@ -60,6 +62,8 @@ export default function ProductToolScreen() {
   const {language}=useLanguage();
   const params = useLocalSearchParams<Params>();
   const screen = Array.isArray(params.tool) ? params.tool[0] : params.tool || '';
+  if(screen==='professional-qualification-review')return <ProfessionalQualificationReview/>;
+  if(screen==='professional-workspace')return <ProfessionalWorkspace/>;
   if(screen==='growth-rewards')return <GrowthRewardsScreen/>;
   if(screen==='growth-paths')return <LearningScreen/>;
   if(screen==='question-editorial')return <QuestionEditorial/>;

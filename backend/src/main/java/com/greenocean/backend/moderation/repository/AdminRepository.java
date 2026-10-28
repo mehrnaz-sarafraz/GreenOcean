@@ -65,6 +65,7 @@ public class AdminRepository {
     }
 
     public boolean updateVerification(UUID verificationId, UUID actorId, String action, String note) {
+        if("APPROVE_VERIFICATION".equals(action))throw new com.greenocean.backend.common.exception.ConflictException("Use the independent, revision-bound professional qualification workflow");
         if ("APPROVE_VERIFICATION".equals(action)) {
             Long clean = jdbcTemplate.queryForObject("""
                     SELECT COUNT(*) FROM professional_application_documents
@@ -350,6 +351,7 @@ public class AdminRepository {
     }
 
     public boolean updateDocumentScan(UUID id, UUID actorId, String status) {
+        if("CLEAN".equals(status))throw new com.greenocean.backend.common.exception.ConflictException("A genuine scanner result is required; manual clean labels are disabled");
         int updated = jdbcTemplate.update("""
                 UPDATE professional_application_documents
                    SET scan_status = ?, scanned_at = CURRENT_TIMESTAMP, reviewed_by = ?

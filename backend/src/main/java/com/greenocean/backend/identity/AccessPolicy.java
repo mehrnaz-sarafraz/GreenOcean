@@ -11,9 +11,12 @@ import java.util.*;
 public class AccessPolicy {
     private final JdbcTemplate db;
     private final Instant legacyDeadline;
-    public AccessPolicy(JdbcTemplate db, @Value("${greenocean.phase-a.legacy-grace-until:2027-01-01T00:00:00Z}") Instant deadline) {
-        this.db = db; this.legacyDeadline = deadline;
+    private final boolean clinicEnabled;
+    @org.springframework.beans.factory.annotation.Autowired
+    public AccessPolicy(JdbcTemplate db, @Value("${greenocean.phase-a.legacy-grace-until:2027-01-01T00:00:00Z}") Instant deadline,@Value("${greenocean.clinic.enabled:false}")boolean clinicEnabled) {
+        this.db = db; this.legacyDeadline = deadline;this.clinicEnabled=clinicEnabled;
     }
+    public AccessPolicy(JdbcTemplate db,Instant deadline){this(db,deadline,false);}
     public void require(UUID userId, String service) {
         var rows = db.queryForList("""
           SELECT u.status,u.email_verified,u.phase_a_enrolled,e.age_result,e.residence_country,e.current_country
@@ -36,7 +39,10 @@ public class AccessPolicy {
           SELECT EXISTS(SELECT 1 FROM regional_services WHERE country_code=? AND service=? AND status='AVAILABLE')
           """, Boolean.class, country, service));
     }
-    public void requireCare(UUID requester,UUID professional) {
+    public void requireCare(UUID requester,UUID professional){requireCare(requester,professional,"TEXT");}
+    public void requireCare(UUID requester,UUID professional,String mode) {
+        if(!java.util.Set.of("TEXT","AUDIO","VIDEO").contains(mode))throw new ForbiddenException("Unsupported professional consultation modality");
+        if(!clinicEnabled||!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM account_eligibility e WHERE e.user_id=? AND professional_scope_live(?,e.residence_country,?) AND(e.current_country IS NULL OR professional_scope_live(?,e.current_country,?)))",Boolean.class,requester,professional,mode,professional,mode)))throw new ForbiddenException("Current independent professional and platform approvals are required");
         require(requester,"PROFESSIONAL_CARE");require(professional,"PROFESSIONAL_CARE");
         if(!Boolean.TRUE.equals(db.queryForObject("""
           SELECT EXISTS(SELECT 1 FROM professional_care_regions scope

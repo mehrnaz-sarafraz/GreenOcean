@@ -1,3 +1,4 @@
+import {ProfessionalQualificationReview} from '@/features/professional-qualification-review';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -30,6 +31,7 @@ export default function AdminTool() {
   const isAdmin = user?.roles.includes('ADMIN') === true;
   const load = useCallback(() => Promise.all([apiRequest<AdminDashboard>('/api/v1/admin/dashboard'), apiRequest<AdminOperations>('/api/v1/admin/operations')]).then(([nextDashboard, nextOperations]) => { setDashboard(nextDashboard); setOperations(nextOperations); }).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load operations data')), []);
   useEffect(() => { if (isAdmin) void load(); }, [isAdmin, load]);
+  if(screen==='verification-detail')return <ProfessionalQualificationReview/>;
   if (!isAdmin) return <ProductPage><ProductHeader title="Admin access required" subtitle="This area is restricted to authorized trust and safety staff." /><Notice tone="warning" title="Role protected" body="Authorization is enforced by the server for every admin request." /></ProductPage>;
   if (!copy[screen]) return <ProductPage><ProductHeader title="Admin page not found" subtitle="This operations route is unavailable." /></ProductPage>;
   const report = dashboard?.reports.find(item => item.id === String(params.id || '')) || dashboard?.reports[0];

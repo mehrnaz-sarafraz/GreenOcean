@@ -154,6 +154,8 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM educational_credentials WHERE user_id=?",userId);
         jdbcTemplate.update("UPDATE educational_credentials SET verified_by=NULL,revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE verified_by=?",userId);
         jdbcTemplate.update("DELETE FROM professional_articles WHERE author_id = ?", userId);
+        jdbcTemplate.update("UPDATE professional_qualification_decisions SET actor_id=NULL WHERE actor_id=?",userId);
+        jdbcTemplate.update("UPDATE clinic_release_approvals SET revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE approved_by=?",userId);
         jdbcTemplate.update("DELETE FROM professional_verifications WHERE professional_user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM professional_profiles WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM listener_applications WHERE user_id = ?", userId);

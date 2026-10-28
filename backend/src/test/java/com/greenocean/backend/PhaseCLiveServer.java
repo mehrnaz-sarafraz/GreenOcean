@@ -33,8 +33,11 @@ public class PhaseCLiveServer {
         if(!"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_BROWSER_QA")) ||
            System.getenv("GREENOCEAN_TEST_DB_URL")==null)
             throw new IllegalStateException("An explicitly isolated test database and opt-in are required");
+        boolean clinicalQa="isolated-only".equals(System.getenv("GREENOCEAN_LIVE_CLINICAL_QA"));
+        java.net.ServerSocket clinicalScanner=clinicalQa?new java.net.ServerSocket(0,10,java.net.InetAddress.getLoopbackAddress()):null;
+        if(clinicalScanner!=null)Thread.startVirtualThread(()->{while(!clinicalScanner.isClosed())try(var socket=clinicalScanner.accept()){socket.setSoTimeout(5000);var input=new java.io.DataInputStream(socket.getInputStream());while(input.readByte()!=0){}int total=0;for(int count;(count=input.readInt())>0;){total+=count;if(total>10485760)throw new java.io.IOException("Synthetic scanner limit");input.readNBytes(count);}socket.getOutputStream().write("stream: OK\0".getBytes(java.nio.charset.StandardCharsets.US_ASCII));}catch(java.io.IOException ignored){}});
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
-            "--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true","--greenocean.listener-support.extension-enabled=true","--greenocean.listener-support.followup-enabled=true",
+            "--greenocean.clinic.scanning-approved="+clinicalQa,"--greenocean.clinic.scanner-port="+(clinicalScanner==null?0:clinicalScanner.getLocalPort()),"--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true","--greenocean.listener-support.extension-enabled=true","--greenocean.listener-support.followup-enabled=true",
             "--greenocean.groups.activities-enabled=true","--greenocean.groups.proposals-enabled=true","--greenocean.groups.activation-approved=true","--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
@@ -42,6 +45,7 @@ public class PhaseCLiveServer {
         var db=context.getBean(JdbcTemplate.class);var json=context.getBean(ObjectMapper.class);
         // Only this disposable QA database is given a synthetic available region.
         db.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','COMMUNITY','AVAILABLE') ON CONFLICT(country_code,service) DO UPDATE SET status='AVAILABLE'");
+        if(clinicalQa)for(String clinicalService:java.util.List.of("PROFESSIONAL_CARE","PROFESSIONAL_DIRECTORY"))db.update("INSERT INTO regional_services(country_code,service,status) VALUES('IR',?,'AVAILABLE') ON CONFLICT(country_code,service) DO UPDATE SET status='AVAILABLE'",clinicalService);
         String key=UUID.randomUUID().toString()+UUID.randomUUID();
         Path token=Path.of("target","qa-mailbox-token");Files.writeString(token,key);
         try {Files.setPosixFilePermissions(token,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));}
@@ -129,6 +133,6 @@ public class PhaseCLiveServer {
                 db.execute("ALTER TABLE listener_bookings ENABLE TRIGGER listener_booking_guard");return null;
             });exchange.sendResponseHeaders(204,-1);
         }catch(RuntimeException failure){exchange.sendResponseHeaders(400,-1);}finally{exchange.close();}});
-        mailbox.start();Runtime.getRuntime().addShutdownHook(new Thread(()->{mailbox.stop(0);context.close();}));
+        mailbox.start();Runtime.getRuntime().addShutdownHook(new Thread(()->{mailbox.stop(0);context.close();if(clinicalScanner!=null)try{clinicalScanner.close();}catch(java.io.IOException ignored){}}));
     }
 }

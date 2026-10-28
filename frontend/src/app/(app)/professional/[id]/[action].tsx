@@ -59,7 +59,7 @@ function Contact({ professionalId, name }: { professionalId: string; name: strin
 }
 
 function Application() {
-  const { options } = usePlatformData(); const professionalTypes = optionsIn(options, 'PROFESSIONAL_TYPE'); const genders = optionsIn(options, 'GENDER'); const consultationModes = optionsIn(options, 'CONSULTATION_MODE');
+  const { options } = usePlatformData(); const professionalTypes = optionsIn(options, 'PROFESSIONAL_TYPE').filter(o=>['PSYCHOLOGIST','COUNSELOR','PSYCHIATRIST'].includes(o.key)); const genders = optionsIn(options, 'GENDER'); const consultationModes = optionsIn(options, 'CONSULTATION_MODE');
   const [form, setForm] = useState({ professionalType: '', title: '', specialization: '', bio: '', yearsOfExperience: '', specialties: '', languages: '', gender: '', country: '', city: '', workplace: '', clinicName: '', clinicAddress: '', education: '', licenseNumber: '', consultationModes: '' });
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [busy, setBusy] = useState(false); const [result, setResult] = useState<ProfessionalApplication | null>(null); const [error, setError] = useState('');
@@ -74,7 +74,7 @@ function Application() {
 function Verification() {
   const [item, setItem] = useState<ProfessionalApplication | null>(null); const [error, setError] = useState('');
   useEffect(() => { apiRequest<ProfessionalApplication>('/api/v1/professional-applications/me').then(setItem).catch(caught => setError(caught instanceof Error ? caught.message : 'No application found')); }, []);
-  return <ProductPage><ProductHeader eyebrow="VERIFICATION" title="Professional application status" subtitle="Review status comes directly from the credential workflow." />{item ? <ProductCard><View style={styles.between}><Text style={styles.title}>{item.profession}</Text><Pill label={item.status} active={item.status === 'APPROVED'} /></View><Text style={styles.body}>{item.country} · {item.documentNames.length} documents</Text><Text style={styles.meta}>Submitted {new Date(item.submittedAt).toLocaleString()}</Text>{item.note && <Notice title="Reviewer note" body={item.note} />}</ProductCard> : <EmptyState icon="verified" title="No application available" body={error} />}</ProductPage>;
+  return <ProductPage><ProductHeader eyebrow="VERIFICATION" title="Professional application status" subtitle="Review status comes directly from the credential workflow." /><AppButton label="Professional workspace / فضای متخصص" onPress={()=>router.push('/tools/professional-workspace' as never)}/>{item ? <ProductCard><View style={styles.between}><Text style={styles.title}>{item.profession}</Text><Pill label={item.status} active={item.status === 'APPROVED'} /></View><Text style={styles.body}>{item.country} · {item.documentNames.length} documents</Text><Text style={styles.meta}>Submitted {new Date(item.submittedAt).toLocaleString()}</Text>{item.note && <Notice title="Reviewer note" body={item.note} />}</ProductCard> : <EmptyState icon="verified" title="No application available" body={error} />}</ProductPage>;
 }
 
 function ProfessionalConsultations() {
