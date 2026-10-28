@@ -24,6 +24,7 @@ public record AccountArchiveResponse(
         java.util.Map<String,Object> governance,
         java.util.List<java.util.Map<String,Object>> socialDrafts,
         java.util.List<java.util.Map<String,Object>> socialModeration,
-        java.util.List<java.util.Map<String,Object>> messageRequests
+        java.util.List<java.util.Map<String,Object>> messageRequests,
+        java.util.Map<String,Object> groupGovernance
 ) {
 }

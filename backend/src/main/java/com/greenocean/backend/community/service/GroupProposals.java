@@ -1,0 +1,32 @@
+package com.greenocean.backend.community.service;
+import com.greenocean.backend.common.exception.*;
+import com.greenocean.backend.post.service.ContentClassifier;
+import com.greenocean.backend.post.service.ContentSafety;
+import jakarta.validation.constraints.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
+import java.util.*;
+@Service
+public class GroupProposals {
+ public record Input(@NotBlank @Size(max=80) String name,@NotBlank @Size(max=500) String description,@NotBlank @Size(max=1000) String purpose,@NotNull @Pattern(regexp="PUBLIC|PRIVATE|HIDDEN") String privacyType,@NotEmpty @Size(max=20) List<@NotBlank @Size(max=500) String> rules,@Min(0) long revision){}
+ private final GroupPolicy policy;private final ObjectMapper json;private final ContentClassifier classifier;private final boolean intake,activation;
+ public GroupProposals(GroupPolicy policy,ObjectMapper json,ContentClassifier classifier,@Value("${greenocean.groups.proposals-enabled:false}")boolean intake,@Value("${greenocean.groups.activation-approved:false}")boolean activation){this.policy=policy;this.json=json;this.classifier=classifier;this.intake=intake;this.activation=activation;}
+ @Transactional public Map<String,Object> save(UUID owner,UUID id,Input in){if(!intake)throw new ForbiddenException("Group proposals are unavailable pending processing and review readiness");policy.eligible(owner);policy.bound(owner,"GROUP_PROPOSAL_WRITE",20);
+  if(id==null){id=UUID.randomUUID();policy.db.update("INSERT INTO community_proposals(id,owner_id,name,description,purpose,privacy_type,rules) VALUES(?,?,?,?,?,?,?::jsonb)",id,owner,in.name().trim(),in.description().trim(),in.purpose().trim(),in.privacyType(),json.writeValueAsString(in.rules()));}
+  else if(policy.db.update("UPDATE community_proposals SET name=?,description=?,purpose=?,privacy_type=?,rules=?::jsonb,revision=revision+1,status='DRAFT',updated_at=CURRENT_TIMESTAMP WHERE id=? AND owner_id=? AND revision=? AND status IN('DRAFT','NEEDS_REVISION')",in.name().trim(),in.description().trim(),in.purpose().trim(),in.privacyType(),json.writeValueAsString(in.rules()),id,owner,in.revision())!=1)throw new ConflictException("Proposal unavailable or changed; reload before editing");return own(owner,id);}
+ @Transactional(readOnly=true) public List<Map<String,Object>> mine(UUID owner,int page){return policy.db.queryForList("SELECT id,name,description,purpose,privacy_type,rules::text AS rules,revision,status,decision_note,community_id,created_at,updated_at FROM community_proposals WHERE owner_id=? ORDER BY created_at DESC,id DESC LIMIT 20 OFFSET ?",owner,Math.min(1000,Math.max(0,page))*20);}
+ public Map<String,Object> own(UUID owner,UUID id){return policy.db.queryForList("SELECT id,name,description,purpose,privacy_type,rules::text AS rules,revision,status,decision_note,community_id FROM community_proposals WHERE id=? AND owner_id=?",id,owner).stream().findFirst().orElseThrow(()->new NotFoundException("Proposal was not found"));}
+ @Transactional public void transition(UUID owner,UUID id,long revision,String action){policy.eligible(owner);String next="SUBMIT".equals(action)?"SUBMITTED":"CANCELLED";int n=policy.db.update("UPDATE community_proposals SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND owner_id=? AND revision=? AND status IN('DRAFT','NEEDS_REVISION','SUBMITTED') AND (?='CANCELLED' OR status<>'SUBMITTED')",next,id,owner,revision,next);if(n!=1)throw new ConflictException("Proposal unavailable or changed");policy.notify(owner);}
+ @Transactional public List<Map<String,Object>> queue(UUID actor,int page){policy.staff(actor);policy.audit(actor,null,"GROUP_PROPOSAL_QUEUE");return policy.db.queryForList("SELECT id,name,description,purpose,privacy_type,rules::text AS rules,revision,status FROM community_proposals WHERE status='SUBMITTED' ORDER BY created_at,id LIMIT 20 OFFSET ?",Math.min(1000,Math.max(0,page))*20);}
+ @Transactional public Map<String,Object> decide(UUID actor,UUID id,long revision,String outcome,String note){policy.staff(actor);if(!Set.of("APPROVED","NEEDS_REVISION","REJECTED").contains(outcome))throw new IllegalArgumentException("Invalid review outcome");var rows=policy.db.queryForList("SELECT * FROM community_proposals WHERE id=? FOR UPDATE",id);if(rows.isEmpty())throw new NotFoundException("Proposal was not found");var p=rows.getFirst();
+  if(actor.equals(p.get("owner_id")))throw new ForbiddenException("An independent platform reviewer is required");
+  if(!"SUBMITTED".equals(p.get("status"))||((Number)p.get("revision")).longValue()!=revision)throw new ConflictException("Proposal changed or already reviewed");
+  UUID group=null;if("APPROVED".equals(outcome)){if(!activation)throw new ForbiddenException("Group activation is disabled pending actual safety and processing approval");UUID owner=(UUID)p.get("owner_id");policy.eligible(owner);
+   String text=p.get("name")+"\n"+p.get("description")+"\n"+p.get("purpose");if(classifier.assess(text).outcome()!=ContentSafety.Outcome.ALLOW)throw new ConflictException("Proposal requires revision before activation");
+   group=UUID.randomUUID();String privacy=(String)p.get("privacy_type");policy.db.update("INSERT INTO communities(id,name,slug,description,is_private,privacy_type,created_by) VALUES(?,?,?,?,?,?,?)",group,p.get("name"),"g-"+group,p.get("description"),!"PUBLIC".equals(privacy),privacy,owner);policy.db.update("INSERT INTO community_members(community_id,user_id,role) VALUES(?,?,'OWNER')",group,owner);
+   List<String> rules=json.readValue(p.get("rules").toString(),json.getTypeFactory().constructCollectionType(List.class,String.class));for(int i=0;i<rules.size();i++)policy.db.update("INSERT INTO community_rules(community_id,position,rule_text) VALUES(?,?,?)",group,i+1,rules.get(i));
+  }
+  policy.db.update("INSERT INTO community_proposal_reviews(proposal_id,revision,outcome,reviewer_id,note) VALUES(?,?,?,?,?)",id,revision,outcome,actor,note.trim());policy.db.update("UPDATE community_proposals SET status=?,reviewer_id=?,decision_note=?,reviewed_at=CURRENT_TIMESTAMP,community_id=? WHERE id=?",outcome,actor,note.trim(),group,id);policy.audit(actor,group,"GROUP_PROPOSAL_"+outcome);policy.notify((UUID)p.get("owner_id"));return Map.of("status",outcome,"proposalId",id);}
+}

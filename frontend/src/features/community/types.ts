@@ -5,7 +5,11 @@ export type Community = {
   description?: string | null;
   iconUrl?: string | null;
   privateCommunity: boolean;
-  memberCount: number;
+  memberCount: number | null;
+  privacyType?: 'PUBLIC'|'PRIVATE'|'HIDDEN';
+  status?: string;
+  rulesVersion?: number;
+  rulesJson?: string | null;
   member: boolean;
   membershipRole?: 'MEMBER' | 'MODERATOR' | 'OWNER' | null;
   joinRequested: boolean;

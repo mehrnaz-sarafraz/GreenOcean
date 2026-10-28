@@ -10,10 +10,14 @@ public record CommunityResponse(
         String description,
         String iconUrl,
         boolean privateCommunity,
-        long memberCount,
+        Long memberCount,
         boolean member,
         String membershipRole,
         boolean joinRequested,
-        Instant createdAt
+        Instant createdAt,
+        String privacyType,
+        String status,
+        long rulesVersion,
+        String rulesJson
 ) {
 }

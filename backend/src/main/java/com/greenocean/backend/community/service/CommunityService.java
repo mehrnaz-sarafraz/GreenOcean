@@ -30,14 +30,7 @@ public class CommunityService {
 
     @Transactional
     public CommunityResponse create(UUID userId, CreateCommunityRequest request) {
-        UUID id = uuidGenerator.nextUuid();
-        try {
-            communityRepository.create(id, userId, request.name().trim(), request.slug().trim(),
-                    normalize(request.description()), request.privateCommunity());
-        } catch (IllegalStateException exception) {
-            throw new ConflictException(exception.getMessage());
-        }
-        return getById(id, userId);
+        throw new ConflictException("Submit a group proposal for platform review; immediate creation is unavailable");
     }
 
     @Transactional(readOnly = true)
