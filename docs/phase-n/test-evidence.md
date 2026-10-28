@@ -9,3 +9,6 @@
 Synthetic test-only time fixtures are excluded from the production jar. Integration tests replace the N clock inside a rolled-back test transaction; the keyed loopback browser fixture moves only a synthetic future reservation to the present with the immutability trigger restored in the same transaction. This proves boundary behavior and the real scheduled handoff without claiming a real thirty-minute wall-clock staffing exercise.
 
 N2 and N3 checks are pending. Full A–M regression and exact GitHub run evidence must be recorded before final Phase N completion.
+
+## Initial exact-head CI adf005f
+GitHub run [40692653809](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40692653809): backend 391/391, synthetic backup restore, frontend and release scans passed. Real-stack browser tests: 33 passed, including the full new scheduled conversation; the new cancellation UI assertion failed because the rendered status also includes its reason code. The assertion now accepts that exact documented reason suffix while retaining the independent API status and zero-live-request checks. A new complete run is required before accepting N1.
