@@ -40,7 +40,9 @@ public class ListenerSupportPolicy {
  public void lock(UUID a,UUID b){db.queryForList("SELECT listener_lock_pair(?,?)",a,b);}
  public void liveLock(){db.queryForList("SELECT pg_advisory_xact_lock(72491001)");}
  public void bound(UUID who,String action,int count){if(!rates.allowInCurrentTransaction("listener-planning:"+action+":"+who,count,Duration.ofHours(1)))throw denied(429,"RATE_LIMITED","Please pause before trying this support action again.");}
- public void shutdownDisabled(){if(!booking()){
+ public void shutdownDisabled(){if(!queue()){
+  db.update("UPDATE listener_wait_queue SET status='SERVICE_UNAVAILABLE',reason_code='SERVICE_DISABLED' WHERE status IN('WAITING','OFFERED')");
+ }if(!booking()){
   db.update("UPDATE live_support_requests SET status='CANCELLED',reason_code='SERVICE_DISABLED',ended_at=clock_timestamp() WHERE source_booking_id IS NOT NULL AND status IN('REQUESTED','ACCEPTED')");
   db.update("UPDATE listener_bookings SET status='CANCELLED_BY_SERVICE',reason_code='SERVICE_DISABLED',revision=revision+1 WHERE status IN('CONFIRMED','CHECKED_IN','HANDOFF_REQUESTED')");}}
  public void notice(UUID user,UUID entity,String kind,boolean optedIn){if(!optedIn||!truth("SELECT COALESCE((SELECT notify_messages FROM user_preferences WHERE user_id=?),FALSE)",user))return;

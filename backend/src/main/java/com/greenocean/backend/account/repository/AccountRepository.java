@@ -99,6 +99,9 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);
         jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+        jdbcTemplate.update("DELETE FROM listener_wait_queue WHERE member_id=? OR listener_id=?",userId,userId);
+        jdbcTemplate.update("DELETE FROM listener_queue_coverage_windows WHERE listener_id=?",userId);
+        jdbcTemplate.update("UPDATE listener_queue_coverage_windows SET approved_by=NULL,revoked_at=COALESCE(revoked_at,listener_support_now()) WHERE approved_by=?",userId);
         jdbcTemplate.update("DELETE FROM listener_support_notices WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM listener_bookings WHERE member_id=? OR listener_id=?",userId,userId);
         jdbcTemplate.update("DELETE FROM listener_calendar_rules WHERE listener_id=?",userId);

@@ -21,4 +21,17 @@ sequenceDiagram
  Member->>Server: Activate
  Server->>Server: Create one listener conversation
 ```
-Queue sequence is pending the N2 milestone. The existing Phase I acceptance, activation, presence, interruption and safety rules remain authoritative.
+## Queue
+```mermaid
+sequenceDiagram
+ Member->>Server: Explicit bounded queue admission
+ Server->>Server: Verify staffed qualified actual coverage
+ Server->>Member: Persisted short-lived listener proposal
+ Member->>Server: Confirm exact proposal readiness
+ Server->>Server: Atomically create I request and mark TRANSFERRED
+ Server->>Listener: Existing Phase I offer
+ Listener->>Server: Accept
+ Member->>Server: Activate
+ Server->>Server: Create one listener conversation
+```
+The transfer commit is the independence point: later parent expiry cannot invalidate this I request. The existing Phase I acceptance, activation, presence, interruption and safety rules remain authoritative.
