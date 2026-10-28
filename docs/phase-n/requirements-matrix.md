@@ -10,13 +10,13 @@
 | N-06 | Appointment check-in | Verified N1: run 40694008890 |
 | N-07 | Live-session and calendar capacity coordination | Verified N1: run 40694008890 |
 | N-08 | Listener and member scheduling interfaces | Verified N1: run 40694008890 |
-| N-09 | Queue entry eligibility | Implemented in N2; final CI pending |
-| N-10 | Twenty-minute server-enforced queue expiry | Implemented in N2; final CI pending |
-| N-11 | Fair queue assignment | Implemented in N2; final CI pending |
-| N-12 | Queue-to-live handoff | Implemented in N2; final CI pending |
-| N-13 | Queue cancellation and recovery | Implemented in N2; final CI pending |
-| N-14 | Queue capacity and contention | Implemented in N2; final CI pending |
-| N-15 | Queue notifications | Implemented in N2; final CI pending |
+| N-09 | Queue entry eligibility | Verified N2: run 40702893879 |
+| N-10 | Twenty-minute server-enforced queue expiry | Verified N2: run 40702893879 |
+| N-11 | Fair queue assignment | Verified N2: run 40702893879 |
+| N-12 | Queue-to-live handoff | Verified N2: run 40702893879 |
+| N-13 | Queue cancellation and recovery | Verified N2: run 40702893879 |
+| N-14 | Queue capacity and contention | Verified N2: run 40702893879 |
+| N-15 | Queue notifications | Verified N2: run 40702893879 |
 | N-16 | Preserve the direct Live Now pathway | Verified direct I in N1; preserved by N2 |
 | N-17 | Thirty-minute planned support sessions | Pending N3 |
 | N-18 | Limited consensual extension | Pending N3 |
