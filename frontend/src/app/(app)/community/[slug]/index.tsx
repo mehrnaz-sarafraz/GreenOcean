@@ -1,108 +1,33 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { AppButton } from '@/components/app-button';
-import { AppIcon } from '@/components/app-icon';
-import { Screen } from '@/components/screen';
-import { PostCard } from '@/features/content/post-card';
-import { PageResponse, PostItem } from '@/features/content/types';
-import { CommunityDetails } from '@/features/community/types';
-import { usePlatformData } from '@/features/platform/data-provider';
-import { apiRequest } from '@/lib/api/client';
-import { useLanguage } from '@/localization/language-provider';
-import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
-
-export default function CommunityDetail() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
-  const { t, isRtl } = useLanguage();
-  const { communities, setCommunities } = usePlatformData();
-  const community = communities.find(item => item.slug === slug);
-  const [posts, setPosts] = useState<PostItem[]>([]);
-  const [details, setDetails] = useState<CommunityDetails | null>(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!community?.member) { setPosts([]); setDetails(null); return; }
-      setError('');
-      Promise.all([
-        apiRequest<PageResponse<PostItem>>(`/api/v1/communities/${community.id}/posts?size=50`),
-        apiRequest<CommunityDetails>(`/api/v1/communities/${community.id}/details`),
-      ]).then(([postResult, detailResult]) => {
-        setPosts(postResult.items);
-        setDetails(detailResult);
-      }).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load this circle'));
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [community?.id, community?.member]);
-
-  async function join() {
-    if (!community) return;
-    const updated = await apiRequest<typeof community>(`/api/v1/communities/${community.id}/membership`, { method: 'PUT' });
-    setCommunities(items => items.map(item => item.id === community.id ? updated : item));
-  }
-
-  async function cancelRequest() {
-    if (!community) return;
-    await apiRequest(`/api/v1/communities/${community.id}/join-request`, { method: 'DELETE' });
-    setCommunities(items => items.map(item => item.id === community.id ? { ...item, joinRequested: false } : item));
-  }
-
-  async function toggleEvent(eventId: string, joined: boolean) {
-    if (!community) return;
-    setError('');
-    try {
-      const next = await apiRequest<CommunityDetails>(
-        `/api/v1/communities/${community.id}/events/${eventId}/attendance`,
-        { method: joined ? 'DELETE' : 'PUT' },
-      );
-      setDetails(next);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not update event attendance');
-    }
-  }
-
-  if (!community) return <Screen style={styles.screen}><View style={styles.content}><Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable><Text style={styles.empty}>Community not found.</Text></View></Screen>;
-
-  return <Screen scroll style={styles.screen}><View style={styles.content}>
-    <Pressable onPress={() => router.back()}><AppIcon name="arrow_back" color={colors.ocean700} /></Pressable>
-    <View style={styles.hero}><View style={styles.heroIcon}><AppIcon name="diversity_1" size={34} color={colors.ocean700} /></View><Text style={[styles.title, { textAlign: isRtl ? 'right' : 'left' }]}>{community.name}</Text><Text style={[styles.meta, { textAlign: isRtl ? 'right' : 'left' }]}>{isRtl?'عضویت خصوصی است':'Membership is private'}</Text><Text style={[styles.desc, { textAlign: isRtl ? 'right' : 'left' }]}>{community.description}</Text><AppButton label={community.member ? t('shareHere') : community.joinRequested ? 'Request sent' : community.privateCommunity ? 'Request access' : t('join')} variant={community.joinRequested ? 'secondary' : 'primary'} onPress={() => community.member ? router.push('/create') : community.joinRequested ? void cancelRequest() : void join()} /></View>
-    {!community.member && <Text style={styles.empty}>{community.joinRequested ? 'Your request is waiting for a community moderator.' : community.privateCommunity ? 'Request access to read and share in this private circle.' : 'Join this circle to read and share community posts.'}</Text>}
-    {!!error && <Text style={styles.error}>{error}</Text>}
-    {community.member && details && <>
-      {(community.membershipRole === 'OWNER' || community.membershipRole === 'MODERATOR') && <View style={styles.manage}><Text style={styles.manageTitle}>Community management</Text><AppButton label="Rules" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-rules', slug: community.slug } } as never)} /><AppButton label="Members & requests" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-members', slug: community.slug } } as never)} /><AppButton label="Events" variant="secondary" onPress={() => router.push({ pathname: '/tools/[tool]' as never, params: { tool: 'community-events', slug: community.slug } } as never)} /></View>}
-      <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>Upcoming events</Text>
-      {details.events.length ? details.events.map(event => <View key={event.id} style={styles.card}>
-        <View style={styles.cardHead}><View style={styles.cardCopy}><Text style={styles.cardTitle}>{event.title}</Text><Text style={styles.meta}>{new Date(event.startsAt).toLocaleString()} · {event.format.replaceAll('_', ' ')}</Text></View><AppIcon name="event" color={colors.ocean600} /></View>
-        {!!event.description && <Text style={styles.cardBody}>{event.description}</Text>}
-        <Text style={styles.meta}>Hosted by {event.hostName || 'Community team'} · {event.attendeeCount}{event.capacity ? `/${event.capacity}` : ''} attending</Text>
-        <AppButton label={event.joined ? 'Leave event' : 'Join event'} variant={event.joined ? 'secondary' : 'primary'} onPress={() => void toggleEvent(event.id, event.joined)} />
-      </View>) : <Text style={styles.empty}>No upcoming events are scheduled.</Text>}
-
-      <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>Community guidelines</Text>
-      <View style={styles.card}>{details.rules.map(rule => <View key={rule.id} style={styles.rule}><View style={styles.ruleNumber}><Text style={styles.ruleNumberText}>{rule.position}</Text></View><Text style={styles.ruleText}>{rule.text}</Text></View>)}</View>
-
-      <View style={styles.sectionHead}><Text style={styles.section}>Members</Text><Text style={styles.meta}>{details.members.length} visible</Text></View>
-      <View style={styles.card}>{details.members.slice(0, 12).map(member => <View key={member.userId} style={styles.member}><View style={styles.memberIcon}><AppIcon name={member.role === 'MEMBER' ? 'person' : 'shield'} size={18} color={colors.ocean700} /></View><View style={styles.cardCopy}><Text style={styles.memberName}>{member.displayName}</Text><Text style={styles.meta}>@{member.username} · {member.role.toLowerCase()}</Text></View></View>)}</View>
-    </>}
-
-    <Text style={[styles.section, { textAlign: isRtl ? 'right' : 'left' }]}>{t('communityPosts')}</Text>
-    {posts.map(post => <PostCard key={post.id} post={post} />)}
-    {community.member && posts.length === 0 && !error && <Text style={styles.empty}>No stories have been shared here yet.</Text>}
-  </View></Screen>;
+import {useLocalSearchParams,router} from 'expo-router';import {useRef,useState} from 'react';import {Switch,Text,TextInput,View} from 'react-native';
+import {Screen} from '@/components/screen';import {AppButton} from '@/components/app-button';import {apiRequest} from '@/lib/api/client';import {useLanguage} from '@/localization/language-provider';import {useForegroundPoll} from '@/features/live-support/foreground';import {newClientId} from '@/features/live-support/policy';import {Community,CommunityDetails} from '@/features/community/types';import {PostItem,PageResponse} from '@/features/content/types';import {PostCard} from '@/features/content/post-card';
+type Applicant={userId:string;displayName:string;requestRevision:number};type Invitation={id:string;display_name:string;expires_at:string};type Ban={user_id:string;display_name:string;reason:string};type Person={userId:string;displayName:string;username:string};
+export default function GroupHome(){const {slug}=useLocalSearchParams<{slug:string}>();const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+ const [group,setGroup]=useState<Community|null>(null),[details,setDetails]=useState<CommunityDetails|null>(null),[posts,setPosts]=useState<PostItem[]>([]),[requests,setRequests]=useState<Applicant[]>([]),[invites,setInvites]=useState<Invitation[]>([]),[bans,setBans]=useState<Ban[]>([]);
+ const [ack,setAck]=useState<number|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[term,setTerm]=useState(''),[people,setPeople]=useState<Person[]>([]),[reason,setReason]=useState(''),[ruleText,setRuleText]=useState('');const retries=useRef<Record<string,string>>({});
+ const refresh=useForegroundPoll(async current=>{try{const g=await apiRequest<Community>('/api/v1/communities/slug/'+encodeURIComponent(slug));let d:CommunityDetails|null=null,p:PostItem[]=[],r:Applicant[]=[],i:Invitation[]=[],b:Ban[]=[];
+  if(g.member){const values=await Promise.all([apiRequest<CommunityDetails>('/api/v1/communities/'+g.id+'/details'),apiRequest<PageResponse<PostItem>>('/api/v1/communities/'+g.id+'/posts')]);d=values[0];p=values[1].items;if(['OWNER','MODERATOR'].includes(g.membershipRole??'')){[r,i,b]=await Promise.all([apiRequest<Applicant[]>('/api/v1/communities/'+g.id+'/join-requests'),apiRequest<Invitation[]>('/api/v1/communities/'+g.id+'/invitations'),apiRequest<Ban[]>('/api/v1/communities/'+g.id+'/bans')]);}}
+  if(current()){setGroup(g);setDetails(d);setPosts(p);setRequests(r);setInvites(i);setBans(b);setError('');}}
+  catch(e){if(current()){setGroup(null);setDetails(null);setPosts([]);setRequests([]);setInvites([]);setBans([]);setError(e instanceof Error?e.message:tr('Group unavailable','گروه در دسترس نیست'));}}},10000,()=>{setGroup(null);setDetails(null);setPosts([]);setRequests([]);setInvites([]);setBans([]);setPeople([]);setReason('');setRuleText('');setAck(null);});
+ async function act(path:string,method:string,body?:object){if(busy)return false;setBusy(true);setError('');try{await apiRequest('/api/v1/'+path,{method,body:body?JSON.stringify(body):undefined});await refresh();return true;}catch(e){setError(e instanceof Error?e.message:'Unavailable');return false;}finally{setBusy(false);}}
+ async function find(){if(busy)return;setBusy(true);try{setPeople((await apiRequest<PageResponse<Person>>('/api/v1/search/users?q='+encodeURIComponent(term)+'&size=10')).items);}catch(e){setPeople([]);setError(e instanceof Error?e.message:'Unavailable');}finally{setBusy(false);}}
+ async function invite(person:Person){if(!group)return;const key=retries.current[person.userId]??newClientId();retries.current[person.userId]=key;if(await act('communities/'+group.id+'/invitations','POST',{targetId:person.userId,retryKey:key})){delete retries.current[person.userId];setPeople([]);}}
+ const base='communities/'+group?.id;const manager=['OWNER','MODERATOR'].includes(group?.membershipRole??'');const owner=group?.membershipRole==='OWNER';
+ return <Screen scroll><View style={{gap:16,direction:language==='fa'?'rtl':'ltr',maxWidth:800,width:'100%',alignSelf:'center'}}><AppButton label={tr('Back','بازگشت')} variant="secondary" onPress={()=>router.back()}/>{!!error&&<Text accessibilityRole="alert">{error}</Text>}<AppButton label={tr('Refresh group','دریافت دوبارهٔ گروه')} variant="secondary" onPress={()=>void refresh()}/>
+ {group&&<><Text accessibilityRole="header">{group.name}</Text><Text>{group.description}</Text><Text>{group.privacyType??(group.privateCommunity?'PRIVATE':'PUBLIC')} · {group.status??'ACTIVE'}</Text><Text>{tr('Discussion and activities require current membership. Only managers see the roster. Named participation is visible to members; anonymous posts do not guarantee that text or small audiences cannot identify you. This is peer support, not treatment or emergency care.','گفت‌وگو و فعالیت‌ها نیازمند عضویت فعلی‌اند. فهرست اعضا فقط برای مدیران است. مشارکت با هویت اجتماعی برای اعضا قابل‌مشاهده است؛ ناشناسی پست مانع حدس هویت از متن یا گروه کوچک نمی‌شود. این حمایت همتاست، نه درمان یا خدمات اضطراری.')}</Text>
+ <Text accessibilityRole="header">{tr('Group rules','قوانین گروه')}</Text><Text>{tr('Platform safety standards always apply; group rules cannot weaken them.','استانداردهای ایمنی پلتفرم همیشه اجرا می‌شوند؛ قوانین گروه نمی‌توانند آن‌ها را ضعیف کنند.')}</Text><Text selectable>{group.rulesJson??''}</Text><Switch accessibilityLabel={tr('Acknowledge current group rules','تأیید قوانین فعلی گروه')} value={ack===group.rulesVersion} onValueChange={v=>setAck(v?group.rulesVersion??null:null)}/>
+ {group.member?<><AppButton label={tr('Record rules acknowledgment','ثبت تأیید قوانین')} disabled={busy||ack!==group.rulesVersion} onPress={()=>void act(base+'/rules-ack','PUT',{rulesVersion:group.rulesVersion})}/><AppButton label={tr('Write in this group','نوشتن در این گروه')} disabled={busy||ack!==group.rulesVersion||group.status==='RESTRICTED'} onPress={()=>{void (async()=>{if(await act(base+'/rules-ack','PUT',{rulesVersion:group.rulesVersion}))router.push({pathname:'/(app)/create',params:{groupId:group.id}});})();}}/><AppButton label={tr('Leave group','ترک گروه')} variant="secondary" disabled={busy||owner} onPress={()=>void act(base+'/membership','DELETE')}/>{owner&&<Text>{tr('Transfer ownership before leaving.','پیش از خروج، مالکیت را منتقل کنید.')}</Text>}</>:group.joinRequested?<AppButton label={tr('Cancel access request','لغو درخواست عضویت')} disabled={busy} variant="secondary" onPress={()=>void act(base+'/join-request','DELETE',{requestRevision:group.joinRequestRevision})}/>:<AppButton label={group.privateCommunity?tr('Request group access','درخواست عضویت در گروه'):tr('Join group','عضویت در گروه')} disabled={busy||ack!==group.rulesVersion||group.status==='RESTRICTED'} onPress={()=>void act(base+'/membership','PUT',{rulesVersion:group.rulesVersion})}/>}
+ {posts.map(post=><PostCard key={post.id} post={post}/>)}
+ {details&&<><Text accessibilityRole="header">{tr('Text-based group activities','فعالیت‌های متنی گروه')}</Text><Text>{tr('Scheduling is not live audio or video. A host identity may be visible; participant lists stay private.','زمان‌بندی به‌معنای صوت یا ویدئوی زنده نیست. هویت میزبان ممکن است دیده شود؛ فهرست شرکت‌کنندگان خصوصی می‌ماند.')}</Text>{details.events.map(event=><View key={event.id} style={{gap:10}}><Text>{event.title}</Text><Text>{new Date(event.startsAt).toLocaleString(language)} · {event.status}</Text><Text>{event.description}</Text><Text>{event.hostName}</Text><AppButton label={event.joined?tr('Leave activity','انصراف از فعالیت'):tr('Attend activity','شرکت در فعالیت')} disabled={busy||event.status!=='SCHEDULED'} onPress={()=>void act(base+'/events/'+event.id+'/attendance',event.joined?'DELETE':'PUT')}/></View>)}</>}
+ {manager&&<View style={{gap:12}}><Text accessibilityRole="header">{tr('Group management','مدیریت گروه')}</Text><Text>{tr('Group roles do not grant staff powers or anonymous attribution.','نقش گروه، اختیار کارکنان یا شناسایی نویسندهٔ ناشناس نمی‌دهد.')}</Text>
+ {requests.map(r=><View key={r.userId}><Text>{r.displayName}</Text><AppButton label={tr('Approve membership','تأیید عضویت')} disabled={busy} onPress={()=>void act(base+'/join-requests/'+r.userId+'/approve','POST',{requestRevision:r.requestRevision})}/><AppButton label={tr('Decline membership','رد عضویت')} variant="secondary" disabled={busy} onPress={()=>void act(base+'/join-requests/'+r.userId,'DELETE',{requestRevision:r.requestRevision})}/></View>)}
+ <TextInput accessibilityLabel={tr('Find invitation recipient','یافتن گیرندهٔ دعوت')} value={term} onChangeText={setTerm}/><AppButton label={tr('Find eligible member','یافتن عضو مجاز')} disabled={busy||term.trim().length<2} onPress={()=>void find()}/>{people.map(person=><AppButton key={person.userId} label={tr('Invite: ','دعوت: ')+person.displayName} disabled={busy} onPress={()=>void invite(person)}/>)}
+ {invites.map(i=><View key={i.id}><Text>{i.display_name} · {new Date(i.expires_at).toLocaleString(language)}</Text><AppButton label={tr('Revoke invitation','لغو دعوت')} variant="secondary" disabled={busy} onPress={()=>void act('community-invitations/'+i.id+'/decision','POST',{action:'REVOKE',rulesVersion:0})}/></View>)}
+ <TextInput accessibilityLabel={tr('Member action explanation','توضیح اقدام دربارهٔ عضو')} value={reason} onChangeText={setReason} maxLength={1000}/>
+ {details?.members.map(member=><View key={member.userId} style={{gap:8}}><Text>{member.displayName} · {member.role}</Text>{member.role!=='OWNER'&&<><AppButton label={tr('Remove member: ','حذف عضو: ')+member.displayName} variant="secondary" disabled={busy||!reason.trim()} onPress={()=>void act(base+'/members/'+member.userId+'/action','POST',{action:'REMOVE',reason})}/><AppButton label={tr('Ban member: ','مسدودکردن عضویت: ')+member.displayName} variant="secondary" disabled={busy||!reason.trim()} onPress={()=>void act(base+'/members/'+member.userId+'/action','POST',{action:'BAN',reason})}/>{owner&&<><AppButton label={(member.role==='MODERATOR'?tr('Make member: ','تبدیل به عضو: '):tr('Make moderator: ','تبدیل به مدیر: '))+member.displayName} variant="secondary" disabled={busy} onPress={()=>void act(base+'/members/'+member.userId+'/role','PATCH',{role:member.role==='MODERATOR'?'MEMBER':'MODERATOR'})}/><AppButton label={tr('Offer ownership: ','پیشنهاد مالکیت: ')+member.displayName} variant="secondary" disabled={busy} onPress={()=>void act(base+'/ownership-transfer','POST',{targetId:member.userId})}/></>}</>}</View>)}
+ {owner&&<AppButton label={tr('Cancel pending ownership offer','لغو پیشنهاد مالکیت')} variant="secondary" disabled={busy} onPress={()=>void act(base+'/ownership-transfer','DELETE')}/>}
+ {bans.map(b=><View key={b.user_id}><Text>{b.display_name} · {b.reason}</Text>{owner&&<AppButton label={tr('Lift group ban','برداشتن محدودیت عضویت')} disabled={busy} variant="secondary" onPress={()=>void act(base+'/bans/'+b.user_id,'DELETE')}/>}</View>)}
+ <TextInput accessibilityLabel={tr('Proposed group rules','قوانین پیشنهادی گروه')} value={ruleText} onChangeText={setRuleText} multiline maxLength={10000}/><AppButton label={tr('Update group rules','به‌روزرسانی قوانین گروه')} disabled={busy||!ruleText.trim()} onPress={()=>void act(base+'/rules','PUT',{rules:ruleText.split('\n').filter(r=>r.trim())})}/>
+ </View>}
+ </>}
+ </View></Screen>;
 }
-
-const styles = StyleSheet.create({
-  screen: { padding: 0 }, content: { width: '100%', maxWidth: layout.maxContent, alignSelf: 'center', padding: spacing.md, gap: spacing.md },
-  hero: { backgroundColor: colors.ocean900, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm }, heroIcon: { width: 58, height: 58, borderRadius: radius.md, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: typography.h1, color: colors.white, fontWeight: '900' }, meta: { color: colors.ocean300, fontSize: 12 }, desc: { color: colors.ocean100, lineHeight: 22, marginBottom: spacing.sm },
-  section: { fontSize: typography.h3, fontWeight: '900', color: colors.ink, marginTop: spacing.sm }, empty: { color: colors.muted, textAlign: 'center', padding: spacing.lg }, error: { color: colors.danger, fontWeight: '700' },
-  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
-  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md, gap: spacing.sm },
-  cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.sm },
-  cardCopy: { flex: 1 }, cardTitle: { color: colors.ink, fontWeight: '900', fontSize: 16 }, cardBody: { color: colors.inkSoft, lineHeight: 21 },
-  rule: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }, ruleNumber: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, ruleNumberText: { color: colors.ocean700, fontWeight: '900', fontSize: 11 }, ruleText: { flex: 1, color: colors.inkSoft, lineHeight: 20 },
-  member: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs }, memberIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.ocean100, alignItems: 'center', justifyContent: 'center' }, memberName: { color: colors.ink, fontWeight: '800' },
-  manage: { backgroundColor: colors.ocean50, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.ocean200, padding: spacing.md, gap: spacing.sm }, manageTitle: { color: colors.ink, fontSize: 15, fontWeight: '900' },
-});

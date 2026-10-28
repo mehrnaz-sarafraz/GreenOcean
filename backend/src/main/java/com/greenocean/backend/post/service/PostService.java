@@ -202,7 +202,7 @@ public class PostService {
         if(!comment.getAuthorId().equals(owner))throw new NotFoundException("Comment was not found");
         comment.softDelete();commentRepository.flush();
     }
-    private void checkGroup(UUID group,UUID user){if(group!=null){groups.lock(group);groups.member(group,user);groups.writable(group);}}
+    private void checkGroup(UUID group,UUID user){if(group!=null){groups.lock(group);groups.contribution(group,user);}}
     private void validateVisibility(UUID userId, PostVisibility visibility, UUID communityId) {
         if (visibility == PostVisibility.COMMUNITY) {
             if (communityId == null) throw new IllegalArgumentException("communityId is required for COMMUNITY visibility");

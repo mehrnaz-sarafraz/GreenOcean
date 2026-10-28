@@ -53,7 +53,7 @@ class CommunityNotificationIntegrationTest {
         mockMvc.perform(get("/api/v1/communities/{id}/posts", communityId).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(put("/api/v1/communities/{id}/membership", communityId).header(HttpHeaders.AUTHORIZATION, auth(member.token())))
+        mockMvc.perform(put("/api/v1/communities/{id}/membership", communityId).header(HttpHeaders.AUTHORIZATION, auth(member.token())).contentType(MediaType.APPLICATION_JSON).content("{\"rulesVersion\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.member").value(true))
                 .andExpect(jsonPath("$.memberCount").doesNotExist());
@@ -74,7 +74,7 @@ class CommunityNotificationIntegrationTest {
         JsonNode privateCommunity = createCommunity(owner.token(), "Private Circle " + suffix,
                 "private-circle-" + suffix, true);
         mockMvc.perform(put("/api/v1/communities/{id}/membership", privateCommunity.get("id").asText())
-                        .header(HttpHeaders.AUTHORIZATION, auth(member.token())))
+                        .header(HttpHeaders.AUTHORIZATION, auth(member.token())).contentType(MediaType.APPLICATION_JSON).content("{\"rulesVersion\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.member").value(false))
                 .andExpect(jsonPath("$.joinRequested").value(true));
@@ -91,21 +91,21 @@ class CommunityNotificationIntegrationTest {
 
         MvcResult notificationsResult = mockMvc.perform(get("/api/v1/notifications").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.items.length()").value(4))
                 .andReturn();
         JsonNode notifications = objectMapper.readTree(notificationsResult.getResponse().getContentAsString()).get("items");
         Set<String> types = new HashSet<>();
         notifications.forEach(item -> types.add(item.get("type").asText()));
-        assertEquals(Set.of("FOLLOW", "LIKE", "COMMENT"), types);
+        assertEquals(Set.of("FOLLOW", "LIKE", "COMMENT", "SYSTEM_NOTICE"), types);
         assertTrue(notifications.get(0).hasNonNull("actor"));
 
         mockMvc.perform(get("/api/v1/notifications/unread-count").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(4));
         mockMvc.perform(put("/api/v1/notifications/{id}/read", notifications.get(0).get("id").asText())
                         .header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
                 .andExpect(status().isNoContent());
         mockMvc.perform(get("/api/v1/notifications/unread-count").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
         mockMvc.perform(put("/api/v1/notifications/read-all").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
                 .andExpect(status().isNoContent());
         mockMvc.perform(get("/api/v1/notifications/unread-count").header(HttpHeaders.AUTHORIZATION, auth(owner.token())))
@@ -116,7 +116,7 @@ class CommunityNotificationIntegrationTest {
         // Historical approved-group fixture; the legacy creation route is covered by M1 denial tests.
         UUID owner=UUID.fromString(objectMapper.readTree(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1])).path("sub").asText());
         UUID id=UUID.randomUUID();fixtureDb.update("INSERT INTO communities(id,name,slug,description,is_private,created_by) VALUES(?,?,?,'A safe support space',?,?)",id,name,slug,privateCommunity,owner);
-        fixtureDb.update("INSERT INTO community_members(community_id,user_id,role) VALUES(?,?,'OWNER')",id,owner);
+        fixtureDb.update("INSERT INTO community_members(community_id,user_id,role,rules_version_ack) VALUES(?,?,'OWNER',1)",id,owner);
         return objectMapper.readTree(mockMvc.perform(get("/api/v1/communities/slug/"+slug).header(HttpHeaders.AUTHORIZATION,auth(token))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
 

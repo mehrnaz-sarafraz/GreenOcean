@@ -1,5 +1,5 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { DisplayReview } from '@/features/auth/display-review';
 import { AppButton } from '@/components/app-button';
@@ -16,19 +16,23 @@ type Payload={body:string;publicationIdentity:Identity|null;visibility:'FOLLOWER
 type Draft={id:string;payload:string;revision:number;expires_at:string};
 const blank=():Payload=>({body:'',publicationIdentity:null,visibility:'FOLLOWERS',communityId:null,contentWarning:'',categoryId:null,postType:'EXPERIENCE',mood:''});
 export default function Create() {
+ const {groupId}=useLocalSearchParams<{groupId?:string}>();const fresh=():Payload=>({...blank(),...(groupId?{visibility:'COMMUNITY',communityId:groupId}:{})});
+ const groupContext=useRef(groupId);
+ const [myGroups,setMyGroups]=useState<{id:string;name:string}[]>([]);
  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
  const {categories,communities,profile}=usePlatformData();
- const [stage,setStage]=useState<1|2|3>(1);const [value,setValue]=useState<Payload>(blank);
+ const [stage,setStage]=useState<1|2|3>(1);const [value,setValue]=useState<Payload>(fresh);
  const [reviewed,setReviewed]=useState<boolean|null>(null);const [broader,setBroader]=useState(false);
  const [draft,setDraft]=useState<Draft|null>(null);const [drafts,setDrafts]=useState<Draft[]>([]);
  const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [notice,setNotice]=useState('');
  const patch=(next:Partial<Payload>)=>setValue(current=>({...current,...next}));
- useFocusEffect(useCallback(()=>{let active=true;const epoch=tokenStorage.generation();
+ useFocusEffect(useCallback(()=>{if(groupContext.current!==groupId){groupContext.current=groupId;setStage(1);setValue(current=>({...current,publicationIdentity:null,visibility:groupId?'COMMUNITY':'FOLLOWERS',communityId:groupId??null}));setBroader(false);}let active=true;const epoch=tokenStorage.generation();
   void apiRequest<{eligibility:{display_reviewed_at?:string}}>('/api/v1/identity').then(r=>{if(active&&epoch===tokenStorage.generation())setReviewed(Boolean(r.eligibility.display_reviewed_at));}).catch(()=>{if(active)setReviewed(false);});
+  void apiRequest<{id:string;name:string;status:string}[]>('/api/v1/communities/mine').then(rows=>{if(active&&epoch===tokenStorage.generation())setMyGroups(rows.filter(g=>g.status==='ACTIVE'));}).catch(()=>{if(active)setMyGroups([]);});
   void apiRequest<Draft[]>('/api/v1/posts/drafts').then(r=>{if(active&&epoch===tokenStorage.generation())setDrafts(r);}).catch(()=>{if(active)setError(language==='fa'?'بارگیری پیش‌نویس‌ها انجام نشد.':'Could not load drafts.');});
-  return()=>{active=false;};
- },[language]));
- function reset(){setValue(blank());setStage(1);setDraft(null);setBroader(false);setError('');}
+  return()=>{active=false;setMyGroups([]);};
+ },[language,groupId]));
+ function reset(){setValue(fresh());setStage(1);setDraft(null);setBroader(false);setError('');}
  async function save(){if(busy)return;setBusy(true);setError('');const epoch=tokenStorage.generation();try{
   const saved=await apiRequest<Draft>(draft?`/api/v1/posts/drafts/${draft.id}`:'/api/v1/posts/drafts',{method:draft?'PUT':'POST',body:JSON.stringify({payload:value,revision:draft?.revision??0})});
   if(epoch!==tokenStorage.generation())return;setDraft(saved);setDrafts(current=>[saved,...current.filter(d=>d.id!==saved.id)]);setNotice(tr('Private draft saved; deleted 7 days after last edit.','پیش‌نویس خصوصی ذخیره شد؛ حذف ۷ روز پس از آخرین ویرایش.'));
@@ -66,7 +70,7 @@ export default function Create() {
    <TextInput accessibilityLabel={tr('Post text','متن پست')} multiline maxLength={10000} value={value.body} onChangeText={body=>patch({body})} style={[styles.editor,direction]}/><Text style={direction}>{value.body.length}/10000</Text>
    <Text style={direction}>{tr('Audience is independent of identity','مخاطبان مستقل از هویت هستند')}</Text>
    {(['FOLLOWERS','COMMUNITY','PUBLIC'] as const).map(a=><AppButton key={a} label={audience(a)} variant={value.visibility===a?'primary':'secondary'} onPress={()=>{patch({visibility:a,communityId:null});setBroader(false);}}/>)}
-   {value.visibility==='COMMUNITY'&&communities.filter(c=>c.member).map(c=><AppButton key={c.id} label={c.name} variant={value.communityId===c.id?'primary':'secondary'} onPress={()=>patch({communityId:c.id})}/>)}
+   {value.visibility==='COMMUNITY'&&myGroups.map(c=><AppButton key={c.id} label={c.name} variant={value.communityId===c.id?'primary':'secondary'} onPress={()=>patch({communityId:c.id})}/>)}
    <TextInput accessibilityLabel={tr('Optional content warning','هشدار اختیاری محتوا')} placeholder={tr('Optional content warning','هشدار اختیاری محتوا')} maxLength={120} value={value.contentWarning} onChangeText={contentWarning=>patch({contentWarning})} style={[styles.input,direction]}/>
    <Text style={direction}>{tr('Topic is optional. No health classification is required.','موضوع اختیاری است. هیچ طبقه‌بندی سلامتی الزامی نیست.')}</Text>
    <AppButton label={tr('No topic','بدون موضوع')} variant="secondary" onPress={()=>patch({categoryId:null})}/>
@@ -79,7 +83,7 @@ export default function Create() {
    <Text accessibilityRole="header" style={[styles.title,direction]}>{tr('Final review','بازبینی نهایی')}</Text>
    <Text style={direction}>{value.publicationIdentity==='ANONYMOUS'?tr('Identity: Anonymous','هویت: ناشناس'):tr('Identity: Social identity','هویت: اجتماعی')+' · '+(profile?.displayName??'')}</Text>
    <Text style={direction}>{tr('Audience','مخاطبان')}: {audience(value.visibility)}</Text>
-   {!!value.communityId&&<Text style={direction}>{communities.find(c=>c.id===value.communityId)?.name}</Text>}
+   {!!value.communityId&&<Text style={direction}>{myGroups.find(c=>c.id===value.communityId)?.name??communities.find(c=>c.id===value.communityId)?.name}</Text>}
    <Text style={direction}>{value.contentWarning||tr('No content warning','بدون هشدار محتوا')}</Text>
    {!!value.categoryId&&<Text style={direction}>{categories.find(c=>c.id===value.categoryId)?.name}</Text>}
    <Text style={direction}>{value.body}</Text>

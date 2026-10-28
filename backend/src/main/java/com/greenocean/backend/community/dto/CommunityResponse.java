@@ -18,6 +18,6 @@ public record CommunityResponse(
         String privacyType,
         String status,
         long rulesVersion,
-        String rulesJson
+        String rulesJson,Long joinRequestRevision
 ) {
 }

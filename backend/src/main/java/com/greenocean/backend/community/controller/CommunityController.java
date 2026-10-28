@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 @RestController
 @RequestMapping("/api/v1/communities")
 public class CommunityController {
+    public record RulesAck(@jakarta.validation.constraints.Min(1)long rulesVersion){}
+    public record RequestRevision(@jakarta.validation.constraints.Min(1)long requestRevision){}
     private final CommunityService communityService;
     private final PostService postService;
 
@@ -63,8 +65,8 @@ public class CommunityController {
     }
 
     @PutMapping("/{communityId}/membership")
-    public CommunityResponse join(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId) {
-        return communityService.join(communityId, userId(jwt));
+    public CommunityResponse join(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,@Valid @RequestBody RulesAck input) {
+        return communityService.join(communityId, userId(jwt),input.rulesVersion());
     }
 
     @DeleteMapping("/{communityId}/membership")
@@ -74,8 +76,8 @@ public class CommunityController {
     }
 
     @DeleteMapping("/{communityId}/join-request")
-    public ResponseEntity<Void> cancelJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId) {
-        communityService.cancelJoinRequest(communityId, userId(jwt));
+    public ResponseEntity<Void> cancelJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,@Valid @RequestBody RequestRevision input) {
+        communityService.cancelJoinRequest(communityId, userId(jwt),input.requestRevision());
         return ResponseEntity.noContent().build();
     }
 
@@ -86,15 +88,15 @@ public class CommunityController {
 
     @PostMapping("/{communityId}/join-requests/{requesterId}/approve")
     public ResponseEntity<Void> approveJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
-                                                    @PathVariable UUID requesterId) {
-        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), true);
+                                                    @PathVariable UUID requesterId,@Valid @RequestBody RequestRevision input) {
+        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), true,input.requestRevision());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{communityId}/join-requests/{requesterId}")
     public ResponseEntity<Void> declineJoinRequest(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID communityId,
-                                                    @PathVariable UUID requesterId) {
-        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), false);
+                                                    @PathVariable UUID requesterId,@Valid @RequestBody RequestRevision input) {
+        communityService.resolveJoinRequest(communityId, requesterId, userId(jwt), false,input.requestRevision());
         return ResponseEntity.noContent().build();
     }
 
