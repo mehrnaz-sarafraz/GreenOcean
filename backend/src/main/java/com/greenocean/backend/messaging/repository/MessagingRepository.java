@@ -171,8 +171,15 @@ public class MessagingRepository {
                 id, userId, id, listenerId);
         jdbcTemplate.update("""
                 INSERT INTO messages (id, conversation_id, message_kind, body)
-                VALUES (?, ?, 'SYSTEM', 'Peer listeners offer non-clinical support. If you may be in immediate danger, contact local emergency services.')
-                """, systemMessageId, id);
+                VALUES (?, ?, 'SYSTEM', ?)
+                """, systemMessageId,id,listenerBoundary(id));
+    }
+
+    private String listenerBoundary(UUID conversation){
+        String body="Peer listeners offer non-clinical support. If you may be in immediate danger, contact local emergency services.";
+        var rows=jdbcTemplate.queryForList("SELECT planned_seconds,planned_ends_at FROM live_support_requests WHERE conversation_id=? AND planned_ends_at IS NOT NULL",conversation);
+        if(!rows.isEmpty())body+=" Planned support time: "+((Number)rows.getFirst().get("planned_seconds")).intValue()/60+" minutes from activation. Authorized end: "+com.greenocean.backend.listener.planning.ListenerSupportPolicy.instant(rows.getFirst().get("planned_ends_at"))+" (UTC). Extra time requires both participants and available capacity. / جلسه از فعال‌سازی سی دقیقه برنامه‌ریزی شده است؛ زمان اضافه فقط با رضایت هر دو نفر و ظرفیت آزاد ممکن است.";
+        return body;
     }
 
     public boolean canStartDirectConversation(UUID userId, UUID otherUserId) {

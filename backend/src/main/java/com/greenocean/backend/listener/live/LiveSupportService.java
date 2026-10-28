@@ -207,7 +207,7 @@ public class LiveSupportService {
    SELECT r.*,clock_timestamp() AS server_time, p.display_name AS peer_name,
    CASE WHEN r.listener_id=? THEN r.member_id ELSE r.listener_id END AS peer_id
    FROM live_support_requests r JOIN profiles p ON p.user_id=CASE WHEN r.listener_id=? THEN r.member_id ELSE r.listener_id END WHERE r.id=?
-   """,(rs,n)->new LiveSupportView(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),time(rs,"server_time"),time(rs,"expires_at"),time(rs,"activation_expires_at"),time(rs,"interrupted_at"),time(rs,"ended_at"),rs.getObject("conversation_id",UUID.class),rs.getObject("peer_id",UUID.class),rs.getString("peer_name"),user.equals(rs.getObject("listener_id",UUID.class)),rs.getInt("presence_seconds"),rs.getInt("reconnect_seconds"),time(rs,"activated_at"),time(rs,"planned_ends_at")),user,user,id);
+   """,(rs,n)->new LiveSupportView(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),time(rs,"server_time"),time(rs,"expires_at"),time(rs,"activation_expires_at"),time(rs,"interrupted_at"),time(rs,"ended_at"),rs.getObject("conversation_id",UUID.class),rs.getObject("peer_id",UUID.class),rs.getString("peer_name"),user.equals(rs.getObject("listener_id",UUID.class)),rs.getInt("presence_seconds"),rs.getInt("reconnect_seconds"),time(rs,"activated_at"),time(rs,"planned_ends_at"),rs.getObject("planned_seconds",Integer.class),rs.getInt("extension_seconds_used")),user,user,id);
  }
  private Instant time(ResultSet rs,String column)throws SQLException{var value=rs.getObject(column,OffsetDateTime.class);return value==null?null:value.toInstant();}
 }

@@ -6,4 +6,13 @@ UNION ALL SELECT 'sessions',count(*),md5(COALESCE(string_agg(row_to_json(x)::tex
 UNION ALL SELECT 'live_requests',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM live_support_requests x
 UNION ALL SELECT 'authorizations',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY event_order),'')) FROM processing_authorizations x
 UNION ALL SELECT 'deletions',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY user_id),'')) FROM account_deletions x
+UNION ALL SELECT 'listener_calendar_rules',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_calendar_rules x
+UNION ALL SELECT 'listener_calendar_exceptions',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_calendar_exceptions x
+UNION ALL SELECT 'listener_bookings',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_bookings x
+UNION ALL SELECT 'listener_booking_events',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_booking_events x
+UNION ALL SELECT 'listener_wait_queue',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_wait_queue x
+UNION ALL SELECT 'listener_queue_events',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_queue_events x
+UNION ALL SELECT 'listener_queue_coverage_windows',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_queue_coverage_windows x
+UNION ALL SELECT 'listener_session_extensions',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY id),'')) FROM listener_session_extensions x
+UNION ALL SELECT 'listener_session_feedback',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY session_id),'')) FROM listener_session_feedback x
 UNION ALL SELECT 'migration_history',count(*),md5(COALESCE(string_agg(row_to_json(x)::text,'' ORDER BY installed_rank),'')) FROM flyway_schema_history x;

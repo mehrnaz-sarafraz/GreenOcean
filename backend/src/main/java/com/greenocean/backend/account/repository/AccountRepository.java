@@ -99,6 +99,8 @@ public class AccountRepository {
         jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM data_rights_requests WHERE user_id=?",userId);
         jdbcTemplate.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+        var planningEntities=jdbcTemplate.queryForList("SELECT id FROM listener_bookings WHERE member_id=? OR listener_id=? UNION SELECT id FROM listener_wait_queue WHERE member_id=? OR listener_id=? UNION SELECT e.id FROM listener_session_extensions e JOIN live_support_requests r ON r.id=e.session_id WHERE r.member_id=? OR r.listener_id=?",UUID.class,userId,userId,userId,userId,userId,userId);
+        for(UUID entity:planningEntities){jdbcTemplate.update("DELETE FROM notifications WHERE id IN(SELECT notification_id FROM listener_support_notices WHERE entity_id=? AND notification_id IS NOT NULL)",entity);jdbcTemplate.update("DELETE FROM listener_support_notices WHERE entity_id=?",entity);}
         jdbcTemplate.update("DELETE FROM listener_wait_queue WHERE member_id=? OR listener_id=?",userId,userId);
         jdbcTemplate.update("DELETE FROM listener_queue_coverage_windows WHERE listener_id=?",userId);
         jdbcTemplate.update("UPDATE listener_queue_coverage_windows SET approved_by=NULL,revoked_at=COALESCE(revoked_at,listener_support_now()) WHERE approved_by=?",userId);

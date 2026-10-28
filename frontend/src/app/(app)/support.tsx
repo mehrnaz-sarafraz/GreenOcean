@@ -10,5 +10,6 @@ export default function SupportNow(){
  <Text accessibilityRole="header">{tr('Live Now','حمایت زندهٔ اکنون')}</Text><AppButton label={tr('Check current listener availability','بررسی دسترسی فعلی به شنونده')} onPress={()=>router.push({pathname:'/listener/[action]',params:{action:'match'}})}/>
  <Text accessibilityRole="header">{tr('Waiting queue','صف انتظار')}</Text><AppButton variant="secondary" label={tr('Review waiting queue','بررسی صف انتظار')} onPress={()=>router.push({pathname:'/listener/[action]',params:{action:'queue'}})}/>
  <Text accessibilityRole="header">{tr('Scheduled support','حمایت زمان‌بندی‌شده')}</Text><AppButton variant="secondary" label={tr('Future booking','رزرو برای آینده')} onPress={()=>router.push({pathname:'/listener/[action]',params:{action:'bookings'}})}/>
+ <AppButton variant="secondary" label={tr('Review past listener sessions','بررسی جلسات قبلی شنونده')} onPress={()=>router.push({pathname:'/listener/[action]',params:{action:'history'}})}/>
  <Alternatives/><AppButton variant="secondary" label={tr('Listener workspace','محیط کار شنونده')} onPress={()=>router.push({pathname:'/listener/[action]',params:{action:'workspace'}})}/></ProductPage>;
 }
