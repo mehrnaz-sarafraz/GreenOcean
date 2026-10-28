@@ -27,6 +27,7 @@ public record AccountArchiveResponse(
         java.util.List<java.util.Map<String,Object>> messageRequests,
         java.util.Map<String,Object> groupGovernance,
         java.util.Map<String,Object> listenerPlanning,
-        java.util.Map<String,Object> privateWellbeing
+        java.util.Map<String,Object> privateWellbeing,
+        java.util.Map<String,Object> professionalCare
 ) {
 }

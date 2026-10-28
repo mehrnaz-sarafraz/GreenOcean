@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class})
+    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class, java.time.DateTimeException.class})
     public ResponseEntity<ApiError> handleIllegalArgumentException(RuntimeException exception, HttpServletRequest request) {
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),

@@ -50,6 +50,7 @@ class ProfessionalAvailabilityIntegrationTest {
         jdbcTemplate.update("INSERT INTO regional_services(country_code,service,status) VALUES ('IR','PROFESSIONAL_CARE','AVAILABLE')");
         jdbcTemplate.update("INSERT INTO professional_care_regions(professional_user_id,country_code,approved_by,expires_at) VALUES (?,'IR',?,CURRENT_TIMESTAMP+INTERVAL '1 day')",professionalId,professionalId);
 
+        PhasePFixtures.qualified(jdbcTemplate,professionalId,firstMemberId);
         OffsetDateTime startsAt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(2);
         var slot = workflowService.createAvailability(professionalId,
                 new CreateAvailabilityRequest(startsAt, startsAt.plusMinutes(50), "VIDEO"));

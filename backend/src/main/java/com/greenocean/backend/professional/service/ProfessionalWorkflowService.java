@@ -14,14 +14,15 @@ import java.time.Duration;
 
 @Service
 public class ProfessionalWorkflowService {
+    private final ProfessionalAuthority authority;
     private final ProfessionalWorkflowRepository repository;
     private final DatabaseUuidGenerator uuidGenerator;
     private final ProfessionalDocumentStorage documentStorage;
     private final com.greenocean.backend.identity.AccessPolicy access;
 
     public ProfessionalWorkflowService(ProfessionalWorkflowRepository repository, DatabaseUuidGenerator uuidGenerator,
-                                       ProfessionalDocumentStorage documentStorage,com.greenocean.backend.identity.AccessPolicy access) {
-        this.access=access;
+                                       ProfessionalDocumentStorage documentStorage,com.greenocean.backend.identity.AccessPolicy access,ProfessionalAuthority authority) {
+        this.access=access;this.authority=authority;
         this.repository = repository;
         this.uuidGenerator = uuidGenerator;
         this.documentStorage = documentStorage;
@@ -59,7 +60,7 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ProfessionalAvailabilityResponse createAvailability(UUID professionalId, CreateAvailabilityRequest request) {
-        requireProfessional(professionalId);
+        requireProfessional(professionalId);authority.offer(professionalId,"IR",request.consultationMode());
         if (!request.endsAt().isAfter(request.startsAt())) {
             throw new IllegalArgumentException("Availability end must follow its start");
         }
@@ -105,12 +106,14 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ConsultationResponse requestConsultation(UUID professionalId, UUID userId, CreateConsultationRequest request) {
-        access.requireCare(userId,professionalId);
+        authority.lock(professionalId);
+        access.require(userId,"PROFESSIONAL_CARE");access.require(professionalId,"PROFESSIONAL_CARE");
         requireProfessional(professionalId);
         if (professionalId.equals(userId)) throw new ConflictException("You cannot request a consultation with yourself");
         if (request.availabilitySlotId() == null) throw new IllegalArgumentException("Select a published availability slot");
         ProfessionalAvailabilityResponse slot = repository.availableSlotForUpdate(request.availabilitySlotId(), professionalId)
                 .orElseThrow(() -> new ConflictException("This availability slot is no longer available"));
+        access.requireCare(userId,professionalId,slot.consultationMode());
         UUID id = uuidGenerator.nextUuid();
         repository.bookAvailability(slot.id());
         repository.createConsultation(id, userId, professionalId, slot, request);
@@ -119,8 +122,11 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ProfessionalApplicationResponse apply(UUID userId, ProfessionalApplicationRequest request) {
+        if(!"IR".equals(request.country()))throw new IllegalArgumentException("Iran(IR) is the initial professional verification jurisdiction; other jurisdictions need separate approval");
         if (repository.hasPendingApplication(userId)) throw new ConflictException("A professional application is already under review");
-        repository.submitApplication(uuidGenerator.nextUuid(), userId, request);
+        UUID application=uuidGenerator.nextUuid();
+        repository.submitApplication(application, userId, request);
+        authority.application(application,userId,request.professionalType().toUpperCase(java.util.Locale.ROOT),request.licenseNumber().trim());
         return repository.latestApplication(userId).orElseThrow();
     }
 
@@ -132,11 +138,15 @@ public class ProfessionalWorkflowService {
     @Transactional
     public ProfessionalDocumentResponse uploadDocument(UUID applicationId, UUID userId,
                                                         org.springframework.web.multipart.MultipartFile file) {
+        authority.actor(userId);
         if (!repository.applicationOwnedBy(applicationId, userId)) {
             throw new NotFoundException("Open professional application was not found");
         }
         ProfessionalDocumentStorage.StoredDocument stored = documentStorage.store(applicationId, file);
-        return repository.addDocument(uuidGenerator.nextUuid(), applicationId, stored);
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization(){@Override public void afterCompletion(int status){if(status!=STATUS_COMMITTED)documentStorage.delete(stored.storageKey());}});
+        var response=repository.addDocument(uuidGenerator.nextUuid(), applicationId, stored);
+        authority.audit(userId,"CREDENTIAL_DOCUMENT_UPLOADED",applicationId,"Encrypted credential quarantine upload");
+        return response;
     }
 
     private void requireProfessional(UUID id) {

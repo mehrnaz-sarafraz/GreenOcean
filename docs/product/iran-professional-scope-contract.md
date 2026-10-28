@@ -1,0 +1,2 @@
+# Iran professional scope
+The canonical current-scope predicate binds an independently verified exact credential application to Iran and a specific TEXT/AUDIO/VIDEO consultation modality, while preserving earlier regional eligibility and expiry restrictions. Professional licenses never substitute for platform approval. Prescribing and unapproved modes remain unavailable. Human verification sources and evidence are recorded without pretending to query an authorized registry API.

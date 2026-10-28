@@ -79,10 +79,10 @@ public class CatalogRepository {
         String specialtySearch = specialty == null || specialty.isBlank() || "all".equalsIgnoreCase(specialty)
                 ? null : specialty.trim().toLowerCase();
         return jdbcTemplate.query("""
-                SELECT pp.*, p.username, p.display_name, p.avatar_url
+                SELECT pp.*, p.username, p.display_name, p.avatar_url,(SELECT v.verified_name FROM professional_verifications v WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id) ORDER BY v.reviewed_at DESC LIMIT 1) AS verified_display_name,COALESCE((SELECT v.verified_specialties FROM professional_verifications v WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id) ORDER BY v.reviewed_at DESC LIMIT 1),ARRAY[]::TEXT[]) AS verified_specialties,ARRAY(SELECT DISTINCT mode FROM professional_scope_authorizations s JOIN professional_verifications v ON v.id=s.application_id WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id)) AS authorized_modes
                   FROM professional_profiles pp
                   JOIN profiles p ON p.user_id = pp.user_id
-                 WHERE pp.verification_status = 'VERIFIED'
+                 WHERE professional_qualification_live(pp.user_id)
                    AND (? = '%%' OR LOWER(CONCAT_WS(' ', p.display_name, p.username, pp.title, pp.specialization,
                          pp.city, pp.country, array_to_string(pp.specialties, ' '), array_to_string(pp.languages, ' '))) LIKE ?)
                    AND (CAST(? AS TEXT) IS NULL OR EXISTS (SELECT 1 FROM unnest(pp.specialties) value
@@ -94,10 +94,10 @@ public class CatalogRepository {
 
     public Optional<ProfessionalResponse> professional(UUID id) {
         return jdbcTemplate.query("""
-                SELECT pp.*, p.username, p.display_name, p.avatar_url
+                SELECT pp.*, p.username, p.display_name, p.avatar_url,(SELECT v.verified_name FROM professional_verifications v WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id) ORDER BY v.reviewed_at DESC LIMIT 1) AS verified_display_name,COALESCE((SELECT v.verified_specialties FROM professional_verifications v WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id) ORDER BY v.reviewed_at DESC LIMIT 1),ARRAY[]::TEXT[]) AS verified_specialties,ARRAY(SELECT DISTINCT mode FROM professional_scope_authorizations s JOIN professional_verifications v ON v.id=s.application_id WHERE v.professional_user_id=pp.user_id AND professional_verification_live(v.id)) AS authorized_modes
                   FROM professional_profiles pp
                   JOIN profiles p ON p.user_id = pp.user_id
-                 WHERE pp.user_id = ? AND pp.verification_status = 'VERIFIED'
+                 WHERE pp.user_id = ? AND professional_qualification_live(pp.user_id)
                 """, this::mapProfessional, id).stream().findFirst();
     }
 
@@ -195,15 +195,15 @@ public class CatalogRepository {
 
     private ProfessionalResponse mapProfessional(ResultSet rs, int row) throws SQLException {
         return new ProfessionalResponse(
-                rs.getObject("user_id", UUID.class), rs.getString("display_name"), rs.getString("username"),
-                rs.getString("title"), strings(rs.getArray("specialties")), rs.getString("avatar_url"),
-                rs.getBigDecimal("rating"), rs.getInt("review_count"), rs.getInt("green_ocean_score"),
+                rs.getObject("user_id", UUID.class), rs.getString("verified_display_name"), rs.getString("username"),
+                rs.getString("professional_type"), strings(rs.getArray("verified_specialties")), rs.getString("avatar_url"),
+                java.math.BigDecimal.ZERO, 0, 0,
                 rs.getInt("years_of_experience"), strings(rs.getArray("languages")),
-                "VERIFIED".equals(rs.getString("verification_status")), rs.getBoolean("promoted"),
-                rs.getString("promoted_reason"), rs.getString("bio"), rs.getString("gender"),
+                true, false,
+                null, rs.getString("bio"), rs.getString("gender"),
                 rs.getString("country"), rs.getString("city"), rs.getString("workplace"),
                 rs.getString("clinic_name"), rs.getString("clinic_address"), strings(rs.getArray("education")),
-                rs.getString("license_number"), strings(rs.getArray("consultation_modes")),
+                null, strings(rs.getArray("authorized_modes")),
                 rs.getBoolean("accepting_new_clients"));
     }
 
