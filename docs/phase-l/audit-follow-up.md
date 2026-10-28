@@ -21,7 +21,7 @@ New database-backed tests in `PhaseL2SocialTest`:
 
 New browser journeys in `phase-l2.spec.mjs` cover no follows versus no eligible stories versus503, and Persian RTL search/input/clear/result headings plus anonymous post and reaction accessible names. They supplement the existing distinct-server-query test.
 
-Local Windows verification on Java21 / disposable PostgreSQL18: **327 backend passed, zero failures/errors/skips;69 frontend logic passed** using `scripts/run-phase-a-qa.ps1 -Offline`. TypeScript passed after Expo regenerated its stale J-era route cache. No production database was used. Browser and final published CI outcomes are recorded below after execution; baseline results must not be counted as new execution.
+Local Windows verification on Java21 / disposable PostgreSQL18: **327 backend passed, zero failures/errors/skips** using `scripts/run-phase-a-qa.ps1 -Offline`. The initial frontend logic attempt failed the existing K dependency assertion because node_modules still contained the older J dependency; it is not counted as passing. Dependencies are restored from the checked-in lockfile before final execution. TypeScript passed after Expo regenerated its stale J-era route cache. No production database was used. Browser and final published CI outcomes are recorded below after execution; baseline results must not be counted as new execution.
 
 ## External release dependencies
 

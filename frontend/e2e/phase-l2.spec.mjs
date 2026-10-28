@@ -26,7 +26,7 @@ test('L2 Persian search and post actions have localized accessible names in RTL'
  await page.goto('/search');await expect(page.locator('html')).toHaveAttribute('dir','rtl');
  const search=page.getByRole('textbox',{name:'جست‌وجو در گرین‌اوشن',exact:true});await expect(search).toBeVisible();
  await search.fill('synthetic');await expect(page.getByText('اعضا',{exact:true})).toBeVisible();await expect(page.getByText('پست‌ها',{exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'پاک‌کردن جست‌وجو',exact:true})).toBeVisible();
+ await expect(page.getByLabel('پاک‌کردن جست‌وجو',{exact:true})).toBeVisible();
  await page.route('**/api/v1/posts/discovery*',r=>r.fulfill({json:{items:[{id:'synthetic-localized-post',body:'متن آزمایشی',anonymous:true,author:null,visibility:'PUBLIC',createdAt:new Date().toISOString(),liked:false,bookmarked:false,likeCount:0,commentCount:0}],hasNext:false,nextCursor:null}}));
  await page.goto('/');await expect(page.getByRole('button',{name:'پسندیدن پست',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'ذخیرهٔ پست',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'خواندن پست ناشناس',exact:true})).toBeVisible();
