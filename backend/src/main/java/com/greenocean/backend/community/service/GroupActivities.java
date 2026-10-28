@@ -50,7 +50,7 @@ public class GroupActivities {
   p.db.update("UPDATE community_events SET status=?,revision=revision+1 WHERE id=?",next,id);p.audit(actor,group,"GROUP_ACTIVITY_"+next);notifyMembers(group);
  }
  @Transactional public PostResponse discussion(UUID group,UUID id,UUID actor,long revision,CreatePostRequest in){requireEnabled();p.lock(group);p.manager(group,actor);p.contribution(group,actor);var e=event(group,id);version(e,revision);
-  if(!"SCHEDULED".equals(e.get("status"))||instant(e.get("ends_at")).isBefore(Instant.now())||e.get("discussion_post_id")!=null)throw new ConflictException("Activity discussion is unavailable or already created");
+  if(!Set.of("TEXT_CIRCLE","WORKSHOP","Q_AND_A").contains(e.get("format"))||!"SCHEDULED".equals(e.get("status"))||instant(e.get("ends_at")).isBefore(Instant.now())||e.get("discussion_post_id")!=null)throw new ConflictException("Activity discussion is unavailable or already created");
   if(in.visibility()!=com.greenocean.backend.post.entity.PostVisibility.COMMUNITY||!group.equals(in.communityId()))throw new IllegalArgumentException("Discussion must use this group audience");
   PostResponse post=posts.create(actor,in);p.db.update("UPDATE community_events SET discussion_post_id=?,revision=revision+1 WHERE id=?",post.id(),id);p.audit(actor,group,"GROUP_ACTIVITY_DISCUSSION");return post;
  }
