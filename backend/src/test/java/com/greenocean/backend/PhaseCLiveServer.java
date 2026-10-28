@@ -34,7 +34,7 @@ public class PhaseCLiveServer {
            System.getenv("GREENOCEAN_TEST_DB_URL")==null)
             throw new IllegalStateException("An explicitly isolated test database and opt-in are required");
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
-            "--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true",
+            "--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true","--greenocean.listener-support.extension-enabled=true","--greenocean.listener-support.followup-enabled=true",
             "--greenocean.groups.activities-enabled=true","--greenocean.groups.proposals-enabled=true","--greenocean.groups.activation-approved=true","--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
@@ -104,14 +104,14 @@ public class PhaseCLiveServer {
         }finally{exchange.close();}});
         mailbox.createContext("/planning-session-tail",exchange->{try{
             if(!"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA"))||!"POST".equals(exchange.getRequestMethod())||!key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))){exchange.sendResponseHeaders(403,-1);return;}
-            var input=json.readTree(exchange.getRequestBody());String email=input.path("email").asText();UUID request=UUID.fromString(input.path("requestId").asText());if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
+            var input=json.readTree(exchange.getRequestBody());String email=input.path("email").asText();UUID request=UUID.fromString(input.path("requestId").asText());int remaining=input.path("secondsRemaining").asInt(600);if(remaining<1||remaining>600){exchange.sendResponseHeaders(400,-1);return;}if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
             new org.springframework.transaction.support.TransactionTemplate(context.getBean(org.springframework.transaction.PlatformTransactionManager.class)).execute(s->{
                 db.queryForList("SELECT pg_advisory_xact_lock(72491001)");
                 if(db.queryForObject("SELECT count(*) FROM live_support_requests r JOIN users u ON u.id=r.member_id WHERE r.id=? AND u.email=? AND r.status='ACTIVE' AND r.planned_seconds=1800",Integer.class,request,email)!=1)throw new IllegalArgumentException("Synthetic bounded active session required");
                 boolean durationGuard=Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='live_support_requests'::regclass AND tgname='listener_session_duration_guard')",Boolean.class));
                 if(durationGuard)db.execute("ALTER TABLE live_support_requests DISABLE TRIGGER listener_session_duration_guard");
-                db.update("WITH t AS MATERIALIZED(SELECT clock_timestamp() AS at) UPDATE live_support_requests SET activated_at=t.at-INTERVAL '20 minutes',planned_ends_at=t.at+INTERVAL '10 minutes' FROM t WHERE id=?",request);
-                if(durationGuard)db.execute("ALTER TABLE live_support_requests ENABLE TRIGGER listener_session_duration_guard");return null;
+                db.update("WITH t AS MATERIALIZED(SELECT clock_timestamp() AS at) UPDATE live_support_requests SET activated_at=t.at+((?-planned_seconds-extension_seconds_used)*INTERVAL '1 second'),planned_ends_at=t.at+(?*INTERVAL '1 second') FROM t WHERE id=?",remaining,remaining,request);
+                db.execute("SET CONSTRAINTS ALL IMMEDIATE");if(durationGuard)db.execute("ALTER TABLE live_support_requests ENABLE TRIGGER listener_session_duration_guard");return null;
             });exchange.sendResponseHeaders(204,-1);
         }catch(RuntimeException failure){exchange.sendResponseHeaders(400,-1);}finally{exchange.close();}});
         // Synthetic time fixture: only a keyed, loopback QA process can move its own

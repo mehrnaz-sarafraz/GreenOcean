@@ -1,5 +1,5 @@
 export type LiveStatus = 'REQUESTED'|'ACCEPTED'|'ACTIVE'|'INTERRUPTED'|'DECLINED'|'CANCELLED'|'EXPIRED'|'COMPLETED'|'ENDED_SAFETY';
-export type LiveRequest = {id:string;status:LiveStatus;reasonCode:string|null;serverTime:string;expiresAt:string;activationExpiresAt:string|null;interruptedAt:string|null;endedAt:string|null;conversationId:string|null;peerId:string;peerName:string;listenerSide:boolean;presenceSeconds:number;reconnectSeconds:number;activatedAt?:string|null;plannedEndsAt?:string|null};
+export type LiveRequest = {id:string;status:LiveStatus;reasonCode:string|null;serverTime:string;expiresAt:string;activationExpiresAt:string|null;interruptedAt:string|null;endedAt:string|null;conversationId:string|null;peerId:string;peerName:string;listenerSide:boolean;presenceSeconds:number;reconnectSeconds:number;activatedAt?:string|null;plannedEndsAt?:string|null;plannedSeconds?:number|null;extensionSecondsUsed?:number};
 export type Availability={enabled:boolean;state:'OFFLINE'|'ONLINE_NOT_AVAILABLE'|'AVAILABLE_FOR_REQUESTS'|'BUSY'|'UNAVAILABLE';leaseId:string|null;expiresAt:string|null;serverTime:string;heartbeatSeconds:number};
 export function isOpen(status:LiveStatus){return ['REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED'].includes(status);}
 export function canSend(status:LiveStatus|undefined){return status==='ACTIVE';}

@@ -5,8 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 /** The service transaction has rolled back before this response is produced. */
-@RestControllerAdvice(assignableTypes={ListenerPlanningController.class,LiveSupportController.class,ListenerQueueController.class,ListenerQueueCoverageController.class})
+@RestControllerAdvice(assignableTypes={ListenerPlanningController.class,LiveSupportController.class,ListenerQueueController.class,ListenerQueueCoverageController.class,ListenerSessionsController.class})
 @org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
 public class ListenerPlanningErrors {
- @ExceptionHandler(DataIntegrityViolationException.class) public ResponseEntity<Map<String,String>> conflict(){return ResponseEntity.status(409).body(Map.of("code","SUPPORT_CAPACITY_CHANGED","message","Support capacity changed. Refresh the current server state before choosing another action."));}
+ @ExceptionHandler({DataIntegrityViolationException.class,org.springframework.dao.PessimisticLockingFailureException.class,org.springframework.dao.QueryTimeoutException.class}) public ResponseEntity<Map<String,String>> conflict(){return ResponseEntity.status(409).body(Map.of("code","SUPPORT_CAPACITY_CHANGED","message","Support capacity changed. Refresh the current server state before choosing another action."));}
 }

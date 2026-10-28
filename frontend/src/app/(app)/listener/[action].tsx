@@ -1,3 +1,5 @@
+import {SupportSessionHistory} from '@/features/live-support/history';
+import {ListenerOperations} from '@/features/live-support/operations';
 import {WaitingQueue} from '@/features/live-support/queue';
 import {SupportBookings,ListenerCalendarScreen} from '@/features/live-support/planning';
 import { LiveMember } from '@/features/live-support/member';
@@ -17,10 +19,12 @@ import { apiRequest } from '@/lib/api/client';
 import { colors, radius, spacing } from '@/theme/tokens';
 
 export default function ListenerFlow() {
-  const { action } = useLocalSearchParams<{ action?: string }>(); const current = String(action || 'match');
+  const { action,listenerId } = useLocalSearchParams<{ action?: string;listenerId?:string }>(); const current = String(action || 'match');
   if (current === 'match') return <LiveMember />;
+  if (current === 'history') return <SupportSessionHistory />;
+  if (current === 'operations') return <ListenerOperations />;
   if (current === 'queue') return <WaitingQueue />;
-  if (current === 'bookings') return <SupportBookings />;
+  if (current === 'bookings') return <SupportBookings key={String(listenerId??'all')} />;
   if (current === 'calendar') return <ListenerCalendarScreen />;
   if (current === 'workspace') return <ListenerWorkspace />;
   if (current === 'apply') return <Apply />;

@@ -28,3 +28,14 @@ Final focused N2 run: 35 tests passed, zero failures/errors/skips, including the
 
 ## Validated N2 baseline bcb7471
 GitHub run [40702893879](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40702893879) passed all four jobs for bcb747133288c59b5ca5da0975b8466c77bc4722: 426 backend tests (zero failures/errors/skips), 36 real-stack journeys, complete frontend checks, synthetic backup restore and release scans. N3 may now build on the validated N2 milestone. N1 documentation head 804255b also passed all jobs in run 40695272632.
+
+## Owner retention decision
+On 2026-10-28 the owner selected 30 days after completion for Phase N reservation/check-in, queue, optional feedback and extension-consent metadata. Production cleanup remains disabled by default. Expired/inactive scheduling availability uses the same scheduling retention boundary after its validity ends and after references are released.
+
+## N3 local implementation verification
+The complete A–M/N backend suite passed 456 tests with zero failures/errors/skips before the final owner-scoped history endpoint was added. Its following focused session/history run passed all 16 tests. All 20 N component/browser tests passed together; TypeScript passed. The first expanded calendar test detected the exact repeated-hour start boundary; candidate transition handling was corrected without changing the expected two real occurrences. The earlier N2 populated-upgrade expectation now includes the intentionally added nullable retirement column while preserving equality checks for every old field. Final exact-head CI and real-stack evidence are recorded after execution, not assumed here.
+
+Synthetic time fixtures demonstrate deadline and retention boundaries; they do not claim real thirty/forty-minute wall-clock staffing exercises. No physical native-device, production alert transport or production deletion replay is claimed.
+
+## N3 real-stack verification
+Both new N3 browser/API/PostgreSQL journeys passed locally (53.1 seconds): mutual approval changes the deadline by exactly 600 seconds; the authoritative deadline closes messaging; only the member can save/read feedback; voluntary same-listener booking creates no new live request; qualification revocation cancels an appointment and denies check-in/slot discovery. The test-only clock fixture first hit PostgreSQL pending deferred-trigger events when re-enabling its duration guard; it now checks all deferred participant constraints before restoring the guard. No production guard was weakened. The initial service boundary uses explicit UTC. Full frontend lint has zero errors and only the unchanged 11 baseline warnings. Exact committed-head CI is pending below.

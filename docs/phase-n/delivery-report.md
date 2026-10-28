@@ -1,6 +1,12 @@
-# Phase N delivery status
-Baseline: M3 d7ebebc232aa5fd6c4d9de1a31ec490d4735f744, GitHub quality run 40686924502 succeeded. Main remains A–K; L/M form the existing draft dependency stack. N1 branches from M3, not from an older main.
+# Phase N delivery report
+N1 #16 branches from validated M3 d7ebebc. N2 #17 branches from N1, and N3 branches from validated N2. Main has not been merged or deployed by this work.
 
-N1 implements listener calendars, timezone-safe slots, booking/cancel/atomic reschedule, protected capacity, member check-in and explicit Phase I handoff, export/erase and a captured duration foundation. Current validation is recorded in test-evidence.md. Draft PR #16 targets M3 #15. Its executable head 8de284f passed all four jobs in run 40694008890 before N2 implementation.
+N1: qualified IANA calendars, recurrence/exceptions, genuine slots, participant capacity, reservation/cancellation/atomic rescheduling, check-in and existing I acceptance/activation. Validated executable 8de284f passed run 40694008890; documentation head 804255b passed run 40695272632.
 
-N2 now implements explicit staffed-coverage queue admission, immutable twenty-minute deadlines, FIFO proposals, exact readiness confirmation, atomic independent Phase I transfer, queue/booking/live capacity protection, current-role/recent-MFA staffing approval and owner data rights. N2 passed 35 focused PostgreSQL tests, seven component/browser tests and two real-stack journeys locally. Draft PR #17 targets N1 #16. All four jobs passed for executable bcb7471 in run 40702893879 before N3 implementation. N3 extension/follow-up/final integration remains pending. This document does not claim full Phase N completion. No merge, deployment, or production enablement is authorized by this implementation delivery.
+N2: explicit bounded admission from genuine staffed coverage, immutable twenty-minute expiry, FIFO short proposals, exact readiness and atomic independent I transfer, restart/shutdown/role safety, optional generic notices and data rights. Executable bcb7471 passed all four jobs in run 40702893879 (426 backend, 36 real-stack journeys and complete frontend gates) before N3 started.
+
+N3: thirty-minute activated plan, presentational countdown and advance warnings, one mutually approved ten-minute extension, truthful no-show outcomes, voluntary owned feedback and repeat booking, recent own session history, 30-day metadata policy/guarded default-off purge, minimized staff dashboard and actual observed reconciliation state. Private notes are safely disabled. New forward migrations V58–V61 preserve historical I contracts and extend the verified N1/N2 schema.
+
+Local evidence and any resolved findings are in test-evidence.md. All implementation and local milestone checks are complete, including the two new real-stack journeys and owner-scoped history check. N3 is being published as the third dependent draft PR. The final exact-head full CI remains pending; this report does not claim a pending run has passed.
+
+No real service activation, production merge/deployment, physical device pass, real staffing/supervision approval, external alert delivery or production restore/deletion replay is fabricated. Remaining external launch requirements are in operational-readiness.md and external-dependencies.md. No Phase O product work is implemented.
