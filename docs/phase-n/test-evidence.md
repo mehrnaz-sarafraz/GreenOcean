@@ -12,3 +12,6 @@ N2 and N3 checks are pending. Full A–M regression and exact GitHub run evidenc
 
 ## Initial exact-head CI adf005f
 GitHub run [40692653809](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40692653809): backend 391/391, synthetic backup restore, frontend and release scans passed. Real-stack browser tests: 33 passed, including the full new scheduled conversation; the new cancellation UI assertion failed because the rendered status also includes its reason code. The assertion now accepts that exact documented reason suffix while retaining the independent API status and zero-live-request checks. A new complete run is required before accepting N1.
+
+## Validated N1 baseline 8de284f
+GitHub run [40694008890](https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40694008890) passed all four jobs for executable head 8de284f0546fedc0279c5003885971d30dbec084: 391 backend tests (zero failures/errors/skips), 34 real-stack journeys, full frontend checks, synthetic backup restore and release scans. Both N1 real-stack journeys and the five updated N1 component tests also passed locally against this head. N2 may now build on this validated baseline.
