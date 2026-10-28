@@ -80,18 +80,21 @@ public class LiveSupportService {
   return availability(user,session);
  }
  public LiveSupportView create(UUID user,UUID clientId,UUID target){
-  return createOrigin(user,clientId,target,null);
+  return createOrigin(user,clientId,target,null,null);
  }
  public LiveSupportView createScheduled(UUID user,UUID clientId,UUID target,UUID booking){
   if(planning==null)throw failure(503,"SUPPORT_PATH_DISABLED","Scheduled support is disabled.");
-  planning.require("BOOKING");return createOrigin(user,clientId,target,booking);
+  planning.require("BOOKING");return createOrigin(user,clientId,target,booking,null);
  }
- private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking){
+ public LiveSupportView createQueued(UUID user,UUID clientId,UUID target,UUID entry){
+  if(planning==null)throw failure(503,"SUPPORT_PATH_DISABLED","Queue support is disabled.");planning.require("QUEUE");return createOrigin(user,clientId,target,null,entry);
+ }
+ private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking,UUID queue){
   reconcile();requireEnabled();requireMember(user);
-  var retry=db.queryForList("SELECT id,listener_id,source_booking_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
+  var retry=db.queryForList("SELECT id,listener_id,source_booking_id,source_queue_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
   if(!retry.isEmpty()){
    if(target!=null && !target.equals(retry.getFirst().get("listener_id")))throw failure(409,"IDEMPOTENCY_CONFLICT","Use a new request identifier for a different listener.");
-   if(!Objects.equals(booking,retry.getFirst().get("source_booking_id")))throw failure(409,"IDEMPOTENCY_CONFLICT","This request identifier belongs to another support pathway.");
+   if(!Objects.equals(booking,retry.getFirst().get("source_booking_id"))||!Objects.equals(queue,retry.getFirst().get("source_queue_id")))throw failure(409,"IDEMPOTENCY_CONFLICT","This request identifier belongs to another support pathway.");
    return view((UUID)retry.getFirst().get("id"),user);
   }
   if(occupied(user))throw failure(409,"REQUEST_ALREADY_OPEN","You already have an open live support request or session.");
@@ -100,13 +103,13 @@ public class LiveSupportService {
    SELECT p.listener_id FROM listener_presence p
    WHERE p.listener_id<>? AND (CAST(? AS UUID) IS NULL OR p.listener_id=?)
     AND live_listener_ready(p.listener_id) AND NOT live_pair_blocked(?,p.listener_id)
-    AND listener_capacity_available(?,p.listener_id,?)
+    AND listener_all_capacity_available(?,p.listener_id,?,?)
     AND NOT EXISTS(SELECT 1 FROM live_support_requests r WHERE (r.member_id=p.listener_id OR r.listener_id=p.listener_id) AND r.status IN ('REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED'))
    ORDER BY p.last_assigned_at NULLS FIRST,p.listener_id LIMIT 1
-   """,UUID.class,user,target,target,user,user,booking);
+   """,UUID.class,user,target,target,user,user,booking,queue);
   if(candidates.isEmpty())throw failure(409,"NO_AVAILABLE_LISTENER","No live listener is currently available. You can check again or choose another support path.");
   UUID listener=candidates.getFirst(),id=UUID.randomUUID();
-  db.update("INSERT INTO live_support_requests(id,member_id,listener_id,client_request_id,expires_at,presence_seconds,reconnect_seconds,source_booking_id,planned_seconds) VALUES (?,?,?,?,clock_timestamp()+(?*INTERVAL '1 second'),?,?,?,?)",id,user,listener,clientId,settings.offerSeconds(),settings.presenceSeconds(),settings.reconnectSeconds(),booking,planning!=null&&planning.planning()?1800:null);
+  db.update("INSERT INTO live_support_requests(id,member_id,listener_id,client_request_id,expires_at,presence_seconds,reconnect_seconds,source_booking_id,source_queue_id,planned_seconds) VALUES (?,?,?,?,clock_timestamp()+(?*INTERVAL '1 second'),?,?,?,?,?)",id,user,listener,clientId,settings.offerSeconds(),settings.presenceSeconds(),settings.reconnectSeconds(),booking,queue,planning!=null&&planning.planning()?1800:null);
   db.update("UPDATE listener_presence SET last_assigned_at=clock_timestamp() WHERE listener_id=?",listener);
   return view(id,user);
  }
