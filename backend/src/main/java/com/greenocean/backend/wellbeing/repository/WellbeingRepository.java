@@ -47,17 +47,19 @@ public class WellbeingRepository {
         return new WellbeingSnapshotResponse(checkIns, journal, goals, growthPaths(userId), reflections);
     }
 
+    @org.springframework.beans.factory.annotation.Value("${greenocean.education.learning-enabled:false}") private boolean learningEnabled;
     public List<WellbeingSnapshotResponse.GrowthPath> growthPaths(UUID userId) {
+        if(!learningEnabled)return List.of();
         return jdbcTemplate.query("""
                 SELECT path.id, path.slug, path.title, path.summary, path.lesson_count, path.duration_minutes,
                        path.author_name, path.evidence_note, path.reference_list, path.reviewed_at,
-                       COALESCE(progress.progress, 0) AS progress,
-                       COALESCE(progress.completed, FALSE) AS completed,
+                       learning_progress(?,path.resource_id,(SELECT published_revision FROM growth_resources WHERE id=path.resource_id)) AS progress,
+                       learning_progress(?,path.resource_id,(SELECT published_revision FROM growth_resources WHERE id=path.resource_id))=100 AS completed,
                        progress.updated_at
                   FROM guided_growth_paths path
                   LEFT JOIN user_growth_path_progress progress
                     ON progress.path_id = path.id AND progress.user_id = ?
-                 WHERE path.is_published = TRUE
+                 WHERE path.is_published = TRUE AND growth_resource_available(path.resource_id)
                  ORDER BY path.created_at, path.id
                 """, (rs, row) -> {
             String[] references = (String[]) rs.getArray("reference_list").getArray();
@@ -68,7 +70,7 @@ public class WellbeingRepository {
                     rs.getString("author_name"), rs.getString("evidence_note"), Arrays.asList(references),
                     rs.getObject("reviewed_at", java.time.LocalDate.class).toString(), rs.getInt("progress"),
                     rs.getBoolean("completed"), updatedAt == null ? null : updatedAt.toInstant());
-        }, userId);
+        }, userId,userId,userId);
     }
 
     public boolean updateGrowthPath(UUID pathId, UUID userId, int progress) {

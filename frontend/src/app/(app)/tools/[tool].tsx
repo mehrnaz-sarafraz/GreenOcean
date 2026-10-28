@@ -1,3 +1,5 @@
+import {LearningScreen} from '@/features/wellbeing/learning';
+import {QuestionEditorial} from '@/features/wellbeing/question-editorial';
 import {GrowthLibraryScreen,EditorialWorkspace,EducationPermissions} from '@/features/wellbeing/growth-library';
 import {PrivateSpace} from '@/features/wellbeing/private-space';
 import {ConnectionsPanel} from '@/features/content/connections-panel';
@@ -11,7 +13,7 @@ import { ActionRow, EmptyState, Notice, Pill, ProductCard, ProductHeader, Produc
 import { usePlatformData } from '@/features/platform/data-provider';
 import { optionsIn } from '@/features/platform/catalog';
 import { CommunityDetails } from '@/features/community/types';
-import { AccountArchive, Consultation, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences, WellbeingSnapshot } from '@/features/platform/types';
+import { AccountArchive, Consultation, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { useAuth } from '@/features/auth/auth-provider';
 import { UrgentHelpContent } from '@/features/safety/urgent-help';
@@ -55,6 +57,8 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
 export default function ProductToolScreen() {
   const params = useLocalSearchParams<Params>();
   const screen = Array.isArray(params.tool) ? params.tool[0] : params.tool || '';
+  if(screen==='growth-paths')return <LearningScreen/>;
+  if(screen==='question-editorial')return <QuestionEditorial/>;
   if(screen==='growth-library')return <GrowthLibraryScreen/>;
   if(screen==='educational-editorial')return <EditorialWorkspace/>;
   if(screen==='educational-permissions')return <EducationPermissions/>;
@@ -88,7 +92,6 @@ function renderScreen(screen: string, params: Params) {
     case 'goals': return <PrivateSpace section="goals" />;
     case 'journal': return <PrivateSpace section="journal" />;
     case 'assessments': return <Assessment />;
-    case 'growth-paths': return <GrowthPaths />;
     case 'companion': return <PrivateSpace section="companion" />;
     case 'search-history': return <SearchHistory />;
     case 'session-management': return <Sessions />;
@@ -301,31 +304,11 @@ function WellbeingHub() {
   return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="book" title="Growth Library / کتابخانه رشد" subtitle="Reviewed educational resources" onPress={() => nav('growth-library')} /><ActionRow icon="book" title="Daily reflection / تأمل روزانه" subtitle="Three optional questions; skip freely" onPress={() => nav('daily-reflection')} /><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
 }
 
-const emptyWellbeing: WellbeingSnapshot = { checkIns: [], journalEntries: [], goals: [], growthPaths: [], reflections: [] };
-function useWellbeing() {
-  const [snapshot, setSnapshot] = useState<WellbeingSnapshot>(emptyWellbeing);
-  const refresh = async () => setSnapshot(await apiRequest<WellbeingSnapshot>('/api/v1/wellbeing'));
-  useEffect(() => {
-    const timer = setTimeout(() => void refresh(), 0);
-    return () => clearTimeout(timer);
-  }, []);
-  return { snapshot, refresh };
-}
-
 function Assessment() {
   const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0);
   const finish = async () => { setSaving(true); setSaveError(''); try { await apiRequest('/api/v1/wellbeing/reflections', { method: 'POST', body: JSON.stringify({ answers: orderedAnswers }) }); setDone(true); } catch (caught) { setSaveError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } finally { setSaving(false); } };
   if (done) return <><Notice title="Private reflection saved" body="These are your own observations. No diagnostic result, risk estimate or treatment recommendation is inferred from them." /><Text>This optional tool is not a validated clinical measurement. Historical responses remain private and unchanged.</Text><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
   return <><Notice title="Important boundary" body="Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition." />{questions.map((question, index) => <ProductCard key={question.key}><Text style={styles.cardTitle}>{index + 1}. {question.label}</Text><View style={styles.wrap}>{responses.map(response => <Pill key={response.key} label={response.label} active={(answers[question.key] ?? 0) === response.sortOrder} onPress={() => setAnswers(current => ({ ...current, [question.key]: response.sortOrder }))} />)}</View></ProductCard>)}{!!saveError && <ErrorText text={saveError} />}<AppButton label="Save and see reflection" disabled={!questions.length || !responses.length} loading={saving} onPress={() => void finish()} /></>;
-}
-
-function GrowthPaths() {
-  const { snapshot, refresh } = useWellbeing();
-  const advance = async (id: string, progress: number) => {
-    await apiRequest(`/api/v1/wellbeing/growth-paths/${id}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, progress + 20) }) });
-    await refresh();
-  };
-  return <>{snapshot.growthPaths.map(path => <ProductCard key={path.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{path.title}</Text><Text style={styles.body}>{path.summary}</Text></View><Pill label={path.completed ? 'Completed' : path.progress ? `${path.progress}% · Continue` : 'Start'} active={path.completed} onPress={() => !path.completed && void advance(path.id, path.progress)} /></View><Text style={styles.meta}>{path.lessonCount} lessons · {path.durationMinutes} minutes · by {path.authorName}</Text><Text style={styles.meta}>{path.evidenceNote} · reviewed {new Date(path.reviewedAt).toLocaleDateString()}</Text><Text style={styles.meta}>Sources: {path.references.join(' · ')}</Text></ProductCard>)}{!snapshot.growthPaths.length && <EmptyState icon="route" title="No growth paths available" body="Reviewed learning paths will appear here when published." />}<Notice title="Educational scope" body="Growth paths teach reflection and coping skills. They do not diagnose conditions or replace individualized professional care." /></>;
 }
 
 function SearchHistory() {

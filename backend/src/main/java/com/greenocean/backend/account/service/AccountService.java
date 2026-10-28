@@ -75,6 +75,12 @@ public class AccountService {
         data.put("educationalSubmissions",db.queryForList("SELECT v.resource_id,v.revision,v.document::text,v.state,v.review_note,v.reviewed_at,v.published_at FROM growth_resources r JOIN growth_resource_versions v ON v.resource_id=r.id WHERE r.author_id=? ORDER BY r.id,v.revision",user));
         data.put("ownEditorialDecisions",db.queryForList("SELECT resource_id,revision,action,note,created_at FROM growth_editorial_events WHERE actor_id=? ORDER BY created_at,id",user));
         data.put("resourceProposals",db.queryForList("SELECT id,post_id,resource_id,resource_revision,status,reason,created_at FROM post_resource_attachments WHERE proposed_by=? ORDER BY created_at",user));
+        data.put("lessonCompletions",db.queryForList("SELECT id,source_course_key,course_revision,lesson_key,content_digest,lesson_title,completed_at FROM learning_lesson_completions WHERE owner_id=? ORDER BY completed_at,id",user));
+        data.put("courseCompletions",db.queryForList("SELECT id,source_course_key,course_revision,course_title,completed_at FROM learning_course_completions WHERE owner_id=? ORDER BY completed_at,id",user));
+        data.put("exerciseCompletions",db.queryForList("SELECT id,source_course_key,course_revision,lesson_key,content_digest,exercise_digest,completed_at FROM learning_exercise_completions WHERE owner_id=? ORDER BY completed_at,id",user));
+        data.put("pendingLessonOpenings",db.queryForList("SELECT course_id,lesson_key,revision,opened_at FROM learning_lesson_views WHERE owner_id=? ORDER BY opened_at",user));
+        data.put("editorialQuestions",db.queryForList("SELECT id,prompt_key,revision,body,language,review_state,review_note,reviewed_at FROM wellbeing_prompt_versions WHERE author_id=? OR reviewer_id=? ORDER BY created_at,id",user,user));
+        data.put("legacyLearningProgress",db.queryForList("SELECT path_id,legacy_progress,started_at,updated_at FROM user_growth_path_progress WHERE user_id=? ORDER BY path_id",user));
         return data;
     }
 
