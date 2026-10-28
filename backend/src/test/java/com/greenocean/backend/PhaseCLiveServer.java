@@ -34,6 +34,7 @@ public class PhaseCLiveServer {
            System.getenv("GREENOCEAN_TEST_DB_URL")==null)
             throw new IllegalStateException("An explicitly isolated test database and opt-in are required");
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
+            "--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true",
             "--greenocean.groups.activities-enabled=true","--greenocean.groups.proposals-enabled=true","--greenocean.groups.activation-approved=true","--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
@@ -97,8 +98,22 @@ public class PhaseCLiveServer {
             PhaseIFixtures.region(db);
             var reviewer=PhaseIFixtures.member(db,context.getBean(com.greenocean.backend.auth.repository.UserRepository.class),context.getBean(com.greenocean.backend.auth.service.TokenService.class));
             UUID application=PhaseIFixtures.review(db,ids.getFirst(),reviewer.id(),!input.path("unapproved").asBoolean());
-            byte[] body=json.writeValueAsBytes(Map.of("applicationId",application));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,body.length);exchange.getResponseBody().write(body);
+            byte[] body=json.writeValueAsBytes(Map.of("applicationId",application,"listenerId",ids.getFirst()));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,body.length);exchange.getResponseBody().write(body);
         }finally{exchange.close();}});
+        // Synthetic time fixture: only a keyed, loopback QA process can move its own
+        // future booking to the present. No production clock override or endpoint.
+        mailbox.createContext("/planning-checkin",exchange->{try{
+            if(!"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA"))||!"POST".equals(exchange.getRequestMethod())||!key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))){exchange.sendResponseHeaders(403,-1);return;}
+            var input=json.readTree(exchange.getRequestBody());String email=input.path("email").asText();UUID booking=UUID.fromString(input.path("bookingId").asText());
+            if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
+            new org.springframework.transaction.support.TransactionTemplate(context.getBean(org.springframework.transaction.PlatformTransactionManager.class)).execute(s->{
+                db.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+                if(db.queryForObject("SELECT count(*) FROM listener_bookings b JOIN users u ON u.id=b.member_id WHERE b.id=? AND u.email=? AND b.status='CONFIRMED' AND b.starts_at>clock_timestamp()",Integer.class,booking,email)!=1)throw new IllegalArgumentException("Synthetic future booking required");
+                db.execute("ALTER TABLE listener_bookings DISABLE TRIGGER listener_booking_guard");
+                db.update("WITH t AS MATERIALIZED(SELECT date_trunc('second',clock_timestamp()) AS at) UPDATE listener_bookings SET starts_at=t.at-INTERVAL '10 seconds',ends_at=t.at+INTERVAL '1790 seconds',reserved_until=t.at+INTERVAL '2240 seconds' FROM t WHERE id=?",booking);
+                db.execute("ALTER TABLE listener_bookings ENABLE TRIGGER listener_booking_guard");return null;
+            });exchange.sendResponseHeaders(204,-1);
+        }catch(RuntimeException failure){exchange.sendResponseHeaders(400,-1);}finally{exchange.close();}});
         mailbox.start();Runtime.getRuntime().addShutdownHook(new Thread(()->{mailbox.stop(0);context.close();}));
     }
 }

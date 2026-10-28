@@ -1,3 +1,4 @@
+import {SupportBookings,ListenerCalendarScreen} from '@/features/live-support/planning';
 import { LiveMember } from '@/features/live-support/member';
 import { ListenerWorkspace } from '@/features/live-support/workspace';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,6 +18,8 @@ import { colors, radius, spacing } from '@/theme/tokens';
 export default function ListenerFlow() {
   const { action } = useLocalSearchParams<{ action?: string }>(); const current = String(action || 'match');
   if (current === 'match') return <LiveMember />;
+  if (current === 'bookings') return <SupportBookings />;
+  if (current === 'calendar') return <ListenerCalendarScreen />;
   if (current === 'workspace') return <ListenerWorkspace />;
   if (current === 'apply') return <Apply />;
   if (current === 'training') return <Training />;

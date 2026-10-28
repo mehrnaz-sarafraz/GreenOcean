@@ -4,6 +4,8 @@ import com.greenocean.backend.auth.service.AuthRateLimit;
 import com.greenocean.backend.identity.AccessPolicy;
 import com.greenocean.backend.common.exception.ForbiddenException;
 import com.greenocean.backend.messaging.repository.MessagingRepository;
+import com.greenocean.backend.listener.planning.ListenerSupportPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ public class LiveSupportService {
  private final LiveSupportSettings settings;
  private final AuthRateLimit rates;
  private final MessagingRepository messaging;
+ private ListenerSupportPolicy planning;
+ @Autowired public void configurePlanning(ListenerSupportPolicy policy){this.planning=policy;}
  public LiveSupportService(JdbcTemplate db,AccessPolicy access,LiveSupportSettings settings,AuthRateLimit rates,MessagingRepository messaging) {
   this.db=db;this.access=access;this.settings=settings;this.rates=rates;this.messaging=messaging;
  }
@@ -37,6 +41,7 @@ public class LiveSupportService {
  private void requireListener(UUID user){requireMember(user);if(!truth("SELECT live_listener_qualified(?)",user))throw failure(403,"LISTENER_NOT_AUTHORIZED","Independent listener practice and conduct approval is required before live availability.");}
  public void reconcile(){
   db.queryForList("SELECT pg_advisory_xact_lock(72491001)");
+  if(planning!=null)planning.shutdownDisabled();
   db.queryForList("SELECT expire_live_support()");
   if(!enabled())db.update("UPDATE live_support_requests SET status='ENDED_SAFETY',reason_code='SERVICE_DISABLED',ended_at=clock_timestamp() WHERE status IN ('REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED')");
  }
@@ -75,10 +80,18 @@ public class LiveSupportService {
   return availability(user,session);
  }
  public LiveSupportView create(UUID user,UUID clientId,UUID target){
+  return createOrigin(user,clientId,target,null);
+ }
+ public LiveSupportView createScheduled(UUID user,UUID clientId,UUID target,UUID booking){
+  if(planning==null)throw failure(503,"SUPPORT_PATH_DISABLED","Scheduled support is disabled.");
+  planning.require("BOOKING");return createOrigin(user,clientId,target,booking);
+ }
+ private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking){
   reconcile();requireEnabled();requireMember(user);
-  var retry=db.queryForList("SELECT id,listener_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
+  var retry=db.queryForList("SELECT id,listener_id,source_booking_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
   if(!retry.isEmpty()){
    if(target!=null && !target.equals(retry.getFirst().get("listener_id")))throw failure(409,"IDEMPOTENCY_CONFLICT","Use a new request identifier for a different listener.");
+   if(!Objects.equals(booking,retry.getFirst().get("source_booking_id")))throw failure(409,"IDEMPOTENCY_CONFLICT","This request identifier belongs to another support pathway.");
    return view((UUID)retry.getFirst().get("id"),user);
   }
   if(occupied(user))throw failure(409,"REQUEST_ALREADY_OPEN","You already have an open live support request or session.");
@@ -87,12 +100,13 @@ public class LiveSupportService {
    SELECT p.listener_id FROM listener_presence p
    WHERE p.listener_id<>? AND (CAST(? AS UUID) IS NULL OR p.listener_id=?)
     AND live_listener_ready(p.listener_id) AND NOT live_pair_blocked(?,p.listener_id)
+    AND listener_capacity_available(?,p.listener_id,?)
     AND NOT EXISTS(SELECT 1 FROM live_support_requests r WHERE (r.member_id=p.listener_id OR r.listener_id=p.listener_id) AND r.status IN ('REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED'))
    ORDER BY p.last_assigned_at NULLS FIRST,p.listener_id LIMIT 1
-   """,UUID.class,user,target,target,user);
+   """,UUID.class,user,target,target,user,user,booking);
   if(candidates.isEmpty())throw failure(409,"NO_AVAILABLE_LISTENER","No live listener is currently available. You can check again or choose another support path.");
   UUID listener=candidates.getFirst(),id=UUID.randomUUID();
-  db.update("INSERT INTO live_support_requests(id,member_id,listener_id,client_request_id,expires_at,presence_seconds,reconnect_seconds) VALUES (?,?,?,?,clock_timestamp()+(?*INTERVAL '1 second'),?,?)",id,user,listener,clientId,settings.offerSeconds(),settings.presenceSeconds(),settings.reconnectSeconds());
+  db.update("INSERT INTO live_support_requests(id,member_id,listener_id,client_request_id,expires_at,presence_seconds,reconnect_seconds,source_booking_id,planned_seconds) VALUES (?,?,?,?,clock_timestamp()+(?*INTERVAL '1 second'),?,?,?,?)",id,user,listener,clientId,settings.offerSeconds(),settings.presenceSeconds(),settings.reconnectSeconds(),booking,planning!=null&&planning.planning()?1800:null);
   db.update("UPDATE listener_presence SET last_assigned_at=clock_timestamp() WHERE listener_id=?",listener);
   return view(id,user);
  }
@@ -140,6 +154,7 @@ public class LiveSupportService {
   int changed=db.update("UPDATE live_support_requests SET status='ACTIVE',conversation_id=?,activated_at=clock_timestamp(),member_seen_at=clock_timestamp(),listener_seen_at=clock_timestamp() WHERE id=? AND status='ACCEPTED' AND activation_expires_at>clock_timestamp() AND live_listener_ready(listener_id)",conversation,id);
   if(changed!=1){reconcile();throw failure(409,"REQUEST_EXPIRED","The accepted request is no longer available for activation.");}
   messaging.createListenerConversation(conversation,UUID.randomUUID(),user,(UUID)r.get("listener_id"));
+  if(r.get("source_booking_id")!=null)db.queryForList("SELECT reconcile_listener_planning()");
   return view(id,user);
  }
  public LiveSupportView pulse(UUID id,UUID user){
@@ -189,7 +204,7 @@ public class LiveSupportService {
    SELECT r.*,clock_timestamp() AS server_time, p.display_name AS peer_name,
    CASE WHEN r.listener_id=? THEN r.member_id ELSE r.listener_id END AS peer_id
    FROM live_support_requests r JOIN profiles p ON p.user_id=CASE WHEN r.listener_id=? THEN r.member_id ELSE r.listener_id END WHERE r.id=?
-   """,(rs,n)->new LiveSupportView(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),time(rs,"server_time"),time(rs,"expires_at"),time(rs,"activation_expires_at"),time(rs,"interrupted_at"),time(rs,"ended_at"),rs.getObject("conversation_id",UUID.class),rs.getObject("peer_id",UUID.class),rs.getString("peer_name"),user.equals(rs.getObject("listener_id",UUID.class)),rs.getInt("presence_seconds"),rs.getInt("reconnect_seconds")),user,user,id);
+   """,(rs,n)->new LiveSupportView(rs.getObject("id",UUID.class),rs.getString("status"),rs.getString("reason_code"),time(rs,"server_time"),time(rs,"expires_at"),time(rs,"activation_expires_at"),time(rs,"interrupted_at"),time(rs,"ended_at"),rs.getObject("conversation_id",UUID.class),rs.getObject("peer_id",UUID.class),rs.getString("peer_name"),user.equals(rs.getObject("listener_id",UUID.class)),rs.getInt("presence_seconds"),rs.getInt("reconnect_seconds"),time(rs,"activated_at"),time(rs,"planned_ends_at")),user,user,id);
  }
  private Instant time(ResultSet rs,String column)throws SQLException{var value=rs.getObject(column,OffsetDateTime.class);return value==null?null:value.toInstant();}
 }

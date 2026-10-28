@@ -1,0 +1,6 @@
+# Timezone and calendar rules
+Weekly availability stores IANA timezone, ISO weekday (Monday 1), whole-minute local start/end, inclusive local validity dates (at most one year), and explicit EARLIER/LATER/BOTH repeated-hour policy. An end at or before the start spans midnight. Expand only through the bounded booking horizon, including the preceding local day for overnight rules.
+
+A nonexistent recurrence boundary is skipped. Repeated boundaries use the chosen offset policy. One-time exceptions require an explicit valid offset when the civil time repeats; nonexistent or mismatched offsets are rejected. No Java atZone gap shift is accepted silently. Slots and reservations retain UTC instants plus their source timezone; device timezone is used only to display the same instant with an offset. Existing reservations never shift when a preference changes.
+
+Paging keys use fixed-nine-digit UTC instants and UUID tie-breakers. Availability is revalidated under participant locks before reservation, so a discovery response never guarantees capacity. Busy intervals are fetched per listener, not one database call per generated slot.
