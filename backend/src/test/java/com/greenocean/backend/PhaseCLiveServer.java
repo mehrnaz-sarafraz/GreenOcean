@@ -85,6 +85,7 @@ public class PhaseCLiveServer {
             if(!email.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
             var ids=db.queryForList("SELECT id FROM users WHERE email=? AND status='ACTIVE' AND email_verified",UUID.class,email);if(ids.size()!=1){exchange.sendResponseHeaders(400,-1);return;}
             UUID user=ids.getFirst();db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='MODERATOR' ON CONFLICT DO NOTHING",user);
+            if(input.path("educationalAdmin").asBoolean(false))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='ADMIN' ON CONFLICT DO NOTHING",user);
             var tokenService=context.getBean(com.greenocean.backend.auth.service.TokenService.class);String permit=tokenService.createRefreshToken();db.update("INSERT INTO webauthn_enrollment_permits(token_hash,user_id,expires_at) VALUES (?,?,CURRENT_TIMESTAMP+INTERVAL '10 minutes')",tokenService.hashRefreshToken(permit),user);
             byte[] response=json.writeValueAsBytes(Map.of("permit",permit));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,response.length);exchange.getResponseBody().write(response);
         }finally{exchange.close();}});

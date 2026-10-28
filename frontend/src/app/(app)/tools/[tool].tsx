@@ -1,3 +1,4 @@
+import {GrowthLibraryScreen,EditorialWorkspace,EducationPermissions} from '@/features/wellbeing/growth-library';
 import {PrivateSpace} from '@/features/wellbeing/private-space';
 import {ConnectionsPanel} from '@/features/content/connections-panel';
 import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
@@ -54,6 +55,9 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
 export default function ProductToolScreen() {
   const params = useLocalSearchParams<Params>();
   const screen = Array.isArray(params.tool) ? params.tool[0] : params.tool || '';
+  if(screen==='growth-library')return <GrowthLibraryScreen/>;
+  if(screen==='educational-editorial')return <EditorialWorkspace/>;
+  if(screen==='educational-permissions')return <EducationPermissions/>;
   const copy = pageCopy[screen];
   if (!copy) return <ProductPage><ProductHeader title="Page not found" subtitle="This GreenOcean tool does not exist." /><EmptyState icon="travel_explore" title="Nothing at this address" body="Return to the wellbeing hub or your profile to keep exploring." /><AppButton label="Go to wellbeing hub" onPress={() => nav('wellbeing')} /></ProductPage>;
   return <ProductPage><ProductHeader {...copy} />{renderScreen(screen, params)}</ProductPage>;
@@ -294,7 +298,7 @@ function useCommunityDetails(slug: string) {
 }
 
 function WellbeingHub() {
-  return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="book" title="Daily reflection / تأمل روزانه" subtitle="Three optional questions; skip freely" onPress={() => nav('daily-reflection')} /><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
+  return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="book" title="Growth Library / کتابخانه رشد" subtitle="Reviewed educational resources" onPress={() => nav('growth-library')} /><ActionRow icon="book" title="Daily reflection / تأمل روزانه" subtitle="Three optional questions; skip freely" onPress={() => nav('daily-reflection')} /><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
 }
 
 const emptyWellbeing: WellbeingSnapshot = { checkIns: [], journalEntries: [], goals: [], growthPaths: [], reflections: [] };

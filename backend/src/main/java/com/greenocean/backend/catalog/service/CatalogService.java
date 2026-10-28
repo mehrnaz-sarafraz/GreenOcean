@@ -52,9 +52,7 @@ public class CatalogService {
         if (!repository.isVerifiedProfessional(userId)) {
             throw new ForbiddenException("Only verified professionals can submit articles");
         }
-        UUID id = uuidGenerator.nextUuid();
-        repository.createArticle(id, userId, request);
-        return id;
+        throw new com.greenocean.backend.common.exception.ConflictException("Use the versioned Growth Library editorial workflow; publication and featuring need separate current permissions.");
     }
     @Transactional
     public void setArticleHelpful(UUID userId, UUID articleId, boolean helpful) {
@@ -69,5 +67,5 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<MediaRecommendationResponse> media(UUID userId, String kind) { return repository.media(userId, kind); }
     @Transactional
-    public void setMediaSaved(UUID userId, UUID mediaId, boolean saved) { repository.setMediaSaved(mediaId, userId, saved); }
+    public void setMediaSaved(UUID userId, UUID mediaId, boolean saved) { if(saved && repository.media(userId,"All").stream().noneMatch(item->item.id().equals(mediaId)))throw new NotFoundException("Reviewed media is unavailable"); repository.setMediaSaved(mediaId, userId, saved); }
 }

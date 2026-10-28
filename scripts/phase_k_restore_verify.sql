@@ -21,3 +21,12 @@ SELECT 'o_journal', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id),
 SELECT 'o_moods', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM wellbeing_check_ins t;
 SELECT 'o_goals', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM wellbeing_goals t;
 SELECT 'o_daily', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM wellbeing_daily_answers t;
+
+SELECT 'o_resources', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM growth_resources t;
+SELECT 'o_resource_versions', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY resource_id,revision), '')) FROM growth_resource_versions t;
+SELECT 'o_resource_saves', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY user_id,resource_id), '')) FROM growth_resource_saves t;
+SELECT 'o_attachments', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM post_resource_attachments t;
+
+SELECT 'o_permissions', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM educational_permissions t;
+SELECT 'o_credentials', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM educational_credentials t;
+SELECT 'o_editorial_events', md5(COALESCE(string_agg(to_jsonb(t)::text, '|' ORDER BY id), '')) FROM growth_editorial_events t;

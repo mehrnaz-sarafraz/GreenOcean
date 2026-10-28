@@ -70,6 +70,11 @@ public class AccountService {
         data.put("goalSteps",db.queryForList("SELECT s.id,s.goal_id,s.title,s.completed,s.position FROM wellbeing_goal_steps s JOIN wellbeing_goals g ON g.id=s.goal_id WHERE g.user_id=? ORDER BY s.goal_id,s.position",user));
         data.put("dailyAnswers",db.queryForList("SELECT s.local_date,s.timezone,q.position,p.id AS prompt_id,p.revision AS prompt_revision,p.body AS question,a.body AS answer,a.revision,a.updated_at FROM wellbeing_daily_sets s JOIN wellbeing_daily_questions q ON q.set_id=s.id JOIN wellbeing_prompt_versions p ON p.id=q.prompt_id JOIN wellbeing_daily_answers a ON a.set_id=q.set_id AND a.position=q.position WHERE s.user_id=? ORDER BY s.local_date,q.position",user));
         data.put("journalDraft",db.queryForList("SELECT title,body,mood,revision,updated_at,expires_at FROM wellbeing_journal_drafts WHERE user_id=? AND expires_at>CURRENT_TIMESTAMP",user));
+        data.put("resourceSaves",db.queryForList("SELECT resource_id,created_at FROM growth_resource_saves WHERE user_id=? ORDER BY created_at",user));
+        data.put("educationalPermissions",db.queryForList("SELECT action,scope,evidence,expires_at,revoked_at FROM educational_permissions WHERE user_id=? ORDER BY created_at",user));
+        data.put("educationalSubmissions",db.queryForList("SELECT v.resource_id,v.revision,v.document::text,v.state,v.review_note,v.reviewed_at,v.published_at FROM growth_resources r JOIN growth_resource_versions v ON v.resource_id=r.id WHERE r.author_id=? ORDER BY r.id,v.revision",user));
+        data.put("ownEditorialDecisions",db.queryForList("SELECT resource_id,revision,action,note,created_at FROM growth_editorial_events WHERE actor_id=? ORDER BY created_at,id",user));
+        data.put("resourceProposals",db.queryForList("SELECT id,post_id,resource_id,resource_revision,status,reason,created_at FROM post_resource_attachments WHERE proposed_by=? ORDER BY created_at",user));
         return data;
     }
 
