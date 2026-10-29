@@ -21,3 +21,6 @@ PROFESSIONAL is added only after the independent qualification decision and enab
 | CLINIC_FINANCE | None through financial role | Purpose-limited operations with recent MFA | None through finance role |
 | CLINICAL_RECORDS_OPERATOR | Independent time-limited category/encounter grant and recent MFA | None through records role | None through records role |
 | Moderator, listener, educational editor | None through these roles | None through these roles | None through these roles |
+
+
+P4/P5 purpose roles: CLINIC_REPUTATION_OPERATOR reviews raw feedback and independent recognition; CLINIC_OPERATIONS reviews nonnarrative incidents/reminder dispatch; CLINIC_PRIVACY_OPERATOR reviews category rights and bounded holds. All require current account authority and recent security-key authentication. None receives clinical narrative access by role. ADMIN sees aggregate business/configuration; CLINIC_FINANCE sees financial operations; direct records require participant authorization or a separately approved expiring CLINICAL_RECORDS_OPERATOR grant. Case/feature/hold self approval is rejected. Legacy professional generic messaging cannot start new care or send messages; new care uses bounded encounters.

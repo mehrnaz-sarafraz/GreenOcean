@@ -32,9 +32,7 @@ export default function ProfessionalAction() {
 }
 
 function Contact({ professionalId, name }: { professionalId: string; name: string }) {
-  const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  const start = async () => { setBusy(true); setError(''); try { const result = await apiRequest<{ id: string }>(`/api/v1/conversations/professionals/${professionalId}`, { method: 'POST' }); router.replace({ pathname: '/chat/[id]', params: { id: result.id } }); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not start conversation'); } finally { setBusy(false); } };
-  return <ProductPage><ProductHeader eyebrow="PROFESSIONAL MESSAGE" title={`Message ${name}`} subtitle="Start a secure GreenOcean conversation." /><Notice title="Support, not emergency care" body="Messages may not be read immediately and do not replace emergency or medical care." />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Start conversation" loading={busy} onPress={() => void start()} /></ProductPage>;
+ return <ProductPage><ProductHeader title={name} subtitle="Professional care starts in an explicitly booked, consented and bounded clinic encounter. / مراقبت حرفه‌ای در نوبت با رضایت صریح و زمان محدود آغاز می‌شود."/><AppButton label="Review clinic appointments / بررسی نوبت‌های کلینیک" onPress={()=>router.replace({pathname:'/professional/[id]/[action]',params:{id:professionalId,action:'book'}} as never)}/></ProductPage>;
 }
 
 function Application() {

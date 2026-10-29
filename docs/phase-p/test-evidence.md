@@ -1,25 +1,33 @@
-# Phase P verification evidence
+# Phase P validation evidence
 
-P1: focused PostgreSQL verification on the preceding source snapshot passed51 tests (31 retained Phase A cases,12 clinic integration cases,three independent-connection races, populated migration rollback/retry, default-off clinical access, document-storage and legacy availability). A complete earlier P1 snapshot passed544 tests. The next complete run executed549 tests and found one brittle pre-existing notification assertion: within one transaction CURRENT_TIMESTAMP ties do not guarantee which notification is first. The corrected test checks the expected real member actor on every FOLLOW/LIKE/COMMENT notification, retaining the original type/count/read-state assertions. A complete rerun of the current source is in progress; it is not yet claimed green.
+This replaces intermediate in-progress notes. All accounts, documents, provider receipts and clinical narratives used in QA are synthetic.
 
-Five P1 actual-component browser cases passed: private free draft planning without publication permission, denied privileged review without retained case details, exact-case evidence requirements and Persian RTL at360/1280. TypeScript and changed-file ESLint passed. One real browser/API/PostgreSQL journey passed: original application/upload, encrypted quarantine, unauthorized scan refusal, actual controlled ClamAV socket exchange, independent exact-revision decision, stale-decision refusal, platform approval separation, draft publication, public availability and credential revocation. All clinical identities/evidence/release references and scanner responses in this journey are synthetic QA, not actual licensing or malware assurance. This journey exposed and fixed a JDBC SQL-array JSON serialization defect missed by direct service tests; arrays now cross the private API as values rather than driver internals. Three cipher unit cases cover wrong owner/tamper, old-key rotation and missing-key refusal; their final suite run is pending.
+| Snapshot / scope | Observed result |
+|---|---|
+| P1 exact-head CI 40768695429 | All four jobs succeeded |
+| P2 exact-head CI 40828662757 | All four succeeded; local complete backend 577 passed; four component cases and one real journey passed |
+| P3 exact-head CI 40836174883 | All four succeeded; 30 P3 targeted cases, four component cases and real P1–P3 journeys passed |
+| P4 exact-head CI 40846917934 | All four succeeded; complete backend 628 passed; 21 P4 migration/concurrency cases; five component cases and one real journey passed |
+| Initial P5 complete backend | 650 passed, zero failures/errors/skips; later policy-binding/deduplication refinements are verified separately and by final CI |
+| Final P5 targeted | 26 passed, including independent-connection races, forward migration/rollback, no-show evidence, quiet-hour deduplication and subject rights |
+| P5 interface | Four component browser cases passed, including Persian RTL at 360/1280 widths |
+| Frontend shared logic / lint | 69 unit cases passed; zero lint errors and eleven existing warnings |
+| Final shared P2/P3/P5 source regression | 80 passed, zero failures/errors/skips; final P5 presence refinement separately passed all 26 P5 cases |
+| Final P5 real API/browser journey | Passed (38.4s test; 1.4m orchestration): optional follow-up, explicit acceptance/withdrawal, no ongoing messaging, protected rights review and independent incident authority |
+| Fresh-database concurrency-first bootstrap | Four races passed on a new empty disposable database; public Flyway history initializes before any clinic history schema, without baseline/repair or changing applied migrations |
+| P5 full frontend/live CI on 2bcfd3d457fd533e38e93155f796e9daf6cbbfc2 | 175 component browser cases and 51 real API/browser journeys passed; frontend typecheck/lint/unit and all-platform JS exports succeeded; final backend bootstrap correction is test-only |
+| Final P5 CI | Exact published head and all job results maintained in https://github.com/mehrnaz-sarafraz/GreenOcean/pull/27 |
+| Physical Android/iOS, native push/call permission/disconnect behavior | NOT_EXECUTED; no attached adb/Xcode/device runtime |
+| Real bank/media/clinical approval and production capacity | NOT_EXECUTED / APPROVAL_REQUIRED |
 
-Remote exact-head P1 CI, complete current browser regression, all-platform export and real native device testing are not yet claimed. O4 exact-head remote CI40760677603 passed all four jobs on ca5f66217fe9b7bee77e4634e32ec12f575a5719. O4 PR22 remains draft and stacked on O3; nothing is merged/deployed.
+Reproducible commands (repository root unless stated):
 
-## P2 current verification
+- PostgreSQL18 disposable database, Java21: `cd backend; ./mvnw -B clean verify` with GREENOCEAN_TEST_DB_URL pointing to a disposable `_qa` database and its independent test credentials.
+- Focused final domain run: `./mvnw -B -Dtest=PhaseP2*,PhaseP3*,PhaseP5* clean test` (quote the test argument in PowerShell). Local orchestration logs are `.tmp/phase-p5-final-regression.log`; full earlier run `.tmp/phase-p5-full-backend.log`.
+- Frontend: `npm run typecheck`, `npm run lint`, `npm test`, `npx expo export --platform all`, `npm run test:e2e`.
+- Component scope: `npx playwright test phase-p5.spec.mjs`; local `.tmp/phase-p5-browser.log`.
+- Isolated real journeys: compile `PhaseCLiveServer` test sources/classpath and run the established CI registration-live setup with GREENOCEAN_LIVE_BROWSER_QA, GREENOCEAN_LIVE_SUPPORT_QA and GREENOCEAN_LIVE_CLINICAL_QA set to `isolated-only`; `npm run test:live` executes all real-stack cases. Test-only loopback fixtures require their generated QA secret and synthetic account/database restrictions. No production bean fabricates provider success.
 
-P1 exact-head remote CI run 40768695429 succeeded on c47afb3a75de4352e15f390b0f2ab57a50aec8b3. P2 targeted suite passed 24 tests on the preceding snapshot (12 workflow, eight payment/signature/replay, three independent-connection concurrency and one populated rollback/retry migration). A further independent-connection duplicate-refund case was then added; the complete suite is running and is not yet claimed green. Four P2 component browser cases passed, including Persian RTL at360/1280; TypeScript and changed-file ESLint passed. One real browser/API/PostgreSQL journey passed after fixing empty-200 mutation responses to204: synthetic credential/platform flow, free booking, immutable invoice, retry, foreign-account denial, legacy completion refusal and cancellation without reopening capacity. Real external payments/payouts, physical devices and clinical operations were not exercised.
+Four personas: Happy User covers verified scheduling, free real-stack delivery, explicit follow-up and synthetic-provider paid accounting. Confused User covers exact IRR/IRT display, refund obligation versus receipt, separate consent, optional reminders and no invented small-sample score. Malicious User covers role/IDOR failures, callback replay/mismatch, clinical/social separation, independent moderation/incident/hold review and concurrency. Creative User covers DST/locale/RTL, cohort changes, repeated feedback, changed methodology inputs and recovery retries. Existing A–O suites run in the full backend and CI frontend/live gates.
 
-## P2 validated baseline
-
-Commit4489f4cae3703880a3515a6db9feb9f9118b0e22 passed577 backend tests (25 P2), zero failures/errors/skips; exact-head CI40828662757 succeeded across all four jobs. PR24 remains stacked on P1 PR23, unmerged.
-
-## P3 current validation
-
-Twenty-six targeted tests passed:15 clinical/security/export cases, three independent-connection message/note/completion races, three file/scanner cases, three synthetic media admission/failure cases, one default-off case and one rollback/retry migration case. Four component browser cases passed, including Persian RTL at360/1280. One real browser/API/PostgreSQL journey passed: independent clinical notices, three explicit choices, authenticated entry, explicit professional start, both-party text participation, denial of unrelated administrator/professional-note patient access, protected note creation, end and mutual completion. The journey uses synthetic identities, source/release evidence and a gated scheduled-time fixture; no production record or real external media/payment operation is exercised. Current TypeScript/lint and exact-head complete CI are being finalized.
-
-The actual role change invalidates old role-claim JWTs. Live fixtures now sign in or refresh through the real authentication endpoints after qualification; prior scope/denial assertions remain unchanged. No token validation was relaxed.
-
-P3 follow-up verification: four additional provider-backed (synthetic only) clinical accounting tests passed together with all25 P2 tests. They verify no paid activation without capture, exact earned integer fees/payables after transport evidence, no negative reversal of unearned fees, and reversal of actually earned amounts after confirmed refund. The three live journeys retain their assertions; isolated QA reset now revokes only synthetic example.test release approvals so prior test runs cannot make the initial missing-platform-approval assertion accidentally succeed. No production release state is reset.
-
-P3 final local checks: TypeScript passed and changed clinical-feature ESLint has zero errors/warnings (the three pre-existing account-security hook warnings remain). All three P1/P2/P3 real browser/API/PostgreSQL journeys passed together. Complete exact-head remote regression remains pending until the P3 PR run finishes.
+Exact implementation SHAs and CI run IDs are in delivery-report.md and each PR body. Final PR metadata records the exact final tested head without embedding a self-referential commit SHA into its own tree. No synthetic success is an operational approval.

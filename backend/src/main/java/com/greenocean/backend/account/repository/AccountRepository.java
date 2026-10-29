@@ -79,7 +79,7 @@ public class AccountRepository {
     public void erase(UUID userId) {
         jdbcTemplate.queryForList("SELECT id FROM users WHERE id=? FOR NO KEY UPDATE",userId);
         if(Boolean.TRUE.equals(jdbcTemplate.queryForObject("SELECT EXISTS(SELECT 1 FROM consultation_requests WHERE clinic_governed AND(requester_user_id=? OR professional_user_id=?))",Boolean.class,userId,userId)))
-            throw new com.greenocean.backend.common.exception.ConflictException("Clinical/financial records require the separate privacy-rights review workflow before account erasure; automatic erasure is not configured for these categories");
+            throw new com.greenocean.backend.common.exception.ConflictException("Open Follow-up and clinic data rights to request category-specific review before account erasure; clinical and financial records require independent policy and hold review");
         jdbcTemplate.queryForList("SELECT g.id FROM communities g WHERE g.id IN(SELECT community_id FROM community_members WHERE user_id=? UNION SELECT community_id FROM posts WHERE author_id=? UNION SELECT p.community_id FROM comments c JOIN posts p ON p.id=c.post_id WHERE c.author_id=?) ORDER BY g.id FOR UPDATE",userId,userId,userId);
         jdbcTemplate.update("DELETE FROM community_content_actions WHERE post_id IN(SELECT id FROM posts WHERE author_id=?) OR comment_id IN(SELECT id FROM comments WHERE author_id=?)",userId,userId);
         jdbcTemplate.update("UPDATE community_content_actions SET actor_id=NULL WHERE actor_id=?",userId);
