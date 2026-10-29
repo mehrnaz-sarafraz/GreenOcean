@@ -97,7 +97,8 @@ public class ProfessionalWorkflowRepository {
         return jdbcTemplate.query("""
                 SELECT id, professional_user_id, starts_at, ends_at, consultation_mode, status
                   FROM professional_availability_slots
-                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE' AND governed
+                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE' AND governed AND price_units=0
+                   AND NOT EXISTS(SELECT 1 FROM clinic_slot_offers o WHERE o.slot_id=professional_availability_slots.id)
                    AND starts_at > CURRENT_TIMESTAMP
                  FOR UPDATE
                 """, this::availabilitySlot, slotId, professionalId).stream().findFirst();
@@ -155,14 +156,14 @@ public class ProfessionalWorkflowRepository {
     public boolean updateConsultationStatus(UUID consultationId, UUID professionalId, String status) {
         return jdbcTemplate.update("""
                 UPDATE consultation_requests SET status = ?
-                 WHERE id = ? AND professional_user_id = ? AND status IN ('REQUESTED', 'CONFIRMED')
+                 WHERE id = ? AND professional_user_id = ? AND NOT clinic_governed AND status IN ('REQUESTED', 'CONFIRMED')
                 """, status, consultationId, professionalId) == 1;
     }
 
     public boolean cancelOwnConsultation(UUID consultationId, UUID requesterId) {
         return jdbcTemplate.update("""
                 UPDATE consultation_requests SET status = 'CANCELLED'
-                 WHERE id = ? AND requester_user_id = ? AND status IN ('REQUESTED', 'CONFIRMED')
+                 WHERE id = ? AND requester_user_id = ? AND NOT clinic_governed AND status IN ('REQUESTED', 'CONFIRMED')
                 """, consultationId, requesterId) == 1;
     }
 

@@ -39,7 +39,7 @@ public class SecurityConfig {
                                 "/api/v1/mail/events",
                                 "/api/v1/public/**",
                                 "/api/v1/geography/**",
-                                "/api/v1/auth/register",
+                                "/api/v1/clinic/provider-callback", "/api/v1/auth/register",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout"
