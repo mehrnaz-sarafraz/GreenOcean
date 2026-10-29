@@ -45,7 +45,7 @@ export default function AppLayout() {
     <Tabs.Screen name="community-review" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     <Tabs.Screen name="content-decisions" options={{ href: null }} />
     <Tabs.Screen name="group-workspace" options={{href:null}} /><Tabs.Screen name="group-review" options={{href:null}} /><Tabs.Screen name="group-safety-review" options={{href:null}} />
-    <Tabs.Screen name="clinical-governance" options={{href:null,tabBarStyle:{display:'none'}}}/><Tabs.Screen name="clinical/[appointment]" options={{href:null,tabBarStyle:{display:'none'}}}/><Tabs.Screen name="clinic" options={{href:null}} />
+    <Tabs.Screen name="professional-rankings" options={{href:null}}/><Tabs.Screen name="clinic-reputation" options={{href:null}}/><Tabs.Screen name="clinic-reputation-operations" options={{href:null}}/><Tabs.Screen name="clinical-governance" options={{href:null,tabBarStyle:{display:'none'}}}/><Tabs.Screen name="clinical/[appointment]" options={{href:null,tabBarStyle:{display:'none'}}}/><Tabs.Screen name="clinic" options={{href:null}} />
     <Tabs.Screen name="clinic-finance-operations" options={{href:null}} />
     <Tabs.Screen name="my-posts" options={{ href: null }} />
     <Tabs.Screen name="message-requests" options={{ href: null }} />

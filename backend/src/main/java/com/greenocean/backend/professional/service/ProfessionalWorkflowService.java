@@ -36,11 +36,7 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ProfessionalReviewResponse review(UUID professionalId, UUID reviewerId, CreateProfessionalReviewRequest request) {
-        requireProfessional(professionalId);
-        if (professionalId.equals(reviewerId)) throw new ConflictException("You cannot review your own professional profile");
-        repository.saveReview(uuidGenerator.nextUuid(), professionalId, reviewerId, request);
-        return repository.reviews(professionalId, reviewerId).stream().filter(ProfessionalReviewResponse::mine)
-                .findFirst().orElseThrow();
+        throw new ConflictException("Feedback requires an eligible governed appointment and explicit privacy choices in the verified feedback workspace");
     }
 
     @Transactional(readOnly = true)
@@ -122,9 +118,11 @@ public class ProfessionalWorkflowService {
 
     @Transactional
     public ProfessionalApplicationResponse apply(UUID userId, ProfessionalApplicationRequest request) {
+        authority.lock(userId);
         if(!"IR".equals(request.country()))throw new IllegalArgumentException("Iran(IR) is the initial professional verification jurisdiction; other jurisdictions need separate approval");
         if (repository.hasPendingApplication(userId)) throw new ConflictException("A professional application is already under review");
         UUID application=uuidGenerator.nextUuid();
+        repository.invalidateOffersForApplication(userId);
         repository.submitApplication(application, userId, request);
         authority.application(application,userId,request.professionalType().toUpperCase(java.util.Locale.ROOT),request.licenseNumber().trim());
         return repository.latestApplication(userId).orElseThrow();

@@ -88,7 +88,7 @@ public class CatalogRepository {
                    AND (CAST(? AS TEXT) IS NULL OR EXISTS (SELECT 1 FROM unnest(pp.specialties) value
                                                            WHERE LOWER(value) LIKE '%' || CAST(? AS TEXT) || '%'))
                    AND (? = FALSE OR pp.accepting_new_clients = TRUE)
-                 ORDER BY pp.promoted DESC, pp.green_ocean_score DESC, pp.rating DESC, p.display_name
+                 ORDER BY verified_display_name,pp.user_id
                 """, this::mapProfessional, search, search, specialtySearch, specialtySearch, availableOnly);
     }
 
