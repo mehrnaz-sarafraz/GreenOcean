@@ -14,7 +14,7 @@ This replaces intermediate in-progress notes. All accounts, documents, provider 
 | Frontend shared logic / lint | 69 unit cases passed; zero lint errors and eleven existing warnings |
 | Final shared P2/P3/P5 source regression | 80 passed, zero failures/errors/skips; final P5 presence refinement separately passed all 26 P5 cases |
 | Final P5 real API/browser journey | Passed (38.4s test; 1.4m orchestration): optional follow-up, explicit acceptance/withdrawal, no ongoing messaging, protected rights review and independent incident authority |
-| Final P5 CI | Exact published head and all job results maintained in the P5 PR |
+| Final P5 CI | Exact published head and all job results maintained in https://github.com/mehrnaz-sarafraz/GreenOcean/pull/27 |
 | Physical Android/iOS, native push/call permission/disconnect behavior | NOT_EXECUTED; no attached adb/Xcode/device runtime |
 | Real bank/media/clinical approval and production capacity | NOT_EXECUTED / APPROVAL_REQUIRED |
 
