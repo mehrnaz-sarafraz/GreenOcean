@@ -30,7 +30,7 @@ export function AccountSecurityPanel(){
   <AppButton label={fa?'خروج':'Sign out'} variant="secondary" onPress={()=>void signOut().then(()=>router.replace('/(auth)/welcome'))}/>
   <AppButton label={fa?'نشست‌های فعال':'Active sessions'} variant="secondary" onPress={()=>router.push({pathname:'/(app)/tools/[tool]',params:{tool:'session-management'}})}/>
   <AppButton label={fa?'دانلود داده‌های من':'Download my data'} variant="secondary" onPress={()=>router.push({pathname:'/(app)/tools/[tool]',params:{tool:'data-export'}})}/>
-  {user?.roles.some(role=>role==='ADMIN'||role==='MODERATOR')&&<StaffKeys/>}
+  {user?.roles.some(role=>['ADMIN','MODERATOR','PROFESSIONAL','CLINIC_FINANCE','CLINICAL_RECORDS_OPERATOR'].includes(role))&&<StaffKeys/>}
   <Text accessibilityRole="header">{fa?'فعالیت امنیتی اخیر':'Recent security activity'}</Text>
   {events.map((event,n)=><Text key={`${event.created_at}-${n}`}>{securityEventLabel(event.action,fa)} · {new Date(event.created_at).toLocaleString(fa?'fa':'en')}</Text>)}
   <ErrorMessage message={eventError}/><AppButton label={fa?'بارگذاری دوباره رویدادها':'Reload security activity'} variant="secondary" onPress={activity}/>
@@ -61,7 +61,7 @@ export function SessionsPanel(){
   <AppButton label={fa?'خروج همه دستگاه‌ها':'Sign out all devices'} variant="secondary" onPress={()=>setSelected('all')} disabled={busy||!sessions.length}/>
   {selected&&<View style={card}><Text accessibilityRole="header">{selected==='all'?(fa?'خروج همه دستگاه‌ها، از جمله این دستگاه را تأیید می‌کنید؟':'Confirm signing out every device, including this one?'):(fa?'خروج دستگاه انتخاب‌شده را تأیید می‌کنید؟':'Confirm signing out the selected device?')}</Text><AppField label={fa?'رمز برای تأیید خروج':'Password to confirm sign-out'} value={proof} onChangeText={setProof} secureTextEntry autoComplete="current-password" autoCapitalize="none" autoCorrect={false} ltr/><AppButton label={fa?'تأیید خروج':'Confirm sign-out'} loading={busy} disabled={!proof} onPress={()=>void revoke()}/><AppButton label={fa?'انصراف':'Cancel'} variant="secondary" disabled={busy} onPress={()=>{setSelected(null);setProof('');}}/></View>}
   <ErrorMessage message={error}/>
-  {user?.roles.some(role=>role==='ADMIN'||role==='MODERATOR')&&<StaffKeys/>}
+  {user?.roles.some(role=>['ADMIN','MODERATOR','PROFESSIONAL','CLINIC_FINANCE','CLINICAL_RECORDS_OPERATOR'].includes(role))&&<StaffKeys/>}
  </View>;
 }
 function StaffKeys(){

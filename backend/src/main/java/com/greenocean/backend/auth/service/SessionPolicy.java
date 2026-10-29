@@ -16,5 +16,5 @@ public record SessionPolicy(Duration webOverall,Duration webIdle,Duration mobile
  public Duration overall(String client,String scope){return "PENDING".equals(scope)?Duration.ofHours(1):"PRIVILEGED".equals(scope)?privilegedOverall:"MOBILE".equals(client)?mobileOverall:webOverall;}
  public Duration idle(String client,String scope){return "PENDING".equals(scope)?Duration.ofMinutes(15):"PRIVILEGED".equals(scope)?privilegedIdle:"MOBILE".equals(client)?mobileIdle:webIdle;}
  public static Instant earlier(Instant a,Instant b){return a.isBefore(b)?a:b;}
- public static boolean privileged(java.util.Collection<String> roles){return roles.stream().anyMatch(Set.of("ADMIN","MODERATOR")::contains);}
+ public static boolean privileged(java.util.Collection<String> roles){return roles.stream().anyMatch(Set.of("ADMIN","MODERATOR","PROFESSIONAL","CLINIC_FINANCE","CLINICAL_RECORDS_OPERATOR")::contains);}
 }
