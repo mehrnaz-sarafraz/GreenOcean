@@ -67,6 +67,7 @@ public class MessagingService {
     public MessageResponse send(UUID conversationId, UUID userId, String body, UUID clientMessageId) {
         requireConversation(conversationId, userId);
         String service=db.queryForObject("SELECT service_kind FROM conversations WHERE id=?",String.class,conversationId);
+        if("PROFESSIONAL_CARE".equals(service))throw new ForbiddenException("Legacy professional conversations are read-only; use the bounded clinic encounter");
         if("LISTENER".equals(service))live.requireSending(conversationId,userId,clientMessageId);
         UUID id = repository.send(uuidGenerator.nextUuid(), conversationId, userId, body.trim(),clientMessageId);
         return repository.messages(conversationId, userId).stream()
@@ -76,15 +77,7 @@ public class MessagingService {
 
     @Transactional
     public UUID startProfessionalConversation(UUID professionalId, UUID userId) {
-        access.requireCare(userId,professionalId);
-        if (catalogRepository.professional(professionalId).isEmpty()) {
-            throw new NotFoundException("Professional was not found");
-        }
-        return repository.professionalConversation(userId, professionalId).orElseGet(() -> {
-            UUID id = uuidGenerator.nextUuid();
-            repository.createProfessionalConversation(id, uuidGenerator.nextUuid(), userId, professionalId);
-            return id;
-        });
+        throw new ForbiddenException("Professional care uses an explicitly consented, bounded clinic encounter; generic professional messaging cannot start care");
     }
 
     @Transactional

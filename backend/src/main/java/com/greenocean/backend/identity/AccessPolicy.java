@@ -43,6 +43,7 @@ public class AccessPolicy {
     public void requireCare(UUID requester,UUID professional,String mode) {
         if(!java.util.Set.of("TEXT","AUDIO","VIDEO").contains(mode))throw new ForbiddenException("Unsupported professional consultation modality");
         if(!clinicEnabled||!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM account_eligibility e WHERE e.user_id=? AND professional_scope_live(?,e.residence_country,?) AND(e.current_country IS NULL OR professional_scope_live(?,e.current_country,?)))",Boolean.class,requester,professional,mode,professional,mode)))throw new ForbiddenException("Current independent professional and platform approvals are required");
+        for(UUID participant:List.of(requester,professional))if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM users u JOIN account_eligibility e ON e.user_id=u.id WHERE u.id=? AND u.status='ACTIVE' AND u.email_verified AND e.age_result='ADULT')",Boolean.class,participant)))throw new ForbiddenException("New clinical care requires verified adult eligibility for both participants; legacy grace is insufficient");
         require(requester,"PROFESSIONAL_CARE");require(professional,"PROFESSIONAL_CARE");
         if(!Boolean.TRUE.equals(db.queryForObject("""
           SELECT EXISTS(SELECT 1 FROM professional_care_regions scope

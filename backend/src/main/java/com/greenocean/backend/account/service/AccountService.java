@@ -77,6 +77,10 @@ public class AccountService {
         result.put("clinicAppointments",db.queryForList("SELECT id,scheduled_at,ends_at,status,price_units,currency,terms_snapshot FROM consultation_requests WHERE clinic_governed AND(requester_user_id=? OR professional_user_id=?) ORDER BY id",user,user));
         result.put("clinicFinancialEvents",db.queryForList("SELECT f.* FROM clinic_financial_events f JOIN consultation_requests c ON c.id=f.appointment_id WHERE c.requester_user_id=? OR c.professional_user_id=? ORDER BY f.created_at,f.id",user,user));
         result.put("clinicRefunds",db.queryForList("SELECT r.* FROM clinic_refunds r JOIN consultation_requests c ON c.id=r.appointment_id WHERE c.requester_user_id=? ORDER BY r.id",user));
+        result.put("clinicRightsRequests",db.queryForList("SELECT r.id,r.appointment_id,r.category,r.request_kind,r.created_at,e.state,e.evidence_reference FROM clinic_rights_requests r JOIN clinic_rights_events e ON e.request_id=r.id WHERE r.requester_id=? ORDER BY e.created_at,e.id",user));
+        result.put("clinicFollowupMetadata",db.queryForList("SELECT f.id,f.appointment_id,v.revision,v.suggested_after,v.expires_at FROM clinic_followups f JOIN clinic_followup_versions v ON v.followup_id=f.id WHERE f.patient_id=? OR f.professional_id=? ORDER BY f.created_at,v.revision",user,user));
+        result.put("clinicFeedbackChoices",db.queryForList("SELECT f.id,f.appointment_id,f.state,v.revision,v.rating,v.include_aggregate,v.publish_text FROM clinic_feedback f JOIN clinic_feedback_versions v ON v.feedback_id=f.id WHERE f.patient_id=? ORDER BY f.id,v.revision",user));
+        result.put("clinicProtectedContentAccess","Clinical content uses current category access and fresh authentication through /api/v1/clinical; follow-up through /api/v1/clinic-integration/followups; exceptional exports through subject rights requests. No clinical narrative is copied into social/wellbeing archives.");
         return (java.util.Map<String,Object>)com.greenocean.backend.professional.service.ProfessionalAuthority.jsonSafe(result);
     }
 

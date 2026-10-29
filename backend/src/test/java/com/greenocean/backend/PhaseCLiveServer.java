@@ -92,6 +92,7 @@ public class PhaseCLiveServer {
             UUID user=ids.getFirst();db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='MODERATOR' ON CONFLICT DO NOTHING",user);
             if(input.path("educationalAdmin").asBoolean(false))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='ADMIN' ON CONFLICT DO NOTHING",user);
             if(clinicalQa&&input.path("reputationOperator").asBoolean(false))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='CLINIC_REPUTATION_OPERATOR' ON CONFLICT DO NOTHING",user);
+            if(clinicalQa&&input.path("clinicOperator").asBoolean(false))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name IN('CLINIC_OPERATIONS','CLINIC_PRIVACY_OPERATOR') ON CONFLICT DO NOTHING",user);
             var tokenService=context.getBean(com.greenocean.backend.auth.service.TokenService.class);String permit=tokenService.createRefreshToken();db.update("INSERT INTO webauthn_enrollment_permits(token_hash,user_id,expires_at) VALUES (?,?,CURRENT_TIMESTAMP+INTERVAL '10 minutes')",tokenService.hashRefreshToken(permit),user);
             byte[] response=json.writeValueAsBytes(Map.of("permit",permit));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,response.length);exchange.getResponseBody().write(response);
         }finally{exchange.close();}});
