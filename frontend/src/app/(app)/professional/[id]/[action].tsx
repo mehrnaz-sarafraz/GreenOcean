@@ -1,3 +1,4 @@
+import {ClinicBooking} from '@/features/clinic-commerce';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -23,25 +24,10 @@ export default function ProfessionalAction() {
   if (professionalId === 'me' && action === 'verification') return <Verification />;
   if (professionalId === 'me' && action === 'consultations') return <ProfessionalConsultations />;
   if (!professional) return <ProductPage><ProductHeader title="Professional not found" subtitle="This verified profile is unavailable." /><EmptyState icon="person_search" title="No verified profile here" body="Return to the directory to compare active professionals." /><AppButton label="Browse professionals" onPress={() => router.replace('/professionals')} /></ProductPage>;
-  if (action === 'book') return <Booking professionalId={professional.id} name={professional.displayName} />;
+  if (action === 'book') return <ClinicBooking professionalId={professional.id} />;
   if (action === 'reviews') return <Reviews professionalId={professional.id} name={professional.displayName} />;
   if (action === 'contact') return <Contact professionalId={professional.id} name={professional.displayName} />;
   return <ProductPage><ProductHeader title="Professional action unavailable" subtitle="This workflow does not exist." /></ProductPage>;
-}
-
-function Booking({ professionalId, name }: { professionalId: string; name: string }) {
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]); const [slotId, setSlotId] = useState(''); const [note, setNote] = useState('');
-  const [done, setDone] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  useEffect(() => {
-    const timer = setTimeout(() => apiRequest<AvailabilitySlot[]>(`/api/v1/professionals/${professionalId}/availability`)
-      .then(items => { setSlots(items); setSlotId(items[0]?.id || ''); })
-      .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load availability.')), 0);
-    return () => clearTimeout(timer);
-  }, [professionalId]);
-  const selected = slots.find(slot => slot.id === slotId);
-  const submit = async () => { if (!selected) return; setBusy(true); setError(''); try { await apiRequest(`/api/v1/professionals/${professionalId}/consultations`, { method: 'POST', body: JSON.stringify({ availabilitySlotId: selected.id, scheduledAt: selected.startsAt, consultationMode: selected.consultationMode, note }) }); setDone(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not request consultation'); } finally { setBusy(false); } };
-  if (done && selected) return <ProductPage><ProductHeader eyebrow="REQUEST RECEIVED" title="Consultation requested" subtitle={`${name}'s practice can now review your requested time.`} /><Notice title="No payment taken" body="A request is not a confirmed appointment or a clinical relationship." /><ProductCard><Text style={styles.title}>{new Date(selected.startsAt).toLocaleString()}</Text><Text style={styles.body}>{selected.consultationMode}</Text><Text style={styles.meta}>Status: REQUESTED</Text></ProductCard><AppButton label="Return to professionals" onPress={() => router.replace('/professionals')} /></ProductPage>;
-  return <ProductPage><ProductHeader eyebrow="CONSULTATION REQUEST" title={`Book with ${name}`} subtitle="Choose one of the times published by this practice." /><Notice title="Before booking" body="Times are reserved atomically when you submit. Confirm licensing, fees, cancellation policy, insurance, privacy, and emergency arrangements with the practice." /><ProductSection title="Available times">{slots.length ? <View style={styles.wrap}>{slots.map(slot => <Pill key={slot.id} label={`${new Date(slot.startsAt).toLocaleString()} · ${slot.consultationMode}`} active={slotId === slot.id} onPress={() => setSlotId(slot.id)} />)}</View> : <EmptyState icon="event_busy" title="No appointment times available" body={`${name} has not published an open consultation slot. Check again later or send a message.`} />}</ProductSection><ProductCard><Field label="Optional note" value={note} onChangeText={setNote} multiline />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Send request" disabled={!slotId} loading={busy} onPress={() => void submit()} /></ProductCard></ProductPage>;
 }
 
 function Reviews({ professionalId, name }: { professionalId: string; name: string }) {

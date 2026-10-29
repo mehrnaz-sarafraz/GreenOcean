@@ -73,6 +73,9 @@ public class AccountService {
         result.put("availability",db.queryForList("SELECT id,starts_at,ends_at,consultation_mode,status,price_units,currency,timezone,revision FROM professional_availability_slots WHERE professional_user_id=? ORDER BY starts_at,id",user));
         result.put("reminderPreferences",db.queryForList("SELECT appointment_id,enabled,updated_at FROM professional_appointment_reminder_preferences WHERE user_id=? ORDER BY appointment_id",user));
         result.put("readiness",db.queryForList("SELECT appointment_id,observed_at,expires_at FROM professional_appointment_readiness WHERE actor_id=? ORDER BY appointment_id",user));
+        result.put("clinicAppointments",db.queryForList("SELECT id,scheduled_at,ends_at,status,price_units,currency,terms_snapshot FROM consultation_requests WHERE clinic_governed AND(requester_user_id=? OR professional_user_id=?) ORDER BY id",user,user));
+        result.put("clinicFinancialEvents",db.queryForList("SELECT f.* FROM clinic_financial_events f JOIN consultation_requests c ON c.id=f.appointment_id WHERE c.requester_user_id=? OR c.professional_user_id=? ORDER BY f.created_at,f.id",user,user));
+        result.put("clinicRefunds",db.queryForList("SELECT r.* FROM clinic_refunds r JOIN consultation_requests c ON c.id=r.appointment_id WHERE c.requester_user_id=? ORDER BY r.id",user));
         return (java.util.Map<String,Object>)com.greenocean.backend.professional.service.ProfessionalAuthority.jsonSafe(result);
     }
 
