@@ -3,6 +3,10 @@ import com.greenocean.backend.professional.service.*;import com.greenocean.backe
 import org.springframework.beans.factory.annotation.Autowired;import org.springframework.boot.test.context.SpringBootTest;import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;import org.springframework.test.context.ActiveProfiles;import org.springframework.transaction.annotation.Transactional;import org.junit.jupiter.api.*;import org.springframework.mock.web.MockMultipartFile;
 import java.time.*;import java.util.*;import static org.assertj.core.api.Assertions.*;
 abstract class PhaseP3Fixtures extends PhaseO3Fixtures {
+ // Scoped P3/P4/P5 races can be the first class on CI. V0 creates a public
+ // compatibility function, so migrate the real public history before a scoped schema.
+ @org.junit.jupiter.api.BeforeAll static void initializeClinicApplicationSchema(){MigrationTestSupport.initializeApplicationSchema();}
+
  @Autowired ClinicalCare care;@Autowired ClinicalFiles files;@Autowired ClinicCommerce commerce;
  UUID appointment,encounter,policy;
  @BeforeEach void clinical(){PhasePFixtures.qualified(db,author.id(),issuer.id());role(author.id(),"PROFESSIONAL");role(reviewer.id(),"ADMIN");db.update("UPDATE user_sessions SET mfa_authenticated_at=CURRENT_TIMESTAMP,reauthenticated_at=CURRENT_TIMESTAMP WHERE user_id IN(?,?,?)",author.id(),issuer.id(),reviewer.id());
