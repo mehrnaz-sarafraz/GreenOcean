@@ -37,7 +37,7 @@ public class PhaseCLiveServer {
         java.net.ServerSocket clinicalScanner=clinicalQa?new java.net.ServerSocket(0,10,java.net.InetAddress.getLoopbackAddress()):null;
         if(clinicalScanner!=null)Thread.startVirtualThread(()->{while(!clinicalScanner.isClosed())try(var socket=clinicalScanner.accept()){socket.setSoTimeout(5000);var input=new java.io.DataInputStream(socket.getInputStream());while(input.readByte()!=0){}int total=0;for(int count;(count=input.readInt())>0;){total+=count;if(total>10485760)throw new java.io.IOException("Synthetic scanner limit");input.readNBytes(count);}socket.getOutputStream().write("stream: OK\0".getBytes(java.nio.charset.StandardCharsets.US_ASCII));}catch(java.io.IOException ignored){}});
         var context=new SpringApplicationBuilder(BackendApplication.class,TestMail.class).profiles("test").run(
-            "--greenocean.clinic.commerce-enabled="+clinicalQa,"--greenocean.clinic.scanning-approved="+clinicalQa,"--greenocean.clinic.scanner-port="+(clinicalScanner==null?0:clinicalScanner.getLocalPort()),"--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true","--greenocean.listener-support.extension-enabled=true","--greenocean.listener-support.followup-enabled=true",
+            "--greenocean.clinic.records-enabled="+clinicalQa,"--greenocean.clinic.record-keys="+(clinicalQa?"clinical-qa:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=":""),"--greenocean.clinic.record-current-key="+(clinicalQa?"clinical-qa":""),"--greenocean.clinic.commerce-enabled="+clinicalQa,"--greenocean.clinic.scanning-approved="+clinicalQa,"--greenocean.clinic.scanner-port="+(clinicalScanner==null?0:clinicalScanner.getLocalPort()),"--greenocean.listener-support.duration-enabled=true","--greenocean.listener-support.scheduling-enabled=true","--greenocean.listener-support.booking-enabled=true","--greenocean.listener-support.queue-enabled=true","--greenocean.listener-support.extension-enabled=true","--greenocean.listener-support.followup-enabled=true",
             "--greenocean.groups.activities-enabled=true","--greenocean.groups.proposals-enabled=true","--greenocean.groups.activation-approved=true","--server.port=8080","--server.address=127.0.0.1","--greenocean.live-support.enabled="+"isolated-only".equals(System.getenv("GREENOCEAN_LIVE_SUPPORT_QA")),"--greenocean.mail.enabled=true",
             "--greenocean.mail.poll-ms=200","--greenocean.auth.web-cookie-secure=false",
             "--greenocean.security.allowed-origin-patterns=http://127.0.0.1:8081,http://127.0.0.1:8082,https://localhost:8443",
@@ -58,6 +58,7 @@ public class PhaseCLiveServer {
                 exchange.sendResponseHeaders(403,-1);return;
             }
             db.update("DELETE FROM auth_rate_windows");
+            if(clinicalQa)db.update("UPDATE clinic_release_approvals SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND evidence_reference LIKE 'SYNTHETIC-%' AND approved_by IN(SELECT id FROM users WHERE email LIKE '%@example.test')");
             exchange.sendResponseHeaders(204,-1);
         } finally {exchange.close();}});
         mailbox.createContext("/snapshot",exchange->{
@@ -132,6 +133,19 @@ public class PhaseCLiveServer {
                 db.update("WITH t AS MATERIALIZED(SELECT date_trunc('second',clock_timestamp()) AS at) UPDATE listener_bookings SET starts_at=t.at-INTERVAL '10 seconds',ends_at=t.at+INTERVAL '1790 seconds',reserved_until=t.at+INTERVAL '2240 seconds' FROM t WHERE id=?",booking);
                 db.execute("ALTER TABLE listener_bookings ENABLE TRIGGER listener_booking_guard");return null;
             });exchange.sendResponseHeaders(204,-1);
+        }catch(RuntimeException failure){exchange.sendResponseHeaders(400,-1);}finally{exchange.close();}});
+        mailbox.createContext("/clinical-fixture",exchange->{try{
+            if(!clinicalQa||!"POST".equals(exchange.getRequestMethod())||!key.equals(exchange.getRequestHeaders().getFirst("X-QA-Key"))){exchange.sendResponseHeaders(403,-1);return;}
+            var input=json.readTree(exchange.getRequestBody());String professionalEmail=input.path("professionalEmail").asText(),patientEmail=input.path("patientEmail").asText();UUID policy=UUID.fromString(input.path("policyId").asText());
+            if(!professionalEmail.endsWith("@example.test")||!patientEmail.endsWith("@example.test")){exchange.sendResponseHeaders(400,-1);return;}
+            UUID appointment=new org.springframework.transaction.support.TransactionTemplate(context.getBean(org.springframework.transaction.PlatformTransactionManager.class)).execute(tx->{
+                UUID professional=db.queryForObject("SELECT id FROM users WHERE email=? AND status='ACTIVE' AND email_verified AND professional_qualification_live(id)",UUID.class,professionalEmail),patient=db.queryForObject("SELECT id FROM users WHERE email=? AND status='ACTIVE' AND email_verified",UUID.class,patientEmail);
+                context.getBean(com.greenocean.backend.professional.service.ProfessionalAuthority.class).offer(professional,"IR","TEXT");
+                db.queryForObject("SELECT id FROM clinic_commercial_policies WHERE id=?",UUID.class,policy);
+                UUID slot=db.queryForObject("INSERT INTO professional_availability_slots(id,professional_user_id,starts_at,ends_at,consultation_mode,status,governed) VALUES(uuidv7(),?,CURRENT_TIMESTAMP-INTERVAL '1 minute',CURRENT_TIMESTAMP+INTERVAL '29 minutes','TEXT','BOOKED',TRUE) RETURNING id",UUID.class,professional);
+                UUID id=db.queryForObject("INSERT INTO consultation_requests(requester_user_id,professional_user_id,availability_slot_id,scheduled_at,ends_at,consultation_mode,status,clinic_governed,booking_key,price_units,commission_units,provider_fee_units,currency,policy_id,terms_snapshot,confirmed_at) SELECT ?,?,id,starts_at,ends_at,'TEXT','CONFIRMED',TRUE,uuidv7(),0,0,0,'IRR',?,'SYNTHETIC scheduled-time clinic fixture; no real clinical service',CURRENT_TIMESTAMP FROM professional_availability_slots WHERE id=? RETURNING id",UUID.class,patient,professional,policy,slot);
+                db.update("INSERT INTO clinic_invoices(appointment_id,amount_units,currency) VALUES(?,0,'IRR')",id);return id;
+            });byte[] response=json.writeValueAsBytes(Map.of("appointmentId",appointment));exchange.getResponseHeaders().set("Content-Type","application/json");exchange.sendResponseHeaders(200,response.length);exchange.getResponseBody().write(response);
         }catch(RuntimeException failure){exchange.sendResponseHeaders(400,-1);}finally{exchange.close();}});
         mailbox.start();Runtime.getRuntime().addShutdownHook(new Thread(()->{mailbox.stop(0);context.close();if(clinicalScanner!=null)try{clinicalScanner.close();}catch(java.io.IOException ignored){}}));
     }

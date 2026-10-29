@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {api,account,login,reset} from './phase-l-helpers.mjs';
+import {api,account,login,reset,password} from './phase-l-helpers.mjs';
 import {moderator} from './phase-m-helpers.mjs';
 import {browserApi} from './phase-o-helpers.mjs';
 test('independent credential quarantine, exact revision review and clinic release remain separate',async({browser,request,page})=>{
@@ -15,6 +15,7 @@ test('independent credential quarantine, exact revision review and clinic releas
   const decision={revision,state:'VERIFIED',reason:'Synthetic independent human evidence workflow only',category:'COUNSELOR',verifiedName:'Synthetic test clinician',issuer:'Synthetic test issuer',licenseIdentifier:'SYNTHETIC-P1-LICENSE',method:'OFFICIAL_REGISTER_HUMAN',source:'https://my.pcoiran.ir/member/',evidence:'SYNTHETIC-QA-NOT-A-REAL-LICENSE-CHECK',validFrom:new Date(Date.now()-60000).toISOString(),validUntil:new Date(Date.now()+86400000).toISOString(),recheckAt:new Date(Date.now()+3600000).toISOString(),scopes:[{country:'IR',mode:'TEXT'}],verifiedSpecialties:['Synthetic test scope']};
   expect((await browserApi(staff.page,`/api/v1/admin/professional-qualifications/${app.id}/decision`,'POST',decision)).status).toBe(204);
   expect((await browserApi(staff.page,`/api/v1/admin/professional-qualifications/${app.id}/decision`,'POST',decision)).status).toBe(409);
+  const current=await request.post(`${api}/auth/login`,{data:{email:owner.email,password}});expect(current.status()).toBe(200);owner.headers.Authorization='Bearer '+(await current.json()).accessToken;
   const slot={startsAt:new Date(Date.now()+7200000).toISOString(),endsAt:new Date(Date.now()+9000000).toISOString(),mode:'TEXT',timezone:'Asia/Tehran',priceUnits:0,publish:true};
   expect((await request.post(`${api}/professional/calendar/slots`,{headers:owner.headers,data:slot})).status()).toBe(403);
   for(const purpose of ['PLATFORM','PROFESSIONAL_SCOPE','PATIENT_IDENTITY','DATA_PROCESSING','TERMS','OPERATIONS'])expect((await browserApi(staff.page,'/api/v1/admin/clinic-release-approvals','POST',{country:'IR',mode:'TEXT',purpose,evidence:'SYNTHETIC-QA-RELEASE-NOT-LEGAL-APPROVAL',expiresAt:new Date(Date.now()+3600000).toISOString()})).status).toBe(204);
