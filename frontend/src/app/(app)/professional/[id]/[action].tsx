@@ -1,3 +1,4 @@
+import {ProfessionalReputationPublic} from '@/features/professional-reputation';
 import {ClinicBooking} from '@/features/clinic-commerce';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -8,7 +9,7 @@ import { AppButton } from '@/components/app-button';
 import { EmptyState, Notice, Pill, ProductCard, ProductHeader, ProductPage, ProductSection } from '@/components/product-ui';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { optionsIn } from '@/features/platform/catalog';
-import { AvailabilitySlot, Consultation, ProfessionalApplication, ProfessionalReview } from '@/features/platform/types';
+import { AvailabilitySlot, Consultation, ProfessionalApplication } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -25,17 +26,9 @@ export default function ProfessionalAction() {
   if (professionalId === 'me' && action === 'consultations') return <ProfessionalConsultations />;
   if (!professional) return <ProductPage><ProductHeader title="Professional not found" subtitle="This verified profile is unavailable." /><EmptyState icon="person_search" title="No verified profile here" body="Return to the directory to compare active professionals." /><AppButton label="Browse professionals" onPress={() => router.replace('/professionals')} /></ProductPage>;
   if (action === 'book') return <ClinicBooking professionalId={professional.id} />;
-  if (action === 'reviews') return <Reviews professionalId={professional.id} name={professional.displayName} />;
+  if (action === 'reviews') return <ProductPage><ProductHeader title="Verified appointment experience / تجربهٔ نوبت احرازشده" subtitle="Optional, independently reviewed feedback / بازخورد اختیاری و مستقل"/><ProfessionalReputationPublic professionalId={professional.id} profession={professional.title}/></ProductPage>;
   if (action === 'contact') return <Contact professionalId={professional.id} name={professional.displayName} />;
   return <ProductPage><ProductHeader title="Professional action unavailable" subtitle="This workflow does not exist." /></ProductPage>;
-}
-
-function Reviews({ professionalId, name }: { professionalId: string; name: string }) {
-  const [items, setItems] = useState<ProfessionalReview[]>([]); const [rating, setRating] = useState(5);
-  const [body, setBody] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  useEffect(() => { apiRequest<ProfessionalReview[]>(`/api/v1/professionals/${professionalId}/reviews`).then(setItems).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load reviews')); }, [professionalId]);
-  const submit = async () => { setBusy(true); setError(''); try { const review = await apiRequest<ProfessionalReview>(`/api/v1/professionals/${professionalId}/reviews/me`, { method: 'PUT', body: JSON.stringify({ rating, body }) }); setItems(current => [review, ...current.filter(item => !item.mine)]); setBody(''); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not submit review'); } finally { setBusy(false); } };
-  return <ProductPage><ProductHeader eyebrow="PATIENT FEEDBACK" title={`${name}'s reviews`} subtitle="Published reviews are moderated; your own pending review remains visible to you." /><ProductCard><Text style={styles.label}>Rating</Text><View style={styles.wrap}>{[1,2,3,4,5].map(value => <Pill key={value} label={`${value} ★`} active={rating === value} onPress={() => setRating(value)} />)}</View><Field label="Your experience" value={body} onChangeText={setBody} multiline />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Submit for review" disabled={body.trim().length < 20} loading={busy} onPress={() => void submit()} /></ProductCard>{items.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.title}>{item.reviewerName} · {item.rating} ★</Text><Pill label={item.status} active={item.status === 'PUBLISHED'} /></View><Text style={styles.body}>{item.body}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></ProductCard>)}</ProductPage>;
 }
 
 function Contact({ professionalId, name }: { professionalId: string; name: string }) {

@@ -27,11 +27,11 @@ public class ProfessionalWorkflowRepository {
 
     public List<ProfessionalReviewResponse> reviews(UUID professionalId, UUID viewerId) {
         return jdbcTemplate.query("""
-                SELECT r.id, r.professional_user_id, p.display_name, r.rating, r.body, r.status, r.created_at,
+                SELECT r.id, r.professional_user_id, 'Private legacy feedback' AS display_name, r.rating, r.body, r.status, r.created_at,
                        r.reviewer_user_id = ? AS mine
                   FROM professional_reviews r
                   JOIN profiles p ON p.user_id = r.reviewer_user_id
-                 WHERE r.professional_user_id = ? AND (r.status = 'PUBLISHED' OR r.reviewer_user_id = ?)
+                 WHERE r.professional_user_id = ? AND r.reviewer_user_id = ?
                  ORDER BY r.created_at DESC
                 """, (rs, row) -> new ProfessionalReviewResponse(
                 rs.getObject("id", UUID.class), rs.getObject("professional_user_id", UUID.class),
@@ -177,6 +177,8 @@ public class ProfessionalWorkflowRepository {
                 """, id, userId, professionalId, slot.id(), java.sql.Timestamp.from(slot.startsAt()), slot.consultationMode(),
                 normalize(request.note()));
     }
+
+    public void invalidateOffersForApplication(UUID userId){jdbcTemplate.update("UPDATE professional_availability_slots SET status='CANCELLED',revision=revision+1 WHERE professional_user_id=? AND status='AVAILABLE' AND starts_at>CURRENT_TIMESTAMP",userId);}
 
     public boolean hasPendingApplication(UUID userId) {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""

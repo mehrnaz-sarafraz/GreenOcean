@@ -33,5 +33,5 @@ import com.greenocean.backend.auth.repository.UserRepository;import com.greenoce
   // Keep the original absolute/idle boundaries; only authentication freshness changes.
   return auth.refresh(refresh);
  }
- public boolean privileged(UUID user){return Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=? AND r.name IN ('ADMIN','MODERATOR','PROFESSIONAL','CLINIC_FINANCE','CLINICAL_RECORDS_OPERATOR'))",Boolean.class,user));}
+ public boolean privileged(UUID user){return Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=? AND r.name IN ('ADMIN','MODERATOR','PROFESSIONAL','CLINIC_FINANCE','CLINICAL_RECORDS_OPERATOR','CLINIC_REPUTATION_OPERATOR'))",Boolean.class,user));}
 }
