@@ -10,7 +10,7 @@ import java.util.*;
 public class TrustCases {
     private final JdbcTemplate db;private final TrustAuthority auth;private final TrustSources sources;private final TrustCoverage coverage;
     public TrustCases(JdbcTemplate db,TrustAuthority auth,TrustSources sources,TrustCoverage coverage){this.db=db;this.auth=auth;this.sources=sources;this.coverage=coverage;}
-    private static final String SAFE="id,source_kind,source_id,domain,category,severity,state,revision,assignee_id,purpose,result,approval_expires_at,created_at,updated_at";
+    private static final String SAFE="id,source_kind,source_id,domain,category,severity,state,revision,assignee_id,purpose,result,approval_expires_at,created_at,updated_at,CASE WHEN source_kind='REPORT' THEN EXISTS(SELECT 1 FROM moderation_appeals a WHERE a.report_id=trust_cases.source_id AND a.status IN('OPEN','REVIEWING')) WHEN source_kind='REPUTATION_CASE' THEN EXISTS(SELECT 1 FROM clinic_reputation_cases a WHERE a.id=trust_cases.source_id AND a.kind='RANKING_APPEAL' AND a.state='OPEN') ELSE FALSE END AS source_appeal_pending";
     public UUID coordinate(UUID who,UUID sid,String kind,UUID sourceId,String domain){
         auth.require(who,sid,domain);TrustSources.Source source=sources.read(kind,sourceId);
         boolean classifiedSupport=kind.equals("SUPPORT_REQUEST")&&Set.of("ACCOUNT","EDUCATION","PLATFORM").contains(domain);
@@ -23,7 +23,7 @@ public class TrustCases {
         event(id,1,who,null,"RECEIVED","SOURCE_RECEIVED");return id;
     }
     public List<Map<String,Object>> queue(UUID who,UUID sid,String domain,int page,boolean assigned){auth.require(who,sid,domain);if(page<0||page>10000)throw new IllegalArgumentException("Invalid queue page");return db.queryForList("SELECT "+SAFE+" FROM trust_cases WHERE domain=? AND (?=FALSE OR assignee_id=?) ORDER BY CASE severity WHEN 'CRITICAL' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2 ELSE 3 END,created_at,id LIMIT 20 OFFSET ?",domain,assigned,who,page*20);}
-    public Map<String,Object> detail(UUID who,UUID sid,UUID id,String domain){auth.require(who,sid,domain);var rows=db.queryForList("SELECT "+SAFE+" FROM trust_cases WHERE id=? AND domain=?",id,domain);if(rows.isEmpty())throw new NotFoundException("Case unavailable");auth.audit(who,id,"TRUST_CASE_VIEW");return Map.of("case",rows.getFirst(),"history",db.queryForList("SELECT revision,from_state,to_state,reason_code,created_at FROM trust_case_events WHERE case_id=? ORDER BY revision DESC LIMIT 100",id));}
+    public Map<String,Object> detail(UUID who,UUID sid,UUID id,String domain){auth.require(who,sid,domain);var rows=db.queryForList("SELECT "+SAFE+" FROM trust_cases WHERE id=? AND domain=?",id,domain);if(rows.isEmpty())throw new NotFoundException("Case unavailable");auth.audit(who,id,"TRUST_CASE_VIEW");return Map.of("case",rows.getFirst(),"history",db.queryForList("SELECT revision,from_state,to_state,reason_code,category,severity,created_at FROM trust_case_events WHERE case_id=? ORDER BY revision DESC LIMIT 100",id));}
     public void move(UUID who,UUID sid,UUID id,String domain,long revision,String target){
         auth.require(who,sid,domain);var rows=db.queryForList("SELECT * FROM trust_cases WHERE id=? AND domain=? FOR UPDATE",id,domain);if(rows.isEmpty())throw new NotFoundException("Case unavailable");var c=rows.getFirst();
         if(((Number)c.get("revision")).longValue()!=revision)throw new ConflictException("Case changed; reload before deciding");
@@ -36,7 +36,7 @@ public class TrustCases {
             case "UNDER_REVIEW" -> {require(from,"TRIAGED","WAITING_FOR_OPERATOR");present(who,domain);db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))","trust-assignment:"+who);if(!coverage.canAssign(domain,who))throw new ConflictException("No current review capacity");db.update("UPDATE trust_cases SET assignee_id=? WHERE id=?",who,id);yield "REVIEW_STARTED";}
             case "ACTION_PENDING_APPROVAL" -> {require(from,"UNDER_REVIEW","APPEAL_REVIEW");assigned(c,who);present(who,domain);db.update("UPDATE trust_cases SET action_author=?,action_session=?,source_snapshot=?,approval_expires_at=CURRENT_TIMESTAMP+INTERVAL '15 minutes',independent_reviewer=NULL WHERE id=?",who,sid,source.snapshot(),id);yield "DUAL_REVIEW_REQUESTED";}
             case "ACTIONED" -> {require(from,"ACTION_PENDING_APPROVAL");present(who,domain);if(who.equals(c.get("action_author"))||who.equals(c.get("assignee_id")))throw new ForbiddenException("A second independent reviewer is required");if(!Boolean.TRUE.equals(db.queryForObject("SELECT approval_expires_at>CURRENT_TIMESTAMP FROM trust_cases WHERE id=?",Boolean.class,id))||!Objects.equals(c.get("source_snapshot"),source.snapshot()))throw new ConflictException("Approval expired or source evidence changed");auth.require((UUID)c.get("action_author"),(UUID)c.get("action_session"),domain);if(!source.complete()||source.pendingAppeal())throw new ConflictException("Complete the authorized source workflow and pending appeals first");db.update("UPDATE trust_cases SET independent_reviewer=?,result='SOURCE_OUTCOME_CONFIRMED' WHERE id=?",who,id);yield "INDEPENDENT_APPROVAL";}
-            case "APPEALED" -> {require(from,"ACTIONED","RESOLVED","CLOSED");if(!source.appealed())throw new ConflictException("Use the existing source appeal route first");yield "SOURCE_APPEALED";}
+            case "APPEALED" -> {require(from,"ACTIONED","RESOLVED","CLOSED");if(!source.appealed()||Objects.equals(source.snapshot(),c.get("source_snapshot")))throw new ConflictException("Use the existing source appeal route first");yield "SOURCE_APPEALED";}
             case "APPEAL_REVIEW" -> {require(from,"APPEALED");present(who,domain);if(who.equals(c.get("action_author"))||who.equals(c.get("independent_reviewer")))throw new ForbiddenException("Original decision makers cannot review this appeal");db.update("UPDATE trust_cases SET assignee_id=? WHERE id=?",who,id);yield "INDEPENDENT_APPEAL_REVIEW";}
             case "RESOLVED" -> {require(from,"ACTIONED");if(!source.complete()||source.pendingAppeal()||!Objects.equals(source.snapshot(),c.get("source_snapshot")))throw new ConflictException("Current source outcome and finished appeal required");yield "SOURCE_RESOLVED";}
             case "CLOSED" -> {require(from,"RESOLVED");if(!source.complete()||source.pendingAppeal()||!Objects.equals(source.snapshot(),c.get("source_snapshot")))throw new ConflictException("Source changed; independent review is still required");yield "CLOSED";}
@@ -46,10 +46,31 @@ public class TrustCases {
         if(target.equals("TRIAGED"))db.update("UPDATE trust_cases SET action_author=NULL,source_snapshot=NULL,approval_expires_at=NULL,independent_reviewer=NULL WHERE id=?",id);
         event(id,revision+1,who,from,target,reason);
     }
+    public void classify(UUID who,UUID sid,UUID id,String domain,long revision,String category,String severity){
+        auth.require(who,sid,domain);
+        var rows=db.queryForList("SELECT * FROM trust_cases WHERE id=? AND domain=? FOR UPDATE",id,domain);
+        if(rows.isEmpty())throw new NotFoundException("Case unavailable");var c=rows.getFirst();
+        if(((Number)c.get("revision")).longValue()!=revision||!Set.of("RECEIVED","TRIAGED","WAITING_FOR_OPERATOR").contains(c.get("state")))throw new ConflictException("Reclassify the current case before starting consequential review");
+        Set<String> categories=switch(domain){
+            case "SOCIAL"->Set.of("POST","COMMENT","HARASSMENT","THREAT","PRIVACY");
+            case "GROUP"->Set.of("GROUP_MISCONDUCT","HARASSMENT","THREAT","PRIVACY");
+            case "LISTENER"->Set.of("LISTENER_MISCONDUCT","HARASSMENT","PRIVACY");
+            case "CLINIC"->Set.of("PROFESSIONAL_CONDUCT","PRIVACY");
+            case "FINANCE"->Set.of("FINANCIAL_SERVICE","PRIVACY");
+            case "ACCOUNT"->Set.of("ACCOUNT_ACCESS","PRIVACY","HARASSMENT");
+            case "EDUCATION"->Set.of("EDUCATIONAL_CONTENT","PRIVACY");
+            default->Set.of("PLATFORM_SAFETY","THREAT","PRIVACY");
+        };
+        if(!categories.contains(category)||!Set.of("CRITICAL","HIGH","MEDIUM","LOW").contains(severity))throw new IllegalArgumentException("Choose fixed category and severity within this source domain");
+        if(sources.read((String)c.get("source_kind"),(UUID)c.get("source_id")).conflicts().contains(who))throw new ForbiddenException("Independent triage required");
+        auth.budget(who,"TRUST_CASE_TRANSITION",120);
+        db.update("UPDATE trust_cases SET category=?,severity=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE id=?",category,severity,id);
+        event(id,revision+1,who,(String)c.get("state"),(String)c.get("state"),"TRIAGE");
+    }
     private void present(UUID who,String domain){if(!coverage.live(domain,who))throw new ConflictException("An acknowledged current staffed shift and recent presence are required");}
     private void assigned(Map<String,Object> c,UUID who){if(!who.equals(c.get("assignee_id")))throw new ForbiddenException("Only the currently assigned independent operator may propose this action");}
     private void require(String actual,String... valid){if(!Set.of(valid).contains(actual))throw new ConflictException("Transition is not available from the current case state");}
-    private void event(UUID id,long revision,UUID who,String from,String to,String reason){db.update("INSERT INTO trust_case_events(case_id,revision,actor_id,from_state,to_state,reason_code) VALUES(?,?,?,?,?,?)",id,revision,who,from,to,reason);auth.audit(who,id,"TRUST_CASE_"+to);}
+    private void event(UUID id,long revision,UUID who,String from,String to,String reason){db.update("INSERT INTO trust_case_events(case_id,revision,actor_id,from_state,to_state,reason_code,category,severity) SELECT ?,?,?,?,?,?,category,severity FROM trust_cases WHERE id=?",id,revision,who,from,to,reason,id);auth.audit(who,id,"TRUST_CASE_"+to);}
     public List<Map<String,Object>> candidates(UUID who,UUID sid,String domain){auth.require(who,sid,domain);return switch(domain){
         case "SOCIAL","GROUP","LISTENER" -> db.queryForList("SELECT r.id,'REPORT' AS source_kind,r.severity,r.status FROM reports r WHERE NOT EXISTS(SELECT 1 FROM trust_cases c WHERE c.source_kind='REPORT' AND c.source_id=r.id) AND CASE WHEN r.context_group_id IS NOT NULL OR r.community_id IS NOT NULL OR r.event_id IS NOT NULL THEN 'GROUP' WHEN EXISTS(SELECT 1 FROM live_support_requests l WHERE l.conversation_id=r.conversation_id) THEN 'LISTENER' WHEN r.conversation_id IS NOT NULL THEN 'ACCOUNT' ELSE 'SOCIAL' END=? ORDER BY r.created_at,r.id LIMIT 20",domain);
         case "CLINIC" -> db.queryForList("SELECT id,source_kind,status FROM (SELECT id,'REPUTATION_CASE' AS source_kind,state AS status,created_at FROM clinic_reputation_cases UNION ALL SELECT id,'CLINIC_INCIDENT','RECEIVED',created_at FROM clinic_operational_incidents WHERE kind<>'PAYMENT') r WHERE NOT EXISTS(SELECT 1 FROM trust_cases c WHERE c.source_kind=r.source_kind AND c.source_id=r.id) ORDER BY created_at,id LIMIT 20");

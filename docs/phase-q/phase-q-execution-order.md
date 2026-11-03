@@ -2,7 +2,7 @@
 
 | Order | Branch | Intended base | Status |
 |---|---|---|---|
-|1 Q1|feature/phase-q1-trust-safety-operations|validated P5|IN_PROGRESS|
+|1 Q1|feature/phase-q1-trust-safety-operations|validated P5|PR28 published; final CI pending|
 |2 Q2|feature/phase-q2-security-privacy-assurance|validated Q1|MISSING|
 |3 Q3|feature/phase-q3-quality-incident-operations|validated Q2|MISSING|
 |4 Q4|feature/phase-q4-reliability-scalability|validated Q3|MISSING|

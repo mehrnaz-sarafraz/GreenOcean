@@ -20,7 +20,7 @@ test('Q1 real stack: purpose-isolated coordination, truthful coverage and indepe
   const workerShift=await shift(rh,workerId),reviewerShift=await shift(wh,reviewerId);
   expect((await request.post(`${api}/trust/coverage/${workerShift}/acknowledge`,{headers:wh})).status()).toBe(204);expect((await request.post(`${api}/trust/coverage/${reviewerShift}/acknowledge`,{headers:rh})).status()).toBe(204);
   await card.getByRole('button',{name:'Under review',exact:true}).click();await expect(card.getByText('Revision: 3',{exact:true})).toBeVisible();
-  expect((await request.patch(`${api}/admin/reports/${report.id}`,{headers:wh,data:{action:'DISMISS',note:'Synthetic independent source review; no private narrative is copied into coordination'}})).status()).toBe(204);
+  expect((await request.patch(`${api}/admin/reports/${report.id}`,{headers:wh,data:{action:'APPROVE',note:'Synthetic independent source review; no private narrative is copied into coordination'}})).status()).toBe(204);
   await card.getByRole('button',{name:'Independent approval pending',exact:true}).click();await expect(card.getByText('Revision: 4',{exact:true})).toBeVisible();
   expect((await request.post(`${api}/trust/cases/${id}/transition`,{headers:wh,data:{domain:'SOCIAL',revision:4,state:'ACTIONED'}})).status()).toBe(403);
   expect((await request.post(`${api}/trust/cases/${id}/transition`,{headers:rh,data:{domain:'SOCIAL',revision:4,state:'ACTIONED'}})).status()).toBe(204);
