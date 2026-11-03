@@ -1,4 +1,4 @@
-param([string]$PostgresBin='C:\Program Files\PostgreSQL\18\bin',[switch]$Offline)
+param([string]$PostgresBin='C:\Program Files\PostgreSQL\18\bin',[switch]$Offline,[string]$BackendTests='')
 $ErrorActionPreference='Stop'
 $qaRepo=Split-Path $PSScriptRoot -Parent
 $qaRoot=Join-Path $qaRepo ('.tmp\qa-'+[guid]::NewGuid().ToString('N'))
@@ -18,7 +18,9 @@ try {
   }
   if(!$qaReady){throw 'Temporary database did not become ready'}
   $env:GREENOCEAN_TEST_DB_URL="jdbc:postgresql://127.0.0.1:$qaPort/postgres"
-  $qaArgs=@('-B','-f',(Join-Path $qaRepo backend/pom.xml),'clean','verify')
+  # Bound retained Spring contexts so historical suites fit the disposable 40-connection instance.
+  $qaArgs=@('-B','-Dspring.test.context.cache.maxSize=8','-f',(Join-Path $qaRepo backend/pom.xml),'clean','verify')
+  if($BackendTests){$qaArgs+=('-Dtest='+$BackendTests)}
   if($Offline){$qaArgs=@('-o')+$qaArgs}
   & (Join-Path $qaRepo backend/mvnw.cmd) @qaArgs
   if($LASTEXITCODE -ne 0){throw 'Backend verification failed'}
