@@ -96,6 +96,10 @@ public class AccountRepository {
         jdbcTemplate.update("UPDATE conversations SET requester_id=NULL,request_target_id=NULL WHERE requester_id=? OR request_target_id=?",userId,userId);
         jdbcTemplate.update("DELETE FROM moderation_appeals WHERE appellant_user_id=?",userId);
         jdbcTemplate.update("DELETE FROM social_drafts WHERE owner_id=?",userId);
+        jdbcTemplate.update("UPDATE trust_coverage SET revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE operator_id=? OR approved_by=?",userId,userId);
+        jdbcTemplate.update("UPDATE social_attribution_requests SET revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP) WHERE requester_id=? OR approved_by=?",userId,userId);
+        jdbcTemplate.update("UPDATE trust_coverage SET revoked_at=COALESCE(revoked_at,CURRENT_TIMESTAMP),session_id=NULL,token_version=NULL WHERE session_id IN(SELECT id FROM user_sessions WHERE user_id=?)",userId);
+        jdbcTemplate.update("UPDATE trust_cases SET action_session=NULL,approval_expires_at=NULL WHERE action_session IN(SELECT id FROM user_sessions WHERE user_id=?)",userId);
         jdbcTemplate.update("DELETE FROM social_assessments WHERE post_id IN(SELECT id FROM posts WHERE author_id=?) OR comment_id IN(SELECT id FROM comments WHERE author_id=?)",userId,userId);
         jdbcTemplate.update("DELETE FROM processing_authorizations WHERE user_id=?",userId);
         jdbcTemplate.update("DELETE FROM privacy_notice_receipts WHERE user_id=?",userId);

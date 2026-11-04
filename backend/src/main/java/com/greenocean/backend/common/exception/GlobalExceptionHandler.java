@@ -117,6 +117,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableRequest(HttpMessageNotReadableException exception, HttpServletRequest request) {
+        for(Throwable cause=exception;cause!=null;cause=cause.getCause())if(cause instanceof com.greenocean.backend.auth.config.BoundedJsonFilter.Limit)return ResponseEntity.status(413).body(new ApiError(Instant.now(),413,"Content Too Large","JSON request exceeds the bounded input limit",request.getRequestURI(),List.of()));
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "Request body is missing or malformed", request.getRequestURI(), List.of()

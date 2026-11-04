@@ -28,6 +28,7 @@ public record AccountArchiveResponse(
         java.util.Map<String,Object> groupGovernance,
         java.util.Map<String,Object> listenerPlanning,
         java.util.Map<String,Object> privateWellbeing,
-        java.util.Map<String,Object> professionalCare
+        java.util.Map<String,Object> professionalCare,
+        java.util.Map<String,Object> trustAndSecurity
 ) {
 }

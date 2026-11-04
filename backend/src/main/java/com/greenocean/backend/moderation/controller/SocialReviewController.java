@@ -10,12 +10,13 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/v1")
 public class SocialReviewController {
-    private final SocialReviewService service;
-    public SocialReviewController(SocialReviewService service){this.service=service;}
+    private final SocialReviewService service;private final com.greenocean.backend.moderation.service.SocialAttribution attribution;
+    public SocialReviewController(SocialReviewService service,com.greenocean.backend.moderation.service.SocialAttribution attribution){this.service=service;this.attribution=attribution;}
     public record Appeal(@NotBlank @Size(max=2000) String reason) {}
     public record Decision(@Min(1) long revision,@NotBlank String outcome,@NotBlank @Size(max=1000) String note) {}
     public record Revision(@Min(1) long revision) {}
-    public record Purpose(@NotBlank @Size(min=10,max=500) String purpose) {}
+    public record Purpose(@NotNull UUID requestId) {}
+    public record EvidenceRequest(@Min(1)long revision,@NotBlank String purpose) {}
     @GetMapping("/social-moderation/me") public List<Map<String,Object>> mine(@AuthenticationPrincipal Jwt jwt,@RequestParam(defaultValue="0") int page){return service.mine(user(jwt),page);}
     @PostMapping("/social-moderation/{id}/appeal") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     public Map<String,UUID> appeal(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Appeal input){return Map.of("id",service.appeal(user(jwt),id,input.reason()));}
@@ -28,6 +29,14 @@ public class SocialReviewController {
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void decide(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Decision input){service.decide(user(jwt),id,input.revision(),input.outcome(),input.note());}
     @PostMapping("/admin/social-moderation/{id}/attribution") @PreAuthorize("hasRole('ADMIN')")
-    public Map<String,Object> attribution(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Purpose input){return service.attribution(user(jwt),id,input.purpose());}
+    public Map<String,Object> attribution(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Purpose input){return attribution.reveal(user(jwt),session(jwt),id,input.requestId());}
+    @PostMapping("/admin/social-moderation/{id}/attribution-requests") @PreAuthorize("hasRole('ADMIN')") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public Object requestEvidence(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody EvidenceRequest in){return Map.of("id",attribution.request(user(jwt),session(jwt),id,in.revision(),in.purpose()));}
+    @GetMapping("/admin/social-attribution-requests") @PreAuthorize("hasRole('ADMIN')") public Object evidenceQueue(@AuthenticationPrincipal Jwt jwt){return attribution.queue(user(jwt),session(jwt));}
+    @PostMapping("/admin/social-attribution-requests/{id}/approve") @PreAuthorize("hasRole('ADMIN')") @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void approveEvidence(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Revision in){attribution.approve(user(jwt),session(jwt),id,in.revision());}
+    @DeleteMapping("/admin/social-attribution-requests/{id}") @PreAuthorize("hasRole('ADMIN')") @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void revokeEvidence(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id){attribution.revoke(user(jwt),session(jwt),id);}
+    private UUID session(Jwt jwt){return UUID.fromString(jwt.getClaimAsString("sid"));}
     private UUID user(Jwt jwt){return UUID.fromString(jwt.getSubject());}
 }

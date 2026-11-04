@@ -93,15 +93,7 @@ public class SocialReviewService {
         db.update("INSERT INTO notifications(user_id,type,title,body) SELECT ?,'SYSTEM_NOTICE','Content review updated','Open your content decisions to view the outcome.' WHERE COALESCE((SELECT notify_replies FROM user_preferences WHERE user_id=?),TRUE)",c.get("author_id"),c.get("author_id"));
         audit(actor,"SOCIAL_"+outcome,id);
     }
-    @Transactional
-    public Map<String,Object> attribution(UUID actor,UUID id,String purpose) {
-        staff(actor);
-        if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=? AND r.name='ADMIN')",Boolean.class,actor)))throw new ForbiddenException("Administrator authorization is required for attribution");
-        var a=lock(id);var c=content(a);
-        audit(actor,"SOCIAL_IDENTITY_REVIEW",id);
-        db.update("UPDATE audit_logs SET metadata=jsonb_build_object('purpose',?::text) WHERE id=(SELECT id FROM audit_logs WHERE actor_user_id=? AND entity_id=? AND action='SOCIAL_IDENTITY_REVIEW' ORDER BY created_at DESC,id DESC LIMIT 1)",purpose.trim(),actor,id);
-        return Map.of("authorId",c.get("author_id"));
-    }
+    @Transactional public Map<String,Object> attribution(UUID actor,UUID id,String purpose){throw new ForbiddenException("Independent session-bound evidence approval is required; upgrade this client");}
     private void audit(UUID actor,String action,UUID id) {
         db.update("INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES(?,?,'SOCIAL_ASSESSMENT',?)",actor,action,id);
     }
