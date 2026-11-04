@@ -89,7 +89,7 @@ public class LiveSupportService {
  public LiveSupportView createQueued(UUID user,UUID clientId,UUID target,UUID entry){
   if(planning==null)throw failure(503,"SUPPORT_PATH_DISABLED","Queue support is disabled.");planning.require("QUEUE");return createOrigin(user,clientId,target,null,entry);
  }
- private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking,UUID queue){
+ private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking,UUID queue){com.greenocean.backend.trust.AdmissionContainment.require(db,"LISTENER_NEW");
   reconcile();requireEnabled();requireMember(user);
   var retry=db.queryForList("SELECT id,listener_id,source_booking_id,source_queue_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
   if(!retry.isEmpty()){
