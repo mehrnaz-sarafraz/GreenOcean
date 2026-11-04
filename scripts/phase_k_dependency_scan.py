@@ -5,6 +5,7 @@ Network/registry errors make the scan incomplete rather than a clean result.
 import json
 from pathlib import Path
 import subprocess
+import shutil
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,7 +47,7 @@ def main():
     for advisory in sorted({f["advisory"] for f in findings}):
         record = request("https://api.osv.dev/v1/vulns/" + advisory)
         details[advisory] = {key: record.get(key) for key in ["id", "aliases", "summary", "severity", "database_specific", "references", "affected", "withdrawn"]}
-    audit = subprocess.run(["npm", "audit", "--json", "--ignore-scripts"], cwd=ROOT / "frontend", capture_output=True, text=True, timeout=120)
+    audit = subprocess.run([shutil.which("npm") or "npm", "audit", "--json", "--ignore-scripts"], cwd=ROOT / "frontend", capture_output=True, text=True, timeout=120)
     npm = json.loads(audit.stdout)
     if npm.get("error") or "metadata" not in npm or audit.returncode not in (0, 1):
         raise ValueError("npm advisory scan incomplete; see registry availability")

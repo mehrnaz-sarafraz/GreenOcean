@@ -23,3 +23,19 @@ Commands: `scripts/run-phase-a-qa.ps1 -Offline -BackendTests 'PhaseQ1*'`; comple
 Initial test compilation exposed invalid compound `var` fixture declarations; corrected before execution. The first complete local run exhausted the disposable PostgreSQL40-connection limit as historical Spring contexts accumulated. QA now bounds context caching to8; product checks and assertions were not removed. The subsequent complete run passed675 tests. The first live attempt used unsupported DISMISS instead of the existing APPROVE action that dismisses a report; corrected without changing product assertions or the existing API. These failed attempts are not counted as passes. Private QA logs remain in ignored `.tmp`; they are not copied into ordinary telemetry.
 
 No external review, production recovery, clinical or payment approval, real notification acknowledgement, pilot recruitment, merge or deployment has been performed.
+
+Q2 additional browser regression: an in-flight reveal followed by background/foreground initially left controls disabled. The stale response already stayed hidden, but recovery was incomplete. Foreground cleanup now also resets busy state and removes purpose/request state; all seven Q2 rendered browser cases passed after the fix. The failed attempt is retained in ignored QA logs and is not counted as a pass.
+
+## Q1 published final verification
+
+Final Q1 source `62c60dcdd08c4253d699083a68cd7413fde292da`, draft PR28, run41641548999: all four jobs succeeded. Actual totals683 backend,69 frontend logic,182 rendered browser and52 real API/browser/PostgreSQL tests =986, zero failures/skips. This supersedes the pending final-CI entries above; the initial failed fixture remains recorded.
+
+## Q2 implementation validation in progress
+
+Targeted PostgreSQL run:76 passed,0 failures/errors/skips (L3Review13,P3Test15,Q1Test21,Q2Clinical8,Q2Security14,Q2Concurrency4,Q2Migration1), plus69 frontend helper passes. Six new Q2 rendered browser cases passed (EN/FA/RTL360/1280, exact revision/purpose, independent approval, one-use reveal and failure clearing). One actual-stack Q2 test passed using disposable PostgreSQL, actual API, HTTPS browser and two separate virtual WebAuthn administrators; self-approval403, replay409 and ordinary member403 verified. TypeScript passed; lint0 errors/11 existing warnings. Final erasure fixtures and duplicate-key rejection were subsequently added; complete final-source validation and published Q2 CI remain pending. No physical key/device or external security review is implied.
+
+### Final Q2 prepublication check
+
+Final targeted PostgreSQL run: **107 passed,0 failures/errors/skips**, comprising Q2Security17,Q2Clinical8,Q2Concurrency4,Q2Migration1,Q1Test21,P3Test15,P4Test16,P5Test21 and PrivateDocumentCipher4. All69 frontend logic cases passed again; all seven Q2 browser cases passed; final TypeScript passed and lint has0 errors/11 existing warnings. Source scan971 files found no candidate credentials and confirmed all31 original migrations unchanged. V86 remains additive.
+
+The earlier complete local run executed711 tests with two failures: old P4/P5 fixtures expected Forbidden after removing roles, while Q2 now correctly revokes the session and returns Unauthorized. Fixtures now explicitly verify old-session rejection, create a fresh synthetic session, and retain the original no-privilege/no-private-narrative assertions. Both corrected suites passed in the final107-test run. No assertion was broadened to any exception. Complete final-source Linux CI, exports, scan and live regression are still pending before final Q2 verification.

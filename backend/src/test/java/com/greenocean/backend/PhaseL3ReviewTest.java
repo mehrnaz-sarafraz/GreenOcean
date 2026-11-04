@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test") @Transactional
 class PhaseL3ReviewTest extends PhaseLFixtures {
+ @Autowired com.greenocean.backend.moderation.service.SocialAttribution evidence;
  @Autowired SocialReviewService reviews; @Autowired AdminService admin;
  UUID staff(String role)throws Exception{var member=member();db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name=?",member.id(),role);return member.id();}
  UUID assessment(String post){return db.queryForObject("SELECT id FROM social_assessments WHERE post_id=? ORDER BY revision DESC LIMIT 1",UUID.class,UUID.fromString(post));}
@@ -64,8 +65,10 @@ class PhaseL3ReviewTest extends PhaseLFixtures {
  @Test @Tag("malicious") void anonymousAttributionNeedsAdminAndRecordsPurpose()throws Exception{
   var author=member();UUID moderator=staff("MODERATOR"),administrator=staff("ADMIN");UUID id=assessment(held(author));
   assertThatThrownBy(()->reviews.attribution(moderator,id,"Synthetic safety investigation")).isInstanceOf(ForbiddenException.class);
-  assertThat(reviews.attribution(administrator,id,"Synthetic safety investigation").get("authorId")).isEqualTo(author.id());
-  assertThat(db.queryForObject("SELECT metadata::text FROM audit_logs WHERE entity_id=? AND action='SOCIAL_IDENTITY_REVIEW'",String.class,id)).contains("Synthetic safety investigation");
+  assertThatThrownBy(()->reviews.attribution(administrator,id,"Synthetic safety investigation")).isInstanceOf(ForbiddenException.class);
+  UUID second=staff("ADMIN"),sid=db.queryForObject("SELECT id FROM user_sessions WHERE user_id=? ORDER BY created_at DESC LIMIT 1",UUID.class,administrator),otherSid=db.queryForObject("SELECT id FROM user_sessions WHERE user_id=? ORDER BY created_at DESC LIMIT 1",UUID.class,second);
+  db.update("UPDATE user_sessions SET mfa_authenticated_at=CURRENT_TIMESTAMP WHERE id IN(?,?)",sid,otherSid);UUID request=evidence.request(administrator,sid,id,1,"THREAT_INVESTIGATION");evidence.approve(second,otherSid,request,1);assertThat(evidence.reveal(administrator,sid,id,request).get("authorId")).isEqualTo(author.id());
+  assertThat(db.queryForObject("SELECT metadata::text FROM audit_logs WHERE entity_id=? AND action='SOCIAL_IDENTITY_REVIEW'",String.class,id)).contains("THREAT_INVESTIGATION");
   db.update("DELETE FROM user_roles WHERE user_id=?",administrator);
   assertThatThrownBy(()->reviews.attribution(administrator,id,"Stale privilege attempt")).isInstanceOf(ForbiddenException.class);
  }
