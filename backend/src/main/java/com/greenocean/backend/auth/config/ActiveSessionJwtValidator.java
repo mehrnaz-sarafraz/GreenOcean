@@ -15,6 +15,8 @@ import java.time.Instant;
 public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
     private static final OAuth2Error INVALID_SESSION = new OAuth2Error(
             "invalid_token", "The access-token session is no longer active", null);
+    private static final OAuth2Error VERIFICATION_UNAVAILABLE = new OAuth2Error(
+            "temporarily_unavailable", "Authentication verification is temporarily unavailable", null);
 
     private final UserSessionRepository sessionRepository;
     private final java.time.Clock clock;private final com.greenocean.backend.auth.service.SessionPolicy policy;
@@ -38,6 +40,8 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
             return sessionRepository.isActive(sessionId, userId, clock.instant(), UserStatus.ACTIVE)
                     ? OAuth2TokenValidatorResult.success()
                     : OAuth2TokenValidatorResult.failure(INVALID_SESSION);
+        } catch (org.springframework.dao.DataAccessResourceFailureException | org.springframework.dao.TransientDataAccessException unavailable) {
+            return OAuth2TokenValidatorResult.failure(VERIFICATION_UNAVAILABLE);
         } catch (RuntimeException exception) {
             return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
         }

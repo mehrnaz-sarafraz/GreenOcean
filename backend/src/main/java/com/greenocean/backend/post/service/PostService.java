@@ -79,6 +79,8 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> feed(UUID userId, int page, int size) {
+        if(page<0||size<1||size>100||(long)page*size>100)
+            throw new IllegalArgumentException("Use cursor-based discovery beyond the first 100 legacy feed positions");
         List<PostResponse> results = postReadRepository.findFeed(userId, page, size);
         return page(results, page, size);
     }

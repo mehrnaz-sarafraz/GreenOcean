@@ -1,0 +1,50 @@
+{
+  "evidenceKind": "SYNTHETIC_LOCAL_PHYSICAL_JVM_CRASHES",
+  "complete": true,
+  "database": "greenocean_q4_crash_c35db4eb164341b39571d38f4f321fe9_qa",
+  "scenarios": [
+    {
+      "scenario": "booking",
+      "inFlightBarrierObserved": true,
+      "ownedJvmKilled": true,
+      "originalResponseStatus": 0,
+      "rowsCommittedBeforeCrash": 0,
+      "retryStatus": 200,
+      "exactlyOneCommittedResult": true,
+      "rebootAndRetrySeconds": 16.265999999828637,
+      "orphanCipherObjects": 0,
+      "orphanDisposition": "NOT_APPLICABLE"
+    },
+    {
+      "scenario": "queue",
+      "inFlightBarrierObserved": true,
+      "ownedJvmKilled": true,
+      "originalResponseStatus": 0,
+      "rowsCommittedBeforeCrash": 0,
+      "retryStatus": 201,
+      "exactlyOneCommittedResult": true,
+      "rebootAndRetrySeconds": 16.218999999808148,
+      "orphanCipherObjects": 0,
+      "orphanDisposition": "NOT_APPLICABLE"
+    },
+    {
+      "scenario": "upload",
+      "inFlightBarrierObserved": true,
+      "ownedJvmKilled": true,
+      "originalResponseStatus": 0,
+      "rowsCommittedBeforeCrash": 0,
+      "retryStatus": 201,
+      "exactlyOneCommittedResult": true,
+      "rebootAndRetrySeconds": 16.031999999890104,
+      "orphanCipherObjects": 1,
+      "orphanDisposition": "ENCRYPTED_UNREFERENCED_NOT_SERVED_RECONCILIATION_REQUIRED"
+    }
+  ],
+  "limitations": [
+    "Synthetic loopback accounts and credentials only",
+    "Controlled BEFORE INSERT delay exposes a reproducible in-flight boundary",
+    "Upload interruption leaves one inaccessible encrypted orphan; no automatic destructive cleanup is claimed",
+    "No production key custody, provider or hardware rehearsal",
+    "Fixture files contain only synthetic bearer tokens and must remain untracked"
+  ]
+}

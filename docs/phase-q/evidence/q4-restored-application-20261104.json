@@ -1,0 +1,12 @@
+{
+  "independentOperatorCheck" : true,
+  "modifiedQ4Worktree" : true,
+  "privateClinicalMessageVerified" : true,
+  "evidenceKind" : "SYNTHETIC_LOCAL_RESTORED_APPLICATION_HTTP",
+  "sourceBaseCommit" : "035879e196e99ed1ffc1097c3363acf7287040b0",
+  "bootAndReplayExerciseSeconds" : 15.7486341,
+  "checksPassed" : 15,
+  "privacyReplayVerified" : true,
+  "oldSessionRevoked" : true,
+  "limitations" : [ "Synthetic MFA stamps, not a real operator/key custody drill", "Base commit plus uncommitted Q4 sources; repeat on final immutable head", "Current external rights manifest was synthetic", "Private-journal reads, available synthetic clinical episode, appointment denial and replay APIs probed; no comprehensive service RTO proven" ]
+}
