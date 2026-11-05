@@ -20,10 +20,13 @@ import java.util.UUID;
 @Component
 public class ProfessionalDocumentStorage {
     private final Path root;
+    private final PrivateDocumentCipher cipher;
 
-    public ProfessionalDocumentStorage(@Value("${greenocean.storage.professional-documents-root:${java.io.tmpdir}/greenocean-professional-documents}") String root) {
-        this.root = Path.of(root).toAbsolutePath().normalize();
+    @org.springframework.beans.factory.annotation.Autowired
+    public ProfessionalDocumentStorage(@Value("${greenocean.storage.professional-documents-root:${java.io.tmpdir}/greenocean-professional-documents}") String root,@Value("${greenocean.storage.professional-document-keys:}")String keys,@Value("${greenocean.storage.professional-document-current-key:}")String current) {
+        this.root=Path.of(root).toAbsolutePath().normalize();this.cipher=new PrivateDocumentCipher(keys,current);
     }
+    public ProfessionalDocumentStorage(String root){this(root,"","");}
 
     public StoredDocument store(UUID applicationId, MultipartFile file) {
         String contentType = file.getContentType() == null
@@ -36,24 +39,21 @@ public class ProfessionalDocumentStorage {
             throw new IllegalArgumentException("Credential documents must be between 1 byte and 10 MB");
         }
         validateFileSignature(file, contentType);
+        cipher.current();
         String originalName = safeName(file.getOriginalFilename());
         String extension = contentType.equals("application/pdf") ? ".pdf" : contentType.equals("image/png") ? ".png" : ".jpg";
-        String storageKey = applicationId + "/" + UUID.randomUUID() + extension;
+        String storageKey = applicationId + "/" + UUID.randomUUID() + extension + ".enc";
         Path target = root.resolve(storageKey).normalize();
         if (!target.startsWith(root)) throw new IllegalStateException("Invalid storage target");
         try {
             Files.createDirectories(target.getParent());
             Path temporary = Files.createTempFile(target.getParent(), "upload-", ".tmp");
-            String sha256;
-            try (InputStream input = file.getInputStream()) {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                try (DigestInputStream hashed = new DigestInputStream(input, digest)) {
-                    Files.copy(hashed, temporary, StandardCopyOption.REPLACE_EXISTING);
-                }
-                sha256 = HexFormat.of().formatHex(digest.digest());
-            }
+            byte[] plain=file.getBytes();
+            String sha256=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(plain));
+            Files.write(temporary,cipher.seal(plain,"credential:"+applicationId));
+            try{Files.setPosixFilePermissions(temporary,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));}catch(UnsupportedOperationException ignored){}
             Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
-            return new StoredDocument(originalName, contentType, file.getSize(), sha256, storageKey);
+            return new StoredDocument(originalName, contentType, file.getSize(), sha256, storageKey,cipher.current(),1);
         } catch (IOException | NoSuchAlgorithmException exception) {
             throw new IllegalStateException("Credential document could not be stored", exception);
         }
@@ -97,5 +97,7 @@ public class ProfessionalDocumentStorage {
         catch (IOException exception) { throw new IllegalStateException("Credential document could not be deleted", exception); }
     }
 
-    public record StoredDocument(String originalName, String contentType, long byteSize, String sha256, String storageKey) {}
+    public byte[] read(String storageKey,UUID applicationId){Path target=root.resolve(storageKey).normalize();if(!target.startsWith(root)||!Files.isRegularFile(target,java.nio.file.LinkOption.NOFOLLOW_LINKS))throw new IllegalArgumentException("Private document was not found");try{return cipher.open(Files.readAllBytes(target),"credential:"+applicationId);}catch(IOException e){throw new IllegalStateException("Private document is unavailable",e);}}
+
+    public record StoredDocument(String originalName, String contentType, long byteSize, String sha256, String storageKey,String keyId,int encryptionVersion) {}
 }

@@ -5,10 +5,15 @@ export type Community = {
   description?: string | null;
   iconUrl?: string | null;
   privateCommunity: boolean;
-  memberCount: number;
+  memberCount: number | null;
+  privacyType?: 'PUBLIC'|'PRIVATE'|'HIDDEN';
+  status?: string;
+  rulesVersion?: number;
+  rulesJson?: string | null;
   member: boolean;
   membershipRole?: 'MEMBER' | 'MODERATOR' | 'OWNER' | null;
   joinRequested: boolean;
+  joinRequestRevision?: number | null;
   createdAt: string;
 };
 
@@ -31,6 +36,8 @@ export type CommunityDetails = {
     startsAt: string;
     endsAt: string;
     capacity?: number | null;
+    revision: number;
+    discussionPostId?: string|null;
     attendeeCount: number;
     joined: boolean;
     status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';

@@ -1,0 +1,3 @@
+-- Official human lookup origins, not proof of a license and not claimed machine APIs.
+CREATE TABLE professional_verification_sources(category TEXT NOT NULL CHECK(category IN('PSYCHOLOGIST','COUNSELOR','PSYCHIATRIST')),origin TEXT NOT NULL,method TEXT NOT NULL DEFAULT 'HUMAN_ONLY' CHECK(method='HUMAN_ONLY'),automation_enabled BOOLEAN NOT NULL DEFAULT FALSE CHECK(NOT automation_enabled),PRIMARY KEY(category,origin));
+INSERT INTO professional_verification_sources(category,origin) VALUES('PSYCHOLOGIST','https://my.pcoiran.ir'),('COUNSELOR','https://my.pcoiran.ir'),('PSYCHIATRIST','https://membersearch.irimc.org');

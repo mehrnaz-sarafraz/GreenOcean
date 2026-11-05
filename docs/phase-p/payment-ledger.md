@@ -1,0 +1,5 @@
+# Financial provenance
+
+Invoice, payment intent, authenticated provider event, captured amount, earned platform fee, earned professional payable, refund obligation, refund receipt and settlement receipt are distinct records. `clinic_financial_events` is append-only with one event per appointment/kind; provider events have provider/event-key uniqueness. Corrections append compensating reversal kinds. Financial history is not an editable wallet balance.
+
+Integer IRR is authoritative. Price, commission and provider fee are frozen at explicit booking. Service completion, rather than booking count or amount, is required before accruing earned fees/payables. Full refund obligations are independently reconciled with the same captured charge. Payout requires an actual payable, no unresolved hold, separate settlement approval and provider-confirmed evidence. Subscription orders and entitlements are separate from consultation revenue and clinical authority. Production has no authorized financial adapter by default; test adapters reside exclusively in test code. [Adapter, crash/retry and release contract](booking-and-financial-operations.md).

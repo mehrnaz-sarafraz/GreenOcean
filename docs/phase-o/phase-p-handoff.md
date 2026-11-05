@@ -1,0 +1,7 @@
+# Phase P handoff
+
+Reuse the O1 private lifecycle, O2 versioned Growth Library/governance/post consent, O3 immutable curriculum/owned completions and O4 private reward ledger. Do not invent another journal, resource catalog, course completion percentage or reward service. Preserve current L audience/anonymous projections, M hidden-group boundaries and N listener privacy/priority; points never influence care eligibility or queue order.
+
+Educational scope permissions/credential review never authorize regulated consultations. Phase P must establish its own jurisdiction, professional verification and service consent. English/Persian original curriculum drafts are awaiting actual review and attribution; no production expert/source/rights approval has been fabricated. Daily questions remain unavailable when fewer than three genuinely approved language-specific prompts exist. No child-specific or third-party AI service is activated.
+
+Keep default-off learning/reward/publication/sensitive-processing gates until real approval and operations are recorded. Actual mobile-device/assistive-technology validation and production backup/legal/retention exceptions remain externally governed. Four draft stacked O PRs target N3→O1→O2→O3→O4; main is still K unless separately merged. No merge/deployment is part of implementation completion. Final exact-head test and remote CI evidence belongs in delivery-report/test-evidence, not assumptions inherited from prior chat.

@@ -15,6 +15,15 @@
 	<description>REST API for the GreenOcean social support platform</description>
 	<properties>
 		<java.version>21</java.version>
+        <!-- Coordinated same-minor security patches; exact source/scan evidence: docs/phase-q. -->
+        <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+        <httpclient5.version>5.6.5</httpclient5.version>
+        <httpcore5.version>5.4.4</httpcore5.version>
+        <log4j2.version>2.25.5</log4j2.version>
+        <tomcat.version>11.0.27</tomcat.version>
+        <postgresql.version>42.7.14</postgresql.version>
+        <spring-framework.version>7.0.10</spring-framework.version>
 	</properties>
 	<dependencies>
         <dependency><groupId>com.yubico</groupId><artifactId>webauthn-server-core</artifactId><version>2.10.1</version></dependency>

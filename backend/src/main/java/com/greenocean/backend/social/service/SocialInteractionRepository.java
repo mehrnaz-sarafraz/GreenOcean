@@ -196,7 +196,7 @@ public class SocialInteractionRepository {
 
     public long visiblePostCount(UUID authorId, UUID viewerId) {
         Long count = jdbcTemplate.queryForObject("""
-                SELECT COUNT(*) FROM posts p WHERE p.author_id = ? AND can_read_social_post(p.id, ?)
+                SELECT COUNT(*) FROM posts p WHERE p.community_id IS NULL AND p.author_id = ? AND can_read_social_post(p.id, ?)
                 AND (NOT p.is_anonymous OR p.author_id = ?)
                 """, Long.class, authorId, viewerId, viewerId);
         return count == null ? 0 : count;

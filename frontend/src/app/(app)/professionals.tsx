@@ -1,3 +1,4 @@
+import {AppButton} from '@/components/app-button';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -27,6 +28,7 @@ export default function ProfessionalDirectory() {
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>{specialtyFilters.map(item => <Pressable key={item} onPress={() => setSpecialty(item)} style={[styles.filter, specialty === item && styles.filterActive]}><Text style={[styles.filterText, specialty === item && styles.filterTextActive]}>{item}</Text></Pressable>)}</ScrollView>
     <Pressable onPress={() => setAvailableOnly(value => !value)} style={[styles.availableFilter, availableOnly && styles.availableFilterActive]}><AppIcon name={availableOnly ? 'check_box' : 'check_box_outline_blank'} filled={availableOnly} color={availableOnly ? colors.ocean700 : colors.muted} /><Text style={[styles.availableText, availableOnly && { color: colors.ocean700 }]}>Accepting new clients only</Text></Pressable>
     <View style={styles.resultHead}><Text style={styles.resultTitle}>{shown.length} professionals</Text><View style={styles.sort}><AppIcon name="sort" size={16} color={colors.muted} /><Text style={styles.sortText}>Best match</Text></View></View>
+    <AppButton variant="secondary" label="Rankings and methodology / رتبه‌بندی و روش" onPress={()=>router.push('/professional-rankings' as never)}/>
     {shown.map(pro => <ProfessionalCard key={pro.id} professional={pro} />)}
     {!shown.length && <View style={styles.empty}><AppIcon name="search_off" size={34} color={colors.ocean500} /><Text style={styles.emptyTitle}>No exact matches</Text><Text style={styles.emptyText}>Try removing a filter or searching a broader specialty.</Text></View>}
     <Text style={styles.disclaimer}>GreenOcean verifies submitted credentials but does not guarantee suitability or treatment outcomes. Confirm local licensing and care details before booking.</Text>
@@ -36,10 +38,10 @@ export default function ProfessionalDirectory() {
 function ProfessionalCard({ professional }: { professional: Professional }) {
   return <Pressable onPress={() => router.push({ pathname: '/profile', params: { professional: professional.id } })} style={styles.card}>
     {professional.promoted && <View style={styles.sponsored}><AppIcon name="campaign" size={13} color={colors.muted} /><Text style={styles.sponsoredText}>SPONSORED PLACEMENT</Text></View>}
-    <View style={styles.cardTop}><Avatar name={professional.displayName} size={66} verified /><View style={{ flex: 1 }}><Text style={styles.name}>{professional.displayName}</Text><Text style={styles.role}>{professional.title}</Text><Text style={styles.location}>{professional.city} · {professional.country}</Text></View><View style={styles.score}><Text style={styles.scoreValue}>{professional.greenOceanScore}</Text><Text style={styles.scoreLabel}>GO SCORE</Text></View></View>
+    <View style={styles.cardTop}><Avatar name={professional.displayName} size={66} verified /><View style={{ flex: 1 }}><Text style={styles.name}>{professional.displayName}</Text><Text style={styles.role}>{professional.title}</Text><Text style={styles.location}>{professional.city} · {professional.country}</Text></View></View>
     <Text style={styles.bio} numberOfLines={2}>{professional.bio}</Text><View style={styles.tags}>{professional.specialties.map(item => <Text key={item} style={styles.tag}>{item}</Text>)}</View>
     <View style={styles.details}><Detail icon="language" text={professional.languages.join(' · ')} /><Detail icon="person" text={professional.gender ?? 'Not specified'} /><Detail icon="videocam" text={professional.consultationModes.join(' · ')} /></View>
-    <View style={styles.cardBottom}><View><View style={styles.rating}><AppIcon name="star" filled size={16} color={colors.sun} /><Text style={styles.ratingText}>{professional.rating} · {professional.reviewCount} reviews</Text></View><Text style={[styles.availability, !professional.acceptingNewClients && { color: colors.sun }]}>{professional.acceptingNewClients ? '● Accepting new clients' : '● Waitlist active'}</Text></View><View style={styles.profileButton}><Text style={styles.profileButtonText}>View profile</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></View>
+    <View style={styles.cardBottom}><View><Text style={styles.ratingText}>Verified reputation is separate / اعتبار احرازشده مستقل است</Text><Text style={[styles.availability, !professional.acceptingNewClients && { color: colors.sun }]}>{professional.acceptingNewClients ? '● Accepting new clients' : '● Waitlist active'}</Text></View><View style={styles.profileButton}><Text style={styles.profileButtonText}>View profile</Text><AppIcon name="arrow_forward" size={17} color={colors.white} /></View></View>
   </Pressable>;
 }
 function Detail({ icon, text }: { icon: string; text: string }) { return <View style={styles.detail}><AppIcon name={icon} size={15} color={colors.muted} /><Text style={styles.detailText}>{text}</Text></View>; }

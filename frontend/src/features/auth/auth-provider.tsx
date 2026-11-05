@@ -1,3 +1,4 @@
+import {clearPrivateExportCache} from '@/lib/api/private-file';
 import { AppState, Platform } from 'react-native';
 import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 
@@ -35,7 +36,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string | null>(null);
   const [pendingEmailCorrected, setPendingEmailCorrected] = useState(false);
 
+  useEffect(()=>{void clearPrivateExportCache();},[]);
   useEffect(() => tokenStorage.subscribeToClear((reason) => {
+    void clearPrivateExportCache();
     if(reason)setNotice(reason);
     setUser(null);
     setStatus('unauthenticated');

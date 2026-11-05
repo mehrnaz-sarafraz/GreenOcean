@@ -1,3 +1,5 @@
+import {ProfessionalReputationPublic} from '@/features/professional-reputation';
+import {ClinicBooking} from '@/features/clinic-commerce';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,7 +9,7 @@ import { AppButton } from '@/components/app-button';
 import { EmptyState, Notice, Pill, ProductCard, ProductHeader, ProductPage, ProductSection } from '@/components/product-ui';
 import { usePlatformData } from '@/features/platform/data-provider';
 import { optionsIn } from '@/features/platform/catalog';
-import { AvailabilitySlot, Consultation, ProfessionalApplication, ProfessionalReview } from '@/features/platform/types';
+import { AvailabilitySlot, Consultation, ProfessionalApplication } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { colors, radius, spacing } from '@/theme/tokens';
 
@@ -23,43 +25,18 @@ export default function ProfessionalAction() {
   if (professionalId === 'me' && action === 'verification') return <Verification />;
   if (professionalId === 'me' && action === 'consultations') return <ProfessionalConsultations />;
   if (!professional) return <ProductPage><ProductHeader title="Professional not found" subtitle="This verified profile is unavailable." /><EmptyState icon="person_search" title="No verified profile here" body="Return to the directory to compare active professionals." /><AppButton label="Browse professionals" onPress={() => router.replace('/professionals')} /></ProductPage>;
-  if (action === 'book') return <Booking professionalId={professional.id} name={professional.displayName} />;
-  if (action === 'reviews') return <Reviews professionalId={professional.id} name={professional.displayName} />;
+  if (action === 'book') return <ClinicBooking professionalId={professional.id} />;
+  if (action === 'reviews') return <ProductPage><ProductHeader title="Verified appointment experience / تجربهٔ نوبت احرازشده" subtitle="Optional, independently reviewed feedback / بازخورد اختیاری و مستقل"/><ProfessionalReputationPublic professionalId={professional.id} profession={professional.title}/></ProductPage>;
   if (action === 'contact') return <Contact professionalId={professional.id} name={professional.displayName} />;
   return <ProductPage><ProductHeader title="Professional action unavailable" subtitle="This workflow does not exist." /></ProductPage>;
 }
 
-function Booking({ professionalId, name }: { professionalId: string; name: string }) {
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]); const [slotId, setSlotId] = useState(''); const [note, setNote] = useState('');
-  const [done, setDone] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  useEffect(() => {
-    const timer = setTimeout(() => apiRequest<AvailabilitySlot[]>(`/api/v1/professionals/${professionalId}/availability`)
-      .then(items => { setSlots(items); setSlotId(items[0]?.id || ''); })
-      .catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load availability.')), 0);
-    return () => clearTimeout(timer);
-  }, [professionalId]);
-  const selected = slots.find(slot => slot.id === slotId);
-  const submit = async () => { if (!selected) return; setBusy(true); setError(''); try { await apiRequest(`/api/v1/professionals/${professionalId}/consultations`, { method: 'POST', body: JSON.stringify({ availabilitySlotId: selected.id, scheduledAt: selected.startsAt, consultationMode: selected.consultationMode, note }) }); setDone(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not request consultation'); } finally { setBusy(false); } };
-  if (done && selected) return <ProductPage><ProductHeader eyebrow="REQUEST RECEIVED" title="Consultation requested" subtitle={`${name}'s practice can now review your requested time.`} /><Notice title="No payment taken" body="A request is not a confirmed appointment or a clinical relationship." /><ProductCard><Text style={styles.title}>{new Date(selected.startsAt).toLocaleString()}</Text><Text style={styles.body}>{selected.consultationMode}</Text><Text style={styles.meta}>Status: REQUESTED</Text></ProductCard><AppButton label="Return to professionals" onPress={() => router.replace('/professionals')} /></ProductPage>;
-  return <ProductPage><ProductHeader eyebrow="CONSULTATION REQUEST" title={`Book with ${name}`} subtitle="Choose one of the times published by this practice." /><Notice title="Before booking" body="Times are reserved atomically when you submit. Confirm licensing, fees, cancellation policy, insurance, privacy, and emergency arrangements with the practice." /><ProductSection title="Available times">{slots.length ? <View style={styles.wrap}>{slots.map(slot => <Pill key={slot.id} label={`${new Date(slot.startsAt).toLocaleString()} · ${slot.consultationMode}`} active={slotId === slot.id} onPress={() => setSlotId(slot.id)} />)}</View> : <EmptyState icon="event_busy" title="No appointment times available" body={`${name} has not published an open consultation slot. Check again later or send a message.`} />}</ProductSection><ProductCard><Field label="Optional note" value={note} onChangeText={setNote} multiline />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Send request" disabled={!slotId} loading={busy} onPress={() => void submit()} /></ProductCard></ProductPage>;
-}
-
-function Reviews({ professionalId, name }: { professionalId: string; name: string }) {
-  const [items, setItems] = useState<ProfessionalReview[]>([]); const [rating, setRating] = useState(5);
-  const [body, setBody] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  useEffect(() => { apiRequest<ProfessionalReview[]>(`/api/v1/professionals/${professionalId}/reviews`).then(setItems).catch(caught => setError(caught instanceof Error ? caught.message : 'Could not load reviews')); }, [professionalId]);
-  const submit = async () => { setBusy(true); setError(''); try { const review = await apiRequest<ProfessionalReview>(`/api/v1/professionals/${professionalId}/reviews/me`, { method: 'PUT', body: JSON.stringify({ rating, body }) }); setItems(current => [review, ...current.filter(item => !item.mine)]); setBody(''); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not submit review'); } finally { setBusy(false); } };
-  return <ProductPage><ProductHeader eyebrow="PATIENT FEEDBACK" title={`${name}'s reviews`} subtitle="Published reviews are moderated; your own pending review remains visible to you." /><ProductCard><Text style={styles.label}>Rating</Text><View style={styles.wrap}>{[1,2,3,4,5].map(value => <Pill key={value} label={`${value} ★`} active={rating === value} onPress={() => setRating(value)} />)}</View><Field label="Your experience" value={body} onChangeText={setBody} multiline />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Submit for review" disabled={body.trim().length < 20} loading={busy} onPress={() => void submit()} /></ProductCard>{items.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.title}>{item.reviewerName} · {item.rating} ★</Text><Pill label={item.status} active={item.status === 'PUBLISHED'} /></View><Text style={styles.body}>{item.body}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></ProductCard>)}</ProductPage>;
-}
-
 function Contact({ professionalId, name }: { professionalId: string; name: string }) {
-  const [busy, setBusy] = useState(false); const [error, setError] = useState('');
-  const start = async () => { setBusy(true); setError(''); try { const result = await apiRequest<{ id: string }>(`/api/v1/conversations/professionals/${professionalId}`, { method: 'POST' }); router.replace({ pathname: '/chat/[id]', params: { id: result.id } }); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not start conversation'); } finally { setBusy(false); } };
-  return <ProductPage><ProductHeader eyebrow="PROFESSIONAL MESSAGE" title={`Message ${name}`} subtitle="Start a secure GreenOcean conversation." /><Notice title="Support, not emergency care" body="Messages may not be read immediately and do not replace emergency or medical care." />{!!error && <Text style={styles.error}>{error}</Text>}<AppButton label="Start conversation" loading={busy} onPress={() => void start()} /></ProductPage>;
+ return <ProductPage><ProductHeader title={name} subtitle="Professional care starts in an explicitly booked, consented and bounded clinic encounter. / مراقبت حرفه‌ای در نوبت با رضایت صریح و زمان محدود آغاز می‌شود."/><AppButton label="Review clinic appointments / بررسی نوبت‌های کلینیک" onPress={()=>router.replace({pathname:'/professional/[id]/[action]',params:{id:professionalId,action:'book'}} as never)}/></ProductPage>;
 }
 
 function Application() {
-  const { options } = usePlatformData(); const professionalTypes = optionsIn(options, 'PROFESSIONAL_TYPE'); const genders = optionsIn(options, 'GENDER'); const consultationModes = optionsIn(options, 'CONSULTATION_MODE');
+  const { options } = usePlatformData(); const professionalTypes = optionsIn(options, 'PROFESSIONAL_TYPE').filter(o=>['PSYCHOLOGIST','COUNSELOR','PSYCHIATRIST'].includes(o.key)); const genders = optionsIn(options, 'GENDER'); const consultationModes = optionsIn(options, 'CONSULTATION_MODE');
   const [form, setForm] = useState({ professionalType: '', title: '', specialization: '', bio: '', yearsOfExperience: '', specialties: '', languages: '', gender: '', country: '', city: '', workplace: '', clinicName: '', clinicAddress: '', education: '', licenseNumber: '', consultationModes: '' });
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [busy, setBusy] = useState(false); const [result, setResult] = useState<ProfessionalApplication | null>(null); const [error, setError] = useState('');
@@ -74,7 +51,7 @@ function Application() {
 function Verification() {
   const [item, setItem] = useState<ProfessionalApplication | null>(null); const [error, setError] = useState('');
   useEffect(() => { apiRequest<ProfessionalApplication>('/api/v1/professional-applications/me').then(setItem).catch(caught => setError(caught instanceof Error ? caught.message : 'No application found')); }, []);
-  return <ProductPage><ProductHeader eyebrow="VERIFICATION" title="Professional application status" subtitle="Review status comes directly from the credential workflow." />{item ? <ProductCard><View style={styles.between}><Text style={styles.title}>{item.profession}</Text><Pill label={item.status} active={item.status === 'APPROVED'} /></View><Text style={styles.body}>{item.country} · {item.documentNames.length} documents</Text><Text style={styles.meta}>Submitted {new Date(item.submittedAt).toLocaleString()}</Text>{item.note && <Notice title="Reviewer note" body={item.note} />}</ProductCard> : <EmptyState icon="verified" title="No application available" body={error} />}</ProductPage>;
+  return <ProductPage><ProductHeader eyebrow="VERIFICATION" title="Professional application status" subtitle="Review status comes directly from the credential workflow." /><AppButton label="Professional workspace / فضای متخصص" onPress={()=>router.push('/tools/professional-workspace' as never)}/>{item ? <ProductCard><View style={styles.between}><Text style={styles.title}>{item.profession}</Text><Pill label={item.status} active={item.status === 'APPROVED'} /></View><Text style={styles.body}>{item.country} · {item.documentNames.length} documents</Text><Text style={styles.meta}>Submitted {new Date(item.submittedAt).toLocaleString()}</Text>{item.note && <Notice title="Reviewer note" body={item.note} />}</ProductCard> : <EmptyState icon="verified" title="No application available" body={error} />}</ProductPage>;
 }
 
 function ProfessionalConsultations() {

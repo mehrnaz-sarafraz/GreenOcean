@@ -1,0 +1,1153 @@
+{
+  "evidenceKind": "SYNTHETIC_LOCAL_POSTGRESQL_PLANS",
+  "plans": {
+    "feed-first-page-source-sql": {
+      "planningMs": 80.631,
+      "executionMs": 41.863,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3398,
+          "Shared Read Blocks": 135
+        },
+        {
+          "Node Type": "Result",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3398,
+          "Shared Read Blocks": 135
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 976,
+          "Shared Read Blocks": 13
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 967,
+          "Shared Read Blocks": 13
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 966,
+          "Shared Read Blocks": 13
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 966,
+          "Shared Read Blocks": 13
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 945,
+          "Shared Read Blocks": 12
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 945,
+          "Shared Read Blocks": 11
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 943,
+          "Shared Read Blocks": 10
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 943,
+          "Shared Read Blocks": 10
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "posts",
+          "Index Name": "idx_posts_status_created_at",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 879,
+          "Shared Read Blocks": 8,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Memoize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 64,
+          "Shared Read Blocks": 2
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 64,
+          "Shared Read Blocks": 2
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "support_categories",
+          "Index Name": "support_categories_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "user_preferences",
+          "Index Name": "user_preferences_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Function Scan",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "communities",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 1,
+          "Rows Removed by Filter": 2
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "professional_answers",
+          "Index Name": "uq_professional_answers_post",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 21,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 3.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "professional_profiles",
+          "Actual Rows": 3.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 20,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 20,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "pk_post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 20,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2400,
+          "Shared Read Blocks": 120
+        },
+        {
+          "Node Type": "Hash Join",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2400,
+          "Shared Read Blocks": 120
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "comments",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2400,
+          "Shared Read Blocks": 120,
+          "Rows Removed by Filter": 3764
+        },
+        {
+          "Node Type": "Hash",
+          "Actual Rows": 0,
+          "Actual Loops": 0,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "community_content_actions",
+          "Index Name": "community_comment_hidden",
+          "Actual Rows": 0,
+          "Actual Loops": 0,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "idx_post_likes_user_id",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "bookmarks",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "social_saved_owner",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "feed-deep-page-source-sql": {
+      "planningMs": 54.289,
+      "executionMs": 850.053,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 278991,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Result",
+          "Actual Rows": 2021.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 278991,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Actual Rows": 2021.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 34446,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 34437,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 34436,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 34436,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 32414,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 32413,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 32410,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 32410,
+          "Shared Read Blocks": 50
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "posts",
+          "Index Name": "idx_posts_status_created_at",
+          "Actual Rows": 2022.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 32107,
+          "Shared Read Blocks": 50,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Memoize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 303,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 101,
+          "Shared Hit Blocks": 303,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "support_categories",
+          "Index Name": "support_categories_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "user_preferences",
+          "Index Name": "user_preferences_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Function Scan",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "communities",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 2
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "professional_answers",
+          "Index Name": "uq_professional_answers_post",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 2022,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 3.0,
+          "Actual Loops": 2022,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "professional_profiles",
+          "Actual Rows": 3.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 2021,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 2021,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "pk_post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 2021,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 242521,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Hash Join",
+          "Actual Rows": 0.85,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 242521,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "comments",
+          "Actual Rows": 0.85,
+          "Actual Loops": 2021,
+          "Shared Hit Blocks": 242520,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 3763
+        },
+        {
+          "Node Type": "Hash",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "community_content_actions",
+          "Index Name": "community_comment_hidden",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "idx_post_likes_user_id",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "bookmarks",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "social_saved_owner",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "current-purpose-authorization": {
+      "planningMs": 9.513,
+      "executionMs": 0.213,
+      "nodes": [
+        {
+          "Node Type": "Result",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 8,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 8,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 6,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "user_roles",
+          "Index Name": "pk_user_roles",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "users",
+          "Index Name": "users_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "roles",
+          "Index Name": "uq_roles_name",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "own-journal-page": {
+      "planningMs": 4.467,
+      "executionMs": 0.701,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 11,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 11,
+          "Shared Read Blocks": 1
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "wellbeing_journal_entries",
+          "Index Name": "idx_wellbeing_journal_user_created",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 1
+        }
+      ]
+    },
+    "active-group-membership": {
+      "planningMs": 5.478,
+      "executionMs": 2.861,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 3
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "community_members",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 3,
+          "Rows Removed by Filter": 102
+        }
+      ]
+    },
+    "listener-bookings": {
+      "planningMs": 9.946,
+      "executionMs": 0.126,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "listener_bookings",
+          "Index Name": "listener_booking_member",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "queue-current-state": {
+      "planningMs": 9.15,
+      "executionMs": 0.032,
+      "nodes": [
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "listener_wait_queue",
+          "Index Name": "listener_queue_member_active",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "appointment-participant-page": {
+      "planningMs": 11.134,
+      "executionMs": 0.058,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "consultation_requests",
+          "Index Name": "idx_consultation_requests_requester_created",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "payment-ledger-lookup": {
+      "planningMs": 2.291,
+      "executionMs": 1.433,
+      "nodes": [
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "clinic_financial_events",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 3,
+          "Rows Removed by Filter": 80
+        }
+      ]
+    },
+    "refund-lookup": {
+      "planningMs": 4.138,
+      "executionMs": 0.113,
+      "nodes": [
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "clinic_refunds",
+          "Index Name": "clinic_refunds_appointment_id_key",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "clinical-grant-operator": {
+      "planningMs": 6.173,
+      "executionMs": 0.47,
+      "nodes": [
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "clinic_record_access_grants",
+          "Index Name": "clinic_grants_current",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 8,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "moderation-purpose-queue": {
+      "planningMs": 5.8,
+      "executionMs": 0.498,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 2.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 6,
+          "Shared Read Blocks": 2
+        },
+        {
+          "Node Type": "Sort",
+          "Actual Rows": 2.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 6,
+          "Shared Read Blocks": 2
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "trust_cases",
+          "Index Name": "trust_case_queue",
+          "Actual Rows": 2.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 2,
+          "Rows Removed by Filter": 0
+        }
+      ]
+    },
+    "draft-retention-candidates": {
+      "planningMs": 2.371,
+      "executionMs": 0.12,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "wellbeing_journal_drafts",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 0
+        }
+      ]
+    },
+    "private-reward-ledger": {
+      "planningMs": 19.398,
+      "executionMs": 0.121,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "growth_reward_ledger",
+          "Index Name": "growth_reward_owner",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "account-erasure-state": {
+      "planningMs": 2.614,
+      "executionMs": 0.287,
+      "nodes": [
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "account_deletions",
+          "Index Name": "account_deletions_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    },
+    "cursor-page-after-position1000-source-sql": {
+      "planningMs": 54.063,
+      "executionMs": 27.271,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3516,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Result",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3516,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Actual Rows": 21.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 972,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 963,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 962,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 962,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 940,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 939,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 936,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Nested Loop",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 936,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "posts",
+          "Index Name": "idx_posts_status_created_at",
+          "Actual Rows": 22.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 882,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 1
+        },
+        {
+          "Node Type": "Memoize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 54,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 18,
+          "Shared Hit Blocks": 54,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "support_categories",
+          "Index Name": "support_categories_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 1.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "user_preferences",
+          "Index Name": "user_preferences_pkey",
+          "Actual Rows": 1.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 3,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Function Scan",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "communities",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 2
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "professional_answers",
+          "Index Name": "uq_professional_answers_post",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 22,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Scan",
+          "Relation Name": "profiles",
+          "Index Name": "profiles_pkey",
+          "Actual Rows": 0.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Materialize",
+          "Actual Rows": 3.0,
+          "Actual Loops": 22,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "professional_profiles",
+          "Actual Rows": 3.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 21,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 21,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "pk_post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 21,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Aggregate",
+          "Actual Rows": 1.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2520,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Hash Join",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2520,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Relation Name": "comments",
+          "Actual Rows": 0.0,
+          "Actual Loops": 21,
+          "Shared Hit Blocks": 2520,
+          "Shared Read Blocks": 0,
+          "Rows Removed by Filter": 3764
+        },
+        {
+          "Node Type": "Hash",
+          "Actual Rows": 0,
+          "Actual Loops": 0,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Index Only Scan",
+          "Relation Name": "community_content_actions",
+          "Index Name": "community_comment_hidden",
+          "Actual Rows": 0,
+          "Actual Loops": 0,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "post_likes",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "idx_post_likes_user_id",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Relation Name": "bookmarks",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "social_saved_owner",
+          "Actual Rows": 0.0,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 2,
+          "Shared Read Blocks": 0
+        }
+      ]
+    }
+  },
+  "settings": {
+    "max_connections": "100",
+    "statement_timeout": "0",
+    "lock_timeout": "0",
+    "deadlock_timeout": "1s",
+    "shared_buffers": "128MB"
+  },
+  "limitations": [
+    "Small synthetic dataset; empty service tables are not realistic performance evidence",
+    "Only feed query reconstructed exactly from current repository source; remaining probes are representative access paths",
+    "Deep legacy offset diagnostic is rejected by the new public API budget; it remains a direct SQL regression measurement",
+    "Function internals and full account archive/erasure/reward domain workflows require separate analysis",
+    "No new index justified by these small-sample results alone",
+    "No private filters, identifiers or row bodies exported"
+  ]
+}

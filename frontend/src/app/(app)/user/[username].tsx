@@ -1,3 +1,4 @@
+import {useLanguage} from '@/localization/language-provider';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,8 @@ import { colors, layout, radius, spacing, typography } from '@/theme/tokens';
 
 export default function PublicProfileScreen() {
   const { username = '' } = useLocalSearchParams<{ username: string }>();
+  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const [messageAllowed,setMessageAllowed]=useState(false);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [busy, setBusy] = useState(false);
@@ -27,6 +30,7 @@ export default function PublicProfileScreen() {
       const next = await apiRequest<PublicProfile>(`/api/v1/profiles/${encodeURIComponent(username)}`);
       if (!isCurrent()) return;
       setProfile(next);
+      const permission=await apiRequest<{allowed:boolean}>(`/api/v1/conversations/users/${next.userId}/permission`).catch(()=>({allowed:false}));if(!isCurrent())return;setMessageAllowed(permission.allowed);
       if (next.canSeeActivity) {
         const page = await apiRequest<PageResponse<PostItem>>(`/api/v1/profiles/${encodeURIComponent(username)}/posts?size=50`);
         if (!isCurrent()) return;
@@ -41,9 +45,9 @@ export default function PublicProfileScreen() {
 
   useFocusEffect(useCallback(() => {
     let active=true;
-    setProfile(null);setPosts([]);
+    setProfile(null);setPosts([]);setMessageAllowed(false);
     void load(()=>active);
-    return () => {active=false;};
+    return () => {active=false;setProfile(null);setPosts([]);setMessageAllowed(false);};
   }, [load]));
 
   async function toggleFollow() {
@@ -64,6 +68,9 @@ export default function PublicProfileScreen() {
     {profile && <>
       <View style={styles.cover}><View style={styles.glow} /></View>
       <View style={styles.identity}><Avatar name={profile.displayName} uri={profile.avatarUrl} size={86} /><View style={styles.follow}><AppButton loading={busy} label={profile.following ? 'Following' : profile.followRequested ? 'Request sent' : 'Follow'} variant={profile.following || profile.followRequested ? 'secondary' : 'primary'} onPress={() => void toggleFollow()} /></View></View>
+      {messageAllowed?<AppButton label={tr('Request a conversation','درخواست گفتگو')} disabled={busy} onPress={()=>{setBusy(true);void apiRequest<{id:string;status:string}>(`/api/v1/conversations/users/${profile.userId}`,{method:'POST'}).then(r=>{if(r.status==='PENDING')router.push('/message-requests' as never);else router.push({pathname:'/chat/[id]',params:{id:r.id}});}).catch(e=>setError(e.message)).finally(()=>setBusy(false));}}/>:<Text>{tr('New message requests are unavailable.','درخواست پیام تازه در دسترس نیست.')}</Text>}
+      <AppButton label={tr('Block account','مسدودکردن حساب')} variant="secondary" disabled={busy} onPress={()=>{setBusy(true);void apiRequest(`/api/v1/social/blocks/${profile.userId}`,{method:'PUT'}).then(()=>{setProfile(null);setPosts([]);setMessageAllowed(false);}).catch(e=>setError(e.message)).finally(()=>setBusy(false));}}/>
+      <AppButton label={tr('Report account','گزارش حساب')} variant="secondary" onPress={()=>router.push({pathname:'/tools/[tool]',params:{tool:'report',targetType:'USER',targetId:profile.userId}} as never)}/>
       <Text style={styles.name}>{profile.displayName}</Text><Text style={styles.handle}>@{profile.username}</Text>
       <Text style={styles.bio}>{profile.bio || 'This member has not added a bio yet.'}</Text>
       <View style={styles.counts}><Count value={profile.followerCount} label="Followers" /><Count value={profile.followingCount} label="Following" /><Count value={profile.postCount} label="Stories" /></View>

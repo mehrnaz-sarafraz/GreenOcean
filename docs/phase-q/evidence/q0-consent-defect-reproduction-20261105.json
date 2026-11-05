@@ -1,0 +1,9 @@
+{
+  "source": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+  "actualDefect": "Country changed after invitation; acceptance incorrectly succeeded. Source admission still refused current country mismatch.",
+  "reproduction": "PhaseQ5PilotTest.changedCountryBeforeConsentMustRejectAcceptance",
+  "result": "FAIL: Expecting code to raise a throwable",
+  "logSha256": "9bdc400a67daf552f8fe1f61a6c2c6872ad39e72cc8048623ce3f7ad81c12573",
+  "fixtureCorrection": "Initial age scenario violated age_result/age_method consistency; corrected UNKNOWN method alongside result before final regression. This fixture error is not counted as a reproduced application defect.",
+  "scope": "Synthetic accounts in isolated QA schema"
+}

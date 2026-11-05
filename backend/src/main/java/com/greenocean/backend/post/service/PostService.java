@@ -27,6 +27,9 @@ import java.util.UUID;
 
 @Service
 public class PostService {
+    private final SocialPublishing publishing;
+    private final com.greenocean.backend.community.service.GroupPolicy groups;
+    private final org.springframework.jdbc.core.JdbcTemplate db;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostReadRepository postReadRepository;
@@ -38,7 +41,8 @@ public class PostService {
     public PostService(PostRepository postRepository, CommentRepository commentRepository,
                        PostReadRepository postReadRepository, UserRepository userRepository,
                        SocialInteractionRepository interactions, DatabaseUuidGenerator uuidGenerator,
-                       NotificationService notificationService) {
+                       NotificationService notificationService, SocialPublishing publishing, org.springframework.jdbc.core.JdbcTemplate db,com.greenocean.backend.community.service.GroupPolicy groups) {
+        this.publishing=publishing;this.db=db;this.groups=groups;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.postReadRepository = postReadRepository;
@@ -53,23 +57,45 @@ public class PostService {
         if (request.visibility() == PostVisibility.PUBLIC && !Boolean.TRUE.equals(request.broaderAudienceConfirmed()))
             throw new IllegalArgumentException("Confirm the broader eligible-member audience before publishing");
         validateVisibility(userId, request.visibility(), request.communityId());
+        String identity=request.publicationIdentity();
+        if(identity==null && request.anonymous())identity="ANONYMOUS"; // safe legacy anonymous intent only
+        if(identity==null)throw new IllegalArgumentException("Choose an explicit publication identity; upgrade this client before named publication");
+        boolean anonymous="ANONYMOUS".equals(identity);
+        if(request.anonymous()!=anonymous)throw new IllegalArgumentException("Publication identity does not match anonymous intent");
+        if(request.categoryId()!=null && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM support_categories WHERE id=?)",Boolean.class,request.categoryId())))throw new IllegalArgumentException("Choose a valid optional topic");
+        var assessment=publishing.check(userId,"POST",request.body(),null);
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User was not found"));
         Post post = new Post(
-                uuidGenerator.nextUuid(), author, request.communityId(), request.body().trim(), request.anonymous(),
+                uuidGenerator.nextUuid(), author, request.communityId(), request.body().trim(), anonymous,
                 request.visibility(), normalizeOptional(request.contentWarning()), request.categoryId(), request.postType(),
                 normalizeOptional(request.mood())
         );
+        post.assess(assessment);
         postRepository.saveAndFlush(post);
-        return get(post.getId(), userId);
+        publishing.record(post.getId(),false,post.getRevision(),assessment);
+        return postReadRepository.findOwnedPost(post.getId(),userId).orElseThrow();
     }
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> feed(UUID userId, int page, int size) {
+        if(page<0||size<1||size>100||(long)page*size>100)
+            throw new IllegalArgumentException("Use cursor-based discovery beyond the first 100 legacy feed positions");
         List<PostResponse> results = postReadRepository.findFeed(userId, page, size);
         return page(results, page, size);
     }
 
+    @Transactional(readOnly=true)
+    public com.greenocean.backend.post.dto.SocialFeedResponse discovery(UUID user,int size,String mode,UUID category,String cursor) {
+        if(!java.util.Set.of("FOLLOWING","DISCOVER","SAVED").contains(mode))throw new IllegalArgumentException("Unsupported feed mode");
+        java.time.Instant before=null;UUID beforeId=null;
+        if(cursor!=null){try{String[] parts=cursor.split("\\|",-1);if(parts.length!=2)throw new IllegalArgumentException();before=java.time.Instant.parse(parts[0]);beforeId=UUID.fromString(parts[1]);}catch(RuntimeException bad){throw new IllegalArgumentException("Invalid feed cursor");}}
+        var results=postReadRepository.findDiscovery(user,size,mode,category,before,beforeId);boolean more=results.size()>size;
+        var items=List.copyOf(results.subList(0,Math.min(size,results.size())));
+        String next=more?items.getLast().createdAt()+"|"+items.getLast().id():null;
+        return new com.greenocean.backend.post.dto.SocialFeedResponse(items,more,next,
+                mode.equals("FOLLOWING") ? postReadRepository.followingAnyone(user) : null);
+    }
     @Transactional(readOnly = true)
     public PostResponse get(UUID postId, UUID userId) {
         return postReadRepository.findAccessiblePost(postId, userId)
@@ -90,18 +116,27 @@ public class PostService {
         get(postId, userId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post was not found"));
+        checkGroup(post.getCommunityId(),userId);
+        var assessment=publishing.check(userId,"COMMENT",request.body(),null);
         if (request.parentCommentId() != null
-                && !commentRepository.existsByIdAndPost_Id(request.parentCommentId(), postId)) {
+                && !Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM comments c WHERE c.id=? AND c.post_id=? AND c.status='PUBLISHED' AND NOT EXISTS(SELECT 1 FROM community_content_actions ga WHERE ga.comment_id=c.id AND ga.revision=c.revision AND ga.status='HIDDEN') AND NOT EXISTS(SELECT 1 FROM blocks b WHERE (b.blocker_id=? AND b.blocked_id=c.author_id) OR (b.blocker_id=c.author_id AND b.blocked_id=?)))",Boolean.class,request.parentCommentId(),postId,userId,userId))) {
             throw new IllegalArgumentException("Parent comment does not belong to this post");
+        }
+        if(request.parentCommentId()!=null) {
+            Long depth=db.queryForObject("WITH RECURSIVE parents AS (SELECT id,parent_comment_id,1 AS depth FROM comments WHERE id=? UNION ALL SELECT c.id,c.parent_comment_id,p.depth+1 FROM comments c JOIN parents p ON c.id=p.parent_comment_id WHERE p.depth<8) SELECT MAX(depth) FROM parents",Long.class,request.parentCommentId());
+            if(depth!=null && depth>=8)throw new IllegalArgumentException("Reply depth reached; start another response to the post");
         }
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User was not found"));
         Comment comment = new Comment(
-                uuidGenerator.nextUuid(), post, author, request.parentCommentId(), request.body().trim(), request.anonymous()
+                uuidGenerator.nextUuid(), post, author, request.parentCommentId(), request.body().trim(), request.anonymous() || Boolean.TRUE.equals(db.queryForObject("SELECT is_anonymous AND author_id=? FROM posts WHERE id=?",Boolean.class,userId,postId))
         );
+        comment.assess(assessment);
         commentRepository.saveAndFlush(comment);
-        notificationService.commentCreated(userId, request.anonymous(), postId, comment.getId(), request.parentCommentId());
-        return postReadRepository.findComment(comment.getId(), userId)
+        publishing.record(comment.getId(),true,comment.getRevision(),assessment);
+        if(assessment.outcome()==ContentSafety.Outcome.ALLOW)notificationService.commentCreated(userId,
+            Boolean.TRUE.equals(db.queryForObject("SELECT is_anonymous FROM comments WHERE id=?",Boolean.class,comment.getId())), postId, comment.getId(), request.parentCommentId());
+        return postReadRepository.findOwnedComment(comment.getId(), userId)
                 .orElseThrow(() -> new IllegalStateException("Created comment could not be read"));
     }
 
@@ -124,8 +159,8 @@ public class PostService {
 
     @Transactional
     public void setBookmark(UUID postId, UUID userId, boolean bookmarked) {
-        get(postId, userId);
-        if (bookmarked) interactions.bookmark(userId, postId); else interactions.removeBookmark(userId, postId);
+        if (!bookmarked) {interactions.removeBookmark(userId, postId);return;}
+        get(postId, userId);interactions.bookmark(userId,postId);
     }
 
     @Transactional
@@ -133,6 +168,9 @@ public class PostService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment was not found"));
         get(comment.getPostId(), userId);
+        // Post access does not grant permission to interact with every comment author.
+        postReadRepository.findComment(commentId,userId)
+                .orElseThrow(() -> new NotFoundException("Comment was not found"));
         if (liked) {
             if (interactions.likeComment(userId, commentId)) notificationService.commentLiked(userId, commentId);
         } else {
@@ -142,15 +180,38 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> communityFeed(UUID communityId, UUID userId, int page, int size) {
-        if (!interactions.isCommunityMember(communityId, userId)) {
-            throw new ForbiddenException("You must be a member to view community posts");
-        }
+        groups.member(communityId,userId);
         return page(postReadRepository.findCommunityPosts(communityId, userId, page, size), page, size);
     }
 
+    @Transactional(readOnly=true)
+    public PageResponse<PostResponse> owned(UUID owner,int page,int size) {return page(postReadRepository.findOwned(owner,page,size),page,size);}
+    @Transactional
+    public PostResponse edit(UUID id,UUID owner,com.greenocean.backend.post.dto.EditPostRequest request) {
+        var scope=db.queryForList("SELECT community_id FROM posts WHERE id=? AND author_id=?",id,owner);
+        if(scope.isEmpty())throw new NotFoundException("Post was not found");
+        checkGroup((UUID)scope.getFirst().get("community_id"),owner);
+        db.queryForList("SELECT id FROM posts WHERE id=? FOR UPDATE",id);
+        Post post=postRepository.findById(id).orElseThrow(()->new NotFoundException("Post was not found"));
+        if(!post.getAuthorId().equals(owner) || post.getStatus()==ContentStatus.DELETED)throw new NotFoundException("Post was not found");
+        if(post.getRevision()!=request.revision())throw new com.greenocean.backend.common.exception.ConflictException("Post changed; reload before editing");
+        checkGroup(post.getCommunityId(),owner);
+        var assessment=publishing.check(owner,"POST",request.body(),id);
+        post.revise(request.body().trim());post.assess(assessment);postRepository.flush();
+        publishing.record(id,false,post.getRevision(),assessment);
+        return postReadRepository.findOwnedPost(id,owner).orElseThrow();
+    }
+    @Transactional
+    public void deleteComment(UUID id,UUID owner) {
+        Comment comment=commentRepository.findById(id).orElseThrow(()->new NotFoundException("Comment was not found"));
+        if(!comment.getAuthorId().equals(owner))throw new NotFoundException("Comment was not found");
+        comment.softDelete();commentRepository.flush();
+    }
+    private void checkGroup(UUID group,UUID user){if(group!=null){groups.lock(group);groups.contribution(group,user);}}
     private void validateVisibility(UUID userId, PostVisibility visibility, UUID communityId) {
         if (visibility == PostVisibility.COMMUNITY) {
             if (communityId == null) throw new IllegalArgumentException("communityId is required for COMMUNITY visibility");
+            checkGroup(communityId,userId);
             if (!interactions.isCommunityMember(communityId, userId)) {
                 throw new ForbiddenException("You must be a member of the community to publish there");
             }

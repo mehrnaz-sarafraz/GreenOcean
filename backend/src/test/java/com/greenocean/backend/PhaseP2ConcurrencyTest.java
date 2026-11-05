@@ -1,0 +1,29 @@
+package com.greenocean.backend;
+import com.greenocean.backend.professional.service.*;
+import com.greenocean.backend.auth.repository.UserRepository;
+import com.greenocean.backend.auth.service.TokenService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.junit.jupiter.api.*;
+import java.time.*;import java.util.*;import java.util.concurrent.*;import java.util.function.Supplier;
+import static org.assertj.core.api.Assertions.*;
+@SpringBootTest(properties="greenocean.clinic.commerce-enabled=true") @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(PhaseP2PaymentsTest.Providers.class)
+@org.springframework.test.annotation.DirtiesContext(classMode=org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
+class PhaseP2ConcurrencyTest extends MigrationTestSupport {
+ static final String SCHEMA="qa_p2_race_"+UUID.randomUUID().toString().replace("-","");
+ @DynamicPropertySource static void schema(DynamicPropertyRegistry p){String url=System.getenv("GREENOCEAN_TEST_DB_URL");p.add("spring.datasource.url",()->url+(url.contains("?")?"&":"?")+"currentSchema="+SCHEMA+",public");p.add("spring.flyway.schemas",()->SCHEMA);p.add("spring.flyway.default-schema",()->SCHEMA);p.add("spring.jpa.properties.hibernate.default_schema",()->SCHEMA);}
+ @Autowired JdbcTemplate db;@Autowired UserRepository users;@Autowired TokenService tokens;@Autowired ProfessionalScheduling scheduling;@Autowired ClinicCommerce commerce;
+ PhaseIFixtures.Actor pro,staff,a,b;UUID slot,policy;
+ @BeforeEach void setup(){PhaseIFixtures.region(db);pro=PhaseIFixtures.member(db,users,tokens);staff=PhaseIFixtures.member(db,users,tokens);a=PhaseIFixtures.member(db,users,tokens);b=PhaseIFixtures.member(db,users,tokens);PhasePFixtures.qualified(db,pro.id(),staff.id());policy=commerce.policy(staff.id(),new ClinicCommerce.Policy("race-"+UUID.randomUUID(),0,0,"Synthetic concurrent free service policy","Synthetic no-show full refund and reviewed cancellations"));slot=scheduling.slot(pro.id(),new ProfessionalScheduling.Slot(Instant.now().plusSeconds(7200),Instant.now().plusSeconds(9000),"TEXT",0,"Asia/Tehran",true));commerce.offer(pro.id(),slot,policy,false);}
+ @AfterAll static void drop(@Autowired JdbcTemplate db){db.execute("DROP SCHEMA "+SCHEMA+" CASCADE");}
+ Object result(Supplier<?> run){try{return run.get();}catch(RuntimeException e){return e;}}
+ List<Object> race(Supplier<?> a,Supplier<?> b)throws Exception{try(var pool=Executors.newFixedThreadPool(2)){var start=new CountDownLatch(1);var x=pool.submit(()->{start.await();return result(a);});var y=pool.submit(()->{start.await();return result(b);});start.countDown();return List.of(x.get(20,TimeUnit.SECONDS),y.get(20,TimeUnit.SECONDS));}}
+ ClinicCommerce.Booking booking(UUID key){return new ClinicCommerce.Booking(slot,key,2,policy,0,true);}
+ @Test void twoPatientsCannotReserveSameSlotAcrossIndependentConnections()throws Exception{var results=race(()->commerce.book(a.id(),booking(UUID.randomUUID())),()->commerce.book(b.id(),booking(UUID.randomUUID())));assertThat(results.stream().filter(Map.class::isInstance).count()).isEqualTo(1);assertThat(db.queryForObject("SELECT count(*) FROM consultation_requests WHERE availability_slot_id=? AND clinic_governed",Integer.class,slot)).isEqualTo(1);}
+ @Test void samePatientRetryAcrossConnectionsReturnsSameAppointment()throws Exception{var in=booking(UUID.randomUUID());var results=race(()->commerce.book(a.id(),in),()->commerce.book(a.id(),in));assertThat(results).allMatch(Map.class::isInstance);assertThat(((Map<?,?>)results.getFirst()).get("id")).isEqualTo(((Map<?,?>)results.getLast()).get("id"));}
+ @Test void competingCancellationsProduceOneTerminalTransition()throws Exception{UUID id=(UUID)commerce.book(a.id(),booking(UUID.randomUUID())).get("id");race(()->{commerce.change(a.id(),id,new ClinicCommerce.Change(1,"CANCEL","Synthetic patient cancellation"));return "ok";},()->{commerce.change(pro.id(),id,new ClinicCommerce.Change(1,"CANCEL","Synthetic professional cancellation"));return "ok";});assertThat(db.queryForObject("SELECT count(*) FROM clinic_appointment_events WHERE appointment_id=?",Integer.class,id)).isEqualTo(2);assertThat(db.queryForObject("SELECT status FROM professional_availability_slots WHERE id=?",String.class,slot)).isEqualTo("CANCELLED");}
+ @Test void independentRefundWorkersAndReceiptsCannotDoubleRefund()throws Exception{db.update("INSERT INTO clinic_release_approvals(country_code,mode,purpose,evidence_reference,approved_by,expires_at) VALUES('IR','TEXT','PAYMENT_PROVIDER','SYNTHETIC-TEST-PROVIDER-APPROVAL',?,CURRENT_TIMESTAMP+INTERVAL '1 day')",staff.id());db.update("UPDATE professional_availability_slots SET price_units=1000 WHERE id=?",slot);UUID id=(UUID)commerce.book(a.id(),new ClinicCommerce.Booking(slot,UUID.randomUUID(),2,policy,1000,true)).get("id");commerce.payment(a.id(),id);commerce.reconcile(staff.id(),id);commerce.change(pro.id(),id,new ClinicCommerce.Change(2,"CANCEL","Synthetic professional cancellation before service"));var attempts=race(()->{commerce.requestRefund(staff.id(),id);return "ok";},()->{commerce.requestRefund(staff.id(),id);return "ok";});assertThat(attempts).containsOnly("ok");var receipts=race(()->{commerce.reconcileRefund(staff.id(),id);return "ok";},()->{commerce.reconcileRefund(staff.id(),id);return "ok";});assertThat(receipts).containsOnly("ok");assertThat(db.queryForObject("SELECT count(*) FROM clinic_financial_events WHERE appointment_id=? AND kind='REFUND_CONFIRMED'",Integer.class,id)).isEqualTo(1);assertThat(db.queryForObject("SELECT amount_units FROM clinic_financial_events WHERE appointment_id=? AND kind='REFUND_CONFIRMED'",Long.class,id)).isEqualTo(1000L);}
+}

@@ -1,0 +1,34 @@
+{
+  "jackson-2-bom.version": {
+    "version": "2.21.8",
+    "source": "https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-bom/maven-metadata.xml"
+  },
+  "jackson-bom.version": {
+    "version": "3.1.8",
+    "source": "https://repo.maven.apache.org/maven2/tools/jackson/jackson-bom/maven-metadata.xml"
+  },
+  "httpclient5.version": {
+    "version": "5.6.5",
+    "source": "https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/maven-metadata.xml"
+  },
+  "httpcore5.version": {
+    "version": "5.4.4",
+    "source": "https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/maven-metadata.xml"
+  },
+  "log4j2.version": {
+    "version": "2.25.5",
+    "source": "https://repo.maven.apache.org/maven2/org/apache/logging/log4j/log4j-bom/maven-metadata.xml"
+  },
+  "tomcat.version": {
+    "version": "11.0.27",
+    "source": "https://repo.maven.apache.org/maven2/org/apache/tomcat/embed/tomcat-embed-core/maven-metadata.xml"
+  },
+  "postgresql.version": {
+    "version": "42.7.14",
+    "source": "https://repo.maven.apache.org/maven2/org/postgresql/postgresql/maven-metadata.xml"
+  },
+  "spring-framework.version": {
+    "version": "7.0.10",
+    "source": "https://repo.maven.apache.org/maven2/org/springframework/spring-framework-bom/maven-metadata.xml"
+  }
+}

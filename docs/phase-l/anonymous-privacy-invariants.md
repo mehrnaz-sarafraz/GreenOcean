@@ -1,0 +1,11 @@
+# Anonymous-author invariants
+
+Post and comment DTOs redact the anonymous author object. Neutral authorized discovery, direct reads, search, saved collections, reply trees and notification projections reuse audience/block/deletion checks. Named Following explicitly excludes anonymous posts; other-author profile listings and post totals exclude anonymous ownership. Helpful reaction totals are suppressed. Anonymous-post owners cannot accidentally reveal themselves through a named reply. Identity is immutable, including legacy history.
+
+Owner-only mine, draft, moderation-decision and account export endpoints authenticate ownership. Drafts and pending content never enter ordinary search/feed. Bookmarks are not permanent permission. Account export rechecks saved-content access. Notifications contain no post body and anonymous actors are redacted. All API responses have no-store headers; frontend cards and review state are cleared/revalidated on navigation, account generation changes and foreground refresh.
+
+Safety attribution is a separate ADMIN-only single-assessment POST with a 10–500 character purpose, current DB role, existing recent strong-authentication gate and transactional audit event. Queue rows omit author identity. Owner notices omit reviewer identity. Ordinary bearer credentials do not grant staff access. Queue reads and decisions are audited without story text in audit metadata. Privileged operations are OFF in production until existing staff gates are approved.
+
+Residual inference: distinctive text, disclosed details, small follower/community audiences, cross-device screenshots, timing, and outside knowledge can identify someone. Excluding Following cannot eliminate these signals. No timestamps are advertised as anonymous guarantees. Removing content cannot revoke copies already viewed. Guidance appears in final composer review; no absolute anonymity/erasure claim.
+
+Evidence: PhaseL1PublishingTest, PhaseL2SocialTest, PhaseL3ReviewTest, PhaseGHPrivacyIntegrationTest, PhaseLMigrationTest and browser/live Phase L suites. Tests verify serialized HTTP bodies for covered surfaces; this is not proof against all statistical correlation or all logging configurations in a deployed environment.

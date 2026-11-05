@@ -27,13 +27,13 @@ export function PublicLinks() {
   return <View style={publicStyles.links}>{[...copy.infoLinks,...copy.policyLinks].map(link=><AppButton key={link.id} label={link.label} variant="secondary" onPress={()=>navigate({pathname:'/(auth)/info/[page]',params:{page:link.id}})} />)}</View>;
 }
 export function PublicPage({children,back=true}:PropsWithChildren<{back?:boolean}>) {
-  const {language,isRtl,setLanguage}=useLanguage();const copy=publicCopy[language];const navigate=usePublicNavigation();
+  const {language,isRtl,setLanguage,ready}=useLanguage();const copy=publicCopy[language];const navigate=usePublicNavigation();
   return <SafeAreaView style={publicStyles.safe}><Screen scroll style={{padding:0}}><View role="main" style={[publicStyles.content,{direction:isRtl?'rtl':'ltr'}]}>
     <View style={publicStyles.header}>
       <View style={publicStyles.brand}><AppIcon name="waves" color={colors.ocean700} /><Text style={publicStyles.brandText}>GreenOcean</Text></View>
       <View accessibilityLabel={copy.language} style={publicStyles.languages}>
-        <AppButton label="English" selected={language==='en'} variant="secondary" onPress={()=>void setLanguage('en')} />
-        <AppButton label="فارسی" selected={language==='fa'} variant="secondary" onPress={()=>void setLanguage('fa')} />
+        <AppButton label="English" disabled={!ready} selected={language==='en'} variant="secondary" onPress={()=>void setLanguage('en')} />
+        <AppButton label="فارسی" disabled={!ready} selected={language==='fa'} variant="secondary" onPress={()=>void setLanguage('fa')} />
       </View>
     </View>
     <View style={publicStyles.navigation}>

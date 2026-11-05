@@ -80,6 +80,16 @@ export async function apiDownloadText(path: string): Promise<{ filename: string;
   const text=await response.text();if(requestEpoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after sign-out.');return {filename,text};
 }
 
+export async function apiDownloadBinary(path:string,purpose:Record<string,unknown>):Promise<{bytes:ArrayBuffer;mime:string;filename:string}>{
+ assertApiTransport();const epoch=tokenStorage.generation();const tokens=await tokenStorage.get();if(epoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after account change.');
+ const headers=new Headers({Accept:'application/octet-stream','Content-Type':'application/json','X-GreenOcean-CSRF':'1'});if(tokens?.accessToken)headers.set('Authorization',`Bearer ${tokens.accessToken}`);
+ const run=()=>fetchWithTimeout(`${API_URL}${path}`,{method:'POST',headers,credentials:Platform.OS==='web'?'include':'omit',cache:'no-store',body:JSON.stringify(purpose)});
+ let response=await run();if(response.status===401&&tokens?.refreshToken&&epoch===tokenStorage.generation()){const fresh=await refreshTokens(tokens.refreshToken);if(fresh&&epoch===tokenStorage.generation()){headers.set('Authorization',`Bearer ${fresh.accessToken}`);response=await run();}}
+ if(!response.ok){const error=await response.json().catch(()=>null) as {message?:string}|null;throw new ApiError(response.status,error?.message||'Private download was not authorized.');}
+ const bytes=await response.arrayBuffer();if(epoch!==tokenStorage.generation())throw new ApiError(409,'Download cancelled after account change.');if(bytes.byteLength>10*1024*1024)throw new ApiError(413,'Private download exceeds the supported limit.');
+ return {bytes,mime:response.headers.get('Content-Type')||'application/octet-stream',filename:(response.headers.get('Content-Disposition')||'').match(/filename="?([a-zA-Z0-9_.-]+)"?/)?.[1]||'private-document.bin'};
+}
+
 const refreshTokens=singleFlight(async(refreshToken:string)=>{
   if(Platform.OS==='web')return browserSessionLock(()=>performRefresh(refreshToken));
   const epoch=tokenStorage.generation();

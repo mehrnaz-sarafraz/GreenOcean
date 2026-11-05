@@ -21,17 +21,17 @@ public class ProfessionalWorkflowRepository {
 
     public boolean professionalExists(UUID professionalId) {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject(
-                "SELECT EXISTS(SELECT 1 FROM professional_profiles WHERE user_id = ? AND verification_status = 'VERIFIED')",
+                "SELECT professional_qualification_live(?)",
                 Boolean.class, professionalId));
     }
 
     public List<ProfessionalReviewResponse> reviews(UUID professionalId, UUID viewerId) {
         return jdbcTemplate.query("""
-                SELECT r.id, r.professional_user_id, p.display_name, r.rating, r.body, r.status, r.created_at,
+                SELECT r.id, r.professional_user_id, 'Private legacy feedback' AS display_name, r.rating, r.body, r.status, r.created_at,
                        r.reviewer_user_id = ? AS mine
                   FROM professional_reviews r
                   JOIN profiles p ON p.user_id = r.reviewer_user_id
-                 WHERE r.professional_user_id = ? AND (r.status = 'PUBLISHED' OR r.reviewer_user_id = ?)
+                 WHERE r.professional_user_id = ? AND r.reviewer_user_id = ?
                  ORDER BY r.created_at DESC
                 """, (rs, row) -> new ProfessionalReviewResponse(
                 rs.getObject("id", UUID.class), rs.getObject("professional_user_id", UUID.class),
@@ -85,7 +85,7 @@ public class ProfessionalWorkflowRepository {
     }
 
     public List<ProfessionalAvailabilityResponse> availability(UUID professionalId, boolean includeUnavailable) {
-        String statusClause = includeUnavailable ? "" : " AND status = 'AVAILABLE'";
+        String statusClause = includeUnavailable ? "" : " AND status = 'AVAILABLE' AND governed AND professional_scope_live(professional_user_id,'IR',consultation_mode)";
         return jdbcTemplate.query("""
                 SELECT id, professional_user_id, starts_at, ends_at, consultation_mode, status
                   FROM professional_availability_slots
@@ -97,7 +97,8 @@ public class ProfessionalWorkflowRepository {
         return jdbcTemplate.query("""
                 SELECT id, professional_user_id, starts_at, ends_at, consultation_mode, status
                   FROM professional_availability_slots
-                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE'
+                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE' AND governed AND price_units=0
+                   AND NOT EXISTS(SELECT 1 FROM clinic_slot_offers o WHERE o.slot_id=professional_availability_slots.id)
                    AND starts_at > CURRENT_TIMESTAMP
                  FOR UPDATE
                 """, this::availabilitySlot, slotId, professionalId).stream().findFirst();
@@ -107,8 +108,8 @@ public class ProfessionalWorkflowRepository {
                                                                  CreateAvailabilityRequest request) {
         jdbcTemplate.update("""
                 INSERT INTO professional_availability_slots
-                    (id, professional_user_id, starts_at, ends_at, consultation_mode)
-                VALUES (?, ?, ?, ?, ?)
+                    (id, professional_user_id, starts_at, ends_at, consultation_mode,governed)
+                VALUES (?, ?, ?, ?, ?,TRUE)
                 """, id, professionalId, request.startsAt(), request.endsAt(), request.consultationMode().trim());
         return new ProfessionalAvailabilityResponse(id, professionalId, request.startsAt().toInstant(),
                 request.endsAt().toInstant(), request.consultationMode().trim(), "AVAILABLE");
@@ -118,7 +119,7 @@ public class ProfessionalWorkflowRepository {
         jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
             try (var statement = connection.prepareStatement(
                     "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))")) {
-                statement.setString(1, professionalId.toString());
+                statement.setString(1, "professional-schedule:"+professionalId);
                 statement.execute();
             }
             return null;
@@ -136,7 +137,7 @@ public class ProfessionalWorkflowRepository {
     public boolean cancelAvailability(UUID slotId, UUID professionalId) {
         return jdbcTemplate.update("""
                 UPDATE professional_availability_slots SET status = 'CANCELLED'
-                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE'
+                 WHERE id = ? AND professional_user_id = ? AND status = 'AVAILABLE' AND governed
                 """, slotId, professionalId) == 1;
     }
 
@@ -155,14 +156,14 @@ public class ProfessionalWorkflowRepository {
     public boolean updateConsultationStatus(UUID consultationId, UUID professionalId, String status) {
         return jdbcTemplate.update("""
                 UPDATE consultation_requests SET status = ?
-                 WHERE id = ? AND professional_user_id = ? AND status IN ('REQUESTED', 'CONFIRMED')
+                 WHERE id = ? AND professional_user_id = ? AND NOT clinic_governed AND status IN ('REQUESTED', 'CONFIRMED')
                 """, status, consultationId, professionalId) == 1;
     }
 
     public boolean cancelOwnConsultation(UUID consultationId, UUID requesterId) {
         return jdbcTemplate.update("""
                 UPDATE consultation_requests SET status = 'CANCELLED'
-                 WHERE id = ? AND requester_user_id = ? AND status IN ('REQUESTED', 'CONFIRMED')
+                 WHERE id = ? AND requester_user_id = ? AND NOT clinic_governed AND status IN ('REQUESTED', 'CONFIRMED')
                 """, consultationId, requesterId) == 1;
     }
 
@@ -176,6 +177,8 @@ public class ProfessionalWorkflowRepository {
                 """, id, userId, professionalId, slot.id(), java.sql.Timestamp.from(slot.startsAt()), slot.consultationMode(),
                 normalize(request.note()));
     }
+
+    public void invalidateOffersForApplication(UUID userId){jdbcTemplate.update("UPDATE professional_availability_slots SET status='CANCELLED',revision=revision+1 WHERE professional_user_id=? AND status='AVAILABLE' AND starts_at>CURRENT_TIMESTAMP",userId);}
 
     public boolean hasPendingApplication(UUID userId) {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
@@ -229,21 +232,21 @@ public class ProfessionalWorkflowRepository {
         }, userId).stream().findFirst();
     }
 
-    public boolean applicationOwnedBy(UUID applicationId, UUID userId) {
-        return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
-                SELECT EXISTS(SELECT 1 FROM professional_verifications
-                               WHERE id = ? AND professional_user_id = ? AND status = 'PENDING')
-                """, Boolean.class, applicationId, userId));
+    public boolean applicationOwnedBy(UUID applicationId,UUID userId){
+        if(jdbcTemplate.queryForList("SELECT id FROM professional_verifications WHERE id=? AND professional_user_id=? AND status='PENDING' FOR UPDATE",applicationId,userId).isEmpty())return false;
+        if(jdbcTemplate.queryForObject("SELECT count(*) FROM professional_application_documents WHERE application_id=?",Integer.class,applicationId)>=20)throw new com.greenocean.backend.common.exception.ConflictException("At most20 credential documents per application");
+        return true;
     }
 
     public ProfessionalDocumentResponse addDocument(UUID id, UUID applicationId,
             com.greenocean.backend.professional.service.ProfessionalDocumentStorage.StoredDocument document) {
         jdbcTemplate.update("""
                 INSERT INTO professional_application_documents
-                    (id, application_id, original_name, content_type, byte_size, sha256, storage_key)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (id, application_id, original_name, content_type, byte_size, sha256, storage_key,encryption_key_id,encryption_version)
+                VALUES (?, ?, ?, ?, ?, ?, ?,?,?)
                 """, id, applicationId, document.originalName(), document.contentType(), document.byteSize(),
-                document.sha256(), document.storageKey());
+                document.sha256(), document.storageKey(),document.keyId(),document.encryptionVersion());
+        jdbcTemplate.update("UPDATE professional_verifications SET qualification_revision=qualification_revision+1 WHERE id=?",applicationId);
         return documents(applicationId).stream().filter(item -> item.id().equals(id)).findFirst().orElseThrow();
     }
 

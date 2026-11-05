@@ -76,7 +76,7 @@ public class MessagingRepository {
                        WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
                        ORDER BY m.created_at DESC LIMIT 1
                   ) last_message ON TRUE
-                 WHERE cm.user_id = ? AND (c.service_kind<>'LISTENER' OR can_read_live_conversation(c.id,cm.user_id)) AND NOT EXISTS (
+                 WHERE cm.user_id = ? AND c.request_status='ACCEPTED' AND (c.service_kind<>'LISTENER' OR can_read_live_conversation(c.id,cm.user_id)) AND NOT EXISTS (
                     SELECT 1 FROM conversation_members peer JOIN blocks b
                     ON (b.blocker_id=cm.user_id AND b.blocked_id=peer.user_id)
                     OR (b.blocker_id=peer.user_id AND b.blocked_id=cm.user_id)
@@ -154,7 +154,7 @@ public class MessagingRepository {
     public Optional<UUID> directConversation(UUID userId, UUID otherUserId) {
         return jdbcTemplate.query("""
                 SELECT c.id FROM conversations c
-                 WHERE c.conversation_kind = 'DIRECT' AND c.service_kind='COMMUNITY' AND c.is_active = TRUE
+                 WHERE c.conversation_kind = 'DIRECT' AND c.service_kind='COMMUNITY' AND c.request_status='ACCEPTED' AND c.is_active = TRUE
                    AND EXISTS (SELECT 1 FROM conversation_members m WHERE m.conversation_id = c.id AND m.user_id = ?)
                    AND EXISTS (SELECT 1 FROM conversation_members m WHERE m.conversation_id = c.id AND m.user_id = ?)
                    AND (SELECT COUNT(*) FROM conversation_members m WHERE m.conversation_id = c.id) = 2
@@ -171,8 +171,15 @@ public class MessagingRepository {
                 id, userId, id, listenerId);
         jdbcTemplate.update("""
                 INSERT INTO messages (id, conversation_id, message_kind, body)
-                VALUES (?, ?, 'SYSTEM', 'Peer listeners offer non-clinical support. If you may be in immediate danger, contact local emergency services.')
-                """, systemMessageId, id);
+                VALUES (?, ?, 'SYSTEM', ?)
+                """, systemMessageId,id,listenerBoundary(id));
+    }
+
+    private String listenerBoundary(UUID conversation){
+        String body="Peer listeners offer non-clinical support. If you may be in immediate danger, contact local emergency services.";
+        var rows=jdbcTemplate.queryForList("SELECT planned_seconds,planned_ends_at FROM live_support_requests WHERE conversation_id=? AND planned_ends_at IS NOT NULL",conversation);
+        if(!rows.isEmpty())body+=" Planned support time: "+((Number)rows.getFirst().get("planned_seconds")).intValue()/60+" minutes from activation. Authorized end: "+com.greenocean.backend.listener.planning.ListenerSupportPolicy.instant(rows.getFirst().get("planned_ends_at"))+" (UTC). Extra time requires both participants and available capacity. / جلسه از فعال‌سازی سی دقیقه برنامه‌ریزی شده است؛ زمان اضافه فقط با رضایت هر دو نفر و ظرفیت آزاد ممکن است.";
+        return body;
     }
 
     public boolean canStartDirectConversation(UUID userId, UUID otherUserId) {

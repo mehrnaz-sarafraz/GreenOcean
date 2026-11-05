@@ -24,14 +24,14 @@ public class ListenerRepository {
                 SELECT l.user_id,l.display_title,l.listening_style,l.languages,ARRAY[]::TEXT[] AS topics,l.completed_sessions,l.safety_score,live_listener_ready(l.user_id) AS online, p.display_name, p.username, p.avatar_url
                   FROM listener_profiles l JOIN profiles p ON p.user_id = l.user_id
                  WHERE l.status = 'ACTIVE' AND live_listener_qualified(l.user_id) AND l.user_id <> ?
-                   AND (? = FALSE OR (live_listener_ready(l.user_id) AND NOT EXISTS(SELECT 1 FROM live_support_requests r WHERE (r.listener_id=l.user_id OR r.member_id=l.user_id) AND r.status IN ('REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED'))))
+                   AND (? = FALSE OR (live_listener_ready(l.user_id) AND listener_capacity_available(?,l.user_id,NULL) AND NOT EXISTS(SELECT 1 FROM live_support_requests r WHERE (r.listener_id=l.user_id OR r.member_id=l.user_id) AND r.status IN ('REQUESTED','ACCEPTED','ACTIVE','INTERRUPTED'))))
                    AND (CAST(? AS TEXT) IS NULL OR EXISTS (SELECT 1 FROM unnest(l.topics) t
                                                            WHERE LOWER(t) LIKE '%' || CAST(? AS TEXT) || '%'))
                    AND NOT EXISTS (SELECT 1 FROM blocks b
                                     WHERE (b.blocker_id = ? AND b.blocked_id = l.user_id)
                                        OR (b.blocker_id = l.user_id AND b.blocked_id = ?))
                  ORDER BY live_listener_ready(l.user_id) DESC,l.user_id
-                """, this::map, viewerId, onlineOnly, topicFilter, topicFilter, viewerId, viewerId);
+                """, this::map, viewerId, onlineOnly, viewerId, topicFilter, topicFilter, viewerId, viewerId);
     }
 
     public Optional<ListenerResponse> listener(UUID id, UUID viewerId) {

@@ -1,0 +1,32 @@
+# Sensitive data inventory and purpose boundaries
+
+The existing modular PostgreSQL source records remain authoritative. This category inventory identifies product owners by service responsibility; no real named human is invented. Rights decisions use existing policy and authenticated subject routes. Retention periods need actual policy ownership; the table does not create new legal periods.
+
+|Category / location|Purpose / access|Export / erase / hold behavior|
+|---|---|---|
+|Identity, login, verification, sessions, MFA, recovery|Account authentication; current owner and narrowly privileged source processes|Existing account archive omits reusable credentials; account erasure revokes sessions and staged file erasure tracks remaining work|
+|Profile, onboarding, optional support topics|Owner-selected progressive experience; public projection excludes private preferences|Existing owner archive, withdrawal clears optional topic choices; no trust-case copy|
+|Posts, replies, anonymous attribution, group membership|Chosen audience; current group/member policy and moderation|Owner/source rights; V86 attribution requests cascade when their assessment is erased, no orphan author reveal|
+|Reports, appeals, support, coordination|Purpose-specific resolution and independent review|TrustCases stores bounded reference/state/history, no duplicate narrative; owner archive adds own receipts, not others' identities|
+|Journals, reflections, mood, learning, rewards|Private self-care and nonclinical progress|Owner-only access/export; staff role does not confer journal access; reward ledger preserves source-specific integrity|
+|Listener availability, bookings, support messages|Assigned eligible participants and actual staffed readiness|Existing source retention/withdrawal, no clinical reuse or shared trust narrative|
+|Professional credentials and private files|Credential verification by current authorized reviewers|Existing private document storage and authenticated AES-GCM envelope; staged external-file erase ledger; actual object-store/key custody audit required|
+|Clinical consent, encounters, records, uploads, follow-up|Current category/relationship/policy and session rights|Existing exceptional subject-rights workflow; general social archive excludes clinical narrative; holds/obligations require source review|
+|Financial/payment state, provider events|Payment reconciliation, obligations and source incident review|Source-specific minimization and retention/hold review; no automatic erasure that destroys payment obligations|
+|Exceptional access requests and security audit|Bounded independent evidence approval, accountability|Own request metadata in archive; no reviewer identity, SID or raw private evidence; revoke on account erasure/role removal|
+|Telemetry|Default-off fixed aggregate operational counts|No subject identity or persistent payload store; restart clears process memory|
+|Backups, logs, external files and provider systems|Recovery and narrow service obligations|Not proven erased by deleting PostgreSQL alone; external rights ledger/replay, storage inventory and actual restore verification required|
+
+Restricted security evidence stays in ignored local QA directories or access-controlled CI artifacts. Do not upload database dumps, signing/decryption keys, synthetic bearer tokens or raw browser traces to ordinary telemetry or public documentation.
+
+## Common processing and transfer fields
+
+For every row, the source-service responsibility above is the technical owner; a real accountable controller/operator is **UNASSIGNED** until actually appointed. Processing/legal approval for real users is **NOT_VERIFIED**; repository policy/consent configuration alone is not legal authorization. Primary storage is source PostgreSQL, with private credential/clinical files in the configured private storage adapter and transient frontend state on the user's device. No new processor or telemetry transfer is approved by Q2. Mail, media, payment, private object storage, device stores and backup infrastructure each require the actual configured processor/region/contract inventory before launch. All retained PostgreSQL categories may appear in database backups; private files and keys require separate recovery custody.
+
+Export route is authenticated `/api/v1/account/archive` for general own data and the existing `/api/v1/clinic-integration` subject-rights workflow for protected categories. Erasure uses existing account deletion and independent source/category rights processes; exact retention and legal holds require approved policy, not an invented duration. Incident sensitivity is high for identity/authentication, private preferences, group membership, support messages, credentials, clinical data, finance and security evidence. Public educational catalog and voluntarily published content have a different audience, but linked progress and author attribution remain private/purpose-bound.
+
+Reputation/reviews are source P4 appointment-linked voluntary feedback and independent complaint records; no popularity-derived clinical judgement or new universal score. Notification metadata belongs to its original event/recipient and narrow delivery purpose; email delivery is not a human acknowledgement. Both classes use source privacy/retention and are included in the same unverified processor/backup gates above. Source messages, notifications and reviews do not become unrestricted shared trust evidence.
+
+## Q3 operational records
+
+V87 stores operational incident references, revisioned action history, recipient/route assignments, dispatch status, independent containment, fixed communication approvals and periodic ranking-review metadata. Technical owner is the operations purpose; real accountable personnel, approved processors/contact destinations and retention decisions remain UNASSIGNED/NOT_VERIFIED. No source narratives or private evidence copies are permitted. Own staff archive includes only minimal own incident/route/review/communication metadata, not other staff/recipient identities, evidence references, session bindings, contact URLs or message payloads. Existing account role erasure revokes routes, pending controls, review approvals and communications; active safety holds persist until separately authorized recovery. Clinical/financial holds and external backup replay remain separate. These records are sensitive security/employee-accountability data and may occur in PostgreSQL backups; normal public telemetry cannot ingest them.

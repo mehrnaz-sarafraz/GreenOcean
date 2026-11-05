@@ -18,7 +18,7 @@ class ProfessionalDocumentStorageTest {
 
     @Test
     void shouldAcceptARealPdfHeader() {
-        ProfessionalDocumentStorage storage = new ProfessionalDocumentStorage(storageRoot.toString());
+        ProfessionalDocumentStorage storage = new ProfessionalDocumentStorage(storageRoot.toString(),"qa-only:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","qa-only");
         MockMultipartFile document = new MockMultipartFile("file", "license.pdf", "application/pdf",
                 "%PDF-1.4\nfixture".getBytes(StandardCharsets.US_ASCII));
 
@@ -30,7 +30,7 @@ class ProfessionalDocumentStorageTest {
 
     @Test
     void shouldRejectMimeTypeSpoofing() {
-        ProfessionalDocumentStorage storage = new ProfessionalDocumentStorage(storageRoot.toString());
+        ProfessionalDocumentStorage storage = new ProfessionalDocumentStorage(storageRoot.toString(),"qa-only:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","qa-only");
         MockMultipartFile document = new MockMultipartFile("file", "license.pdf", "application/pdf",
                 "not a PDF".getBytes(StandardCharsets.US_ASCII));
 

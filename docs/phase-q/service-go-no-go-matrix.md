@@ -1,0 +1,16 @@
+# Independent service release assessments
+
+These are eight distinct documentary release decisions, not fabricated database approvals. All are currently NO_GO for real users. Technical implementation/QA is separate from external authorization.
+
+|Service / stage|Existing technical boundary|Current real release blockers / responsible review|
+|---|---|---|
+|Community/social /1|Private and hidden group visibility, anonymous attribution, reports, publishing gate|Published reviewed notice; social moderation roster; approved mail and alerts; independent security/privacy/legal reviewers; physical devices; owner|
+|Private wellbeing and education /1|Own journal/mood/goal data; separately approved resources/courses; private points|Processing/retention notice and editorial approvals; education coverage; key/rights review; devices; owner|
+|Peer listeners /2|Qualified presence, actual acceptance, queue and scheduled capacity, supervision|Real qualified listeners and supervisors; bounded staffed hours; current safety rota and escalation; native readiness tests; owner|
+|Professional booking /3|Versioned credentials and platform license; slot locking; price/terms snapshot|Actual credentials plus separate platform/service/country authorization; booking support and cancellation coverage; devices; owner|
+|Clinical text /3|Explicit participant entries, separate clinical consent, access grants and encrypted records|Clinical legal/privacy authorization; approved retention; real clinical staff; actual key custody; independent security; devices; owner|
+|Clinical audio/video /3|Short session-bound admission; authorized provider; recording/transcription disabled|Approved real regional audio/video provider and agreements; microphone/camera and physical connection tests; clinical staffing/approvals; owner|
+|Real payments /3|Provider capture separated from booking; idempotent ledger/refunds|Approved real payment provider; merchant/legal/financial policy; reconciliation staff; independent security; owner|
+|Clinical records /3|Category-specific policy; encrypted storage; scoped audited exceptional access|Legally approved category-specific retention and deletion/hold policy; key backup and custody; approved staging/production restore; privacy/security reviewers; owner|
+
+Engine states: NOT_ASSESSED, TECHNICALLY_READY, APPROVAL_REQUIRED, OPERATIONALLY_BLOCKED, NO_GO, GO_RECOMMENDED and OWNER_APPROVED. No evidence yields NOT_ASSESSED, failed/critical evidence or permanent revocation yields NO_GO. Live source, staffing, approved alerts, region, applicable real providers/keys, current published notice and all13 evidence criteria must pass. Every evidence row binds the assessment service/country/commit and records exact tests, opaque artifact reference/hash, server author/time, responsible role, risks and bounded expiry. Synthetic evidence is always insufficient. Different current purpose-authorized staff reviews latest evidence; an external designated owner, distinct from all preparers/reviewers, approves the exact revision for at most24hours. New evidence, changed notice/source, expiry, revoked/regranted staff or lost coverage invalidates approval. Artifact hashes require actual human comparison; this is not an automated external-auditor or CI attestation service.

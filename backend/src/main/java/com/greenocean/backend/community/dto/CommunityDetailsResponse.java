@@ -31,6 +31,8 @@ public record CommunityDetailsResponse(
             Integer capacity,
             long attendeeCount,
             boolean joined,
-            String status
+            String status,
+            long revision,
+            UUID discussionPostId
     ) {}
 }

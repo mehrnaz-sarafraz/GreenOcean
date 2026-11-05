@@ -45,17 +45,12 @@ public class WellbeingService {
     }
     @Transactional
     public WellbeingSnapshotResponse.Goal updateGoal(UUID id, UUID userId, UpdateGoalRequest request) {
-        if (!repository.updateGoal(id, userId, request)) throw new NotFoundException("Goal was not found");
-        return repository.goal(id, userId);
+        throw new com.greenocean.backend.common.exception.ConflictException("Use versioned goal status and actual completed steps; arbitrary progress is no longer accepted.");
     }
 
     @Transactional
     public WellbeingSnapshotResponse.GrowthPath updateGrowthPath(UUID id, UUID userId,
                                                                   UpdateGrowthPathProgressRequest request) {
-        if (!repository.updateGrowthPath(id, userId, request.progress())) {
-            throw new NotFoundException("Growth path was not found");
-        }
-        return repository.growthPaths(userId).stream().filter(path -> path.id().equals(id)).findFirst()
-                .orElseThrow(() -> new NotFoundException("Growth path was not found"));
+        throw new com.greenocean.backend.common.exception.ConflictException("Learning progress derives from actual reviewed lesson completion; arbitrary percentages are no longer accepted.");
     }
 }

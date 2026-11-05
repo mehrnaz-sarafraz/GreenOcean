@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record CreateReportRequest(
-        @NotBlank @Pattern(regexp = "USER|POST|COMMENT|CONVERSATION|COMMUNITY") String targetType,
+        @NotBlank @Pattern(regexp = "USER|POST|COMMENT|CONVERSATION|COMMUNITY|EVENT") String targetType,
         @NotNull UUID targetId,
         @NotBlank @Pattern(regexp = "HARASSMENT|SPAM|HATE_SPEECH|SEXUAL_CONTENT|SELF_HARM_CONTENT|MISINFORMATION|OTHER") String reason,
         @Size(max = 1000) String description

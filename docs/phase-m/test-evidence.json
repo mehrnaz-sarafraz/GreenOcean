@@ -1,0 +1,46 @@
+{
+  "technical_status": "IMPLEMENTED_TESTED",
+  "production_status": "PRODUCTION_NO_GO / PILOT_BLOCKED",
+  "date": "2026-10-28",
+  "timezone": "America/Los_Angeles",
+  "executable_sha": "cb1da7f6ef72bd0737afd607d099e40f44644248",
+  "ci_run": 40685491966,
+  "ci_url": "https://github.com/mehrnaz-sarafraz/GreenOcean/actions/runs/40685491966",
+  "passed": {
+    "backend": 372,
+    "logic": 69,
+    "browser": 111,
+    "real_stack": 32,
+    "total": 584
+  },
+  "failed": 0,
+  "skipped": 0,
+  "environment": "Ubuntu GitHub Actions, Java21, Node24, PostgreSQL18, Chromium; synthetic accounts and virtual WebAuthn",
+  "commands": {
+    "backend": "cd backend; ./mvnw -B clean verify",
+    "frontend": [
+      "npm ci --no-audit --no-fund",
+      "npx expo customize tsconfig.json",
+      "npm run typecheck",
+      "npm run lint",
+      "npm test",
+      "npx expo export --platform all",
+      "npm run test:e2e"
+    ],
+    "real_stack": "npx playwright test --config playwright.live.config.mjs"
+  },
+  "migrations_added": [
+    "V49",
+    "V50",
+    "V51"
+  ],
+  "native_physical_devices": "NOT_EXECUTED_DEVICE_REQUIRED",
+  "actual_operations_and_legal_approval": "NOT_VERIFIED",
+  "merged": false,
+  "deployed": false,
+  "pull_requests": [
+    13,
+    14,
+    15
+  ]
+}

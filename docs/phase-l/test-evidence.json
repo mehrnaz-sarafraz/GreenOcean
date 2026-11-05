@@ -1,0 +1,48 @@
+{
+  "executableSource": "8843a613a52ac5120c97b3eeddba6a6da75c25ca",
+  "backend": {
+    "tests": 327,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontendLogic": {
+    "tests": 69,
+    "failures": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "tests": 101,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "fullStack": {
+    "tests": 27,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "typecheck": "PASSED",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "webAndroidIosJsAssetExports": "PASSED",
+  "nativeDevicesAndScreenReaders": "NOT_EXECUTED_DEVICE_REQUIRED",
+  "l3GithubCI": {
+    "status": "PASSED",
+    "runId": 40640710127,
+    "verifiedOn": "2026-10-28",
+    "head": "8843a613a52ac5120c97b3eeddba6a6da75c25ca",
+    "jobIds": [
+      122658108635,
+      122658108953,
+      122658108990,
+      122658109014
+    ]
+  },
+  "productionActivation": "DISABLED",
+  "followUpEvidence": "audit-follow-up.md",
+  "totalPassing": 524
+}

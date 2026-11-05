@@ -15,10 +15,14 @@ import java.time.Instant;
 public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
     private static final OAuth2Error INVALID_SESSION = new OAuth2Error(
             "invalid_token", "The access-token session is no longer active", null);
+    private static final OAuth2Error VERIFICATION_UNAVAILABLE = new OAuth2Error(
+            "temporarily_unavailable", "Authentication verification is temporarily unavailable", null);
 
     private final UserSessionRepository sessionRepository;
     private final java.time.Clock clock;private final com.greenocean.backend.auth.service.SessionPolicy policy;
     private final org.springframework.jdbc.core.JdbcTemplate db;
+    @org.springframework.beans.factory.annotation.Value("${greenocean.recovery.restore-epoch:}")
+    private String restoreEpoch="";
 
     public ActiveSessionJwtValidator(UserSessionRepository sessionRepository,org.springframework.jdbc.core.JdbcTemplate db,java.time.Clock clock,com.greenocean.backend.auth.service.SessionPolicy policy) {
         this.db=db;this.clock=clock;this.policy=policy;
@@ -30,6 +34,9 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
         try {
             UUID userId = UUID.fromString(jwt.getSubject());
             UUID sessionId = UUID.fromString(jwt.getClaimAsString("sid"));
+            if(!restoreEpoch.isBlank()&&Boolean.TRUE.equals(db.queryForObject(
+                    "SELECT EXISTS(SELECT 1 FROM recovery_replay_subjects s JOIN recovery_replay_runs r ON r.id=s.run_id WHERE r.epoch=? AND s.subject_id=? AND s.domain='ALL')",
+                    Boolean.class,UUID.fromString(restoreEpoch),userId)))return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
             Number version=jwt.getClaim("sv");if(!java.util.Objects.equals(version==null?0:version.intValue(),db.queryForObject("SELECT token_version FROM user_sessions WHERE id=? AND user_id=?",Integer.class,sessionId,userId)))return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
             var currentRoles=db.queryForList("SELECT r.name FROM roles r JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=? ORDER BY r.name",String.class,userId);
             var tokenRoles=jwt.getClaimAsStringList("roles");
@@ -38,6 +45,8 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
             return sessionRepository.isActive(sessionId, userId, clock.instant(), UserStatus.ACTIVE)
                     ? OAuth2TokenValidatorResult.success()
                     : OAuth2TokenValidatorResult.failure(INVALID_SESSION);
+        } catch (org.springframework.dao.DataAccessResourceFailureException | org.springframework.dao.TransientDataAccessException unavailable) {
+            return OAuth2TokenValidatorResult.failure(VERIFICATION_UNAVAILABLE);
         } catch (RuntimeException exception) {
             return OAuth2TokenValidatorResult.failure(INVALID_SESSION);
         }

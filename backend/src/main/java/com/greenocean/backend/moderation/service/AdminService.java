@@ -18,9 +18,11 @@ import java.util.UUID;
 
 @Service
 public class AdminService {
+    private final com.greenocean.backend.community.service.GroupSafety groupSafety;
     private final AdminRepository repository;
     private final DatabaseUuidGenerator uuidGenerator;
-    public AdminService(AdminRepository repository, DatabaseUuidGenerator uuidGenerator) {
+    public AdminService(AdminRepository repository, DatabaseUuidGenerator uuidGenerator,com.greenocean.backend.community.service.GroupSafety groupSafety) {
+        this.groupSafety=groupSafety;
         this.repository = repository; this.uuidGenerator = uuidGenerator;
     }
 
@@ -106,7 +108,8 @@ public class AdminService {
     public void communityStatus(UUID id, UUID actorId, AdminStatusRequest request) {
         String status = request.status().trim().toUpperCase();
         if (!java.util.List.of("ACTIVE", "ARCHIVED").contains(status)) throw new IllegalArgumentException("Unsupported community status");
-        if (!repository.updateCommunityStatus(id, actorId, status, request.note())) throw new NotFoundException("Community was not found");
+        if(request.note()==null||request.note().isBlank())throw new IllegalArgumentException("Explain the group lifecycle decision");
+        groupSafety.lifecycle(id,actorId,status,request.note(),true);
     }
 
     @Transactional

@@ -1,6 +1,15 @@
+import {ProfessionalQualificationReview} from '@/features/professional-qualification-review';
+import {ProfessionalWorkspace} from '@/features/professional-workspace';
+import {useLanguage} from '@/localization/language-provider';
+import {GrowthRewardsScreen} from '@/features/wellbeing/growth-rewards';
+import {LearningScreen} from '@/features/wellbeing/learning';
+import {QuestionEditorial} from '@/features/wellbeing/question-editorial';
+import {GrowthLibraryScreen,EditorialWorkspace,EducationPermissions} from '@/features/wellbeing/growth-library';
+import {PrivateSpace} from '@/features/wellbeing/private-space';
+import {ConnectionsPanel} from '@/features/content/connections-panel';
 import { AccountSecurityPanel,SessionsPanel } from '@/features/auth/account-security';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Share, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/app-button';
 import { AppIcon } from '@/components/app-icon';
@@ -8,7 +17,7 @@ import { ActionRow, EmptyState, Notice, Pill, ProductCard, ProductHeader, Produc
 import { usePlatformData } from '@/features/platform/data-provider';
 import { optionsIn } from '@/features/platform/catalog';
 import { CommunityDetails } from '@/features/community/types';
-import { AccountArchive, Consultation, FollowRequest, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences, WellbeingSnapshot } from '@/features/platform/types';
+import { AccountArchive, Consultation, Listener, SearchHistoryItem, SessionItem, SocialConnection, UserPreferences } from '@/features/platform/types';
 import { apiRequest } from '@/lib/api/client';
 import { useAuth } from '@/features/auth/auth-provider';
 import { UrgentHelpContent } from '@/features/safety/urgent-help';
@@ -35,6 +44,7 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
   'community-rules': { title: 'Community rules', subtitle: 'Clear expectations help people share more safely.' },
   'community-members': { title: 'Members & moderators', subtitle: 'See who helps care for this community.' },
   'community-events': { title: 'Community events', subtitle: 'Join structured, moderated conversations and workshops.' },
+  'daily-reflection': {title:'Daily reflection / تأمل روزانه',subtitle:'Three optional reviewed questions. Private answers, no points.'},
   wellbeing: { title: 'Wellbeing hub', subtitle: 'Small tools for reflection, routine, and progress—not diagnosis.', eyebrow: 'YOUR PRIVATE SPACE' },
   'check-ins': { title: 'Mood check-ins', subtitle: 'Notice patterns without judging the day.' },
   goals: { title: 'Gentle goals', subtitle: 'Turn care into small, realistic steps.' },
@@ -49,11 +59,21 @@ const pageCopy: Record<string, { title: string; subtitle: string; eyebrow?: stri
 };
 
 export default function ProductToolScreen() {
+  const {language}=useLanguage();
   const params = useLocalSearchParams<Params>();
   const screen = Array.isArray(params.tool) ? params.tool[0] : params.tool || '';
-  const copy = pageCopy[screen];
+  if(screen==='professional-qualification-review')return <ProfessionalQualificationReview/>;
+  if(screen==='professional-workspace')return <ProfessionalWorkspace/>;
+  if(screen==='growth-rewards')return <GrowthRewardsScreen/>;
+  if(screen==='growth-paths')return <LearningScreen/>;
+  if(screen==='question-editorial')return <QuestionEditorial/>;
+  if(screen==='growth-library')return <GrowthLibraryScreen/>;
+  if(screen==='educational-editorial')return <EditorialWorkspace/>;
+  if(screen==='educational-permissions')return <EducationPermissions/>;
+  const privateFa:Record<string,{title:string;subtitle:string}>={wellbeing:{title:'فضای خصوصی بهزیستی',subtitle:'ابزارهای اختیاری تأمل و یادگیری؛ بدون تشخیص.'},journal:{title:'دفترچه خصوصی',subtitle:'نوشتن و مدیریت متن‌های خصوصی؛ بدون انتشار.'},'check-ins':{title:'ثبت خلق‌وخو',subtitle:'مشاهدهٔ توصیفی حالت‌های ثبت‌شده؛ بدون قضاوت.'},goals:{title:'هدف‌های کوچک',subtitle:'گام‌های واقعی و قابل تغییر، با سرعت دلخواه تو.'},companion:{title:'همراه نوشتن هدایت‌شده',subtitle:'پرسش‌های ثابت؛ بدون درمان یا پاسخ به بحران.'},assessments:{title:'تأمل دربارهٔ بهزیستی',subtitle:'مشاهده‌های شخصی و اختیاری؛ بدون سنجش بالینی معتبر.'},'daily-reflection':{title:'تأمل روزانه',subtitle:'سه پرسش اختیاری؛ پاسخ خصوصی بدون امتیاز.'}};
+  const copy = language==='fa'&&privateFa[screen]?privateFa[screen]:pageCopy[screen];
   if (!copy) return <ProductPage><ProductHeader title="Page not found" subtitle="This GreenOcean tool does not exist." /><EmptyState icon="travel_explore" title="Nothing at this address" body="Return to the wellbeing hub or your profile to keep exploring." /><AppButton label="Go to wellbeing hub" onPress={() => nav('wellbeing')} /></ProductPage>;
-  return <ProductPage><ProductHeader {...copy} />{renderScreen(screen, params)}</ProductPage>;
+  return <ProductPage><ProductHeader {...copy} backLabel={language==='fa'?'بازگشت':'Go back'} />{renderScreen(screen, params)}</ProductPage>;
 }
 
 function renderScreen(screen: string, params: Params) {
@@ -75,13 +95,13 @@ function renderScreen(screen: string, params: Params) {
     case 'community-rules': return <CommunityRules slug={String(params.slug || 'better-sleep')} />;
     case 'community-members': return <CommunityMembers slug={String(params.slug || 'better-sleep')} />;
     case 'community-events': return <CommunityEvents slug={String(params.slug || 'better-sleep')} />;
+    case 'daily-reflection': return <PrivateSpace section="daily-reflection" />;
     case 'wellbeing': return <WellbeingHub />;
-    case 'check-ins': return <CheckIns />;
-    case 'goals': return <Goals />;
-    case 'journal': return <Journal />;
+    case 'check-ins': return <PrivateSpace section="check-ins" />;
+    case 'goals': return <PrivateSpace section="goals" />;
+    case 'journal': return <PrivateSpace section="journal" />;
     case 'assessments': return <Assessment />;
-    case 'growth-paths': return <GrowthPaths />;
-    case 'companion': return <Companion />;
+    case 'companion': return <PrivateSpace section="companion" />;
     case 'search-history': return <SearchHistory />;
     case 'session-management': return <Sessions />;
     case 'data-export': return <DataExport />;
@@ -93,15 +113,17 @@ function renderScreen(screen: string, params: Params) {
 function ProfileEdit() {
   const { profile: source, refresh } = usePlatformData();
   const [profile, setProfile] = useState({ displayName: '', username: '', bio: '', city: '', countryCode: '', avatarUrl: '', showLocation: false, profilePrivate: true });
+  const edited=useRef(false);const [initialized,setInitialized]=useState(false);
   const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (source) setProfile({ displayName: source.displayName, username: source.username, bio: source.bio || '', city: source.city || '', countryCode: source.countryCode || '', avatarUrl: source.avatarUrl || '', showLocation: source.showLocation, profilePrivate: source.profilePrivate });
+      if (source && !edited.current) {setProfile({ displayName: source.displayName, username: source.username, bio: source.bio || '', city: source.city || '', countryCode: source.countryCode || '', avatarUrl: source.avatarUrl || '', showLocation: source.showLocation, profilePrivate: source.profilePrivate });setInitialized(true);}
     }, 0);
     return () => clearTimeout(timer);
   }, [source]);
-  const set = (key: keyof typeof profile, value: string | boolean) => setProfile(current => ({ ...current, [key]: value }));
-  const save = async () => { setBusy(true); setMessage(''); try { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify(profile) }); await refresh(); setMessage('Profile changes saved to your account.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not save profile'); } finally { setBusy(false); } };
+  const set = (key: keyof typeof profile, value: string | boolean) => {edited.current=true;setProfile(current => ({ ...current, [key]: value }));};
+  const save = async () => { setBusy(true); setMessage(''); try { await apiRequest('/api/v1/profiles/me', { method: 'PATCH', body: JSON.stringify(profile) }); edited.current=false;await refresh(); setMessage('Profile changes saved to your account.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Could not save profile'); } finally { setBusy(false); } };
+  if(!initialized)return <Text accessibilityLiveRegion="polite">Loading profile…</Text>;
   return <><ProductSection title="Social details"><ProductCard><Field label="Display name" value={profile.displayName} onChangeText={value => set('displayName', value)} /><Field label="Username" value={profile.username} onChangeText={value => set('username', value.replace(/\s/g, ''))} /><Field label="Bio" value={profile.bio} onChangeText={value => set('bio', value)} multiline /><Field label="Avatar HTTPS URL (optional)" value={profile.avatarUrl} onChangeText={value=>set('avatarUrl',value)}/><AppButton variant="secondary" label="Remove avatar" onPress={()=>set('avatarUrl','')}/><Text style={styles.body}>Your avatar is discoverable to eligible members. Use a trusted image host; an external host may receive image requests. Location here is separate from your private country for service eligibility.</Text><Toggle label="Show social location" detail="Only visible to people allowed to view your profile details." value={profile.showLocation} onChange={value=>set('showLocation',value)}/><View style={styles.two}><View style={styles.flex}><Field label="City" value={profile.city} onChangeText={value => set('city', value)} /></View><View style={styles.flex}><Field label="Country code" value={profile.countryCode} onChangeText={value => set('countryCode', value.toUpperCase().slice(0, 2))} /></View></View><Toggle label="Private profile" detail="Approve followers to share profile details. Each post has its own audience." value={profile.profilePrivate} onChange={value => set('profilePrivate', value)} /></ProductCard></ProductSection>{!!message && (message.startsWith('Profile') ? <Success text={message} /> : <ErrorText text={message} />)}<AppButton label="Save profile" loading={busy} disabled={!source} onPress={() => void save()} /></>;
 }
 
@@ -112,18 +134,7 @@ function Saved() {
   return <><Notice title="Your private collection" body="Saved items are private and synchronized with your GreenOcean account." /><ProductSection title="Posts" subtitle={`${savedPosts.length} saved`}>{savedPosts.length ? savedPosts.map(item => <ActionRow key={item.id} icon="bookmark" title={item.body.slice(0, 72)} subtitle="Saved community story" value="Remove" onPress={() => void remove(`/api/v1/posts/${item.id}/bookmark`)} />) : <EmptyState icon="bookmark_border" title="No saved posts yet" body="Bookmark a story from the feed to keep it here." />}</ProductSection><ProductSection title="Articles" subtitle={`${savedArticles.length} saved`}>{savedArticles.length ? savedArticles.map(item => <ActionRow key={item.id} icon="article" title={item.title} subtitle={item.summary} value="Remove" onPress={() => void remove(`/api/v1/articles/${item.id}/save`)} />) : <EmptyState icon="bookmark_border" title="No saved articles yet" body="Open Knowledge and save anything you want to revisit." />}</ProductSection><ProductSection title="Media" subtitle={`${savedMedia.length} saved`}>{savedMedia.map(item => <ActionRow key={item.id} icon="movie" title={item.title} subtitle={item.description} value="Remove" onPress={() => void remove(`/api/v1/media-recommendations/${item.id}/save`)} />)}{!savedMedia.length && <EmptyState icon="subscriptions" title="No saved media yet" body="Save a movie, series, or documentary from the Media guide." />}</ProductSection></>;
 }
 
-function Connections() {
-  const [following, setFollowing] = useState<SocialConnection[]>([]); const [followers, setFollowers] = useState<SocialConnection[]>([]); const [incoming, setIncoming] = useState<FollowRequest[]>([]); const [outgoing, setOutgoing] = useState<FollowRequest[]>([]);
-  const load = async () => { const [nextFollowing, nextFollowers, nextIncoming, nextOutgoing] = await Promise.all([apiRequest<SocialConnection[]>('/api/v1/social/following'), apiRequest<SocialConnection[]>('/api/v1/social/followers'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/incoming'), apiRequest<FollowRequest[]>('/api/v1/social/follow-requests/outgoing')]); setFollowing(nextFollowing); setFollowers(nextFollowers); setIncoming(nextIncoming); setOutgoing(nextOutgoing); };
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, []);
-  const unfollow = async (userId: string) => { await apiRequest(`/api/v1/social/follows/${userId}`, { method: 'DELETE' }); await load(); };
-  const resolve = async (userId: string, accept: boolean) => { await apiRequest(`/api/v1/social/follow-requests/${userId}${accept ? '/accept' : ''}`, { method: accept ? 'POST' : 'DELETE' }); await load(); };
-  const cancel = async (userId: string) => { await apiRequest(`/api/v1/social/follow-requests/outgoing/${userId}`, { method: 'DELETE' }); await load(); };
-  return <><ProductSection title="Follow requests" subtitle={`${incoming.length} waiting`}>{incoming.length ? incoming.map(person => <ProductCard key={person.userId}><ActionRow icon="person_add" title={person.displayName} subtitle={`@${person.username}`} /><View style={styles.two}><View style={styles.flex}><AppButton label="Accept" onPress={() => void resolve(person.userId, true)} /></View><View style={styles.flex}><AppButton label="Decline" variant="secondary" onPress={() => void resolve(person.userId, false)} /></View></View></ProductCard>) : <EmptyState icon="person_add" title="No pending requests" body="Requests for a private profile will appear here." />}</ProductSection><ProductSection title="Sent requests" subtitle={`${outgoing.length} waiting`}>{outgoing.map(person => <ActionRow key={person.userId} icon="schedule" title={person.displayName} subtitle={`@${person.username}`} value="Cancel" onPress={() => void cancel(person.userId)} />)}</ProductSection><ProductSection title="Following" subtitle={`${following.length} people`}>{following.length ? following.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} value="Unfollow" onPress={() => void unfollow(person.userId)} />) : <EmptyState icon="group" title="Not following anyone yet" body="Follow community members or professionals from their profiles." />}</ProductSection><ProductSection title="Followers" subtitle={`${followers.length} people`}>{followers.length ? followers.map(person => <ActionRow key={person.userId} icon="person" title={person.displayName} subtitle={`@${person.username}`} />) : <EmptyState icon="group" title="No followers yet" body="New followers will appear here." />}</ProductSection></>;
-}
+function Connections() {return <ConnectionsPanel/>;}
 
 function NotificationSettings() {
   const { preferences, setPreferences } = usePlatformData();
@@ -155,7 +166,7 @@ function Blocked() {
 }
 
 function SafetyCenter() {
-  return <><Notice icon="health_and_safety" title="Safety is a product feature" body="Control what you see, report harmful behavior, and reach urgent help without hunting through menus." /><ProductSection title="Your controls"><ActionRow icon="tune" title="Content & contact controls" subtitle="Sensitive content, muted words, and messages" onPress={() => router.push('/safety-settings')} /><ActionRow icon="block" title="Blocked accounts" subtitle="Review and unblock accounts" onPress={() => nav('blocked')} /><ActionRow icon="flag" title="My reports" subtitle="See status and moderation outcomes" onPress={() => nav('my-reports')} /></ProductSection><ProductSection title="Get help"><ActionRow icon="emergency" title="Urgent help" subtitle="Country-aware emergency and crisis routes" danger onPress={() => nav('urgent-help')} /><ActionRow icon="support_agent" title="Talk with support" subtitle="Listener, peer, or verified professional" onPress={() => router.push('/support')} /><ActionRow icon="gavel" title="Community guidelines" subtitle="What GreenOcean permits and why" onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'guidelines' } } as never)} /></ProductSection></>;
+  return <><Notice icon="health_and_safety" title="Safety is a product feature" body="Control what you see, report harmful behavior, and reach urgent help without hunting through menus." /><ProductSection title="Your controls"><ActionRow icon="flag" title="Case coordination status / وضعیت هماهنگی پرونده" subtitle="No promise of immediate human intervention / بدون وعدهٔ مداخلهٔ فوری" onPress={()=>router.push('/safety-status' as never)}/><ActionRow icon="tune" title="Content & contact controls" subtitle="Sensitive content, muted words, and messages" onPress={() => router.push('/safety-settings')} /><ActionRow icon="block" title="Blocked accounts" subtitle="Review and unblock accounts" onPress={() => nav('blocked')} /><ActionRow icon="flag" title="My reports" subtitle="See status and moderation outcomes" onPress={() => nav('my-reports')} /></ProductSection><ProductSection title="Get help"><ActionRow icon="emergency" title="Urgent help" subtitle="Country-aware emergency and crisis routes" danger onPress={() => nav('urgent-help')} /><ActionRow icon="support_agent" title="Talk with support" subtitle="Listener, peer, or verified professional" onPress={() => router.push('/support')} /><ActionRow icon="gavel" title="Community guidelines" subtitle="What GreenOcean permits and why" onPress={() => router.push({ pathname: '/info/[page]' as never, params: { page: 'guidelines' } } as never)} /></ProductSection></>;
 }
 
 function MyReports() {
@@ -200,7 +211,8 @@ function NewMessage() {
     try {
       const result = kind === 'listener'
         ? await apiRequest<{ conversationId: string }>(`/api/v1/listeners/match?listenerId=${id}`, { method: 'POST' })
-        : await apiRequest<{ id: string }>(kind === 'professional' ? `/api/v1/conversations/professionals/${id}` : `/api/v1/conversations/users/${id}`, { method: 'POST' });
+        : await apiRequest<{ id: string; status?:string }>(kind === 'professional' ? `/api/v1/conversations/professionals/${id}` : `/api/v1/conversations/users/${id}`, { method: 'POST' });
+      if('status' in result&&result.status==='PENDING'){router.replace('/message-requests' as never);return;}
       router.replace({ pathname: '/chat/[id]', params: { id: 'conversationId' in result ? result.conversationId : result.id } });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not start conversation');
@@ -298,62 +310,18 @@ function useCommunityDetails(slug: string) {
 }
 
 function WellbeingHub() {
-  return <><Notice title="Private by design" body="These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care." /><ProductSection title="Today"><ActionRow icon="mood" title="Mood check-in" subtitle="Name the moment in under a minute" onPress={() => nav('check-ins')} /><ActionRow icon="flag" title="Gentle goals" subtitle="Small steps and progress" onPress={() => nav('goals')} /><ActionRow icon="book" title="Private journal" subtitle="Write without publishing" onPress={() => nav('journal')} /></ProductSection><ProductSection title="Learn and reflect"><ActionRow icon="quiz" title="Wellbeing reflection" subtitle="A non-diagnostic support check" onPress={() => nav('assessments')} /><ActionRow icon="route" title="Guided growth paths" subtitle="Short skill-building journeys" onPress={() => nav('growth-paths')} /><ActionRow icon="auto_awesome" title="Reflection companion" subtitle="Guided prompts with clear boundaries" onPress={() => nav('companion')} /></ProductSection></>;
-}
-
-function CheckIns() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'POST_MOOD'); const [mood, setMood] = useState(''); const [note, setNote] = useState(''); const [done, setDone] = useState(false);
-  const selectedMood = mood || moods[0]?.label || '';
-  const add = async () => { if (!selectedMood) return; await apiRequest('/api/v1/wellbeing/check-ins', { method: 'POST', body: JSON.stringify({ mood: selectedMood, note }) }); setNote(''); setDone(true); await refresh(); };
-  return <><ProductCard tone="soft"><Text style={styles.label}>How are you feeling?</Text><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><Field label="A note for yourself (optional)" value={note} onChangeText={setNote} multiline /><AppButton label="Save check-in" disabled={!selectedMood} onPress={() => void add()} /></ProductCard>{done && <Success text="Check-in saved privately to your account." />}<ProductSection title="Recent check-ins">{snapshot.checkIns.length ? snapshot.checkIns.map(item => <ProductCard key={item.id}><View style={styles.between}><Text style={styles.cardTitle}>{item.mood}</Text><Text style={styles.meta}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>{!!item.note && <Text style={styles.body}>{item.note}</Text>}</ProductCard>) : <EmptyState icon="mood" title="Your first check-in starts here" body="There is no good or bad score—just a moment worth noticing." />}</ProductSection></>;
-}
-
-function Goals() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const cadences = optionsIn(options, 'GOAL_CADENCE'); const [title, setTitle] = useState(''); const [cadence, setCadence] = useState('');
-  const selectedCadence = cadence || cadences[0]?.label || '';
-  const add = async () => { if (!title.trim() || !selectedCadence) return; await apiRequest('/api/v1/wellbeing/goals', { method: 'POST', body: JSON.stringify({ title, cadence: selectedCadence }) }); setTitle(''); await refresh(); };
-  const progress = async (goalId: string, current: number) => { await apiRequest(`/api/v1/wellbeing/goals/${goalId}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, current + 15), completed: current >= 85 }) }); await refresh(); };
-  return <><ProductCard><Field label="A small, specific step" value={title} onChangeText={setTitle} placeholder="Example: Step outside for five minutes" /><View style={styles.wrap}>{cadences.map(item => <Pill key={item.key} label={item.label} active={selectedCadence === item.label} onPress={() => setCadence(item.label)} />)}</View><AppButton label="Add goal" disabled={!selectedCadence} onPress={() => void add()} /></ProductCard>{snapshot.goals.map(goal => <ProductCard key={goal.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{goal.title}</Text><Text style={styles.body}>{goal.cadence} · {goal.progress}%</Text></View><Pill label={goal.completed ? 'Completed' : '+ Progress'} active={goal.completed} onPress={() => !goal.completed && void progress(goal.id, goal.progress)} /></View></ProductCard>)}</>;
-}
-
-function Journal() {
-  const { snapshot, refresh } = useWellbeing(); const { options } = usePlatformData(); const moods = optionsIn(options, 'JOURNAL_MOOD'); const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [mood, setMood] = useState(''); const selectedMood = mood || moods[0]?.label || '';
-  const add = async () => { if (!body.trim()) return; await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: title.trim() || 'Untitled reflection', body, mood: selectedMood || null }) }); setTitle(''); setBody(''); await refresh(); };
-  return <><Notice icon="lock" title="Private—not a post" body="Journal entries are private account data. Use Create only if you decide to share something publicly." /><ProductCard><Field label="Title" value={title} onChangeText={setTitle} /><Field label="What feels important to name?" value={body} onChangeText={setBody} multiline /><View style={styles.wrap}>{moods.map(item => <Pill key={item.key} label={item.label} active={selectedMood === item.label} onPress={() => setMood(item.label)} />)}</View><AppButton label="Save privately" onPress={() => void add()} /></ProductCard>{snapshot.journalEntries.map(entry => <ProductCard key={entry.id}><View style={styles.between}><Text style={styles.cardTitle}>{entry.title}</Text><Pill label={entry.mood || 'Journal'} /></View><Text style={styles.body}>{entry.body}</Text><Text style={styles.meta}>{new Date(entry.createdAt).toLocaleString()}</Text></ProductCard>)}</>;
-}
-
-const emptyWellbeing: WellbeingSnapshot = { checkIns: [], journalEntries: [], goals: [], growthPaths: [], reflections: [] };
-function useWellbeing() {
-  const [snapshot, setSnapshot] = useState<WellbeingSnapshot>(emptyWellbeing);
-  const refresh = async () => setSnapshot(await apiRequest<WellbeingSnapshot>('/api/v1/wellbeing'));
-  useEffect(() => {
-    const timer = setTimeout(() => void refresh(), 0);
-    return () => clearTimeout(timer);
-  }, []);
-  return { snapshot, refresh };
+  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const rows=[['growth-rewards','Growth Points','امتیاز رشد','Private educational milestones; no wellbeing score','گام‌های آموزشی خصوصی؛ بدون امتیاز بهزیستی'],['growth-library','Growth Library / کتابخانه رشد','کتابخانه رشد','Reviewed educational resources','منابع آموزشی بازبینی‌شده'],['daily-reflection','Daily reflection / تأمل روزانه','تأمل روزانه','Three optional questions; skip freely','سه پرسش اختیاری؛ با امکان رد کردن'],['assessments','Wellbeing reflection','تأمل دربارهٔ بهزیستی','A non-diagnostic support check','مشاهدهٔ شخصی بدون تشخیص'],['growth-paths','Guided growth paths','مسیرهای یادگیری','Short skill-building journeys','درس‌های واقعی با سرعت دلخواه'],['companion','Reflection companion','همراه نوشتن هدایت‌شده','Guided prompts with clear boundaries','پرسش‌های ثابت با مرزهای روشن']];
+  return <><Notice title={tr('Private by design','خصوصی از ابتدا')} body={tr('These tools are for reflection and skill practice. They do not diagnose conditions or replace professional care.','این ابزارها برای تأمل و تمرین مهارت‌اند؛ تشخیص نمی‌دهند و جای مراقبت حرفه‌ای را نمی‌گیرند.')}/><ProductSection title={tr('Today','امروز')}><ActionRow icon="mood" title={tr('Mood check-in','ثبت خلق‌وخو')} subtitle={tr('Name the moment in under a minute','ثبت اختیاری حالت کنونی')} onPress={()=>nav('check-ins')}/><ActionRow icon="flag" title={tr('Gentle goals','هدف‌های کوچک')} subtitle={tr('Small steps and progress','گام‌های واقعی و قابل تغییر')} onPress={()=>nav('goals')}/><ActionRow icon="book" title={tr('Private journal','دفترچه خصوصی')} subtitle={tr('Write without publishing','نوشتن بدون انتشار')} onPress={()=>nav('journal')}/></ProductSection><ProductSection title={tr('Learn and reflect','یادگیری و تأمل')}>{rows.map(([tool,en,fa,detailEn,detailFa])=><ActionRow key={tool} icon="book" title={tr(en,fa)} subtitle={tr(detailEn,detailFa)} onPress={()=>nav(tool)}/>)}</ProductSection></>;
 }
 
 function Assessment() {
-  const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0); const score = orderedAnswers.reduce((sum, value) => sum + value, 0); const maxScore = Math.max(0, questions.length * Math.max(0, responses.length - 1));
+  const {language}=useLanguage();const tr=(en:string,fa:string)=>language==='fa'?fa:en;
+  const translations:Record<string,string>={PAUSE_UNDER_STRESS:'توانسته‌ام هنگام افزایش فشار مکث کنم.',SOCIAL_CONNECTION:'با دست‌کم یک نفر احساس ارتباط داشته‌ام.',RESTORATIVE_SLEEP:'خوابم به اندازهٔ کافی نیروبخش بوده است.',MANAGEABLE_RESPONSIBILITIES:'مسئولیت‌های روزانه قابل انجام بوده‌اند.',INTEREST_OR_HOPE:'لحظه‌هایی از علاقه یا امید داشته‌ام.',NOT_AT_ALL:'اصلاً',SOME_DAYS:'بعضی روزها',OFTEN:'اغلب',MOST_DAYS:'بیشتر روزها',NEARLY_ALWAYS:'تقریباً همیشه'};
+  const { options } = usePlatformData(); const questions = optionsIn(options, 'ASSESSMENT_QUESTION'); const responses = optionsIn(options, 'ASSESSMENT_RESPONSE'); const [answers, setAnswers] = useState<Record<string, number>>({}); const [done, setDone] = useState(false); const [saving, setSaving] = useState(false); const [saveError, setSaveError] = useState(''); const orderedAnswers = questions.map(question => answers[question.key] ?? 0);
   const finish = async () => { setSaving(true); setSaveError(''); try { await apiRequest('/api/v1/wellbeing/reflections', { method: 'POST', body: JSON.stringify({ answers: orderedAnswers }) }); setDone(true); } catch (caught) { setSaveError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } finally { setSaving(false); } };
-  if (done) return <><Notice title="Your reflection summary" body={score >= maxScore * .75 ? 'Several areas feel supported right now. Keep the routines and relationships that help.' : score >= maxScore * .4 ? 'Some areas may need more support. A small goal, peer conversation, or professional directory may help.' : 'You reported strain across several areas. Consider reaching out to someone you trust or a verified professional. If you may be in danger, use urgent help now.'} tone={score < maxScore * .4 ? 'warning' : 'ocean'} /><ProductCard><Text style={styles.bigScore}>{score}/{maxScore}</Text><Text style={styles.body}>This is a GreenOcean reflection score, not a validated clinical scale, diagnosis, or risk assessment.</Text></ProductCard><ActionRow icon="support_agent" title="Choose support now" onPress={() => router.push('/support')} /><ActionRow icon="emergency" title="Urgent help" danger onPress={() => nav('urgent-help')} /><AppButton label="Take again" variant="secondary" onPress={() => setDone(false)} /></>;
-  return <><Notice title="Important boundary" body="Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition." />{questions.map((question, index) => <ProductCard key={question.key}><Text style={styles.cardTitle}>{index + 1}. {question.label}</Text><View style={styles.wrap}>{responses.map(response => <Pill key={response.key} label={response.label} active={(answers[question.key] ?? 0) === response.sortOrder} onPress={() => setAnswers(current => ({ ...current, [question.key]: response.sortOrder }))} />)}</View></ProductCard>)}{!!saveError && <ErrorText text={saveError} />}<AppButton label="Save and see reflection" disabled={!questions.length || !responses.length} loading={saving} onPress={() => void finish()} /></>;
-}
-
-function GrowthPaths() {
-  const { snapshot, refresh } = useWellbeing();
-  const advance = async (id: string, progress: number) => {
-    await apiRequest(`/api/v1/wellbeing/growth-paths/${id}`, { method: 'PATCH', body: JSON.stringify({ progress: Math.min(100, progress + 20) }) });
-    await refresh();
-  };
-  return <>{snapshot.growthPaths.map(path => <ProductCard key={path.id}><View style={styles.between}><View style={styles.flex}><Text style={styles.cardTitle}>{path.title}</Text><Text style={styles.body}>{path.summary}</Text></View><Pill label={path.completed ? 'Completed' : path.progress ? `${path.progress}% · Continue` : 'Start'} active={path.completed} onPress={() => !path.completed && void advance(path.id, path.progress)} /></View><Text style={styles.meta}>{path.lessonCount} lessons · {path.durationMinutes} minutes · by {path.authorName}</Text><Text style={styles.meta}>{path.evidenceNote} · reviewed {new Date(path.reviewedAt).toLocaleDateString()}</Text><Text style={styles.meta}>Sources: {path.references.join(' · ')}</Text></ProductCard>)}{!snapshot.growthPaths.length && <EmptyState icon="route" title="No growth paths available" body="Reviewed learning paths will appear here when published." />}<Notice title="Educational scope" body="Growth paths teach reflection and coping skills. They do not diagnose conditions or replace individualized professional care." /></>;
-}
-
-function Companion() {
-  const { options } = usePlatformData(); const prompts = optionsIn(options, 'REFLECTION_PROMPT'); const [index, setIndex] = useState(0); const [answer, setAnswer] = useState(''); const [notes, setNotes] = useState<string[]>([]); const [saved, setSaved] = useState(false); const [error, setError] = useState('');
-  const advance = async () => { const nextNotes = [...notes, answer.trim()]; if (index < prompts.length - 1) { setNotes(nextNotes); setAnswer(''); setIndex(index + 1); return; } setError(''); try { const body = prompts.map((prompt, promptIndex) => `${prompt.label}\n${nextNotes[promptIndex] || 'No response'}`).join('\n\n'); await apiRequest('/api/v1/wellbeing/journal', { method: 'POST', body: JSON.stringify({ title: 'Guided reflection', body, mood: 'Reflective' }) }); setNotes([]); setAnswer(''); setIndex(0); setSaved(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save this reflection.'); } };
-  if (!prompts.length) return <EmptyState icon="auto_awesome" title="No reflection prompts available" body="Published reflection prompts will appear here." />;
-  return <><Notice title="Clear boundary" body="This companion follows fixed reflection prompts. It does not understand emergencies, provide therapy, or make clinical recommendations." /><ProductCard tone="soft"><Text style={styles.eyebrow}>PROMPT {index + 1} OF {prompts.length}</Text><Text style={styles.prompt}>{prompts[index].label}</Text><Field label="Your private reflection" value={answer} onChangeText={setAnswer} multiline /><AppButton label={index === prompts.length - 1 ? 'Save to private journal' : 'Save and continue'} disabled={!answer.trim()} onPress={() => void advance()} /></ProductCard>{saved && <Success text="Your guided reflection was saved in the private journal." />}{!!error && <ErrorText text={error} />}<ActionRow icon="emergency" title="I need urgent help" danger onPress={() => nav('urgent-help')} /></>;
+  if (done) return <><Notice title={tr('Private reflection saved','تأمل خصوصی ذخیره شد')} body={tr('These are your own observations. No diagnostic result, risk estimate or treatment recommendation is inferred from them.','این‌ها مشاهده‌های شخصی تو هستند؛ نتیجهٔ تشخیصی، برآورد خطر یا پیشنهاد درمان از آن‌ها استنباط نمی‌شود.')} /><Text>{tr('This optional tool is not a validated clinical measurement. Historical responses remain private and unchanged.','این ابزار اختیاری سنجش بالینی معتبر نیست. پاسخ‌های تاریخی خصوصی و بدون تغییر می‌مانند.')}</Text><ActionRow icon="emergency" title={tr('Urgent help','کمک فوری')} danger onPress={() => nav('urgent-help')} /><AppButton label={tr('Take again','تکرار اختیاری')} variant="secondary" onPress={() => setDone(false)} /></>;
+  return <><Notice title={tr('Important boundary','مرز مهم')} body={tr('Answer for the past 7 days. This tool cannot detect or diagnose a mental health condition.','به هفت روز گذشته فکر کن. این ابزار نمی‌تواند مشکل سلامت روان را شناسایی یا تشخیص دهد.')} />{questions.map((question, index) => <ProductCard key={question.key}><Text style={styles.cardTitle}>{index + 1}. {language==='fa'?(translations[question.key]||question.label):question.label}</Text><View style={styles.wrap}>{responses.map(response => <Pill key={response.key} label={language==='fa'?(translations[response.key]||response.label):response.label} active={(answers[question.key] ?? 0) === response.sortOrder} onPress={() => setAnswers(current => ({ ...current, [question.key]: response.sortOrder }))} />)}</View></ProductCard>)}{!!saveError && <ErrorText text={saveError} />}<AppButton label={tr('Save and see reflection','ذخیره و مشاهدهٔ تأمل')} disabled={!questions.length || !responses.length} loading={saving} onPress={() => void finish()} /></>;
 }
 
 function SearchHistory() {

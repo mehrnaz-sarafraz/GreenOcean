@@ -50,6 +50,15 @@ public class Comment {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    @Column(nullable=false) private long revision = 1;
+    @Column(name="safety_outcome") private String safetyOutcome;
+    @Column(name="safety_reason") private String safetyReason;
+    public long getRevision() { return revision; }
+    public void assess(com.greenocean.backend.post.service.ContentSafety.Assessment assessment) {
+        safetyOutcome=assessment.outcome().name(); safetyReason=assessment.reason();
+        status=assessment.outcome()==com.greenocean.backend.post.service.ContentSafety.Outcome.ALLOW ? ContentStatus.PUBLISHED : ContentStatus.UNDER_REVIEW;
+    }
+    public void revise(String text) { body=text; revision++; updatedAt=Instant.now(); }
     protected Comment() {
     }
 
@@ -66,6 +75,9 @@ public class Comment {
         this.updatedAt = now;
     }
 
+    public UUID getAuthorId() {return author.getId();}
+    public ContentStatus getStatus() {return status;}
+    public void softDelete() {status=ContentStatus.DELETED;deletedAt=Instant.now();updatedAt=deletedAt;}
     public UUID getId() { return id; }
     public UUID getPostId() { return post.getId(); }
 }

@@ -1,0 +1,3 @@
+# Professional reputation contract
+
+Feedback is voluntary and available only after evidenced governed delivery or independently reviewed professional no-show. Negative feedback does not restrict further care, refunds or complaints. Public text and aggregate use are separate choices. Raw narratives are purpose restricted; public projections contain neither patient identity nor clinical records. Scores express limited service experience, not treatment effectiveness. See ../phase-p/professional-ranking-methodology.md and ../phase-p/weekly-featured-professionals.md for exact calculation and selection limits.

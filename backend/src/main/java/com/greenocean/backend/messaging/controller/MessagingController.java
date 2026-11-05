@@ -49,12 +49,19 @@ public class MessagingController {
     }
 
     @PostMapping("/conversations/users/{otherUserId}")
-    public ResponseEntity<Map<String, UUID>> startDirect(@AuthenticationPrincipal Jwt jwt,
+    public ResponseEntity<Map<String, Object>> startDirect(@AuthenticationPrincipal Jwt jwt,
                                                          @PathVariable UUID otherUserId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("id", service.startDirectConversation(otherUserId, userId(jwt))));
+        UUID id=service.startDirectConversation(otherUserId,userId(jwt));
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status",service.requestStatus(id,userId(jwt))));
     }
 
+    @GetMapping("/conversations/users/{other}/permission")
+    public Map<String,Boolean> permission(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID other){return service.directPermission(userId(jwt),other);}
+    @GetMapping("/conversations/requests")
+    public List<Map<String,Object>> requests(@AuthenticationPrincipal Jwt jwt){return service.requests(userId(jwt));}
+    public record Resolve(@jakarta.validation.constraints.Pattern(regexp="ACCEPT|DECLINE|CANCEL") @jakarta.validation.constraints.NotNull String action) {}
+    @PostMapping("/conversations/requests/{id}/decision")
+    public void resolve(@AuthenticationPrincipal Jwt jwt,@PathVariable UUID id,@Valid @RequestBody Resolve request){service.resolveRequest(id,userId(jwt),request.action());}
     @GetMapping("/conversations/{id}/messages")
     public List<MessageResponse> messages(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
         return service.messages(id, userId(jwt));

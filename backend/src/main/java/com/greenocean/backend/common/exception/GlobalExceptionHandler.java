@@ -21,6 +21,12 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiError> methodNotAllowed(org.springframework.web.HttpRequestMethodNotSupportedException exception,HttpServletRequest request){
+        var response=ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED);
+        if(exception.getSupportedHttpMethods()!=null)response.allow(exception.getSupportedHttpMethods().toArray(org.springframework.http.HttpMethod[]::new));
+        return response.body(new ApiError(Instant.now(),405,"Method Not Allowed","This method is not supported",request.getRequestURI(),List.of()));
+    }
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     @ExceptionHandler(com.greenocean.backend.listener.live.LiveSupportException.class)
     public ResponseEntity<java.util.Map<String,Object>> handleLiveSupport(com.greenocean.backend.listener.live.LiveSupportException error) {
@@ -80,7 +86,7 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class})
+    @ExceptionHandler({IllegalArgumentException.class, PreferenceValidationException.class, java.time.DateTimeException.class})
     public ResponseEntity<ApiError> handleIllegalArgumentException(RuntimeException exception, HttpServletRequest request) {
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
@@ -111,6 +117,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableRequest(HttpMessageNotReadableException exception, HttpServletRequest request) {
+        for(Throwable cause=exception;cause!=null;cause=cause.getCause())if(cause instanceof com.greenocean.backend.auth.config.BoundedJsonFilter.Limit)return ResponseEntity.status(413).body(new ApiError(Instant.now(),413,"Content Too Large","JSON request exceeds the bounded input limit",request.getRequestURI(),List.of()));
         return ResponseEntity.badRequest().body(new ApiError(
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "Request body is missing or malformed", request.getRequestURI(), List.of()

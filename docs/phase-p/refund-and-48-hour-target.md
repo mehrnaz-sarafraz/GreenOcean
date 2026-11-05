@@ -1,0 +1,5 @@
+# Refund objective
+
+A confirmed eligible professional no-show creates an immutable REFUND_OBLIGATION and a durable refund row with `initiate_by = confirmed_at + 48 hours`. This is an initiation objective, never a bank-settlement guarantee. REFUND_ELIGIBLE and REFUND_PROCESSING are not REFUND_CONFIRMED. The latter requires exact independently authenticated provider evidence.
+
+The default-off worker uses a configured currently authorized finance operator; its operation key is the persisted refund UUID. Exceptions become MANUAL_REVIEW_REQUIRED rather than fabricated confirmation. The authenticated finance workspace shows overdue liabilities; operators can retry/reconcile with recent strong authentication. An authenticated readiness history contradicting absence blocks automatic no-show classification. Technical failures require operational assessment. Patient requests open an independent dispute; honest reviews must never be tied to refunds. Provider/banking operations remain disabled until separately approved. [Detailed operations](booking-and-financial-operations.md).

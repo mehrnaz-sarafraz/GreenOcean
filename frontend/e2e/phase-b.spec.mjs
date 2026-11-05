@@ -42,7 +42,7 @@ test('Happy B-10: pathway explanations and FAQ need no account',async({page})=>{
  await page.getByRole('button',{name:'FAQ',exact:true}).click();await expect(page.getByRole('heading',{name:'Is a listener a therapist?'})).toBeVisible();
 });
 test('Creative B-09: Persian RTL, persistence and English return',async({page},testInfo)=>{
- await setup(page);await page.goto('/welcome');await page.getByRole('button',{name:'فارسی',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');await expect(page.getByRole('heading',{level:1})).toContainText('ارتباط معنادار');await screenshot(page,testInfo,'welcome-rtl');
+ await setup(page);await page.goto('/welcome');await expect(page.locator('html')).toHaveAttribute('dir','ltr');await page.getByRole('button',{name:'فارسی',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');await expect(page.getByRole('heading',{level:1})).toContainText('ارتباط معنادار');await screenshot(page,testInfo,'welcome-rtl');
  await page.reload();await expect(page.locator('html')).toHaveAttribute('lang','fa');await page.setViewportSize({width:375,height:812});await noOverflow(page);await screenshot(page,testInfo,'welcome-rtl-mobile');await page.getByRole('button',{name:'English',exact:true}).click();await expect(page.locator('html')).toHaveAttribute('dir','ltr');
 });
 for(const width of [320,375,390,768,1024,1440])test(`Creative B-09: responsive Welcome at ${width}px`,async({page},testInfo)=>{

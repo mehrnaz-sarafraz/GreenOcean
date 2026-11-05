@@ -1,0 +1,2 @@
+# Professional clinic contract
+Model C clinical workflows are separate from peer/listener support and the growth library. Initial jurisdiction is Iran, with psychologist, counselor and psychiatrist qualifications separately verified. Current licensing and platform authorization precede each clinical action. Private draft calendars are planning only. P1 implements qualification and scheduling; booking, provider money movement, encounters, reputation and follow-up remain subsequent milestones. No production activation is implied.

@@ -1,0 +1,5 @@
+# Commercial configuration
+
+No permanent commission, price or plan is seeded. An authorized administrator publishes an immutable version with integer basis points, provider fee, explicit terms and refund policy. The professional accepts that version for individual unreserved slots. Booking stores the agreed version and computed integers. Free slots have no hidden fees.
+
+Administrative subscriptions have an explicitly configured version, price, period and allow-listed entitlements. The professional explicitly accepts them; a paid plan requires exact provider capture. Expiry is server based, renewal is a new explicit order, and no recurring charge is created. Subscription membership is never consulted by credential, clinical access, review eligibility, ranking or editorial approval checks. Advertising and discount products need separate policies. Subsequent business-model optimization may revisit packaging and provider economics without rewriting historical invoices. [Provider and production boundaries](booking-and-financial-operations.md).

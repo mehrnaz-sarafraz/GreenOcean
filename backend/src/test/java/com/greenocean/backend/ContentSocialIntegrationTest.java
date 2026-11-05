@@ -106,7 +106,7 @@ class ContentSocialIntegrationTest {
     private String createPost(String token, String visibility, String body) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/posts")
                         .header(HttpHeaders.AUTHORIZATION, auth(token)).contentType(MediaType.APPLICATION_JSON)
-                        .content(json(Map.of("body", body, "anonymous", false, "visibility", visibility, "broaderAudienceConfirmed", true))))
+                        .content(json(Map.of("body", body, "publicationIdentity", "SOCIAL_IDENTITY", "anonymous", false, "visibility", visibility, "broaderAudienceConfirmed", true))))
                 .andExpect(status().isCreated()).andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
     }

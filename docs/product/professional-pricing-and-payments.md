@@ -1,0 +1,3 @@
+# Pricing and payments contract
+
+An explicitly accepted immutable policy and offer revision bind each booking to its total, currency, commission, provider fee and refund terms. Free means zero patient charge and no payment intent. The provider must independently confirm exact captures, refunds and payouts with stable retry identifiers. No production adapter is configured. Refund liability, initiation and confirmed receipt are distinct; 48 hours is an initiation target. Earned professional payable and platform commission arise only after evidenced mutual completion. Administrative plans never authorize clinical practice or purchase ranking.

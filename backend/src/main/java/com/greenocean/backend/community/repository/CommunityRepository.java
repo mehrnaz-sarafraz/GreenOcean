@@ -17,14 +17,15 @@ import java.util.UUID;
 @Repository
 public class CommunityRepository {
     private static final String SELECT = """
-            SELECT c.id, c.name, c.slug, c.description, c.icon_url, c.is_private, c.created_at,
-                   (SELECT COUNT(*) FROM community_members all_members WHERE all_members.community_id = c.id) AS member_count,
+            SELECT c.id, c.name, c.slug, c.description, c.icon_url, c.is_private, c.created_at,c.privacy_type,c.status,c.rules_version,
+                   (SELECT jsonb_agg(rule_text ORDER BY position) FROM community_rules WHERE community_id=c.id)::text AS rules_json,
+                   NULL::bigint AS member_count,
                    EXISTS(SELECT 1 FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS member,
                    (SELECT mine.role FROM community_members mine WHERE mine.community_id = c.id AND mine.user_id = ?) AS membership_role
                    ,EXISTS(SELECT 1 FROM community_join_requests request
-                            WHERE request.community_id = c.id AND request.requester_id = ? AND request.status = 'PENDING') AS join_requested
+                            WHERE request.community_id = c.id AND request.requester_id = ? AND request.status = 'PENDING') AS join_requested, (SELECT request_version FROM community_join_requests r WHERE r.community_id=c.id AND r.requester_id=?) AS request_revision
               FROM communities c
-             WHERE c.status = 'ACTIVE'
+             WHERE visible_group(c.id, ?)
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -53,22 +54,22 @@ public class CommunityRepository {
 
     public Optional<CommunityResponse> findById(UUID communityId, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.id = ?", this::map,
-                viewerId, viewerId, viewerId, communityId).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, viewerId, communityId).stream().findFirst();
     }
 
     public Optional<CommunityResponse> findBySlug(String slug, UUID viewerId) {
         return jdbcTemplate.query(SELECT + " AND c.slug = ?", this::map,
-                viewerId, viewerId, viewerId, slug).stream().findFirst();
+                viewerId, viewerId, viewerId, viewerId, viewerId, slug).stream().findFirst();
     }
 
     public List<CommunityResponse> findAll(UUID viewerId, String query, int page, int size) {
         String term = "%" + query.trim().toLowerCase() + "%";
         String sql = SELECT + """
-                 AND (LOWER(c.name) LIKE ? OR LOWER(COALESCE(c.description, '')) LIKE ? OR LOWER(c.slug) LIKE ?)
-                 ORDER BY member DESC, member_count DESC, c.name
+                 AND c.privacy_type<>'HIDDEN' AND (LOWER(c.name) LIKE ? OR LOWER(COALESCE(c.description, '')) LIKE ? OR LOWER(c.slug) LIKE ?)
+                 ORDER BY c.created_at DESC,c.id DESC
                  LIMIT ? OFFSET ?
                 """;
-        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, term, term, term,
+        return jdbcTemplate.query(sql, this::map, viewerId, viewerId, viewerId, viewerId, viewerId, term, term, term,
                 size + 1, (long) page * size);
     }
 
@@ -99,13 +100,13 @@ public class CommunityRepository {
 
     public List<CommunityJoinRequestResponse> joinRequests(UUID communityId) {
         return jdbcTemplate.query("""
-                SELECT p.user_id, p.display_name, p.username, p.avatar_url, r.requested_at
+                SELECT p.user_id, p.display_name, p.username, p.avatar_url, r.requested_at,r.request_version
                   FROM community_join_requests r JOIN profiles p ON p.user_id = r.requester_id
                  WHERE r.community_id = ? AND r.status = 'PENDING'
                  ORDER BY r.requested_at
                 """, (rs, row) -> new CommunityJoinRequestResponse(
                 rs.getObject("user_id", UUID.class), rs.getString("display_name"), rs.getString("username"),
-                rs.getString("avatar_url"), rs.getObject("requested_at", OffsetDateTime.class).toInstant()), communityId);
+                rs.getString("avatar_url"), rs.getObject("requested_at", OffsetDateTime.class).toInstant(),rs.getLong("request_version")), communityId);
     }
 
     public boolean resolveJoinRequest(UUID communityId, UUID requesterId, UUID resolverId, boolean approved) {
@@ -185,33 +186,34 @@ public class CommunityRepository {
                 SELECT cm.user_id, p.display_name, p.username, p.avatar_url, cm.role, cm.joined_at
                   FROM community_members cm
                   JOIN profiles p ON p.user_id = cm.user_id
-                 WHERE cm.community_id = ?
+                 WHERE cm.community_id = ? AND EXISTS(SELECT 1 FROM community_members manager
+                   WHERE manager.community_id=cm.community_id AND manager.user_id=? AND manager.role IN('OWNER','MODERATOR'))
                  ORDER BY CASE cm.role WHEN 'OWNER' THEN 1 WHEN 'MODERATOR' THEN 2 ELSE 3 END,
                           LOWER(p.display_name)
                 """, (resultSet, row) -> new CommunityDetailsResponse.Member(
                 resultSet.getObject("user_id", UUID.class), resultSet.getString("display_name"),
                 resultSet.getString("username"), resultSet.getString("avatar_url"), resultSet.getString("role"),
                 resultSet.getObject("joined_at", OffsetDateTime.class).toInstant()
-        ), communityId);
+        ), communityId,viewerId);
 
         List<CommunityDetailsResponse.Event> events = jdbcTemplate.query("""
                 SELECT e.id, e.title, e.description, e.format, p.display_name AS host_name,
-                       e.starts_at, e.ends_at, e.capacity, e.status,
+                       e.starts_at, e.ends_at, e.capacity, e.status,e.revision,e.discussion_post_id,
                        COUNT(a.user_id) AS attendee_count,
                        BOOL_OR(a.user_id = ?) AS joined
                   FROM community_events e
                   LEFT JOIN profiles p ON p.user_id = e.host_user_id
                   LEFT JOIN community_event_attendees a ON a.event_id = e.id
-                 WHERE e.community_id = ? AND e.status <> 'CANCELLED'
+                 WHERE e.community_id = ? AND e.status IN('SCHEDULED','COMPLETED','CANCELLED')
                  GROUP BY e.id, p.display_name
-                 ORDER BY e.starts_at
+                 ORDER BY e.starts_at DESC,e.id DESC LIMIT 50
                 """, (resultSet, row) -> new CommunityDetailsResponse.Event(
                 resultSet.getObject("id", UUID.class), resultSet.getString("title"), resultSet.getString("description"),
                 resultSet.getString("format"), resultSet.getString("host_name"),
                 resultSet.getObject("starts_at", OffsetDateTime.class).toInstant(),
                 resultSet.getObject("ends_at", OffsetDateTime.class).toInstant(),
                 resultSet.getObject("capacity", Integer.class), resultSet.getLong("attendee_count"),
-                resultSet.getBoolean("joined"), resultSet.getString("status")
+                resultSet.getBoolean("joined"), resultSet.getString("status"),resultSet.getLong("revision"),resultSet.getObject("discussion_post_id",UUID.class)
         ), viewerId, communityId);
 
         return new CommunityDetailsResponse(rules, members, events);
@@ -262,9 +264,10 @@ public class CommunityRepository {
         return new CommunityResponse(
                 resultSet.getObject("id", UUID.class), resultSet.getString("name"), resultSet.getString("slug"),
                 resultSet.getString("description"), resultSet.getString("icon_url"), resultSet.getBoolean("is_private"),
-                resultSet.getLong("member_count"), resultSet.getBoolean("member"), resultSet.getString("membership_role"),
+                resultSet.getObject("member_count",Long.class), resultSet.getBoolean("member"), resultSet.getString("membership_role"),
                 resultSet.getBoolean("join_requested"),
-                resultSet.getObject("created_at", OffsetDateTime.class).toInstant()
+                resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+                resultSet.getString("privacy_type"),resultSet.getString("status"),resultSet.getLong("rules_version"),resultSet.getString("rules_json"),resultSet.getObject("request_revision",Long.class)
         );
     }
 }
