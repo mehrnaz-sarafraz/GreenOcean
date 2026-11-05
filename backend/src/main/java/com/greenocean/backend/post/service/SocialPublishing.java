@@ -9,6 +9,10 @@ import java.util.UUID;
 
 @Service
 public class SocialPublishing {
+ private com.greenocean.backend.trust.PilotGate pilotGate;
+ @org.springframework.beans.factory.annotation.Autowired public void pilotRuntime(com.greenocean.backend.trust.PilotGate gate){this.pilotGate=gate;}
+ private void pilot(java.util.UUID who,String service){com.greenocean.backend.trust.PilotGate.require(pilotGate,db,who,service);}
+
     private final JdbcTemplate db;
     private final ContentClassifier safety;
     private final com.greenocean.backend.auth.service.AuthRateLimit rateLimit;
@@ -21,6 +25,7 @@ public class SocialPublishing {
     }
     public ContentSafety.Assessment check(UUID owner, String action, String body, UUID excludedId) {
         if (!enabled || !policyApproved) throw new ForbiddenException("Community publishing is unavailable pending safety operations approval");
+        pilot(owner,"COMMUNITY");
         if(!rateLimit.allowInCurrentTransaction("social-content:"+owner+":"+action,action.equals("POST")?10:30,java.time.Duration.ofMinutes(1)))
             throw new ConflictException("Please pause before submitting more content");
         db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended(?,0))", "social-write:"+owner);

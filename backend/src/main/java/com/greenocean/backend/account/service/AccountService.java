@@ -64,7 +64,7 @@ public class AccountService {
     }
 
     private java.util.Map<String,Object> trustAndSecurity(UUID user){
-        return java.util.Map.of("caseReceipts",db.queryForList("SELECT c.id,c.domain,c.category,c.state,c.created_at,c.updated_at FROM trust_cases c WHERE(c.source_kind='REPORT' AND EXISTS(SELECT 1 FROM reports r WHERE r.id=c.source_id AND r.reporter_id=?)) OR(c.source_kind='SUPPORT_REQUEST' AND EXISTS(SELECT 1 FROM support_requests r WHERE r.id=c.source_id AND r.user_id=?)) OR(c.source_kind='CLINIC_INCIDENT' AND EXISTS(SELECT 1 FROM clinic_operational_incidents r WHERE r.id=c.source_id AND r.reporter_id=?)) OR(c.source_kind='REPUTATION_CASE' AND EXISTS(SELECT 1 FROM clinic_reputation_cases r WHERE r.id=c.source_id AND r.requester_id=?)) ORDER BY c.created_at,c.id",user,user,user,user),
+        var result=new java.util.LinkedHashMap<String,Object>();result.putAll(java.util.Map.of("caseReceipts",db.queryForList("SELECT c.id,c.domain,c.category,c.state,c.created_at,c.updated_at FROM trust_cases c WHERE(c.source_kind='REPORT' AND EXISTS(SELECT 1 FROM reports r WHERE r.id=c.source_id AND r.reporter_id=?)) OR(c.source_kind='SUPPORT_REQUEST' AND EXISTS(SELECT 1 FROM support_requests r WHERE r.id=c.source_id AND r.user_id=?)) OR(c.source_kind='CLINIC_INCIDENT' AND EXISTS(SELECT 1 FROM clinic_operational_incidents r WHERE r.id=c.source_id AND r.reporter_id=?)) OR(c.source_kind='REPUTATION_CASE' AND EXISTS(SELECT 1 FROM clinic_reputation_cases r WHERE r.id=c.source_id AND r.requester_id=?)) ORDER BY c.created_at,c.id",user,user,user,user),
             "ownRecoveryPreparations",db.queryForList("SELECT id,source_commit,manifest_sha256,expires_at,created_at FROM recovery_replay_runs WHERE prepared_by=? ORDER BY created_at,id",user),
             "ownRecoveryReviews",db.queryForList("SELECT run_id,created_at FROM recovery_replay_reviews WHERE reviewer_id=? ORDER BY created_at,run_id",user),
             "ownRestoredRestrictions",db.queryForList("SELECT s.domain,r.created_at FROM recovery_replay_subjects s JOIN recovery_replay_runs r ON r.id=s.run_id WHERE s.subject_id=? ORDER BY r.created_at,s.domain",user),
@@ -73,7 +73,11 @@ public class AccountService {
             "ownOperationalIncidents",db.queryForList("SELECT id,domain,kind,severity,state,revision,created_at,updated_at FROM operation_incidents WHERE created_by=? OR owner_id=? ORDER BY created_at,id",user,user),
             "ownOperationalRoutes",db.queryForList("SELECT id,domain,destination_key,escalation_level,acknowledged_at,expires_at,revoked_at FROM operation_alert_routes WHERE recipient_id=? OR author_id=? OR approved_by=? ORDER BY created_at,id",user,user,user),
             "ownOperationalReviews",db.queryForList("SELECT id,policy_id,profession,mode,review_interval_days,approved_at,next_review_at,revoked_at FROM operation_ranking_audits WHERE author_id=? OR reviewer_id=? ORDER BY created_at,id",user,user),
-            "ownOperationalCommunications",db.queryForList("SELECT id,template,locale,public_status,approved_at,revoked_at,expires_at FROM operation_communications WHERE author_id=? OR reviewer_id=? ORDER BY created_at,id",user,user));
+            "ownOperationalCommunications",db.queryForList("SELECT id,template,locale,public_status,approved_at,revoked_at,expires_at FROM operation_communications WHERE author_id=? OR reviewer_id=? ORDER BY created_at,id",user,user)));
+        result.put("ownPilotParticipation",db.queryForList("SELECT p.id,p.state,p.revision,p.notice_version,p.notice_sha256,p.expires_at,p.created_at,a.service,a.country_code FROM pilot_participants p JOIN pilot_assessments a ON a.id=p.assessment_id WHERE p.user_id=? ORDER BY p.created_at,p.id",user));
+        result.put("ownPilotChoices",db.queryForList("SELECT e.participant_id,e.state,e.created_at FROM pilot_participant_events e JOIN pilot_participants p ON p.id=e.participant_id WHERE p.user_id=? AND e.actor_id=? ORDER BY e.created_at,e.id",user,user));
+        result.put("ownPilotEvidence",db.queryForList("SELECT id,assessment_id,criterion,state,kind,reference,artifact_sha256,expires_at,created_at FROM pilot_evidence WHERE author_id=? ORDER BY created_at,id",user));
+        return result;
     }
     private java.util.Map<String,Object> professionalCare(UUID user){
         var result=new java.util.LinkedHashMap<String,Object>();

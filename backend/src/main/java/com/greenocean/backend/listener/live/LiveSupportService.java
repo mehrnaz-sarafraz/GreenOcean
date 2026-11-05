@@ -18,6 +18,10 @@ import java.util.*;
 @Service
 @Transactional(noRollbackFor=LiveSupportException.class)
 public class LiveSupportService {
+ private com.greenocean.backend.trust.PilotGate pilotGate;
+ @org.springframework.beans.factory.annotation.Autowired public void pilotRuntime(com.greenocean.backend.trust.PilotGate gate){this.pilotGate=gate;}
+ private void pilot(java.util.UUID who,String service){com.greenocean.backend.trust.PilotGate.require(pilotGate,db,who,service);}
+
  private final JdbcTemplate db;
  private final AccessPolicy access;
  private final LiveSupportSettings settings;
@@ -57,7 +61,7 @@ public class LiveSupportService {
   Map<String,Object> p=rows.isEmpty()?Map.of():rows.getFirst();boolean mine=session.equals(p.get("session_id"));
   return new ListenerAvailability(enabled(),state,mine?(UUID)p.get("lease_id"):null,mine?instant(p.get("expires_at")):null,now(),settings.heartbeatSeconds());
  }
- public ListenerAvailability setAvailability(UUID user,UUID session,int version,boolean ready,UUID previousLease){
+ public ListenerAvailability setAvailability(UUID user,UUID session,int version,boolean ready,UUID previousLease){if(ready)pilot(user,"LISTENERS");
   reconcile();requireEnabled();requireListener(user);
   if(!sessionValid(user,session,version))throw failure(403,"SESSION_REVOKED","Sign in again before setting availability.");
   var rows=db.queryForList("SELECT * FROM listener_presence WHERE listener_id=?",user);
@@ -89,7 +93,7 @@ public class LiveSupportService {
  public LiveSupportView createQueued(UUID user,UUID clientId,UUID target,UUID entry){
   if(planning==null)throw failure(503,"SUPPORT_PATH_DISABLED","Queue support is disabled.");planning.require("QUEUE");return createOrigin(user,clientId,target,null,entry);
  }
- private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking,UUID queue){com.greenocean.backend.trust.AdmissionContainment.require(db,"LISTENER_NEW");
+ private LiveSupportView createOrigin(UUID user,UUID clientId,UUID target,UUID booking,UUID queue){pilot(user,"LISTENERS");if(target!=null)pilot(target,"LISTENERS");com.greenocean.backend.trust.AdmissionContainment.require(db,"LISTENER_NEW");
   reconcile();requireEnabled();requireMember(user);
   var retry=db.queryForList("SELECT id,listener_id,source_booking_id,source_queue_id FROM live_support_requests WHERE member_id=? AND client_request_id=?",user,clientId);
   if(!retry.isEmpty()){
@@ -108,7 +112,7 @@ public class LiveSupportService {
    ORDER BY p.last_assigned_at NULLS FIRST,p.listener_id LIMIT 1
    """,UUID.class,user,target,target,user,user,booking,queue);
   if(candidates.isEmpty())throw failure(409,"NO_AVAILABLE_LISTENER","No live listener is currently available. You can check again or choose another support path.");
-  UUID listener=candidates.getFirst(),id=UUID.randomUUID();
+  UUID listener=candidates.getFirst(),id=UUID.randomUUID();pilot(listener,"LISTENERS");
   db.update("INSERT INTO live_support_requests(id,member_id,listener_id,client_request_id,expires_at,presence_seconds,reconnect_seconds,source_booking_id,source_queue_id,planned_seconds) VALUES (?,?,?,?,clock_timestamp()+(?*INTERVAL '1 second'),?,?,?,?,?)",id,user,listener,clientId,settings.offerSeconds(),settings.presenceSeconds(),settings.reconnectSeconds(),booking,queue,planning!=null&&planning.planning()?1800:null);
   db.update("UPDATE listener_presence SET last_assigned_at=clock_timestamp() WHERE listener_id=?",listener);
   return view(id,user);
@@ -130,7 +134,7 @@ public class LiveSupportService {
   reconcile();requireEnabled();requireListener(user);var r=owned(id,user);
   if(!user.equals(r.get("listener_id")))throw failure(403,"ACCEPT_FORBIDDEN","Only the targeted listener can accept this request.");
   if(Set.of("ACCEPTED","ACTIVE","INTERRUPTED").contains(r.get("status")))return view(id,user);
-  requireState(r,"REQUESTED");
+  pilot(user,"LISTENERS");pilot((UUID)r.get("member_id"),"LISTENERS");requireState(r,"REQUESTED");
   if(!truth("SELECT live_listener_ready(?)",user))throw failure(409,"LISTENER_UNAVAILABLE","Become available before accepting a live request.");
   int changed=db.update("UPDATE live_support_requests SET status='ACCEPTED',accepted_at=clock_timestamp(),listener_seen_at=clock_timestamp(),activation_expires_at=clock_timestamp()+(?*INTERVAL '1 second') WHERE id=? AND status='REQUESTED' AND expires_at>clock_timestamp() AND live_listener_ready(listener_id)",settings.activationSeconds(),id);
   if(changed!=1){reconcile();throw failure(409,"REQUEST_EXPIRED","This live offer is no longer available.");}
@@ -152,7 +156,7 @@ public class LiveSupportService {
  public LiveSupportView activate(UUID id,UUID user){
   reconcile();requireEnabled();requireMember(user);var r=owned(id,user);
   if(!user.equals(r.get("member_id")))throw failure(403,"ACTIVATION_FORBIDDEN","Only the requesting member can enter the accepted session.");
-  if("ACTIVE".equals(r.get("status")))return view(id,user);requireState(r,"ACCEPTED");
+  if("ACTIVE".equals(r.get("status")))return view(id,user);pilot(user,"LISTENERS");pilot((UUID)r.get("listener_id"),"LISTENERS");requireState(r,"ACCEPTED");
   UUID conversation=UUID.randomUUID();
   int changed=db.update("UPDATE live_support_requests SET status='ACTIVE',conversation_id=?,activated_at=clock_timestamp(),member_seen_at=clock_timestamp(),listener_seen_at=clock_timestamp() WHERE id=? AND status='ACCEPTED' AND activation_expires_at>clock_timestamp() AND live_listener_ready(listener_id)",conversation,id);
   if(changed!=1){reconcile();throw failure(409,"REQUEST_EXPIRED","The accepted request is no longer available for activation.");}

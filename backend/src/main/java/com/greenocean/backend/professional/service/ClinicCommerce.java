@@ -13,6 +13,10 @@ import static com.greenocean.backend.professional.service.ProfessionalAuthority.
 
 @Service @Transactional
 public class ClinicCommerce {
+ private com.greenocean.backend.trust.PilotGate pilotGate;
+ @org.springframework.beans.factory.annotation.Autowired public void pilotRuntime(com.greenocean.backend.trust.PilotGate gate){this.pilotGate=gate;}
+ private void pilot(java.util.UUID who,String service){com.greenocean.backend.trust.PilotGate.require(pilotGate,db,who,service);}
+
     private final JdbcTemplate db;
     private final ProfessionalAuthority authority;
     private final GrowthLibrary roles;
@@ -49,10 +53,10 @@ public class ClinicCommerce {
         authority.audit(who,"COMMERCIAL_TERMS_ACCEPTED",slot,"Explicit professional agreement to version "+policy);}
     public List<Map<String,Object>> offers(UUID who,UUID professional){enabled();authority.actor(who);if(!Boolean.TRUE.equals(db.queryForObject("SELECT professional_qualification_live(?)",Boolean.class,professional)))throw new ForbiddenException("Current professional qualification required");
         return safe(db.queryForList("SELECT s.id,s.starts_at,s.ends_at,s.consultation_mode,s.price_units,s.currency,s.revision,o.policy_id,o.approval_required,p.version,p.terms,p.refund_policy,p.commission_bps,CASE WHEN s.price_units=0 THEN 0 ELSE p.provider_fee_units END AS provider_fee_units FROM professional_availability_slots s JOIN clinic_slot_offers o ON o.slot_id=s.id JOIN clinic_commercial_policies p ON p.id=o.policy_id WHERE s.professional_user_id=? AND s.governed AND s.status='AVAILABLE' AND s.starts_at>CURRENT_TIMESTAMP+INTERVAL '15 minutes' AND professional_scope_live(s.professional_user_id,'IR',s.consultation_mode) ORDER BY s.starts_at LIMIT 100",professional));}
-    public Map<String,Object> book(UUID patient,Booking in){com.greenocean.backend.trust.AdmissionContainment.require(db,"CLINIC_BOOKING");enabled();authority.actor(patient);patientLock(patient);
+    public Map<String,Object> book(UUID patient,Booking in){pilot(patient,"PROFESSIONAL_BOOKING");com.greenocean.backend.trust.AdmissionContainment.require(db,"CLINIC_BOOKING");enabled();authority.actor(patient);patientLock(patient);
         var retries=db.queryForList("SELECT * FROM consultation_requests WHERE requester_user_id=? AND booking_key=?",patient,in.retryKey());
         if(!retries.isEmpty()){var r=retries.getFirst();if(!in.slotId().equals(r.get("availability_slot_id"))||!in.policyId().equals(r.get("policy_id"))||in.expectedUnits()!=number(r,"price_units"))throw new ConflictException("Retry key is already bound to another booking");return appointment(patient,(UUID)r.get("id"));}
-        var owners=db.queryForList("SELECT professional_user_id FROM professional_availability_slots WHERE id=?",in.slotId());if(owners.isEmpty())throw new NotFoundException("Availability was not found");UUID professional=(UUID)owners.getFirst().get("professional_user_id");authority.lock(professional);authority.offer(professional,"IR",mode(in.slotId()));access.requireCare(patient,professional,mode(in.slotId()));
+        var owners=db.queryForList("SELECT professional_user_id FROM professional_availability_slots WHERE id=?",in.slotId());if(owners.isEmpty())throw new NotFoundException("Availability was not found");UUID professional=(UUID)owners.getFirst().get("professional_user_id");pilot(professional,"PROFESSIONAL_BOOKING");authority.lock(professional);authority.offer(professional,"IR",mode(in.slotId()));access.requireCare(patient,professional,mode(in.slotId()));
         if(patient.equals(professional))throw new ConflictException("Self booking is not available");
         var rows=db.queryForList("SELECT s.*,o.policy_id,o.approval_required,p.commission_bps,p.provider_fee_units,p.terms,p.refund_policy,p.version FROM professional_availability_slots s JOIN clinic_slot_offers o ON o.slot_id=s.id JOIN clinic_commercial_policies p ON p.id=o.policy_id WHERE s.id=? FOR UPDATE OF s,o",in.slotId());
         if(rows.isEmpty())throw new ConflictException("An explicit professional commercial agreement is required");var s=rows.getFirst();
@@ -81,7 +85,7 @@ public class ClinicCommerce {
     private void event(UUID id,long rev,UUID actor,String state,String reason){db.update("INSERT INTO clinic_appointment_events(appointment_id,revision,actor_id,state,reason) VALUES(?,?,?,?,?)",id,rev,actor,state,reason);}
     private ClinicPaymentProvider provider(){if(providers.size()!=1||!providers.getFirst().authorized())throw new ConflictException("An owner-approved authorized payment adapter is not configured");return providers.getFirst();}
     private void providerGate(String mode){provider();if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM clinic_release_approvals a JOIN users u ON u.id=a.approved_by WHERE a.country_code='IR' AND a.mode=? AND a.purpose='PAYMENT_PROVIDER' AND a.revoked_at IS NULL AND a.expires_at>CURRENT_TIMESTAMP AND u.status='ACTIVE' AND EXISTS(SELECT 1 FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=u.id AND r.name='ADMIN'))",Boolean.class,mode)))throw new ForbiddenException("Current independent payment operating approval is required");}
-    public Map<String,Object> payment(UUID who,UUID id){com.greenocean.backend.trust.AdmissionContainment.require(db,"PAYMENT_CAPTURE");enabled();var c=lock(id);if(!who.equals(c.get("requester_user_id")))throw new NotFoundException("Own appointment was not found");authority.actor(who);providerGate((String)c.get("consultation_mode"));
+    public Map<String,Object> payment(UUID who,UUID id){pilot(who,"REAL_PAYMENTS");com.greenocean.backend.trust.AdmissionContainment.require(db,"PAYMENT_CAPTURE");enabled();var c=lock(id);if(!who.equals(c.get("requester_user_id")))throw new NotFoundException("Own appointment was not found");authority.actor(who);providerGate((String)c.get("consultation_mode"));
         var existing=db.queryForList("SELECT p.* FROM clinic_payment_intents p JOIN clinic_invoices i ON i.id=p.invoice_id WHERE i.appointment_id=?",id);
         if(!"PAYMENT_PENDING".equals(c.get("status"))||((java.sql.Timestamp)c.get("payment_deadline")).toInstant().isBefore(Instant.now()))throw new ConflictException("Current payment reservation is required");
         UUID intent=existing.isEmpty()?db.queryForObject("INSERT INTO clinic_payment_intents(id,invoice_id,provider) SELECT appointment_id,id,? FROM clinic_invoices WHERE appointment_id=? RETURNING id",UUID.class,provider().name(),id):(UUID)existing.getFirst().get("id");

@@ -15,6 +15,10 @@ import com.greenocean.backend.social.dto.FollowRequestResponse;
 
 @Service
 public class SocialService {
+    private com.greenocean.backend.trust.PilotGate pilotGate;
+    @org.springframework.beans.factory.annotation.Autowired public void pilotRuntime(com.greenocean.backend.trust.PilotGate gate){this.pilotGate=gate;}
+    private void pilot(UUID who){com.greenocean.backend.trust.PilotGate.require(pilotGate,db,who,"COMMUNITY");}
+
     private final org.springframework.jdbc.core.JdbcTemplate db;
     private final UserRepository userRepository;
     private final SocialInteractionRepository interactions;
@@ -30,6 +34,7 @@ public class SocialService {
 
     @Transactional
     public FollowActionResponse follow(UUID currentUserId, UUID targetUserId) {
+        pilot(currentUserId);pilot(targetUserId);
         lock(currentUserId,targetUserId);
         validateTarget(currentUserId, targetUserId);
         if (interactions.hasBlockBetween(currentUserId, targetUserId)) {
@@ -58,6 +63,7 @@ public class SocialService {
 
     @Transactional
     public void acceptFollowRequest(UUID currentUserId, UUID requesterId) {
+        pilot(currentUserId);pilot(requesterId);
         lock(currentUserId,requesterId);
         validateTarget(currentUserId, requesterId);
         if(interactions.hasBlockBetween(currentUserId,requesterId))throw new NotFoundException("Pending follow request was not found");

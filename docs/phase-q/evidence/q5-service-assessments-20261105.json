@@ -1,0 +1,200 @@
+[
+  {
+    "service": "COMMUNITY",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "SOCIAL_OPERATIONS",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseL1PublishingTest",
+      "PhaseM1PrivacyTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Published reviewed notice, moderation rota, real mail/alerts",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "WELLBEING_EDUCATION",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "PRIVACY_EDUCATION_REVIEW",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseQ5PilotTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Processing/content approvals and education rota",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "LISTENERS",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "LISTENER_SAFETY_SUPERVISION",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseN1SchedulingTest",
+      "PhaseN3SessionsTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Qualified listener/supervisor rota and service window",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "PROFESSIONAL_BOOKING",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "CLINIC_OPERATIONS",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseP1Test",
+      "PhaseP2Test"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Real current credentials and independent platform country/service license",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "CLINICAL_TEXT",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "CLINICAL_PRIVACY_REVIEW",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseP3Test",
+      "PhaseP3ConcurrencyTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Clinical legal/processing approval, keys and actual professionals",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "CLINICAL_MEDIA",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "CLINICAL_PROVIDER_REVIEW",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseP3MediaTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Approved regional provider and real physical-device media acceptance",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "REAL_PAYMENTS",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "FINANCE_OPERATIONS",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseP2PaymentsTest",
+      "PhaseP2ConcurrencyTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Approved payment provider, merchant authority, financial operations",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  },
+  {
+    "service": "CLINICAL_RECORDS",
+    "country": "IR",
+    "date": "2026-11-05",
+    "sourceBaseline": "366adcc8140063540c13793305ca7cf4ba29a346",
+    "sourceEvidence": "Q4 CI41964591756; Q5 exact publication/CI recorded in PR and final audit",
+    "decision": "NO_GO",
+    "runtimeActivation": false,
+    "responsibleRoleRequired": "CLINICAL_RECORDS_PRIVACY",
+    "actualPersonnelAssigned": false,
+    "technicalRegressionReferences": [
+      "PhaseP3FilesTest",
+      "PhaseQ4RecoveryTest"
+    ],
+    "regressionMeaning": "Synthetic technical checks, never real service qualification",
+    "serviceSpecificBlocker": "Category retention/access approval, actual key custody and real restore rehearsal",
+    "commonBlockers": [
+      "INDEPENDENT_SECURITY_PRIVACY_LEGAL_APPROVAL_REQUIRED",
+      "DEVICE_TEST_REQUIRED",
+      "REAL_COVERAGE_ALERTS_REQUIRED",
+      "OWNER_APPROVAL_REQUIRED"
+    ],
+    "expiry": "Not approved; no valid approval expiry",
+    "evidenceIntegrity": "Documentary report only; no fabricated database assessment or external review"
+  }
+]
