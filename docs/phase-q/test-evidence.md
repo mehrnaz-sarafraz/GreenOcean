@@ -55,3 +55,13 @@ Final additions include minimal own operational archive metadata, an isolated bo
 ### Q3 final prepublication evidence
 
 Final focused source validation: **97 PostgreSQL tests passed,0 failures/errors/skips**, plus69 frontend logic. This includes all Q2/P4/Q3 targeted suites, new own staff archive privacy, current role/route acknowledgement race and actual slow receiver isolation. The final alert worker has a single bounded independent executor with no unbounded task queue, so a slow receiver does not occupy the shared scheduler; HTTP clients/executor close on shutdown. Nine rendered Q3 browser cases and the two actual-stack P4/Q3 journeys passed. TypeScript passed, lint0 errors/11 existing warnings. Staged-source scan1019 files: no candidate credentials, all31 original migrations unchanged. Earlier complete758-test local regression preceded the final two archive/worker assertions; final full exact-source CI and all-platform exports remain pending. External reviews and operational launch gates remain open.
+
+## Q3 final publication and Q4 local validation
+
+Q3 exact head035879e196e99ed1ffc1097c3363acf7287040b0,PR30,CI41786139282:all four jobs successful;760 backend+69 logic+198 browser+54 actual-stack=1081,no failures/skips. This supersedes the prepublication pending-CI statements above.
+
+Q4 final local source:114 focused backend tests passed,0 failures/errors/skips,including30 new Q4 cases;69 logic and7 rendered Q4 browser cases passed;TypeScript passed;lint0 errors/11 existing warnings. Manual HTTP/resource/physical failure/restore evidence and limitations are in q4-validation and evidence/q4-*.json. Q4 publication CI must be verified on its actual commit through PR checks. Q5 and Q0 are not complete,real operational approvals remain open,and no service is activated by this evidence.
+
+### Recovery authority follow-up — 2026-11-05
+
+Initial Q4 head374cee4 had all four CI jobs successful,including790 backend tests. A subsequent three-test reproduction identified stale restored operator authority;the fix requires an external2–10-operator roster,excludes ALL-restricted approvers from preparation/review/readiness,limits historical-epoch access,and invalidates new tokens for ALL subjects. Final Q4-specific rerun:37 tests passed,0 failures/errors/skips. Repeated actual restored-application exercise:16 HTTP assertions passed,including fresh-token rejection. This supersedes the initial30-case Q4 subset for the follow-up;new exact-head CI is required. No real operator/key custody or launch approval is claimed.

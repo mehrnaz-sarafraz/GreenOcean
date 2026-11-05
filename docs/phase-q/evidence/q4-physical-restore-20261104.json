@@ -1,0 +1,41 @@
+{
+  "evidenceKind": "SYNTHETIC_LOCAL_DATABASE_RESTORE",
+  "sourceDatabase": "greenocean_q4_load_qa",
+  "restoredDatabase": "greenocean_q4_restore_534956455c80466c8f4e5fa613a67f39_qa",
+  "dumpSeconds": 1.125,
+  "physicalRestoreSeconds": 8.421000000089407,
+  "dumpBytes": 2315333,
+  "integritySha256": "0ec72f4af69b08f32c25d30f73180edb7e0ae51c50715ccd8ab8d09d7696ade6",
+  "authenticatedDecryptionBeforeRestore": true,
+  "negativeIntegrityChecks": [
+    "wrong-key",
+    "tampered-ciphertext"
+  ],
+  "tableCountsBefore": {
+    "users": 534,
+    "posts": 2651,
+    "wellbeing_journal_entries": 2173,
+    "wellbeing_check_ins": 2129,
+    "flyway_schema_history": 89
+  },
+  "tableCountsRestored": {
+    "users": 534,
+    "posts": 2651,
+    "wellbeing_journal_entries": 2173,
+    "wellbeing_check_ins": 2129,
+    "flyway_schema_history": 89
+  },
+  "canonicalTableFingerprintsMatched": 223,
+  "observedPostBackupWritesMissing": 1,
+  "snapshotToVerificationSeconds": 30.460776567459106,
+  "serviceRecovery": "NOT_MEASURED_BY_THIS_PHYSICAL_DATABASE_DRILL",
+  "privacyReplay": "FRESH_EXTERNAL_EPOCH_AND_INDEPENDENT_REVIEW_REQUIRED_BEFORE_DATA_APIS",
+  "objectStorage": "NOT_COVERED_BY_POSTGRESQL_DUMP",
+  "ownerApprovedRtoRpo": false,
+  "limitations": [
+    "Synthetic local data only",
+    "No staging or production rehearsal",
+    "Windows key file inherits workspace ACL; production custody not established",
+    "No object-store or real provider recovery proof"
+  ]
+}

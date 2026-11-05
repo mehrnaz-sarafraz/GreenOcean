@@ -28,12 +28,22 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authenticationException
     ) throws IOException {
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        HttpStatus status = temporarilyUnavailable(authenticationException) ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.UNAUTHORIZED;
         response.setStatus(status.value());
+        response.setHeader("Cache-Control","no-store");
+        if(status==HttpStatus.SERVICE_UNAVAILABLE)response.setHeader("Retry-After","5");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), new ApiError(
                 Instant.now(), status.value(), status.getReasonPhrase(),
-                "Authentication is required", request.getRequestURI(), List.of()
+                status==HttpStatus.SERVICE_UNAVAILABLE?"Authentication verification is temporarily unavailable. Please retry.":"Authentication is required", request.getRequestURI(), List.of()
         ));
+    }
+    private boolean temporarilyUnavailable(Throwable failure){
+        for(int depth=0;failure!=null&&depth<8;depth++,failure=failure.getCause()){
+            if(failure instanceof org.springframework.security.oauth2.jwt.JwtValidationException validation)
+                return !validation.getErrors().isEmpty()&&validation.getErrors().stream()
+                    .allMatch(error->"temporarily_unavailable".equals(error.getErrorCode()));
+        }
+        return false;
     }
 }

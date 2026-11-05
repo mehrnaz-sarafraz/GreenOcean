@@ -1,0 +1,1808 @@
+{
+  "evidenceKind": "SYNTHETIC_LOCAL_HTTP_WITH_DOMAIN_FIXTURES",
+  "sourceBaseCommit": "035879e196e99ed1ffc1097c3363acf7287040b0",
+  "sourceState": "Q4 modified worktree; immutable-head CI pending",
+  "hardware": {
+    "processor": "AMD Ryzen 5 4600H with Radeon Graphics         ",
+    "physicalCores": 6,
+    "logicalProcessors": 12,
+    "ramGiB": 7.42,
+    "source": "local Windows CIM inventory",
+    "jvmLimitMiB": 768,
+    "postgresMajor": 18,
+    "storage": "Local workspace volume; physical storage performance not benchmarked"
+  },
+  "dataset": {
+    "totalPosts": 2651,
+    "totalUsers": 527,
+    "totalPrivateEntries": 2170,
+    "activeSyntheticClients": 100,
+    "totalMoodObservations": 2129,
+    "newSyntheticAccounts": 0
+  },
+  "postgresSettings": {
+    "maxConnections": "100",
+    "sharedBuffers": "128MB"
+  },
+  "invariants": {
+    "clinicAppointments": 161,
+    "captureEvents": 80,
+    "duplicateCaptures": 0,
+    "duplicateSlotBookings": 0,
+    "clinicalEncounters": 1,
+    "growthResources": 4
+  },
+  "runs": [
+    {
+      "concurrentUsers": 25,
+      "repetition": 1,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2656639,
+      "requests": 1770,
+      "throughputPerSecond": 87.33984777079027,
+      "latency": {
+        "samples": 1770,
+        "p50Ms": 18.596,
+        "p95Ms": 103.54,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 1696,
+        "p50Ms": 19.323,
+        "p95Ms": 107.955,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 74,
+      "publishingProtective409Count": 0,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 68,
+          "p50Ms": 18.073,
+          "p95Ms": 86.8,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 68
+          }
+        },
+        "appointment-booking": {
+          "samples": 22,
+          "p50Ms": 25.854,
+          "p95Ms": 82.926,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 22
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 67,
+          "p50Ms": 26.067,
+          "p95Ms": 90.097,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 67
+          }
+        },
+        "feed": {
+          "samples": 137,
+          "p50Ms": 28.547,
+          "p95Ms": 93.511,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 137
+          }
+        },
+        "group-membership": {
+          "samples": 67,
+          "p50Ms": 13.389,
+          "p95Ms": 52.831,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 67
+          }
+        },
+        "groups": {
+          "samples": 138,
+          "p50Ms": 11.94,
+          "p95Ms": 42.055,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 138
+          }
+        },
+        "growth-library": {
+          "samples": 139,
+          "p50Ms": 13.924,
+          "p95Ms": 40.247,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 139
+          }
+        },
+        "journal-write": {
+          "samples": 67,
+          "p50Ms": 16.438,
+          "p95Ms": 77.669,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 67
+          }
+        },
+        "lessons": {
+          "samples": 140,
+          "p50Ms": 16.269,
+          "p95Ms": 57.376,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 140
+          }
+        },
+        "listener-queue": {
+          "samples": 139,
+          "p50Ms": 17.678,
+          "p95Ms": 82.533,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 139
+          }
+        },
+        "listener-schedules": {
+          "samples": 140,
+          "p50Ms": 15.027,
+          "p95Ms": 65.403,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 140
+          }
+        },
+        "login": {
+          "samples": 67,
+          "p50Ms": 10.2,
+          "p95Ms": 148.758,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 30,
+            "429": 37
+          }
+        },
+        "mood-history": {
+          "samples": 140,
+          "p50Ms": 23.337,
+          "p95Ms": 65.578,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 140
+          }
+        },
+        "mood-write": {
+          "samples": 67,
+          "p50Ms": 16.306,
+          "p95Ms": 99.797,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 67
+          }
+        },
+        "payment-callback": {
+          "samples": 21,
+          "p50Ms": 23.993,
+          "p95Ms": 42.165,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 21
+          }
+        },
+        "private-journal": {
+          "samples": 139,
+          "p50Ms": 23.666,
+          "p95Ms": 76.165,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 139
+          }
+        },
+        "professional-directory": {
+          "samples": 140,
+          "p50Ms": 15.172,
+          "p95Ms": 58.57,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 140
+          }
+        },
+        "registration": {
+          "samples": 67,
+          "p50Ms": 10.11,
+          "p95Ms": 166.852,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 30,
+            "429": 37
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 107303304,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 7,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 47.390625,
+        "gcMillis": 173,
+        "rollbackDelta": 0,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 25,
+      "repetition": 2,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2361743,
+      "requests": 1854,
+      "throughputPerSecond": 91.61810787526179,
+      "latency": {
+        "samples": 1854,
+        "p50Ms": 12.051,
+        "p95Ms": 30.793,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 1587,
+        "p50Ms": 12.759,
+        "p95Ms": 31.251,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 215,
+      "publishingProtective409Count": 52,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 73,
+          "p50Ms": 13.096,
+          "p95Ms": 31.597,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 21,
+            "409": 52
+          }
+        },
+        "appointment-booking": {
+          "samples": 24,
+          "p50Ms": 13.708,
+          "p95Ms": 24.341,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 24
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 73,
+          "p50Ms": 16.872,
+          "p95Ms": 41.41,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 73
+          }
+        },
+        "feed": {
+          "samples": 141,
+          "p50Ms": 24.276,
+          "p95Ms": 45.577,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 141
+          }
+        },
+        "group-membership": {
+          "samples": 70,
+          "p50Ms": 11.646,
+          "p95Ms": 24.233,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 70
+          }
+        },
+        "groups": {
+          "samples": 142,
+          "p50Ms": 9.585,
+          "p95Ms": 22.02,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 142
+          }
+        },
+        "growth-library": {
+          "samples": 144,
+          "p50Ms": 10.786,
+          "p95Ms": 29.266,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 144
+          }
+        },
+        "journal-write": {
+          "samples": 73,
+          "p50Ms": 12.875,
+          "p95Ms": 24.307,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 71,
+            "429": 2
+          }
+        },
+        "lessons": {
+          "samples": 145,
+          "p50Ms": 9.807,
+          "p95Ms": 27.347,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 145
+          }
+        },
+        "listener-queue": {
+          "samples": 146,
+          "p50Ms": 13.048,
+          "p95Ms": 27.776,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 146
+          }
+        },
+        "listener-schedules": {
+          "samples": 146,
+          "p50Ms": 10.316,
+          "p95Ms": 24.959,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 146
+          }
+        },
+        "login": {
+          "samples": 71,
+          "p50Ms": 4.687,
+          "p95Ms": 12.236,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 71
+          }
+        },
+        "mood-history": {
+          "samples": 143,
+          "p50Ms": 16.506,
+          "p95Ms": 32.171,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 105,
+            "429": 38
+          }
+        },
+        "mood-write": {
+          "samples": 74,
+          "p50Ms": 8.885,
+          "p95Ms": 22.578,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 71,
+            "429": 3
+          }
+        },
+        "payment-callback": {
+          "samples": 23,
+          "p50Ms": 9.871,
+          "p95Ms": 23.4,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 23
+          }
+        },
+        "private-journal": {
+          "samples": 143,
+          "p50Ms": 16.586,
+          "p95Ms": 41.532,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 113,
+            "429": 30
+          }
+        },
+        "professional-directory": {
+          "samples": 147,
+          "p50Ms": 8.968,
+          "p95Ms": 25.214,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 147
+          }
+        },
+        "registration": {
+          "samples": 71,
+          "p50Ms": 4.707,
+          "p95Ms": 8.797,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 71
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 105983080,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 0,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 23.5625,
+        "gcMillis": 49,
+        "rollbackDelta": 119,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 50,
+      "repetition": 1,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2607473,
+      "requests": 3585,
+      "throughputPerSecond": 176.94312785787523,
+      "latency": {
+        "samples": 3585,
+        "p50Ms": 14.283,
+        "p95Ms": 98.608,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 2570,
+        "p50Ms": 15.801,
+        "p95Ms": 101.729,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 983,
+      "publishingProtective409Count": 32,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 143,
+          "p50Ms": 19.227,
+          "p95Ms": 105.997,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 111,
+            "409": 32
+          }
+        },
+        "appointment-booking": {
+          "samples": 22,
+          "p50Ms": 21.824,
+          "p95Ms": 100.181,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 22
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 143,
+          "p50Ms": 23.938,
+          "p95Ms": 122.195,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 143
+          }
+        },
+        "feed": {
+          "samples": 278,
+          "p50Ms": 28.82,
+          "p95Ms": 83.87,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 278
+          }
+        },
+        "group-membership": {
+          "samples": 140,
+          "p50Ms": 14.167,
+          "p95Ms": 47.61,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 140
+          }
+        },
+        "groups": {
+          "samples": 281,
+          "p50Ms": 9.759,
+          "p95Ms": 74.747,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 281
+          }
+        },
+        "growth-library": {
+          "samples": 283,
+          "p50Ms": 12.874,
+          "p95Ms": 80.371,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 283
+          }
+        },
+        "journal-write": {
+          "samples": 144,
+          "p50Ms": 14.739,
+          "p95Ms": 95.794,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 48,
+            "429": 96
+          }
+        },
+        "lessons": {
+          "samples": 286,
+          "p50Ms": 12.793,
+          "p95Ms": 81.276,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 286
+          }
+        },
+        "listener-queue": {
+          "samples": 285,
+          "p50Ms": 17.317,
+          "p95Ms": 93.371,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 285
+          }
+        },
+        "listener-schedules": {
+          "samples": 286,
+          "p50Ms": 12.471,
+          "p95Ms": 76.411,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 286
+          }
+        },
+        "login": {
+          "samples": 140,
+          "p50Ms": 5.364,
+          "p95Ms": 129.998,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 30,
+            "429": 110
+          }
+        },
+        "mood-history": {
+          "samples": 283,
+          "p50Ms": 12.43,
+          "p95Ms": 86.967,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2,
+            "429": 281
+          }
+        },
+        "mood-write": {
+          "samples": 140,
+          "p50Ms": 16.002,
+          "p95Ms": 101.729,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 31,
+            "429": 109
+          }
+        },
+        "payment-callback": {
+          "samples": 21,
+          "p50Ms": 11.019,
+          "p95Ms": 41.069,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 21
+          }
+        },
+        "private-journal": {
+          "samples": 281,
+          "p50Ms": 12.691,
+          "p95Ms": 84.833,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3,
+            "429": 278
+          }
+        },
+        "professional-directory": {
+          "samples": 285,
+          "p50Ms": 13.636,
+          "p95Ms": 84.628,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 285
+          }
+        },
+        "registration": {
+          "samples": 139,
+          "p50Ms": 5.989,
+          "p95Ms": 139.951,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 30,
+            "429": 109
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 163795872,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 35,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 50.265625,
+        "gcMillis": 167,
+        "rollbackDelta": 791,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 50,
+      "repetition": 2,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2377968,
+      "requests": 3739,
+      "throughputPerSecond": 184.75331267284983,
+      "latency": {
+        "samples": 3739,
+        "p50Ms": 9.389,
+        "p95Ms": 27.897,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 2482,
+        "p50Ms": 10.433,
+        "p95Ms": 29.283,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 1178,
+      "publishingProtective409Count": 79,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 150,
+          "p50Ms": 11.178,
+          "p95Ms": 27.431,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 71,
+            "409": 79
+          }
+        },
+        "appointment-booking": {
+          "samples": 25,
+          "p50Ms": 12.247,
+          "p95Ms": 25.74,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 25
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 148,
+          "p50Ms": 15.647,
+          "p95Ms": 34.0,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 148
+          }
+        },
+        "feed": {
+          "samples": 293,
+          "p50Ms": 22.882,
+          "p95Ms": 39.05,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 293
+          }
+        },
+        "group-membership": {
+          "samples": 146,
+          "p50Ms": 10.907,
+          "p95Ms": 27.792,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 146
+          }
+        },
+        "groups": {
+          "samples": 293,
+          "p50Ms": 7.322,
+          "p95Ms": 22.797,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 293
+          }
+        },
+        "growth-library": {
+          "samples": 295,
+          "p50Ms": 9.218,
+          "p95Ms": 25.076,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 295
+          }
+        },
+        "journal-write": {
+          "samples": 148,
+          "p50Ms": 10.005,
+          "p95Ms": 24.677,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 148
+          }
+        },
+        "lessons": {
+          "samples": 294,
+          "p50Ms": 8.303,
+          "p95Ms": 23.417,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 294
+          }
+        },
+        "listener-queue": {
+          "samples": 296,
+          "p50Ms": 11.782,
+          "p95Ms": 28.684,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 296
+          }
+        },
+        "listener-schedules": {
+          "samples": 297,
+          "p50Ms": 8.674,
+          "p95Ms": 24.854,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 297
+          }
+        },
+        "login": {
+          "samples": 147,
+          "p50Ms": 3.484,
+          "p95Ms": 9.954,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 147
+          }
+        },
+        "mood-history": {
+          "samples": 293,
+          "p50Ms": 7.57,
+          "p95Ms": 23.661,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 293
+          }
+        },
+        "mood-write": {
+          "samples": 149,
+          "p50Ms": 8.946,
+          "p95Ms": 21.829,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 149
+          }
+        },
+        "payment-callback": {
+          "samples": 24,
+          "p50Ms": 8.888,
+          "p95Ms": 20.02,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 24
+          }
+        },
+        "private-journal": {
+          "samples": 293,
+          "p50Ms": 8.612,
+          "p95Ms": 25.675,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 293
+          }
+        },
+        "professional-directory": {
+          "samples": 295,
+          "p50Ms": 8.449,
+          "p95Ms": 24.62,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 295
+          }
+        },
+        "registration": {
+          "samples": 148,
+          "p50Ms": 4.138,
+          "p95Ms": 12.486,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 148
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 172102304,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 6,
+        "peakLockWaiters": 1,
+        "cpuSeconds": 20.640625,
+        "gcMillis": 36,
+        "rollbackDelta": 971,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 75,
+      "repetition": 1,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.3139308,
+      "requests": 4935,
+      "throughputPerSecond": 242.936733839814,
+      "latency": {
+        "samples": 4935,
+        "p50Ms": 21.219,
+        "p95Ms": 223.934,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 3350,
+        "p50Ms": 24.437,
+        "p95Ms": 230.356,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 1510,
+      "publishingProtective409Count": 75,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 195,
+          "p50Ms": 25.856,
+          "p95Ms": 166.736,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 120,
+            "409": 75
+          }
+        },
+        "appointment-booking": {
+          "samples": 20,
+          "p50Ms": 20.684,
+          "p95Ms": 320.95,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 20
+          }
+        },
+        "clinical-signaling": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        },
+        "comment": {
+          "samples": 194,
+          "p50Ms": 31.349,
+          "p95Ms": 254.197,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 194
+          }
+        },
+        "feed": {
+          "samples": 393,
+          "p50Ms": 39.914,
+          "p95Ms": 271.602,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 393
+          }
+        },
+        "group-membership": {
+          "samples": 195,
+          "p50Ms": 22.218,
+          "p95Ms": 209.594,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 195
+          }
+        },
+        "groups": {
+          "samples": 396,
+          "p50Ms": 14.814,
+          "p95Ms": 203.958,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 396
+          }
+        },
+        "growth-library": {
+          "samples": 395,
+          "p50Ms": 19.507,
+          "p95Ms": 230.358,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 395
+          }
+        },
+        "journal-write": {
+          "samples": 192,
+          "p50Ms": 18.525,
+          "p95Ms": 187.724,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 192
+          }
+        },
+        "lessons": {
+          "samples": 394,
+          "p50Ms": 19.01,
+          "p95Ms": 219.733,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 394
+          }
+        },
+        "listener-queue": {
+          "samples": 391,
+          "p50Ms": 23.946,
+          "p95Ms": 230.356,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 391
+          }
+        },
+        "listener-schedules": {
+          "samples": 389,
+          "p50Ms": 17.824,
+          "p95Ms": 247.46,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 389
+          }
+        },
+        "login": {
+          "samples": 194,
+          "p50Ms": 6.532,
+          "p95Ms": 157.83,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 24,
+            "429": 170
+          }
+        },
+        "mood-history": {
+          "samples": 392,
+          "p50Ms": 17.675,
+          "p95Ms": 229.354,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 392
+          }
+        },
+        "mood-write": {
+          "samples": 194,
+          "p50Ms": 19.04,
+          "p95Ms": 246.263,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 194
+          }
+        },
+        "payment-callback": {
+          "samples": 20,
+          "p50Ms": 13.46,
+          "p95Ms": 107.51,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 20
+          }
+        },
+        "private-journal": {
+          "samples": 393,
+          "p50Ms": 16.563,
+          "p95Ms": 231.36,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 393
+          }
+        },
+        "professional-directory": {
+          "samples": 390,
+          "p50Ms": 17.529,
+          "p95Ms": 206.628,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 390
+          }
+        },
+        "registration": {
+          "samples": 194,
+          "p50Ms": 6.074,
+          "p95Ms": 185.123,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 25,
+            "429": 169
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 18,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 169516800,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 46,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 42.203125,
+        "gcMillis": 147,
+        "rollbackDelta": 1267,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 75,
+      "repetition": 2,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2577966,
+      "requests": 5325,
+      "throughputPerSecond": 262.86175664336565,
+      "latency": {
+        "samples": 5325,
+        "p50Ms": 16.437,
+        "p95Ms": 77.831,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 3573,
+        "p50Ms": 19.428,
+        "p95Ms": 84.302,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 1674,
+      "publishingProtective409Count": 78,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 213,
+          "p50Ms": 22.502,
+          "p95Ms": 78.77,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 135,
+            "409": 78
+          }
+        },
+        "appointment-booking": {
+          "samples": 22,
+          "p50Ms": 18.95,
+          "p95Ms": 51.335,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 22
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 210,
+          "p50Ms": 29.073,
+          "p95Ms": 83.754,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 210
+          }
+        },
+        "feed": {
+          "samples": 421,
+          "p50Ms": 39.339,
+          "p95Ms": 112.183,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 421
+          }
+        },
+        "group-membership": {
+          "samples": 209,
+          "p50Ms": 18.652,
+          "p95Ms": 74.14,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 209
+          }
+        },
+        "groups": {
+          "samples": 422,
+          "p50Ms": 12.455,
+          "p95Ms": 74.626,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 422
+          }
+        },
+        "growth-library": {
+          "samples": 424,
+          "p50Ms": 15.693,
+          "p95Ms": 75.263,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 424
+          }
+        },
+        "journal-write": {
+          "samples": 210,
+          "p50Ms": 14.813,
+          "p95Ms": 74.2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 210
+          }
+        },
+        "lessons": {
+          "samples": 423,
+          "p50Ms": 15.561,
+          "p95Ms": 77.361,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 423
+          }
+        },
+        "listener-queue": {
+          "samples": 425,
+          "p50Ms": 22.498,
+          "p95Ms": 74.409,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 425
+          }
+        },
+        "listener-schedules": {
+          "samples": 422,
+          "p50Ms": 14.203,
+          "p95Ms": 70.135,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 422
+          }
+        },
+        "login": {
+          "samples": 208,
+          "p50Ms": 5.559,
+          "p95Ms": 28.258,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 6,
+            "429": 202
+          }
+        },
+        "mood-history": {
+          "samples": 424,
+          "p50Ms": 14.348,
+          "p95Ms": 71.492,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 424
+          }
+        },
+        "mood-write": {
+          "samples": 210,
+          "p50Ms": 14.916,
+          "p95Ms": 72.485,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 210
+          }
+        },
+        "payment-callback": {
+          "samples": 20,
+          "p50Ms": 13.191,
+          "p95Ms": 48.547,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 20
+          }
+        },
+        "private-journal": {
+          "samples": 424,
+          "p50Ms": 14.888,
+          "p95Ms": 74.21,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 424
+          }
+        },
+        "professional-directory": {
+          "samples": 424,
+          "p50Ms": 14.324,
+          "p95Ms": 77.064,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 424
+          }
+        },
+        "registration": {
+          "samples": 209,
+          "p50Ms": 5.583,
+          "p95Ms": 28.617,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 5,
+            "429": 204
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 18,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 166205328,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 56,
+        "peakLockWaiters": 1,
+        "cpuSeconds": 39.234375,
+        "gcMillis": 97,
+        "rollbackDelta": 1349,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 100,
+      "repetition": 1,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2703098,
+      "requests": 6906,
+      "throughputPerSecond": 340.69533559866954,
+      "latency": {
+        "samples": 6906,
+        "p50Ms": 16.694,
+        "p95Ms": 143.651,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 4606,
+        "p50Ms": 19.981,
+        "p95Ms": 149.119,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 2190,
+      "publishingProtective409Count": 110,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 273,
+          "p50Ms": 19.73,
+          "p95Ms": 157.267,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 163,
+            "409": 110
+          }
+        },
+        "appointment-booking": {
+          "samples": 20,
+          "p50Ms": 17.179,
+          "p95Ms": 122.212,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 20
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 272,
+          "p50Ms": 27.198,
+          "p95Ms": 171.374,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 272
+          }
+        },
+        "feed": {
+          "samples": 550,
+          "p50Ms": 34.865,
+          "p95Ms": 145.083,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 550
+          }
+        },
+        "group-membership": {
+          "samples": 271,
+          "p50Ms": 19.69,
+          "p95Ms": 176.337,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 271
+          }
+        },
+        "groups": {
+          "samples": 549,
+          "p50Ms": 12.405,
+          "p95Ms": 112.058,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 549
+          }
+        },
+        "growth-library": {
+          "samples": 550,
+          "p50Ms": 14.204,
+          "p95Ms": 129.999,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 550
+          }
+        },
+        "journal-write": {
+          "samples": 273,
+          "p50Ms": 15.012,
+          "p95Ms": 135.176,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 273
+          }
+        },
+        "lessons": {
+          "samples": 548,
+          "p50Ms": 15.958,
+          "p95Ms": 153.476,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 548
+          }
+        },
+        "listener-queue": {
+          "samples": 554,
+          "p50Ms": 20.936,
+          "p95Ms": 141.144,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 554
+          }
+        },
+        "listener-schedules": {
+          "samples": 551,
+          "p50Ms": 15.289,
+          "p95Ms": 155.749,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 551
+          }
+        },
+        "login": {
+          "samples": 274,
+          "p50Ms": 5.127,
+          "p95Ms": 29.355,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 274
+          }
+        },
+        "mood-history": {
+          "samples": 546,
+          "p50Ms": 14.693,
+          "p95Ms": 138.093,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 546
+          }
+        },
+        "mood-write": {
+          "samples": 274,
+          "p50Ms": 15.763,
+          "p95Ms": 130.348,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 274
+          }
+        },
+        "payment-callback": {
+          "samples": 20,
+          "p50Ms": 12.473,
+          "p95Ms": 92.928,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 20
+          }
+        },
+        "private-journal": {
+          "samples": 548,
+          "p50Ms": 13.808,
+          "p95Ms": 166.773,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 548
+          }
+        },
+        "professional-directory": {
+          "samples": 553,
+          "p50Ms": 14.223,
+          "p95Ms": 155.886,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 553
+          }
+        },
+        "registration": {
+          "samples": 275,
+          "p50Ms": 5.208,
+          "p95Ms": 34.788,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 275
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 167218296,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 57,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 42.125,
+        "gcMillis": 108,
+        "rollbackDelta": 1717,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    },
+    {
+      "concurrentUsers": 100,
+      "repetition": 2,
+      "warmupSeconds": 5,
+      "configuredSeconds": 20,
+      "actualSeconds": 20.2611421,
+      "requests": 6939,
+      "throughputPerSecond": 342.47822584492906,
+      "latency": {
+        "samples": 6939,
+        "p50Ms": 13.679,
+        "p95Ms": 165.599,
+        "p99MinimumSamples": 10000
+      },
+      "successfulRequestLatency": {
+        "samples": 4687,
+        "p50Ms": 15.403,
+        "p95Ms": 174.784,
+        "p99MinimumSamples": 10000
+      },
+      "unexpectedFailures": 0,
+      "unexpectedFailureFraction": 0.0,
+      "protective429Count": 2164,
+      "publishingProtective409Count": 88,
+      "workloads": {
+        "anonymous-post": {
+          "samples": 273,
+          "p50Ms": 16.49,
+          "p95Ms": 216.835,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 185,
+            "409": 88
+          }
+        },
+        "appointment-booking": {
+          "samples": 20,
+          "p50Ms": 16.903,
+          "p95Ms": 43.637,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 20
+          }
+        },
+        "clinical-signaling": {
+          "samples": 3,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 3
+          }
+        },
+        "comment": {
+          "samples": 273,
+          "p50Ms": 22.28,
+          "p95Ms": 169.069,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 273
+          }
+        },
+        "feed": {
+          "samples": 552,
+          "p50Ms": 30.124,
+          "p95Ms": 186.412,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 552
+          }
+        },
+        "group-membership": {
+          "samples": 274,
+          "p50Ms": 14.395,
+          "p95Ms": 134.334,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 250,
+            "429": 24
+          }
+        },
+        "groups": {
+          "samples": 554,
+          "p50Ms": 9.748,
+          "p95Ms": 145.683,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 554
+          }
+        },
+        "growth-library": {
+          "samples": 553,
+          "p50Ms": 13.174,
+          "p95Ms": 162.087,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 553
+          }
+        },
+        "journal-write": {
+          "samples": 274,
+          "p50Ms": 13.003,
+          "p95Ms": 149.366,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 274
+          }
+        },
+        "lessons": {
+          "samples": 551,
+          "p50Ms": 13.141,
+          "p95Ms": 159.555,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 551
+          }
+        },
+        "listener-queue": {
+          "samples": 555,
+          "p50Ms": 16.199,
+          "p95Ms": 167.34,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 555
+          }
+        },
+        "listener-schedules": {
+          "samples": 555,
+          "p50Ms": 13.243,
+          "p95Ms": 151.055,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 555
+          }
+        },
+        "login": {
+          "samples": 274,
+          "p50Ms": 4.218,
+          "p95Ms": 154.861,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 30,
+            "429": 244
+          }
+        },
+        "mood-history": {
+          "samples": 553,
+          "p50Ms": 12.308,
+          "p95Ms": 164.942,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 553
+          }
+        },
+        "mood-write": {
+          "samples": 273,
+          "p50Ms": 14.019,
+          "p95Ms": 170.917,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 273
+          }
+        },
+        "payment-callback": {
+          "samples": 20,
+          "p50Ms": 8.163,
+          "p95Ms": 21.886,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "204": 20
+          }
+        },
+        "private-journal": {
+          "samples": 553,
+          "p50Ms": 12.243,
+          "p95Ms": 150.294,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "429": 553
+          }
+        },
+        "professional-directory": {
+          "samples": 554,
+          "p50Ms": 12.781,
+          "p95Ms": 187.9,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 554
+          }
+        },
+        "registration": {
+          "samples": 273,
+          "p50Ms": 4.61,
+          "p95Ms": 159.504,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "201": 30,
+            "429": 243
+          }
+        },
+        "staff-case": {
+          "samples": 2,
+          "p99MinimumSamples": 10000,
+          "statusCounts": {
+            "200": 2
+          }
+        }
+      },
+      "sampledResources": {
+        "samples": 19,
+        "unavailableSamples": 0,
+        "peakHeapBytes": 180122912,
+        "peakActiveConnections": 3,
+        "peakWaitingForConnection": 83,
+        "peakLockWaiters": 0,
+        "cpuSeconds": 39.9375,
+        "gcMillis": 176,
+        "rollbackDelta": 1755,
+        "deadlockDelta": 0,
+        "maxListenerQueueDepth": 0,
+        "maxAlertBacklog": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Loopback client and server share CPU in one JVM",
+    "Synthetic professional credentials, purpose operators and clinical notices; no real care or provider activation",
+    "Ten appointment/payment participants, one clinical signaling participant and one staff participant within each concurrent cohort",
+    "Catalogue reads may have no reviewed synthetic course/resource content; inspect dataset separately",
+    "Preserved publishing protections can return verified 409 and 429 responses",
+    "No production capacity guarantee",
+    "One-second resource observations can miss shorter peaks; worker delivery is not exercised by this mix"
+  ]
+}

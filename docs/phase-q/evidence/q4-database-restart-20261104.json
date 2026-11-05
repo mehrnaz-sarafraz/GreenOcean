@@ -1,0 +1,10 @@
+{
+  "recoveryAttempts" : 1,
+  "evidenceKind" : "SYNTHETIC_LOCAL_PHYSICAL_DATABASE_RESTART",
+  "limitations" : [ "Single local database restart", "One authenticated private-read service probe", "Not an in-flight booking, queue or upload process-crash drill", "No production RTO commitment" ],
+  "interruptionToPrivateReadSeconds" : 3.1700588,
+  "recoveredStatus" : 200,
+  "outageStatus" : 503,
+  "healthyStatus" : 200,
+  "acknowledgedEntryPreserved" : true
+}
