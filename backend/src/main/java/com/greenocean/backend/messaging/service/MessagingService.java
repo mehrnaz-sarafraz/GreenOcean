@@ -16,6 +16,10 @@ import java.util.UUID;
 
 @Service
 public class MessagingService {
+    private com.greenocean.backend.trust.PilotGate pilotGate;
+    @org.springframework.beans.factory.annotation.Autowired public void pilotRuntime(com.greenocean.backend.trust.PilotGate gate){this.pilotGate=gate;}
+    private void pilot(UUID who){com.greenocean.backend.trust.PilotGate.require(pilotGate,db,who,"COMMUNITY");}
+
     private final com.greenocean.backend.listener.live.LiveSupportService live;
     private final com.greenocean.backend.identity.AccessPolicy access;
     private final org.springframework.jdbc.core.JdbcTemplate db;
@@ -82,6 +86,7 @@ public class MessagingService {
 
     @Transactional
     public UUID startDirectConversation(UUID otherUserId, UUID userId) {
+        pilot(userId);pilot(otherUserId);
         access.require(otherUserId,"COMMUNITY");
         if(otherUserId.equals(userId))throw new IllegalArgumentException("Choose another member");
         String pair=userId.compareTo(otherUserId)<0?userId+":"+otherUserId:otherUserId+":"+userId;
@@ -126,6 +131,7 @@ public class MessagingService {
         if(!java.util.Set.of("ACCEPT","DECLINE","CANCEL").contains(action))throw new IllegalArgumentException("Unsupported request action");
         if(!(action.equals("CANCEL")?owner.equals(from):owner.equals(target)))throw new NotFoundException("Pending request was not found");
         access.require(from,"COMMUNITY");access.require(target,"COMMUNITY");
+        if(action.equals("ACCEPT")){pilot(from);pilot(target);}
         if(action.equals("ACCEPT") && !repository.canStartDirectConversation(from,target))throw new ForbiddenException("Request is no longer permitted by current settings");
         if(Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM blocks WHERE (blocker_id=? AND blocked_id=?) OR (blocker_id=? AND blocked_id=?))",Boolean.class,from,target,target,from)))throw new NotFoundException("Pending request was not found");
         db.update("UPDATE conversations SET request_status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",action.equals("ACCEPT")?"ACCEPTED":action.equals("DECLINE")?"DECLINED":"CANCELLED",id);

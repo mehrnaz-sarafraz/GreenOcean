@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-05",
+  "baseCommit": "366adcc8140063540c13793305ca7cf4ba29a346",
+  "scope": "Q5 working tree before publication; final exact commit/CI is recorded in PR and final Q0 report",
+  "crossPhase": {
+    "tests": 176,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "phase-q5-cross-phase.log",
+    "sha256": "8aa1446ef36d38c30f916e4a43406b3813f9380b8806d747f7fa2674af441456"
+  },
+  "focusedBeforeFinalSocialGuard": {
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sha256": "cdfd44ef6f63133c3eff7f16999ad19012777c68c6d4d73b3ebaddc1622d6666"
+  },
+  "browser": {
+    "tests": 6,
+    "passed": 6,
+    "sha256": "f47778b8544dff303572c92d9662d09ca3d51467e0a6272cf0095d28f1ea6b95"
+  },
+  "logic": {
+    "tests": 69,
+    "passed": 69
+  },
+  "typescript": "PASS",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "physicalDevices": "DEVICE_TEST_REQUIRED",
+  "actualApprovals": "NOT_SUPPLIED",
+  "productionActivation": false,
+  "qaPositiveWorkflow": "Isolated schema, QA_ONLY references and fake dependency facts; never real legal/device/provider review",
+  "finalFocused": {
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sha256": "7f971055c5bc288f4c6fbda844a01b0976835cb5e6f0785d17872e7a3d265f00"
+  },
+  "sourcePatternScan": {
+    "files": 1081,
+    "candidateLocations": 0,
+    "originalMigrationsUnchanged": 31
+  }
+}
