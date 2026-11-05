@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-05",
+  "scope": "Uncommitted Q0 source with coordinated patched libraries; final exact head/CI recorded in final PR",
+  "base": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+  "tests": 103,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "logSha256": "8a8a54a088b11ac718d5845159ea171a8fdbecd3b392b40ab48d2aef7e8e0b33",
+  "newRegressions": [
+    "changedCountryBeforeConsentMustRejectAcceptance",
+    "changedAgeBeforeConsentMustRejectAcceptance"
+  ],
+  "productionActivation": false
+}

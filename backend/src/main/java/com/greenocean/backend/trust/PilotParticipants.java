@@ -13,7 +13,7 @@ public class PilotParticipants {
     public UUID invite(UUID who,UUID sid,UUID assessment,UUID user){
         readiness.owner(who,sid);var a=readiness.row(assessment,true);
         if(!"OWNER_APPROVED".equals(readiness.assessment(assessment).get("state")))throw new ConflictException("Only a currently owner-approved service may invite participants");
-        if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM users u JOIN account_eligibility e ON e.user_id=u.id WHERE u.id=? AND u.status='ACTIVE' AND u.email_verified AND e.age_result='ADULT' AND e.residence_country=? AND(e.current_country IS NULL OR e.current_country=?))",Boolean.class,user,a.get("country_code"),a.get("country_code"))))throw new ForbiddenException("Current eligible account and region required");
+        eligibleAccount(user,(String)a.get("country_code"));
         db.queryForList("SELECT pg_advisory_xact_lock(hashtextextended('pilot-cohort-capacity',0))");
         var previous=db.queryForList("SELECT id FROM pilot_participants WHERE assessment_id=? AND user_id=?",UUID.class,assessment,user);if(!previous.isEmpty())return previous.getFirst();
         boolean counted=Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM pilot_participants WHERE user_id=? AND state IN('INVITED','ACCEPTED') AND expires_at>CURRENT_TIMESTAMP)",Boolean.class,user));
@@ -21,11 +21,15 @@ public class PilotParticipants {
         UUID id=db.queryForObject("INSERT INTO pilot_participants(assessment_id,user_id,notice_version,notice_sha256,invited_by,expires_at) VALUES(?,?,?,?,?,CURRENT_TIMESTAMP+INTERVAL '24 hours') RETURNING id",UUID.class,assessment,user,a.get("notice_version"),a.get("notice_sha256"),who);
         event(id,who,"INVITED");return id;
     }
+    private void eligibleAccount(UUID user,String country){
+        if(db.queryForList("SELECT u.id FROM users u JOIN account_eligibility e ON e.user_id=u.id WHERE u.id=? AND u.status='ACTIVE' AND u.email_verified AND u.deleted_at IS NULL AND e.age_result='ADULT' AND e.residence_country=? AND(e.current_country IS NULL OR e.current_country=?) FOR SHARE OF u,e",UUID.class,user,country,country).isEmpty())throw new ForbiddenException("Current eligible account and region required");
+    }
     void event(UUID id,UUID who,String state){db.update("INSERT INTO pilot_participant_events(participant_id,actor_id,state) VALUES(?,?,?)",id,who,state);}
     public void choice(UUID user,UUID id,long revision,boolean accept){
         var rows=db.queryForList("SELECT p.* FROM pilot_participants p WHERE p.id=? AND p.user_id=? FOR UPDATE",id,user);if(rows.isEmpty())throw new NotFoundException("Own pilot invitation unavailable");var p=rows.getFirst();
         if(((Number)p.get("revision")).longValue()!=revision)throw new ConflictException("Refresh the invitation before deciding");
         if(accept){
+            eligibleAccount(user,(String)readiness.row((UUID)p.get("assessment_id"),false).get("country_code"));
             if(!"INVITED".equals(p.get("state"))||!PilotReadiness.time(p.get("expires_at")).isAfter(java.time.Instant.now())||!"OWNER_APPROVED".equals(readiness.assessment((UUID)p.get("assessment_id")).get("state")))throw new ConflictException("Current approved invitation and notice are required");
         }
         String state=accept?"ACCEPTED":"OPTED_OUT";

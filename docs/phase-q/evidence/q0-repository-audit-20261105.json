@@ -1,0 +1,1683 @@
+{
+  "executedAt": "2026-11-05T04:59:50.283081+00:00",
+  "main": "30a4b3ae48b4e979d7e78fd62f1b2120aecb54f8",
+  "auditedWorktreeHead": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+  "validatedQ5": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+  "q5CI": {
+    "run": 41969366519,
+    "backend": 818,
+    "logic": 69,
+    "browser": 211,
+    "live": 55,
+    "allFourJobs": "success"
+  },
+  "q5IsAncestorOfCurrentHead": true,
+  "prReconciliation": [
+    {
+      "number": 1,
+      "head": "feature/phase-a-identity-privacy-access",
+      "headSha": "745c24d5a59968ba7c685507578120bdb8ca8c13",
+      "base": "main",
+      "baseSha": "ab44bc19fe72877b35f2709adc8a771c29cd2c00",
+      "state": "closed",
+      "mergedAt": "2026-10-27T16:54:43Z",
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 2,
+      "head": "feature/phase-b-welcome-trust-experience",
+      "headSha": "b370ea00b72abb04bd9e6d85b2b2e126413d8214",
+      "base": "feature/phase-a-identity-privacy-access",
+      "baseSha": "745c24d5a59968ba7c685507578120bdb8ca8c13",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 3,
+      "head": "feature/phase-c-registration-completion",
+      "headSha": "9aaacc1e81c478b848996b4202bbe87c00ebe447",
+      "base": "feature/phase-b-welcome-trust-experience",
+      "baseSha": "b370ea00b72abb04bd9e6d85b2b2e126413d8214",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 4,
+      "head": "feature/phase-d-email-verification-activation",
+      "headSha": "d1353287352121c11eb2eae41b2143e1fa8784ae",
+      "base": "feature/phase-c-registration-completion",
+      "baseSha": "9aaacc1e81c478b848996b4202bbe87c00ebe447",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 5,
+      "head": "feature/phase-ef-account-access-security",
+      "headSha": "9086d3a86e611ad559b2d1362463ff9039f43526",
+      "base": "feature/phase-d-email-verification-activation",
+      "baseSha": "d1353287352121c11eb2eae41b2143e1fa8784ae",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 6,
+      "head": "feature/phase-gh-profile-privacy-onboarding",
+      "headSha": "38c114add7ce1d0c8ffcce8c68239b43ca004eaa",
+      "base": "feature/phase-ef-account-access-security",
+      "baseSha": "9086d3a86e611ad559b2d1362463ff9039f43526",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 7,
+      "head": "feature/phase-i-first-real-support",
+      "headSha": "beb5b78e2b7bc6a7b48ed9715b4152630b3c4411",
+      "base": "feature/phase-gh-profile-privacy-onboarding",
+      "baseSha": "38c114add7ce1d0c8ffcce8c68239b43ca004eaa",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 8,
+      "head": "feature/phase-j-legal-consent-data-governance",
+      "headSha": "ab16a953511dcc075cb0bd4c12c6380893561d7d",
+      "base": "feature/phase-i-first-real-support",
+      "baseSha": "beb5b78e2b7bc6a7b48ed9715b4152630b3c4411",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 9,
+      "head": "feature/phase-k-final-integration-readiness",
+      "headSha": "4bb33f7f410cc00f9e646268148a46b92b8c0056",
+      "base": "main",
+      "baseSha": "ab44bc19fe72877b35f2709adc8a771c29cd2c00",
+      "state": "closed",
+      "mergedAt": "2026-10-27T16:54:41Z",
+      "representedIn": "main",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 10,
+      "head": "codex/phase-l1-safe-publishing",
+      "headSha": "991c77c3862be46cfa31f30435b85070bb3a89b0",
+      "base": "main",
+      "baseSha": "30a4b3ae48b4e979d7e78fd62f1b2120aecb54f8",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 11,
+      "head": "codex/phase-l2-social-interactions",
+      "headSha": "fd908d46ac295ec8a6db888a77038093cf002dd1",
+      "base": "codex/phase-l1-safe-publishing",
+      "baseSha": "991c77c3862be46cfa31f30435b85070bb3a89b0",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 12,
+      "head": "codex/phase-l3-community-safety",
+      "headSha": "d09fbd4970f35e373d4cf6429444ea119582a2d5",
+      "base": "codex/phase-l2-social-interactions",
+      "baseSha": "fd908d46ac295ec8a6db888a77038093cf002dd1",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 13,
+      "head": "codex/phase-m1-group-privacy-approval",
+      "headSha": "77c338cdd78dfa9d8abff5ebcb0f4d3bb60da9d0",
+      "base": "codex/phase-l3-community-safety",
+      "baseSha": "d09fbd4970f35e373d4cf6429444ea119582a2d5",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 14,
+      "head": "codex/phase-m2-membership-governance",
+      "headSha": "e4a401a6b120d2f0f64649e632a9dc7c979d9076",
+      "base": "codex/phase-m1-group-privacy-approval",
+      "baseSha": "77c338cdd78dfa9d8abff5ebcb0f4d3bb60da9d0",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 15,
+      "head": "codex/phase-m3-activities-safety",
+      "headSha": "d7ebebc232aa5fd6c4d9de1a31ec490d4735f744",
+      "base": "codex/phase-m2-membership-governance",
+      "baseSha": "e4a401a6b120d2f0f64649e632a9dc7c979d9076",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 16,
+      "head": "codex/phase-n1-listener-scheduling",
+      "headSha": "804255be13aeacb369e31d318ad185063f24c5bb",
+      "base": "codex/phase-m3-activities-safety",
+      "baseSha": "d7ebebc232aa5fd6c4d9de1a31ec490d4735f744",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 17,
+      "head": "codex/phase-n2-bounded-waiting-queue",
+      "headSha": "7821dfe15400131fcab8bbcf10f0b7ca33de44c5",
+      "base": "codex/phase-n1-listener-scheduling",
+      "baseSha": "804255be13aeacb369e31d318ad185063f24c5bb",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 18,
+      "head": "codex/phase-n3-followup-integration",
+      "headSha": "de427dad9e79136e0586e4e7fe522a816f9d16d3",
+      "base": "codex/phase-n2-bounded-waiting-queue",
+      "baseSha": "7821dfe15400131fcab8bbcf10f0b7ca33de44c5",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 19,
+      "head": "feature/phase-o1-private-selfcare",
+      "headSha": "ec87fa24103ef600aa8b28ed02e788fb9896a084",
+      "base": "codex/phase-n3-followup-integration",
+      "baseSha": "de427dad9e79136e0586e4e7fe522a816f9d16d3",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 20,
+      "head": "feature/phase-o2-growth-library",
+      "headSha": "ff00584cc04554a028a4483efa77c58dfbb7be65",
+      "base": "feature/phase-o1-private-selfcare",
+      "baseSha": "ec87fa24103ef600aa8b28ed02e788fb9896a084",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 21,
+      "head": "feature/phase-o3-learning-courses",
+      "headSha": "706252f7fa5363333846186880c17485494c875d",
+      "base": "feature/phase-o2-growth-library",
+      "baseSha": "ff00584cc04554a028a4483efa77c58dfbb7be65",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 22,
+      "head": "feature/phase-o4-private-growth-rewards",
+      "headSha": "ca5f66217fe9b7bee77e4634e32ec12f575a5719",
+      "base": "feature/phase-o3-learning-courses",
+      "baseSha": "706252f7fa5363333846186880c17485494c875d",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 23,
+      "head": "feature/phase-p1-professional-verification-workspace",
+      "headSha": "c47afb3a75de4352e15f390b0f2ab57a50aec8b3",
+      "base": "feature/phase-o4-private-growth-rewards",
+      "baseSha": "ca5f66217fe9b7bee77e4634e32ec12f575a5719",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 24,
+      "head": "feature/phase-p2-booking-payments",
+      "headSha": "4489f4cae3703880a3515a6db9feb9f9118b0e22",
+      "base": "feature/phase-p1-professional-verification-workspace",
+      "baseSha": "c47afb3a75de4352e15f390b0f2ab57a50aec8b3",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 25,
+      "head": "feature/phase-p3-clinical-sessions-records",
+      "headSha": "7fe68def35a6119ae73911bca008080cf914c392",
+      "base": "feature/phase-p2-booking-payments",
+      "baseSha": "4489f4cae3703880a3515a6db9feb9f9118b0e22",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 26,
+      "head": "feature/phase-p4-professional-reputation",
+      "headSha": "4c27133fbbd6d3d598d924e75214762cbd602cd3",
+      "base": "feature/phase-p3-clinical-sessions-records",
+      "baseSha": "7fe68def35a6119ae73911bca008080cf914c392",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 27,
+      "head": "feature/phase-p5-followup-integration",
+      "headSha": "1bb797d0edee82baad4da7a41c36284f3034379b",
+      "base": "feature/phase-p4-professional-reputation",
+      "baseSha": "4c27133fbbd6d3d598d924e75214762cbd602cd3",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 28,
+      "head": "feature/phase-q1-trust-safety-operations",
+      "headSha": "62c60dcdd08c4253d699083a68cd7413fde292da",
+      "base": "feature/phase-p5-followup-integration",
+      "baseSha": "1bb797d0edee82baad4da7a41c36284f3034379b",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 29,
+      "head": "feature/phase-q2-security-privacy-assurance",
+      "headSha": "bfbdafbab9cca4755fc5cb6e4d9277a0be8bedea",
+      "base": "feature/phase-q1-trust-safety-operations",
+      "baseSha": "62c60dcdd08c4253d699083a68cd7413fde292da",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 30,
+      "head": "feature/phase-q3-quality-incident-operations",
+      "headSha": "035879e196e99ed1ffc1097c3363acf7287040b0",
+      "base": "feature/phase-q2-security-privacy-assurance",
+      "baseSha": "bfbdafbab9cca4755fc5cb6e4d9277a0be8bedea",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 31,
+      "head": "feature/phase-q4-reliability-scalability",
+      "headSha": "366adcc8140063540c13793305ca7cf4ba29a346",
+      "base": "feature/phase-q3-quality-incident-operations",
+      "baseSha": "035879e196e99ed1ffc1097c3363acf7287040b0",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    },
+    {
+      "number": 32,
+      "head": "feature/phase-q5-controlled-pilot-readiness",
+      "headSha": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+      "base": "feature/phase-q4-reliability-scalability",
+      "baseSha": "366adcc8140063540c13793305ca7cf4ba29a346",
+      "state": "open",
+      "mergedAt": null,
+      "representedIn": "Q5",
+      "headIsAncestorOfTarget": true,
+      "baseIsAncestorOfHead": true
+    }
+  ],
+  "migrationComparisons": [
+    {
+      "baseline": "initial",
+      "ref": "ab44bc19fe72877b35f2709adc8a771c29cd2c00",
+      "count": 31,
+      "allUnchanged": true,
+      "files": [
+        {
+          "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+          "sha256": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+          "sha256": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+          "sha256": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+          "sha256": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+          "sha256": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+          "sha256": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+          "sha256": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+          "sha256": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+          "sha256": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+          "sha256": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+          "sha256": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+          "sha256": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+          "sha256": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+          "sha256": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+          "sha256": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+          "sha256": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+          "sha256": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+          "sha256": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+          "sha256": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+          "sha256": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+          "sha256": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+          "sha256": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+          "sha256": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+          "sha256": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+          "sha256": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+          "sha256": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+          "sha256": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+          "sha256": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+          "sha256": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+          "sha256": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+          "sha256": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "baseline": "main",
+      "ref": "30a4b3ae48b4e979d7e78fd62f1b2120aecb54f8",
+      "count": 44,
+      "allUnchanged": true,
+      "files": [
+        {
+          "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+          "sha256": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+          "sha256": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+          "sha256": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+          "sha256": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+          "sha256": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+          "sha256": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+          "sha256": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+          "sha256": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+          "sha256": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+          "sha256": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+          "sha256": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+          "sha256": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+          "sha256": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+          "sha256": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+          "sha256": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+          "sha256": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+          "sha256": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+          "sha256": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+          "sha256": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+          "sha256": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+          "sha256": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+          "sha256": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+          "sha256": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+          "sha256": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V31__phase_a_identity_privacy_access.sql",
+          "sha256": "bc43708b33235a5714aa7a424ae2af76dec36d6ad78f1170e75542a67bfa34d1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V32__reference_country_catalog.sql",
+          "sha256": "e44c68f6029697a5dd28ddcda6162fa7a7736fd236c45d67ce4f199e978f6bef",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V33__phase_a_conversation_boundaries_and_token_rollout.sql",
+          "sha256": "a33d7450c4aa14733bac1c8cefa0634d92b0cce25598ed3a64abd4490b475769",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V34__correct_localized_reference_country_names.sql",
+          "sha256": "907e250777207f6251401918d9244d8dfca91e4977abb80ac1c3c475223d9ef2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V35__explicit_professional_care_regions.sql",
+          "sha256": "e8f7c04123378404631c2329c0622ad7cc81765fa85572775f3fb239766661da",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V36__verification_delivery_and_pending_retention.sql",
+          "sha256": "314941691a54aa0d1658ff8626213935ab7dc2258ebe5e6f24f36e7a5aabe6d2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V37__bounded_sessions_and_privileged_authenticators.sql",
+          "sha256": "2bd2fdead0fad49dd6bc85dcff0f0c4fd91c43c6d2c7642f953223861a8f2a8b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V38__privileged_enrollment_permits.sql",
+          "sha256": "23c6e6020f3efd158df28fada3ef8c053772e5cac791fb30ea3d6c4e6ee95568",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V39__session_assurance_token_version.sql",
+          "sha256": "8f0ade75181ea2afce93f392a00f6246f8eb5f7d214a1ff29d621c6df1d15782",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+          "sha256": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+          "sha256": "82737d96998e0ee822529e68f56f7e211b58e36937d757a5b85ead14d99ebd57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V41__live_listener_acceptance_and_sessions.sql",
+          "sha256": "50c52ae9b85a737ddf44b7b7928455654a1331015085dca9777fdecd8c89e40c",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V42__policy_review_and_purpose_authorization.sql",
+          "sha256": "fb6062d743bee5f7ac8a8da28c8e05fb499693f53b8eeb4dc144467f6887b1a7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V43__preserve_policy_review_evidence.sql",
+          "sha256": "fa07809959d967673eeb827137b8fc92b43d6718fd38cb1da4c81239afb82884",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+          "sha256": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+          "sha256": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+          "sha256": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+          "sha256": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+          "sha256": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+          "sha256": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "baseline": "P5",
+      "ref": "1bb797d0edee82baad4da7a41c36284f3034379b",
+      "count": 84,
+      "allUnchanged": true,
+      "files": [
+        {
+          "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+          "sha256": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+          "sha256": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+          "sha256": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+          "sha256": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+          "sha256": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+          "sha256": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+          "sha256": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+          "sha256": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+          "sha256": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+          "sha256": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+          "sha256": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+          "sha256": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+          "sha256": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+          "sha256": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+          "sha256": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+          "sha256": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+          "sha256": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+          "sha256": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+          "sha256": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+          "sha256": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+          "sha256": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+          "sha256": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+          "sha256": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+          "sha256": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V31__phase_a_identity_privacy_access.sql",
+          "sha256": "bc43708b33235a5714aa7a424ae2af76dec36d6ad78f1170e75542a67bfa34d1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V32__reference_country_catalog.sql",
+          "sha256": "e44c68f6029697a5dd28ddcda6162fa7a7736fd236c45d67ce4f199e978f6bef",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V33__phase_a_conversation_boundaries_and_token_rollout.sql",
+          "sha256": "a33d7450c4aa14733bac1c8cefa0634d92b0cce25598ed3a64abd4490b475769",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V34__correct_localized_reference_country_names.sql",
+          "sha256": "907e250777207f6251401918d9244d8dfca91e4977abb80ac1c3c475223d9ef2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V35__explicit_professional_care_regions.sql",
+          "sha256": "e8f7c04123378404631c2329c0622ad7cc81765fa85572775f3fb239766661da",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V36__verification_delivery_and_pending_retention.sql",
+          "sha256": "314941691a54aa0d1658ff8626213935ab7dc2258ebe5e6f24f36e7a5aabe6d2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V37__bounded_sessions_and_privileged_authenticators.sql",
+          "sha256": "2bd2fdead0fad49dd6bc85dcff0f0c4fd91c43c6d2c7642f953223861a8f2a8b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V38__privileged_enrollment_permits.sql",
+          "sha256": "23c6e6020f3efd158df28fada3ef8c053772e5cac791fb30ea3d6c4e6ee95568",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V39__session_assurance_token_version.sql",
+          "sha256": "8f0ade75181ea2afce93f392a00f6246f8eb5f7d214a1ff29d621c6df1d15782",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+          "sha256": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+          "sha256": "82737d96998e0ee822529e68f56f7e211b58e36937d757a5b85ead14d99ebd57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V41__live_listener_acceptance_and_sessions.sql",
+          "sha256": "50c52ae9b85a737ddf44b7b7928455654a1331015085dca9777fdecd8c89e40c",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V42__policy_review_and_purpose_authorization.sql",
+          "sha256": "fb6062d743bee5f7ac8a8da28c8e05fb499693f53b8eeb4dc144467f6887b1a7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V43__preserve_policy_review_evidence.sql",
+          "sha256": "fa07809959d967673eeb827137b8fc92b43d6718fd38cb1da4c81239afb82884",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V44__safe_social_publishing.sql",
+          "sha256": "8010dc8406b3941adfd5eb6e60ed3badb6100c6041865453cee332bc4821747e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V45__social_discovery_and_message_consent.sql",
+          "sha256": "0f93eb4831b036ee97aa818d3c6e2e581c4a5de88cdcf8411445b124d712078a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V46__social_review_and_appeal_link.sql",
+          "sha256": "33481a8c4d9381a0a07b48beae68676637e8a41782c26181ea3fb31c0b757def",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V47__community_privacy_and_reviewed_proposals.sql",
+          "sha256": "aee2f8d8ab0764b653681da3458e8ec2cd62643e485362b200a79f2a770651ae",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V48__group_membership_invitations_and_governance.sql",
+          "sha256": "3876e6466ccba6620717aed265a87a297c62d6286f244a26ec0a1444dbd18d69",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V49__group_activities_and_scoped_safety.sql",
+          "sha256": "b31b6fdbac7dc31fde289e99889163467fe7130081becc2636390e70ce6b17a1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+          "sha256": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V50__scope_historical_group_reports.sql",
+          "sha256": "577a549b2227d1560ebbe0e0d1e82c9c17a20143f03e2bbe26c19be84d04374a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V51__supersede_obsolete_group_evidence.sql",
+          "sha256": "ae25f12b5b221d30f2cee0535939d178b65ee804b07cbef98b9fa671110892e3",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V52__listener_scheduling_and_capacity.sql",
+          "sha256": "7bc49ccc0d3b545475bab90fd3a3e17a1c73a127ba05f8d93a985e68569309cb",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V53__listener_booking_transition_audit.sql",
+          "sha256": "04a5b732e177d76e77f1ac485b773735c3187fb09b4c9fef36161a37ccf4fdfa",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V54__bounded_listener_waiting_queue.sql",
+          "sha256": "a042f96714c2d2c17033a2489dab2c208631f4a15fbfd1b9a8d63d7446b4c1ff",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V55__listener_queue_response_revision.sql",
+          "sha256": "d361c0633fca088360af6c4d4cde8e85f79bb50f303862484fe0885c4462401f",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V56__listener_queue_cross_role_admission.sql",
+          "sha256": "31f4d00920319c54b21f3ba51ac5964a5eacc363bf3b3038349ea2234c442c2b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V57__listener_queue_atomic_transfer_link.sql",
+          "sha256": "de64ac7ecca88c83753e3921eeefa7e446730afa9efe88e6882f75e03c271ced",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V58__listener_session_extension_and_followup.sql",
+          "sha256": "54a1b8b9144e13bf80367e4499ac48c1710a4094ad50505dbc59f56fba365bed",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V59__listener_operational_maintenance.sql",
+          "sha256": "4b690778df0c7bf5b8bf4edc92a15f112db02ddab531e7be3c184dfb04025d1e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+          "sha256": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V60__listener_operational_indexes.sql",
+          "sha256": "d41de9357a07144b150a43068fc6d8740c06c3c107ec4715b21d29a7ae6c4b69",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V61__listener_metadata_retention_boundaries.sql",
+          "sha256": "8ef0c0d11ce013813e4f4ca1ef840385345e70274d366a2526cfe43462e9df09",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V62__private_wellbeing_lifecycle.sql",
+          "sha256": "9fb4a609c5e109372624dc8fbf192cd924b32990d98a51cfa8ee0106d61badc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V63__reviewed_growth_library.sql",
+          "sha256": "2458d7d4517a4419c5384bc67dabf6707ddd5de2379999d437561de9aa806666",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V64__current_educational_review_authority.sql",
+          "sha256": "5708c74a6325ec747e9f2dd88aba6f686e3072d936695efe17714d444ef8739d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V65__reviewed_learning_and_question_bank.sql",
+          "sha256": "8209f6f3a5c50e08c78312e734b5557e45f99481c7c7151c02c2a8d776402aec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V66__private_learning_rewards.sql",
+          "sha256": "29fd2a6448a748805a660d5cdb2d82a224dc4bb813ec973e90a364a0f5b43766",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V67__professional_qualification_and_calendar.sql",
+          "sha256": "54430d9d76db0fda2c4fc019cb4f2fe807872d80540f21d96cae4e73c76bca50",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V68__bind_professional_scope_to_exact_verification.sql",
+          "sha256": "08affb657a52ddd862d1cb77e6a8e50dbeb1b6b9341acbc410e18acd35687780",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V69__private_appointment_reminder_preferences.sql",
+          "sha256": "18240c7fed6576e8167d19049a563190dc04f55641903d47622b8111c076ab28",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+          "sha256": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V70__professional_slot_retry_and_reminder_policy.sql",
+          "sha256": "c40d9ffb42969ca51b8e6f4865ed4b4e617683befd767d09eed208bf27136735",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V71__current_clinical_region_scope.sql",
+          "sha256": "24abed58e6228e50ed33290242bdfd495142d47bd22656cea90c50e3a6bcf08f",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V72__professional_profile_provenance.sql",
+          "sha256": "49f13d788080ebf4af33846cd340daa9aff0077e8afaeabc3fec7b3a117bbd57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V73__professional_official_human_verification_sources.sql",
+          "sha256": "503415ef60866fa358e716e7977a0c2360c25342c941f1b678ef99241d49a16e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V74__clinic_booking_and_financial_events.sql",
+          "sha256": "c1cdc165a260c12800fd2cd2ce6d1df43707288fb527ca48a85e1d381c3787e1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V75__clinic_subscription_orders_and_provider_attempts.sql",
+          "sha256": "13e339ed61ebc0984f0617155c4258809a4442270e7f306547478f90153656fc",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V76__isolated_clinical_encounters_and_records.sql",
+          "sha256": "016de360387387eab2fef8532fb6eccf8c8374a5f80e1b06a854a23cd8993c31",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V77__clinical_delivery_evidence.sql",
+          "sha256": "336dfc15fb2b4164d42b7eaf07790cac0d271bbbb5ff7182b1a29907f2312b5a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V78__clinical_scope_and_operations_indexes.sql",
+          "sha256": "30226f799528457532ae15d7d5584232b58b3f3b4885299c47e1816db6fb385e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V79__verified_feedback_and_professional_recognition.sql",
+          "sha256": "a7a7ba937d4ebb0ae4de50ce0edb0bbb0bcf91f9faa13f209f04ed5fa849f1fb",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+          "sha256": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V80__immutable_profession_at_service_booking.sql",
+          "sha256": "133630cd230c99dbbfb8f0eea24ef76077c93a038e3815e17ba23299510af891",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V81__clinic_followup_operations_and_rights.sql",
+          "sha256": "a574767261a49218f14e8c616cf9f4e5c7aa56b3f550ab0fa3a61ee8388474aa",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V82__followup_category_policy_binding.sql",
+          "sha256": "8da5fb5c962214d00f8fb4e8e4e405dd47b914470ff2a07a584e7ad715bb7f8a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V83__deduplicated_clinic_state_notices.sql",
+          "sha256": "daf903bf3284c8d08dcd3b3fbea1b8b8466289adf37544891c8c0e68879d0239",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+          "sha256": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+          "sha256": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "baseline": "Q5",
+      "ref": "64cff9785a02b2ab23a5061b3e28df9297435a20",
+      "count": 90,
+      "allUnchanged": true,
+      "files": [
+        {
+          "path": "backend/src/main/resources/db/migration/V0__add_uuidv7_compatibility.sql",
+          "sha256": "56cbfde585cac91ea45aafacb8f18a3c6cfa3f1fc2b06114ff3b290b2f72ed04",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V10__secure_user_sessions.sql",
+          "sha256": "544501591517169e76117219308efb7ef0c6428cfb3c8d96ab2c97d34dbeab57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V11__align_application_schema.sql",
+          "sha256": "b562bda3ef635d48b0949a318ab658c799db81525cdc82693d7feb697cc0c42b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V12__seed_application_data.sql",
+          "sha256": "621b4697de3a2c19d7205053f97b69f677fd44ea7f633911769eeaf9c24fdd34",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V13__complete_product_workflows.sql",
+          "sha256": "4fc05683f6a92dc5d1e5c69126687384c7227a90680efa036ba5e493c856cfdd",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V14__add_saved_articles.sql",
+          "sha256": "ff34682356a6da4f1c667e2cb76004748c7f35dc81e1d2f5cf0d7813d7d1d17b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V15__add_account_assistance_workflows.sql",
+          "sha256": "64893ad818877dfa61c49bb6ae76d2bfa692f28cf251790dbb27402aec87a642",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V16__add_admin_operations_workflows.sql",
+          "sha256": "9c7a97185798203b8095b4720b64856978679e929ce2b12c1a65db5d4430d15e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V17__add_community_details.sql",
+          "sha256": "f5f2db8a91ceeefe0c3e39d6b809fd241245ef689d2281cf9d5fcc01e6a7a95d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V18__add_guided_growth_paths.sql",
+          "sha256": "388a54755075e45ef06257282d6c7d869474b66d0019a2d66982d6bb0d14233a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V19__add_private_follow_requests.sql",
+          "sha256": "de501ec3489fd8e5e694672a1d00eb08fb67666046ed27243f9d9ff713d693e6",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V1__create_auth_schema.sql",
+          "sha256": "801ce4fb1f8b83c64468126213d60c28e7d74f8e9f33e3df868ad6d5786da877",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V20__add_community_management.sql",
+          "sha256": "0be26fb28aa8b278521f725829813ec749c07a9e43188d1422aba475d7c23a02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V21__add_professional_documents.sql",
+          "sha256": "edb2e6877b48b4093aefb66d71bf52230e3b61611e20dcec68860584d999c63b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V22__add_listener_training_progress.sql",
+          "sha256": "0974c706773d7179601ba9f47c3c911975e16da1658ee428c53fe9ead134077e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V23__persist_wellbeing_reflections.sql",
+          "sha256": "f2db6329fe39c86780eb626875f5c5cfbe3977fe73da21ca87768379ac783dec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V24__complete_admin_operations.sql",
+          "sha256": "0ca4e079f4c5eef8a1298be6955a0bb191e293243f1bd35ff364f5ee9901a267",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V25__add_professional_availability.sql",
+          "sha256": "75086cfae71de2f17e259e77a6a7027198968bdc1c3551405f54f9802983dc03",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V26__publish_baseline_policies.sql",
+          "sha256": "648fa4cd95b91cf097f3b4e4fed51f34f10ff62570f42ad5f584e5a754942797",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V27__clarify_development_fixture_copy.sql",
+          "sha256": "f6c76b4a189f667dc6e10d29429041bd01191d32c70162d91bde8df4c5350798",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V28__persist_product_configuration.sql",
+          "sha256": "6b7a580f4063133021bfe05712f0028978483744ae2f3628dd5b410bd28949ea",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V29__remove_development_fixtures.sql",
+          "sha256": "62db4d1f3f3fe4cc1ae6fc46acd5f9d10f132b5882d8665f9632888957867700",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V2__add_auth_updated_at_triggers.sql",
+          "sha256": "5bd1d8e35adfc19fa3b8ea7a87c7d1809829829e32ea8c2230c5e584b20fc251",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V30__add_verified_crisis_resources.sql",
+          "sha256": "33eddc85a8755dcdac4345713d217333649284f5e9bb910c99b41e44b873d7b7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V31__phase_a_identity_privacy_access.sql",
+          "sha256": "bc43708b33235a5714aa7a424ae2af76dec36d6ad78f1170e75542a67bfa34d1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V32__reference_country_catalog.sql",
+          "sha256": "e44c68f6029697a5dd28ddcda6162fa7a7736fd236c45d67ce4f199e978f6bef",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V33__phase_a_conversation_boundaries_and_token_rollout.sql",
+          "sha256": "a33d7450c4aa14733bac1c8cefa0634d92b0cce25598ed3a64abd4490b475769",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V34__correct_localized_reference_country_names.sql",
+          "sha256": "907e250777207f6251401918d9244d8dfca91e4977abb80ac1c3c475223d9ef2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V35__explicit_professional_care_regions.sql",
+          "sha256": "e8f7c04123378404631c2329c0622ad7cc81765fa85572775f3fb239766661da",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V36__verification_delivery_and_pending_retention.sql",
+          "sha256": "314941691a54aa0d1658ff8626213935ab7dc2258ebe5e6f24f36e7a5aabe6d2",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V37__bounded_sessions_and_privileged_authenticators.sql",
+          "sha256": "2bd2fdead0fad49dd6bc85dcff0f0c4fd91c43c6d2c7642f953223861a8f2a8b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V38__privileged_enrollment_permits.sql",
+          "sha256": "23c6e6020f3efd158df28fada3ef8c053772e5cac791fb30ea3d6c4e6ee95568",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V39__session_assurance_token_version.sql",
+          "sha256": "8f0ade75181ea2afce93f392a00f6246f8eb5f7d214a1ff29d621c6df1d15782",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V3__seed_roles.sql",
+          "sha256": "02c593caee23c0a458aba34cfeca1bad8f35b3c23e25909afb2b8311abf0e536",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V40__durable_audience_and_progressive_onboarding.sql",
+          "sha256": "82737d96998e0ee822529e68f56f7e211b58e36937d757a5b85ead14d99ebd57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V41__live_listener_acceptance_and_sessions.sql",
+          "sha256": "50c52ae9b85a737ddf44b7b7928455654a1331015085dca9777fdecd8c89e40c",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V42__policy_review_and_purpose_authorization.sql",
+          "sha256": "fb6062d743bee5f7ac8a8da28c8e05fb499693f53b8eeb4dc144467f6887b1a7",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V43__preserve_policy_review_evidence.sql",
+          "sha256": "fa07809959d967673eeb827137b8fc92b43d6718fd38cb1da4c81239afb82884",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V44__safe_social_publishing.sql",
+          "sha256": "8010dc8406b3941adfd5eb6e60ed3badb6100c6041865453cee332bc4821747e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V45__social_discovery_and_message_consent.sql",
+          "sha256": "0f93eb4831b036ee97aa818d3c6e2e581c4a5de88cdcf8411445b124d712078a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V46__social_review_and_appeal_link.sql",
+          "sha256": "33481a8c4d9381a0a07b48beae68676637e8a41782c26181ea3fb31c0b757def",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V47__community_privacy_and_reviewed_proposals.sql",
+          "sha256": "aee2f8d8ab0764b653681da3458e8ec2cd62643e485362b200a79f2a770651ae",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V48__group_membership_invitations_and_governance.sql",
+          "sha256": "3876e6466ccba6620717aed265a87a297c62d6286f244a26ec0a1444dbd18d69",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V49__group_activities_and_scoped_safety.sql",
+          "sha256": "b31b6fdbac7dc31fde289e99889163467fe7130081becc2636390e70ce6b17a1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V4__create_community_schema.sql",
+          "sha256": "9358d4bab4bd503471a5cd408a742deb46b33a9fc0a4c70e47ac104a9ebd2e02",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V50__scope_historical_group_reports.sql",
+          "sha256": "577a549b2227d1560ebbe0e0d1e82c9c17a20143f03e2bbe26c19be84d04374a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V51__supersede_obsolete_group_evidence.sql",
+          "sha256": "ae25f12b5b221d30f2cee0535939d178b65ee804b07cbef98b9fa671110892e3",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V52__listener_scheduling_and_capacity.sql",
+          "sha256": "7bc49ccc0d3b545475bab90fd3a3e17a1c73a127ba05f8d93a985e68569309cb",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V53__listener_booking_transition_audit.sql",
+          "sha256": "04a5b732e177d76e77f1ac485b773735c3187fb09b4c9fef36161a37ccf4fdfa",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V54__bounded_listener_waiting_queue.sql",
+          "sha256": "a042f96714c2d2c17033a2489dab2c208631f4a15fbfd1b9a8d63d7446b4c1ff",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V55__listener_queue_response_revision.sql",
+          "sha256": "d361c0633fca088360af6c4d4cde8e85f79bb50f303862484fe0885c4462401f",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V56__listener_queue_cross_role_admission.sql",
+          "sha256": "31f4d00920319c54b21f3ba51ac5964a5eacc363bf3b3038349ea2234c442c2b",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V57__listener_queue_atomic_transfer_link.sql",
+          "sha256": "de64ac7ecca88c83753e3921eeefa7e446730afa9efe88e6882f75e03c271ced",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V58__listener_session_extension_and_followup.sql",
+          "sha256": "54a1b8b9144e13bf80367e4499ac48c1710a4094ad50505dbc59f56fba365bed",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V59__listener_operational_maintenance.sql",
+          "sha256": "4b690778df0c7bf5b8bf4edc92a15f112db02ddab531e7be3c184dfb04025d1e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V5__create_content_schema.sql",
+          "sha256": "864594b0c615f65be91cd12d4b7deee1e9d3b86c48d3acad4836a29f29076dc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V60__listener_operational_indexes.sql",
+          "sha256": "d41de9357a07144b150a43068fc6d8740c06c3c107ec4715b21d29a7ae6c4b69",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V61__listener_metadata_retention_boundaries.sql",
+          "sha256": "8ef0c0d11ce013813e4f4ca1ef840385345e70274d366a2526cfe43462e9df09",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V62__private_wellbeing_lifecycle.sql",
+          "sha256": "9fb4a609c5e109372624dc8fbf192cd924b32990d98a51cfa8ee0106d61badc1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V63__reviewed_growth_library.sql",
+          "sha256": "2458d7d4517a4419c5384bc67dabf6707ddd5de2379999d437561de9aa806666",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V64__current_educational_review_authority.sql",
+          "sha256": "5708c74a6325ec747e9f2dd88aba6f686e3072d936695efe17714d444ef8739d",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V65__reviewed_learning_and_question_bank.sql",
+          "sha256": "8209f6f3a5c50e08c78312e734b5557e45f99481c7c7151c02c2a8d776402aec",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V66__private_learning_rewards.sql",
+          "sha256": "29fd2a6448a748805a660d5cdb2d82a224dc4bb813ec973e90a364a0f5b43766",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V67__professional_qualification_and_calendar.sql",
+          "sha256": "54430d9d76db0fda2c4fc019cb4f2fe807872d80540f21d96cae4e73c76bca50",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V68__bind_professional_scope_to_exact_verification.sql",
+          "sha256": "08affb657a52ddd862d1cb77e6a8e50dbeb1b6b9341acbc410e18acd35687780",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V69__private_appointment_reminder_preferences.sql",
+          "sha256": "18240c7fed6576e8167d19049a563190dc04f55641903d47622b8111c076ab28",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V6__create_social_schema.sql",
+          "sha256": "f5a981242e665c4435fd5b6c4a086df5e857715133a51899aa8dbf35820ea546",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V70__professional_slot_retry_and_reminder_policy.sql",
+          "sha256": "c40d9ffb42969ca51b8e6f4865ed4b4e617683befd767d09eed208bf27136735",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V71__current_clinical_region_scope.sql",
+          "sha256": "24abed58e6228e50ed33290242bdfd495142d47bd22656cea90c50e3a6bcf08f",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V72__professional_profile_provenance.sql",
+          "sha256": "49f13d788080ebf4af33846cd340daa9aff0077e8afaeabc3fec7b3a117bbd57",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V73__professional_official_human_verification_sources.sql",
+          "sha256": "503415ef60866fa358e716e7977a0c2360c25342c941f1b678ef99241d49a16e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V74__clinic_booking_and_financial_events.sql",
+          "sha256": "c1cdc165a260c12800fd2cd2ce6d1df43707288fb527ca48a85e1d381c3787e1",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V75__clinic_subscription_orders_and_provider_attempts.sql",
+          "sha256": "13e339ed61ebc0984f0617155c4258809a4442270e7f306547478f90153656fc",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V76__isolated_clinical_encounters_and_records.sql",
+          "sha256": "016de360387387eab2fef8532fb6eccf8c8374a5f80e1b06a854a23cd8993c31",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V77__clinical_delivery_evidence.sql",
+          "sha256": "336dfc15fb2b4164d42b7eaf07790cac0d271bbbb5ff7182b1a29907f2312b5a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V78__clinical_scope_and_operations_indexes.sql",
+          "sha256": "30226f799528457532ae15d7d5584232b58b3f3b4885299c47e1816db6fb385e",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V79__verified_feedback_and_professional_recognition.sql",
+          "sha256": "a7a7ba937d4ebb0ae4de50ce0edb0bbb0bcf91f9faa13f209f04ed5fa849f1fb",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V7__create_professional_schema.sql",
+          "sha256": "e90684963a36b3ec4c776b1c72619908bf8f9898ab18854083f13fde6ca1f165",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V80__immutable_profession_at_service_booking.sql",
+          "sha256": "133630cd230c99dbbfb8f0eea24ef76077c93a038e3815e17ba23299510af891",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V81__clinic_followup_operations_and_rights.sql",
+          "sha256": "a574767261a49218f14e8c616cf9f4e5c7aa56b3f550ab0fa3a61ee8388474aa",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V82__followup_category_policy_binding.sql",
+          "sha256": "8da5fb5c962214d00f8fb4e8e4e405dd47b914470ff2a07a584e7ad715bb7f8a",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V83__deduplicated_clinic_state_notices.sql",
+          "sha256": "daf903bf3284c8d08dcd3b3fbea1b8b8466289adf37544891c8c0e68879d0239",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V84__purpose_isolated_trust_coordination.sql",
+          "sha256": "f6000f74e3c02f80328a46c97986bac455a01958ecc04d10fb5217d6d41b029f",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V85__trust_classification_evidence.sql",
+          "sha256": "43d60c97b07e93671556c0beb18c2c4070e4b2903b604f8ce9237e06d6182482",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V86__session_bound_exceptional_evidence.sql",
+          "sha256": "8529fa8e4f78a89f5660abc5313449ef544304f99c0f67d6d021c16b96cfc3ee",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V87__accountable_incident_operations.sql",
+          "sha256": "7e205eca020d7bc66e786a3a46e6495482b99b66ae6015355fde13ea41525ccf",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V88__restore_privacy_replay_guard.sql",
+          "sha256": "99f4c6679a59267166f0d14e6b41d2fc96db58a24a27cc1389aa5fda1e230520",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V89__controlled_pilot_readiness.sql",
+          "sha256": "40c3bb0f031b3d9e543c60c261e80b9da45821697624409263a27873a1452629",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V8__create_engagement_schema.sql",
+          "sha256": "c6c2bd559cc90acbf4cac19c336921cdd93799bdaa1a0a90bf33065e60bf2881",
+          "unchanged": true
+        },
+        {
+          "path": "backend/src/main/resources/db/migration/V9__create_moderation_schema.sql",
+          "sha256": "3c479f7609640fe7a38951b9a78925d9fa92f3cc89b3e2be5be663e7ec36c296",
+          "unchanged": true
+        }
+      ]
+    }
+  ],
+  "scope": "Captured GitHub PR metadata plus local commit ancestry and normalized published SQL bytes; Flyway/runtime compatibility requires the separate actual PostgreSQL regressions",
+  "mergePerformed": false,
+  "deploymentPerformed": false
+}

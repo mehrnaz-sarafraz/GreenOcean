@@ -105,4 +105,15 @@ class PhaseQ5PilotTest extends MigrationTestSupport {
         assertThatThrownBy(()->messages.startDirectConversation(author.id(),member.id())).isInstanceOf(ForbiddenException.class).hasMessageContaining("pilot invitation");
     }
 
+    @Test void changedCountryBeforeConsentMustRejectAcceptance(){
+        UUID id=approved(),invite=participants.invite(owner.id(),owner.session(),id,member.id());db.update("UPDATE account_eligibility SET current_country='US' WHERE user_id=?",member.id());
+        assertThatThrownBy(()->participants.choice(member.id(),invite,1,true)).isInstanceOf(ForbiddenException.class);
+        assertThat(db.queryForObject("SELECT state FROM pilot_participants WHERE id=?",String.class,invite)).isEqualTo("INVITED");
+    }
+    @Test void changedAgeBeforeConsentMustRejectAcceptance(){
+        UUID id=approved(),invite=participants.invite(owner.id(),owner.session(),id,member.id());db.update("UPDATE account_eligibility SET age_result='UNKNOWN',age_method='UNKNOWN' WHERE user_id=?",member.id());
+        assertThatThrownBy(()->participants.choice(member.id(),invite,1,true)).isInstanceOf(ForbiddenException.class);
+        assertThat(db.queryForObject("SELECT state FROM pilot_participants WHERE id=?",String.class,invite)).isEqualTo("INVITED");
+    }
+
 }

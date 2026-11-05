@@ -1,3 +1,15 @@
+# Final Q0 dependency remediation — 2026-11-05
+
+Current Q0 POM overrides eight coordinated same-minor patch properties: Jackson2 BOM2.21.8, Jackson3 BOM3.1.8, HttpClient5.6.5, HttpCore5.4.4, Log4j2.25.5, Tomcat11.0.27, PostgreSQL JDBC42.7.14 and Spring Framework7.0.10. Both Jackson families and all Spring/Tomcat/HttpComponents managed modules stay coordinated through supported Boot BOM properties. No Java/Boot/Expo major migration, npm force or arbitrary override was used.
+
+Official Maven Central metadata for each exact family was fetched; source URLs are in evidence/q0-official-patch-versions-20261105.json. Upstream security/release checks include [Tomcat11 security](https://tomcat.apache.org/security-11), [pgJDBC releases](https://github.com/pgjdbc/pgjdbc/releases), [Spring7 release notes](https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-7.0-Release-Notes) and [Jackson2.21.8](https://github.com/FasterXML/jackson/wiki/Jackson-Release-2.21.8). Fresh upstream notices supersede the older minimum patch candidates; for example JDBC42.7.12 and Tomcat11.0.25 were not selected after later same-minor security fixes were found.
+
+Q5 exact-source fresh CI41969366519 inventory had113 Maven coordinates and34 package/advisory matches, npm27 records (5high20moderate2low). Downloaded artifact13389520695 ZIP digest3b2880131035ee26c7ad84be31a24e40a7ecafbad1b185429f908d6e0842b85d matched GitHub. Q0 local fresh resolution/OSV/npm scan now has114 Maven coordinates, **0 Maven advisory matches**, and **27 npm records** (5high20moderate2low). Focused patched-library regression103/103 passed. Current scan/evidence hashes and public coordinates are in evidence/q0-dependency-remediation-20261105.json; the final PR records the final exact-head inventory and complete regressions.
+
+Remaining direct npm advisory families: decode-uri-component, deepmerge, glob, minimatch, uuid and zod. Current npm suggestions require incompatible upstream-major changes (including a suggested Expo downgrade); no such automatic change is safe in this final integration task. They remain OPEN/unaccepted release blockers for dependency/security review and supported Expo upstream remediation. Counts changed as the advisory service updated; earlier33/31/12 metrics below are historical and are not the final current result. A zero Maven inventory is neither security-auditor approval nor a claim that all application vulnerabilities are absent. No actual launch approval is recorded.
+
+---
+
 # Dependency security review — 2026-11-04
 
 Status: **REVIEW_REQUIRED / launch blocked**, not a clean scan. Same-source-graph baseline is the Q1 release-scans artifact from run41641548999, artifact13231994282; downloaded ZIP SHA-256 `85c93181dce6a1bd9a07cbcadc137bba813238f1708f4011126fb909b0184e08` verified against GitHub. Q2 has not changed the Maven POM. Its 113 runtime coordinates have 31 package/advisory matches across 22 distinct advisory IDs. Local OSV returned HTTP403 and was reported INCOMPLETE; it was not interpreted as zero findings. Final Q2 CI will query again.
