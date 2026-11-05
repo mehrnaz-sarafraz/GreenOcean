@@ -31,6 +31,14 @@ class PhaseQ4AuthenticationOutageTest {
         assertThat(respond(List.of(new OAuth2Error("invalid_token"))).getStatus()).isEqualTo(401);
         assertThat(respond(List.of(new OAuth2Error("invalid_token"),new OAuth2Error("temporarily_unavailable"))).getStatus()).isEqualTo(401);
     }
+    @Test void newTokenCannotBypassAnAllPurposeRestoredAccountRestriction(){
+        var db=mock(JdbcTemplate.class);UUID subject=UUID.randomUUID(),epoch=UUID.randomUUID();
+        when(db.queryForObject(anyString(),eq(Boolean.class),eq(epoch),eq(subject))).thenReturn(true);
+        var validator=new ActiveSessionJwtValidator(mock(UserSessionRepository.class),db,Clock.systemUTC(),mock(SessionPolicy.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(validator,"restoreEpoch",epoch.toString());
+        var token=Jwt.withTokenValue("fresh-synthetic-token").header("alg","none").subject(subject.toString()).claim("sid",UUID.randomUUID().toString()).build();
+        assertThat(validator.validate(token).getErrors()).extracting(OAuth2Error::getErrorCode).containsExactly("invalid_token");
+    }
     MockHttpServletResponse respond(List<OAuth2Error> errors)throws Exception{
         var response=new MockHttpServletResponse();
         new RestAuthenticationEntryPoint(new tools.jackson.databind.ObjectMapper()).commence(

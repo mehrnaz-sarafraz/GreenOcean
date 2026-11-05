@@ -89,7 +89,7 @@ class PhaseQ4ContentionTest extends MigrationTestSupport {
     @Test void concurrentReplayRetriesPrepareOnlyOneImmutableRun()throws Exception {
         PhaseIFixtures.region(db);var actor=operator();String source="035879e196e99ed1ffc1097c3363acf7287040b0";
         String digest=RecoveryReplay.manifestDigest(source,List.of(),List.of());
-        var replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source);
+        var replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source,actor.id()+","+operator().id());
         var results=race(()->replay.prepare(actor.id(),actor.session(),source,digest,List.of(),List.of()),
             ()->replay.prepare(actor.id(),actor.session(),source,digest,List.of(),List.of()));
         assertThat(results).allMatch(UUID.class::isInstance);assertThat(results.getFirst()).isEqualTo(results.getLast());
@@ -98,7 +98,7 @@ class PhaseQ4ContentionTest extends MigrationTestSupport {
     @Test void roleRemovalCannotRaceReviewIntoAnActiveRecoveryApproval()throws Exception {
         PhaseIFixtures.region(db);var first=operator();var second=operator();String source="035879e196e99ed1ffc1097c3363acf7287040b0";
         String digest=RecoveryReplay.manifestDigest(source,List.of(),List.of());
-        var replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source);
+        var replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source,first.id()+","+second.id());
         UUID run=(UUID)transaction(()->replay.prepare(first.id(),first.session(),source,digest,List.of(),List.of()));
         var results=race(()->{replay.review(second.id(),second.session(),run);return "REVIEWED";},
             ()->{db.update("DELETE FROM user_roles WHERE user_id=? AND role_id=(SELECT id FROM roles WHERE name='TRUST_ACCOUNT')",second.id());return "REMOVED";});

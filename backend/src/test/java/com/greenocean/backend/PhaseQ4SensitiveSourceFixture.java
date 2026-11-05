@@ -42,6 +42,12 @@ public final class PhaseQ4SensitiveSourceFixture {
                 var actor=PhaseIFixtures.member(db,users,tokens);
                 writing.write(actor.id(),null,new com.greenocean.backend.wellbeing.service.PrivateWellbeing.Writing("Synthetic backup entry","SYNTHETIC-Q4-RESTORED-PRIVATE-JOURNAL","",List.of(),0,UUID.randomUUID()));
             }
+            for(var actor:List.of(issuer,reviewer))db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='TRUST_ACCOUNT' ON CONFLICT DO NOTHING",actor.id());
+            try{
+                var roster=java.nio.file.Path.of("target","q4-source-restore-operators.json");
+                java.nio.file.Files.writeString(roster,ctx.getBean(tools.jackson.databind.ObjectMapper.class).writeValueAsString(Map.of("operatorIds",List.of(issuer.id(),reviewer.id()))));
+                try{java.nio.file.Files.setPosixFilePermissions(roster,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));}catch(UnsupportedOperationException ignored){}
+            }catch(java.io.IOException failure){throw new IllegalStateException("Synthetic external operator fixture could not be recorded",failure);}
             System.out.println("Q4 source fixture created: two encrypted synthetic clinical messages and three fresh private journals");
         }
     }

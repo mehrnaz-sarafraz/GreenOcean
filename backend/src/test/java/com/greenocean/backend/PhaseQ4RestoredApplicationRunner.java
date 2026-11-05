@@ -22,6 +22,9 @@ public final class PhaseQ4RestoredApplicationRunner {
         if(!"isolated-only".equals(System.getenv("GREENOCEAN_RESTORE_QA"))||url==null||
             !url.matches("jdbc:postgresql://127\\.0\\.0\\.1:55432/greenocean_q4_restore_[a-f0-9]{32}_qa"))
             throw new IllegalStateException("Fresh uniquely named disposable restored database required");
+        String operatorCsv=Objects.toString(System.getenv("GREENOCEAN_RESTORE_OPERATOR_IDS"),"");
+        var operatorIds=Arrays.stream(operatorCsv.split(",")).filter(value->!value.isBlank()).map(UUID::fromString).toList();
+        if(operatorIds.size()!=2||operatorIds.getFirst().equals(operatorIds.getLast()))throw new IllegalStateException("Two designated synthetic operators must be supplied outside the backup");
         var initial=new JdbcTemplate(new DriverManagerDataSource(url,"postgres",""));
         var clinical=initial.queryForList("SELECT e.id,r.patient_id,r.professional_id FROM clinic_encounters e JOIN clinic_care_relationships r ON r.id=e.relationship_id ORDER BY e.id DESC LIMIT 1");
         UUID clinicalPatient=clinical.isEmpty()?new UUID(0,0):(UUID)clinical.getFirst().get("patient_id");
@@ -37,10 +40,10 @@ public final class PhaseQ4RestoredApplicationRunner {
             "--greenocean.clinic.commerce-enabled=true","--greenocean.clinic.records-enabled=true",
             "--greenocean.clinic.record-keys=clinical-qa:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","--greenocean.clinic.record-current-key=clinical-qa",
             "--greenocean.recovery.restore-epoch="+UUID.randomUUID(),"--greenocean.recovery.source-commit="+SOURCE,
-            "--greenocean.recovery.manifest-sha256="+digest)){
+            "--greenocean.recovery.manifest-sha256="+digest,"--greenocean.recovery.operator-ids="+operatorCsv)){
             var db=ctx.getBean(JdbcTemplate.class);var users=ctx.getBean(UserRepository.class);var tokens=ctx.getBean(TokenService.class);
             var json=ctx.getBean(ObjectMapper.class);PhaseIFixtures.region(db);
-            var first=operator(db,users,tokens);var second=operator(db,users,tokens);
+            var first=operator(db,users,tokens,operatorIds.getFirst());var second=operator(db,users,tokens,operatorIds.getLast());
             var restoredTokens=new ArrayList<String>();
             for(UUID subject:subjects)restoredTokens.add(restoredToken(db,users,tokens,subject));
             String base="http://127.0.0.1:"+ctx.getEnvironment().getRequiredProperty("local.server.port");
@@ -53,6 +56,8 @@ public final class PhaseQ4RestoredApplicationRunner {
             check(send(client,base,"GET","/api/v1/recovery/runs/"+run,second.token(),null).statusCode(),200);
             check(send(client,base,"POST","/api/v1/recovery/runs/"+run+"/review",second.token(),null).statusCode(),204);
             check(send(client,base,"GET","/api/v1/wellbeing/journal",restoredTokens.get(0),null).statusCode(),401);
+            var renewed=PhaseIFixtures.session(db,users,tokens,subjects.get(0));
+            check(send(client,base,"GET","/api/v1/auth/me",renewed.token(),null).statusCode(),401);
             check(send(client,base,"GET","/api/v1/wellbeing/journal",restoredTokens.get(1),null).statusCode(),403);
             check(send(client,base,"GET","/api/v1/wellbeing/journal",restoredTokens.get(2),null).statusCode(),200);
             if(!clinical.isEmpty()){
@@ -79,10 +84,9 @@ public final class PhaseQ4RestoredApplicationRunner {
             System.out.println("Q4 restored application HTTP replay verified with independent purpose operators");
         }
     }
-    static PhaseIFixtures.Actor operator(JdbcTemplate db,UserRepository users,TokenService tokens){
-        var actor=PhaseIFixtures.member(db,users,tokens);
-        db.update("INSERT INTO user_roles(user_id,role_id) SELECT ?,id FROM roles WHERE name='TRUST_ACCOUNT'",actor.id());
-        var fresh=PhaseIFixtures.session(db,users,tokens,actor.id());
+    static PhaseIFixtures.Actor operator(JdbcTemplate db,UserRepository users,TokenService tokens,UUID who){
+        if(!Boolean.TRUE.equals(db.queryForObject("SELECT EXISTS(SELECT 1 FROM user_roles u JOIN roles r ON r.id=u.role_id WHERE u.user_id=? AND r.name='TRUST_ACCOUNT')",Boolean.class,who)))throw new IllegalStateException("Designated synthetic operator purpose is missing");
+        var fresh=PhaseIFixtures.session(db,users,tokens,who);
         db.update("UPDATE user_sessions SET mfa_authenticated_at=CURRENT_TIMESTAMP WHERE id=?",fresh.session());
         return fresh;
     }

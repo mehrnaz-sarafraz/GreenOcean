@@ -38,13 +38,13 @@ class PhaseQ4RecoveryTest {
         first=operator(); second=operator(); subject=PhaseIFixtures.member(db,users,tokens);
         restrictions=List.of(new RecoveryReplay.Subject(subject.id(),"ALL"));
         digest=RecoveryReplay.manifestDigest(source,restrictions,List.of("CLINIC"));
-        replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source);
+        replay=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source,first.id()+","+second.id());
     }
     UUID prepare(){return replay.prepare(first.id(),first.session(),source,digest,restrictions,List.of("CLINIC"));}
     void approve(UUID id){replay.review(second.id(),second.session(),id);}
 
     @Test void normalModeDoesNotActivateRestoreRestrictions(){
-        var normal=new RecoveryReplay(db,authority,"","","");
+        var normal=new RecoveryReplay(db,authority,"","","","");
         assertThat(normal.ready()).isTrue(); assertThat(normal.configured()).isFalse();
         assertThat(normal.restricted(subject.id(),"SOCIAL")).isFalse();
         assertThat(normal.stopped("CLINIC")).isFalse();
@@ -107,7 +107,7 @@ class PhaseQ4RecoveryTest {
         assertThatThrownBy(()->replay.prepare(subject.id(),subject.session(),source,digest,restrictions,List.of("CLINIC"))).isInstanceOf(ForbiddenException.class);
     }
     @Test void malformedExternalConfigurationFailsStartup(){
-        assertThatThrownBy(()->new RecoveryReplay(db,authority,UUID.randomUUID().toString(),"",source)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(()->new RecoveryReplay(db,authority,UUID.randomUUID().toString(),"",source,first.id()+","+second.id())).isInstanceOf(IllegalArgumentException.class);
     }
     @Test void accountArchiveContainsOnlyOwnReplayMetadata(){
         UUID id=prepare();approve(id);
@@ -115,5 +115,39 @@ class PhaseQ4RecoveryTest {
         assertThat(own).contains("ownRecoveryPreparations",id.toString()).doesNotContain(subject.id().toString(),second.id().toString(),first.session().toString());
         String affected=accounts.archive(subject.id()).trustAndSecurity().toString();
         assertThat(affected).contains("ownRestoredRestrictions","ALL").doesNotContain(id.toString(),first.id().toString(),second.id().toString());
+    }
+    @Test void operatorRevokedOutsideTheBackupCannotPrepareTheirOwnReplay(){
+        var manifest=List.of(new RecoveryReplay.Subject(first.id(),"ALL"));
+        String hash=RecoveryReplay.manifestDigest(source,manifest,List.of());
+        var restored=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),hash,source,first.id()+","+second.id());
+        assertThatThrownBy(()->restored.prepare(first.id(),first.session(),source,hash,manifest,List.of())).isInstanceOf(ForbiddenException.class);
+    }
+    @Test void revokedReviewerCannotUseOldBackupAuthorityToApproveReplay(){
+        var manifest=List.of(new RecoveryReplay.Subject(second.id(),"ALL"));
+        String hash=RecoveryReplay.manifestDigest(source,manifest,List.of());
+        var restored=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),hash,source,first.id()+","+second.id());
+        UUID id=restored.prepare(first.id(),first.session(),source,hash,manifest,List.of());
+        assertThatThrownBy(()->restored.review(second.id(),second.session(),id)).isInstanceOf(ForbiddenException.class);
+    }
+    @Test void historicalUnsafeApprovalCannotReactivateWithRevokedReviewer(){
+        var manifest=List.of(new RecoveryReplay.Subject(second.id(),"ALL"));
+        String hash=RecoveryReplay.manifestDigest(source,manifest,List.of());
+        var restored=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),hash,source,first.id()+","+second.id());
+        UUID id=restored.prepare(first.id(),first.session(),source,hash,manifest,List.of());
+        // Explicit old-version synthetic state, not a production approval/import endpoint.
+        db.update("INSERT INTO recovery_replay_reviews(run_id,reviewer_id,review_session) VALUES(?,?,?)",id,second.id(),second.session());
+        assertThat(restored.ready()).isFalse();
+    }
+    @Test void oldBackupRoleDoesNotSubstituteForCurrentExternalOperatorAuthorization(){
+        var outside=operator();
+        assertThatThrownBy(()->replay.prepare(outside.id(),outside.session(),source,digest,restrictions,List.of("CLINIC"))).isInstanceOf(ForbiddenException.class);
+    }
+    @Test void configuredRestoreWithoutTwoDistinctExternalOperatorsFailsClosed(){
+        assertThatThrownBy(()->new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source,first.id().toString())).isInstanceOf(IllegalArgumentException.class);
+    }
+    @Test void currentOperatorsCannotReadOrInvalidateAHistoricalEpoch(){
+        UUID old=prepare();var next=new RecoveryReplay(db,authority,UUID.randomUUID().toString(),digest,source,first.id()+","+second.id());
+        assertThatThrownBy(()->next.detail(first.id(),first.session(),old)).isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(()->next.invalidate(first.id(),first.session(),old)).isInstanceOf(NotFoundException.class);
     }
 }
